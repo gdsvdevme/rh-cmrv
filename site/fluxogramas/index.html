@@ -76,6 +76,19 @@ p{margin:0}
   .legal{padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
 }
 @media (prefers-reduced-motion:reduce){.side{transition:none}}
+/* telas muito estreitas: o indicador de salvamento vira só o ponto colorido (o texto fica no title) */
+@media (max-width:420px){
+  .topbar{gap:8px}
+  .topbar #saveState{font-size:0;gap:0;padding:8px;flex:none}
+  .topbar #saveState::before{width:10px;height:10px}
+}
+/* celular: campos com 16px (o iOS não dá zoom ao digitar) e áreas de toque maiores */
+@media (pointer:coarse){
+  input,select,textarea{font-size:16px}
+  .btn,.ibtn,.chip{min-height:42px}
+  .btn.sm{min-height:38px}
+  .ibtn{min-width:42px}
+}
 
 /* componentes */
 .card{background:var(--surface);border:1px solid var(--line);border-radius:9px;padding:16px;min-width:0}
@@ -163,6 +176,17 @@ tr.selrow td{background:var(--accent-soft)}
 @media (min-width:1150px){.ed-main{grid-template-columns:minmax(0,1fr) 330px}}
 .ed-canvas{position:relative;border:1px solid var(--line);border-radius:8px;background:var(--surface);background-image:radial-gradient(var(--line) 1px,transparent 1px);background-size:20px 20px;height:clamp(420px,68vh,780px);overflow:hidden;min-width:0}
 .ed-svg{width:100%;height:100%;display:block;touch-action:none;user-select:none;-webkit-user-select:none}
+.ed-sheet-close{display:none}
+@media (max-width:760px){
+  .ed-bar{gap:8px}
+  .ed-bar .grp{width:100%;flex-wrap:nowrap;overflow-x:auto;border-right:0;padding:0 0 4px;margin:0;-webkit-overflow-scrolling:touch;scrollbar-width:thin}
+  .ed-bar .grp>*{flex:none}
+  .ed-panel.has-sel{position:fixed;left:0;right:0;bottom:0;z-index:45;max-height:56vh;border-radius:16px 16px 0 0;box-shadow:0 -10px 30px rgba(0,0,0,.28);padding-bottom:max(16px,env(safe-area-inset-bottom,0px));animation:sheetUp .18s ease-out}
+  .ed-panel.has-sel .ed-sheet-close{display:inline-flex;align-self:flex-end;position:sticky;top:0;z-index:1}
+  .ed-hint{font-size:11.5px}
+}
+@keyframes sheetUp{from{transform:translateY(24px);opacity:.4}to{transform:none;opacity:1}}
+@media (prefers-reduced-motion:reduce){.ed-panel.has-sel{animation:none}}
 .ed-hint{position:absolute;left:10px;bottom:8px;font-size:12px;color:var(--muted);background:var(--surface);border:1px solid var(--line);border-radius:5px;padding:2px 8px;pointer-events:none;max-width:calc(100% - 20px)}
 .ed-panel{border:1px solid var(--line);border-radius:8px;background:var(--surface);padding:14px;display:flex;flex-direction:column;gap:11px;min-width:0;align-self:start;max-height:78vh;overflow:auto}
 .ed-panel h3{font-size:1rem}
@@ -729,7 +753,7 @@ function setStatus(k){
   const el=$('#saveState'); if(!el) return;
   const map={ok:['Salvo','ok'],dirty:['Alterações pendentes','dirty'],saving:['Salvando…','saving'],local:['Salvo neste navegador','ok'],err:['Erro ao salvar','err'],load:['Carregando…','dirty']};
   const m=map[k]||map.ok;
-  el.textContent=m[0]; el.className='pill '+m[1];
+  el.textContent=m[0]; el.className='pill '+m[1]; el.title=m[0];
 }
 function changed(){
   touched=true; state.meta.atualizado=new Date().toISOString();
@@ -1450,7 +1474,7 @@ function createEditor(host,cfg){
     <div class="ed-bar"></div>
     <div class="ed-main">
       <div class="ed-canvas"><svg class="ed-svg" tabindex="0" role="application" aria-label="Área de edição do diagrama"><g class="vp"></g></svg>
-        <div class="ed-hint">Arraste os elementos para mover. Arraste o fundo para deslocar a vista. Ctrl + roda do mouse para zoom.</div></div>
+        <div class="ed-hint">${matchMedia('(pointer:coarse)').matches?'Arraste para mover · arraste o fundo para deslocar · dois dedos para zoom':'Arraste os elementos para mover. Arraste o fundo para deslocar a vista. Ctrl + roda do mouse para zoom.'}</div></div>
       <aside class="ed-panel" aria-live="polite"></aside>
     </div>
     ${kind==='flow'?'<div class="ed-table card"></div>':''}
@@ -1601,8 +1625,25 @@ function createEditor(host,cfg){
     for(let i=E.doc.nodes.length-1;i>=0;i--){const n=E.doc.nodes[i],s=sizeOf(n);if(p.x>=n.x&&p.x<=n.x+s.w&&p.y>=n.y&&p.y<=n.y+s.h) return n;}
     return null;
   }
+  /* zoom e deslocamento com dois dedos */
+  const ptrs=new Map();let pinch=null;
+  const rel=()=>{const r=svg.getBoundingClientRect(),[a,b]=[...ptrs.values()];return {x:(a[0]+b[0])/2-r.left,y:(a[1]+b[1])/2-r.top,d:Math.hypot(a[0]-b[0],a[1]-b[1])||1};};
+  function startPinch(){
+    const d=E.drag; E.drag=null;
+    if(d&&d.type==='move'&&d.moved){commit();touch();renderTable();}
+    const m=rel(); pinch={x:m.x,y:m.y,d:m.d,vx:E.view.x,vy:E.view.y,k:E.view.k};
+  }
+  function movePinch(){
+    const m=rel(),k=Math.max(0.15,Math.min(2.5,pinch.k*m.d/pinch.d)),r=k/pinch.k;
+    E.view.k=k;E.view.x=m.x-(pinch.x-pinch.vx)*r;E.view.y=m.y-(pinch.y-pinch.vy)*r;E.touched=true;applyView();
+  }
   svg.addEventListener('pointerdown',ev=>{
     if(ev.pointerType==='mouse'&&ev.button!==0) return;
+    if(ev.pointerType==='touch'){
+      ptrs.set(ev.pointerId,[ev.clientX,ev.clientY]);
+      if(ptrs.size===2){startPinch();return;}
+      if(ptrs.size>2) return;
+    }
     activeEd=E; const w=toWorld(ev);
     const hd=ev.target.closest('[data-handle]');
     if(hd){E.drag={type:'connect',from:hd.dataset.handle,pos:w};svg.setPointerCapture(ev.pointerId);return;}
@@ -1620,6 +1661,7 @@ function createEditor(host,cfg){
     svg.setPointerCapture(ev.pointerId);
   });
   svg.addEventListener('pointermove',ev=>{
+    if(ptrs.has(ev.pointerId)){ptrs.set(ev.pointerId,[ev.clientX,ev.clientY]);if(pinch){movePinch();return;}}
     const d=E.drag; if(!d) return;
     if(d.type==='pan'){E.view.x=d.vx+ev.clientX-d.sx;E.view.y=d.vy+ev.clientY-d.sy;E.touched=true;applyView();}
     else if(d.type==='move'){
@@ -1629,6 +1671,8 @@ function createEditor(host,cfg){
     }else if(d.type==='connect'){d.pos=toWorld(ev);sched();}
   });
   const endDrag=ev=>{
+    ptrs.delete(ev.pointerId);
+    if(pinch){if(ptrs.size<2) pinch=null;E.drag=null;return;}
     const d=E.drag; if(!d) return; E.drag=null;
     try{svg.releasePointerCapture(ev.pointerId);}catch(e){}
     if(d.type==='move'&&d.moved){commit();touch();renderTable();}
@@ -1710,6 +1754,11 @@ function createEditor(host,cfg){
       <div class="row"><button class="btn sm" data-a="erev">Inverter direção</button><button class="btn sm danger" data-a="del">${kind==='org'?'Desconectar':'Excluir conexão'}</button></div>`;
   }
   function renderPanel(){
+    renderPanelBody();
+    panel.classList.toggle('has-sel',!!E.sel);
+    if(E.sel) panel.insertAdjacentHTML('afterbegin','<button class="btn sm ed-sheet-close" data-a="deselect" type="button">Fechar</button>');
+  }
+  function renderPanelBody(){
     const s=E.sel;
     if(s&&s.k==='n'&&node(s.id)){panel.innerHTML=kind==='org'?panelNodeOrg(node(s.id)):panelNodeFlow(node(s.id));return;}
     if(s&&s.k==='e'){const e=E.doc.edges.find(x=>x.id===s.id);if(e){panel.innerHTML=panelEdge(e);return;}}
@@ -1805,6 +1854,7 @@ function createEditor(host,cfg){
       case 'fit': E.touched=false; fit(); break;
       case 'png': case 'svg': case 'pdf': doExport(a); break;
       case 'print': doPrint(); break;
+      case 'deselect': select(null); break;
       case 'del': delSel(); break;
       case 'dup': if(n){
           const c=clone(n); c.id=uid(kind==='org'?'o':'n'); c.x=(n.x||0)+30; c.y=(n.y||0)+30;

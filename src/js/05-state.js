@@ -34,7 +34,7 @@ function setStatus(k){
   const el=$('#saveState'); if(!el) return;
   const map={ok:['Salvo','ok'],dirty:['Alterações pendentes','dirty'],saving:['Salvando…','saving'],local:['Salvo neste navegador','ok'],err:['Erro ao salvar','err'],load:['Carregando…','dirty']};
   const m=map[k]||map.ok;
-  el.textContent=m[0]; el.className='pill '+m[1];
+  el.textContent=m[0]; el.className='pill '+m[1]; el.title=m[0];
 }
 function changed(){
   touched=true; state.meta.atualizado=new Date().toISOString();

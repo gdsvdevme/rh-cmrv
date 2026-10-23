@@ -70,6 +70,19 @@ p{margin:0}
   .legal{padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
 }
 @media (prefers-reduced-motion:reduce){.side{transition:none}}
+/* telas muito estreitas: o indicador de salvamento vira só o ponto colorido (o texto fica no title) */
+@media (max-width:420px){
+  .topbar{gap:8px}
+  .topbar #saveState{font-size:0;gap:0;padding:8px;flex:none}
+  .topbar #saveState::before{width:10px;height:10px}
+}
+/* celular: campos com 16px (o iOS não dá zoom ao digitar) e áreas de toque maiores */
+@media (pointer:coarse){
+  input,select,textarea{font-size:16px}
+  .btn,.ibtn,.chip{min-height:42px}
+  .btn.sm{min-height:38px}
+  .ibtn{min-width:42px}
+}
 
 /* componentes */
 .card{background:var(--surface);border:1px solid var(--line);border-radius:9px;padding:16px;min-width:0}
@@ -157,6 +170,17 @@ tr.selrow td{background:var(--accent-soft)}
 @media (min-width:1150px){.ed-main{grid-template-columns:minmax(0,1fr) 330px}}
 .ed-canvas{position:relative;border:1px solid var(--line);border-radius:8px;background:var(--surface);background-image:radial-gradient(var(--line) 1px,transparent 1px);background-size:20px 20px;height:clamp(420px,68vh,780px);overflow:hidden;min-width:0}
 .ed-svg{width:100%;height:100%;display:block;touch-action:none;user-select:none;-webkit-user-select:none}
+.ed-sheet-close{display:none}
+@media (max-width:760px){
+  .ed-bar{gap:8px}
+  .ed-bar .grp{width:100%;flex-wrap:nowrap;overflow-x:auto;border-right:0;padding:0 0 4px;margin:0;-webkit-overflow-scrolling:touch;scrollbar-width:thin}
+  .ed-bar .grp>*{flex:none}
+  .ed-panel.has-sel{position:fixed;left:0;right:0;bottom:0;z-index:45;max-height:56vh;border-radius:16px 16px 0 0;box-shadow:0 -10px 30px rgba(0,0,0,.28);padding-bottom:max(16px,env(safe-area-inset-bottom,0px));animation:sheetUp .18s ease-out}
+  .ed-panel.has-sel .ed-sheet-close{display:inline-flex;align-self:flex-end;position:sticky;top:0;z-index:1}
+  .ed-hint{font-size:11.5px}
+}
+@keyframes sheetUp{from{transform:translateY(24px);opacity:.4}to{transform:none;opacity:1}}
+@media (prefers-reduced-motion:reduce){.ed-panel.has-sel{animation:none}}
 .ed-hint{position:absolute;left:10px;bottom:8px;font-size:12px;color:var(--muted);background:var(--surface);border:1px solid var(--line);border-radius:5px;padding:2px 8px;pointer-events:none;max-width:calc(100% - 20px)}
 .ed-panel{border:1px solid var(--line);border-radius:8px;background:var(--surface);padding:14px;display:flex;flex-direction:column;gap:11px;min-width:0;align-self:start;max-height:78vh;overflow:auto}
 .ed-panel h3{font-size:1rem}

@@ -1,0 +1,2304 @@
+<!doctype html>
+<html lang="pt-BR"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"></head><body style="margin:0">
+<title>RH Câmara Rio Verde</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=Libre+Franklin:wght@500;600;700&family=Public+Sans:wght@400;500;600&display=swap">
+<style>
+/* RH Câmara Rio Verde — layout: menu lateral azul institucional, barra superior, área de trabalho clara. */
+:root{
+  --bg:#f1f4f8; --surface:#ffffff; --surface-2:#e9eef5; --line:#d3dce8;
+  --fg:#13233a; --muted:#53657e;
+  --accent:#0b4f9c; --accent-fg:#ffffff; --accent-soft:#dbe8f7;
+  --side-bg:#0b2f5c; --side-fg:#e6eefa; --side-muted:#9db4d3; --side-active:#1a4f8f; --side-line:#22497d;
+  --warn:#8a5200; --warn-soft:#fbecd0; --danger:#b3261e; --danger-soft:#f9dedc; --ok:#1b7a3d; --ok-soft:#dcf2e3;
+  --f-display:"Libre Franklin",system-ui,sans-serif;
+  --f-body:"Public Sans",system-ui,sans-serif;
+  --f-mono:"IBM Plex Mono",ui-monospace,monospace;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#0c1522; --surface:#121f31; --surface-2:#1a2b42; --line:#2a3f5b;
+    --fg:#e4edf8; --muted:#93a9c4;
+    --accent:#6aa8f0; --accent-fg:#06192f; --accent-soft:#1a3556;
+    --side-bg:#0a1a2e; --side-fg:#e4edf8; --side-muted:#8aa3c2; --side-active:#173a64; --side-line:#1c3252;
+    --warn:#f0b45a; --warn-soft:#3a2c12; --danger:#ff8f86; --danger-soft:#3b1a18; --ok:#6fd58f; --ok-soft:#14301f;
+    color-scheme:dark;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#0c1522; --surface:#121f31; --surface-2:#1a2b42; --line:#2a3f5b;
+  --fg:#e4edf8; --muted:#93a9c4;
+  --accent:#6aa8f0; --accent-fg:#06192f; --accent-soft:#1a3556;
+  --side-bg:#0a1a2e; --side-fg:#e4edf8; --side-muted:#8aa3c2; --side-active:#173a64; --side-line:#1c3252;
+  --warn:#f0b45a; --warn-soft:#3a2c12; --danger:#ff8f86; --danger-soft:#3b1a18; --ok:#6fd58f; --ok-soft:#14301f;
+  color-scheme:dark;
+}
+*,*::before,*::after{box-sizing:border-box}
+body{background:var(--bg);color:var(--fg);font-family:var(--f-body);font-size:14.5px;line-height:1.5}
+body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);z-index:70;background:var(--surface)}
+button,input,select,textarea{font:inherit;color:inherit}
+h1,h2,h3,h4{font-family:var(--f-display);margin:0;text-wrap:balance}
+p{margin:0}
+.ic{flex:none;display:inline-block;vertical-align:middle}
+.mono{font-family:var(--f-mono)}
+.muted{color:var(--muted)}
+.hint{color:var(--muted);font-size:13px}
+
+/* estrutura */
+.shell{display:grid;grid-template-columns:272px minmax(0,1fr);align-items:start}
+.side{position:sticky;top:env(safe-area-inset-top,0px);height:calc(100vh - env(safe-area-inset-top,0px));overflow:auto;background:var(--side-bg);color:var(--side-fg);display:flex;flex-direction:column}
+.brand{display:flex;gap:12px;align-items:center;padding:18px 16px 16px max(16px,env(safe-area-inset-left,0px));border-bottom:1px solid var(--side-line)}
+.logo{width:40px;height:40px;border-radius:9px;background:var(--surface);color:var(--accent);display:grid;place-items:center;flex:none}
+.brand b{display:block;font-family:var(--f-display);font-size:15px;line-height:1.2}
+.brand span{display:block;font-size:12px;color:var(--side-muted);line-height:1.3;margin-top:2px}
+.nav{display:flex;flex-direction:column;padding:10px 10px 10px max(10px,env(safe-area-inset-left,0px));gap:2px}
+.nav button{display:flex;gap:11px;align-items:center;width:100%;text-align:left;background:none;border:0;border-radius:7px;color:var(--side-fg);padding:9px 11px;cursor:pointer;font-weight:500;font-size:14px}
+.nav button:hover{background:var(--side-active)}
+.nav button[aria-current="page"]{background:var(--surface);color:var(--accent)}
+.nav .sep{height:1px;background:var(--side-line);margin:8px 6px}
+.side-foot{margin-top:auto;padding:12px 16px 16px max(16px,env(safe-area-inset-left,0px));font-size:12px;color:var(--side-muted);border-top:1px solid var(--side-line)}
+.workspace{min-width:0;display:flex;flex-direction:column;min-height:100vh}
+.topbar{position:sticky;top:env(safe-area-inset-top,0px);z-index:30;background:var(--surface);border-bottom:1px solid var(--line);display:flex;gap:12px;align-items:center;padding:10px max(20px,env(safe-area-inset-right,0px)) 10px 24px}
+.topbar h1{font-size:1.15rem;flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.topbar .menu-btn{display:none}
+.main{padding:22px max(20px,env(safe-area-inset-right,0px)) 40px 24px;display:flex;flex-direction:column;gap:18px;min-width:0}
+.legal{font-size:12.5px;color:var(--muted);border-top:1px solid var(--line);padding:14px max(20px,env(safe-area-inset-right,0px)) 22px 24px;margin-top:auto}
+.legal b{color:var(--fg)}
+.backdrop{display:none}
+@media (max-width:940px){
+  .shell{grid-template-columns:minmax(0,1fr)}
+  .side{position:fixed;left:0;top:0;bottom:0;height:auto;width:min(288px,86vw);z-index:60;transform:translateX(-102%);transition:transform .2s;padding-top:env(safe-area-inset-top,0px)}
+  .shell.nav-open .side{transform:none}
+  .shell.nav-open .backdrop{display:block;position:fixed;inset:0;background:rgba(5,15,30,.5);z-index:55}
+  .topbar{padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+  .topbar .menu-btn{display:grid}
+  .main{padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+  .legal{padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+}
+@media (prefers-reduced-motion:reduce){.side{transition:none}}
+
+/* componentes */
+.card{background:var(--surface);border:1px solid var(--line);border-radius:9px;padding:16px;min-width:0}
+.card>h2,.card>.ch>h2{font-size:1.05rem}
+.ch{display:flex;gap:10px;flex-wrap:wrap;align-items:center;justify-content:space-between;margin-bottom:10px}
+.ch h2{font-size:1.05rem}
+.pagehead{display:flex;gap:14px;flex-wrap:wrap;align-items:flex-start;justify-content:space-between}
+.pagehead h2{font-size:1.35rem}
+.pagehead p{max-width:70ch}
+.row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.grid{display:grid;gap:14px}
+.g2{grid-template-columns:repeat(auto-fit,minmax(min(100%,340px),1fr))}
+.g4{grid-template-columns:repeat(auto-fit,minmax(min(100%,200px),1fr))}
+.stat{display:flex;flex-direction:column;gap:2px}
+.stat b{font-family:var(--f-display);font-size:1.9rem;line-height:1.1;font-variant-numeric:tabular-nums}
+.stat span{color:var(--muted);font-size:13px}
+.btn{display:inline-flex;gap:6px;align-items:center;justify-content:center;border:1px solid var(--line);background:var(--surface);border-radius:6px;padding:7px 12px;cursor:pointer;font-weight:500;line-height:1.2;color:var(--fg)}
+.btn:hover{border-color:var(--accent);color:var(--accent)}
+.btn:disabled{opacity:.45;cursor:default}
+.btn:disabled:hover{border-color:var(--line);color:var(--fg)}
+.btn.sm{padding:4px 9px;font-size:13px}
+.btn.primary{background:var(--accent);border-color:var(--accent);color:var(--accent-fg)}
+.btn.primary:hover{color:var(--accent-fg);filter:brightness(1.1)}
+.btn.danger{color:var(--danger)}
+.btn.danger:hover{border-color:var(--danger);color:var(--danger)}
+.btn.on{background:var(--accent-soft);border-color:var(--accent);color:var(--accent)}
+.ibtn{width:30px;height:30px;display:inline-grid;place-items:center;border:1px solid var(--line);background:var(--surface);border-radius:6px;cursor:pointer;padding:0;flex:none}
+.ibtn:hover{border-color:var(--accent);color:var(--accent)}
+.ibtn.danger:hover{border-color:var(--danger);color:var(--danger)}
+.ibtn:disabled{opacity:.4;cursor:default}
+:where(button,input,select,textarea,summary,[tabindex]):focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+input,select,textarea{width:100%;min-width:0;background:var(--surface);border:1px solid var(--line);border-radius:5px;padding:6px 9px}
+textarea{resize:vertical}
+input[type=checkbox]{width:17px;height:17px;accent-color:var(--accent);padding:0}
+input[type=number]{font-variant-numeric:tabular-nums}
+.fld{display:flex;flex-direction:column;gap:4px;min-width:0}
+.fld>span,.lbl{font-size:12px;font-weight:600;color:var(--muted);letter-spacing:.02em}
+.r2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.pill{display:inline-flex;align-items:center;gap:6px;font-size:12.5px;padding:3px 10px;border-radius:999px;border:1px solid var(--line);background:var(--surface);color:var(--muted);white-space:nowrap}
+.pill::before{content:"";width:7px;height:7px;border-radius:50%;background:var(--muted)}
+.pill.ok::before{background:var(--ok)}
+.pill.dirty::before,.pill.saving::before{background:var(--warn)}
+.pill.err{color:var(--danger)}
+.pill.err::before{background:var(--danger)}
+.tag{display:inline-block;font-size:11.5px;font-weight:600;padding:1px 8px;border-radius:999px;background:var(--accent-soft);color:var(--accent)}
+.tag.ok{background:var(--ok-soft);color:var(--ok)}
+.tag.warn{background:var(--warn-soft);color:var(--warn)}
+.tag.bad{background:var(--danger-soft);color:var(--danger)}
+.seg{display:inline-flex;border:1px solid var(--line);border-radius:6px;overflow:hidden}
+.seg button{border:0;background:var(--surface);padding:6px 12px;cursor:pointer;font-weight:500}
+.seg button+button{border-left:1px solid var(--line)}
+.seg button[aria-pressed="true"]{background:var(--accent);color:var(--accent-fg)}
+.chips{display:flex;flex-wrap:wrap;gap:8px}
+.chip{border:1px solid var(--line);background:var(--surface);border-radius:6px;padding:7px 12px;cursor:pointer;text-align:left;font-weight:500;max-width:100%}
+.chip:hover{border-color:var(--accent)}
+.chip.on{background:var(--accent);border-color:var(--accent);color:var(--accent-fg)}
+.chip.add{border-style:dashed;color:var(--muted)}
+.banner{display:flex;gap:10px;align-items:flex-start;justify-content:space-between;flex-wrap:wrap;background:var(--warn-soft);color:var(--warn);border-radius:7px;padding:9px 12px;font-size:13.5px}
+.banner.info{background:var(--accent-soft);color:var(--accent)}
+.empty{padding:28px 16px;text-align:center;color:var(--muted)}
+.scroll{overflow-x:auto}
+table{border-collapse:collapse;width:100%;font-size:13.5px}
+th,td{text-align:left;padding:7px 8px;border-bottom:1px solid var(--line);vertical-align:middle}
+th{font-size:11.5px;letter-spacing:.04em;text-transform:uppercase;color:var(--muted);white-space:nowrap}
+td input,td select{padding:5px 7px}
+td.num,th.num{text-align:center;font-variant-numeric:tabular-nums}
+tr.selrow td{background:var(--accent-soft)}
+.list{display:flex;flex-direction:column;gap:6px}
+.lrow{display:flex;gap:6px;align-items:center}
+.uicon{width:38px;height:38px;border-radius:9px;display:grid;place-items:center;flex:none;background:hsl(var(--h,212) 60% 92%);color:hsl(var(--h,212) 55% 32%)}
+:root[data-theme="dark"] .uicon{background:hsl(var(--h,212) 35% 22%);color:hsl(var(--h,212) 70% 78%)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]) .uicon{background:hsl(var(--h,212) 35% 22%);color:hsl(var(--h,212) 70% 78%)}}
+.sw{width:20px;height:20px;border-radius:50%;border:0;padding:0;cursor:pointer;background:hsl(var(--h) 55% 50%);flex:none}
+.sw.auto{background:var(--surface);border:1.5px dashed var(--muted)}
+.sw[aria-pressed="true"]{box-shadow:0 0 0 2px var(--surface),0 0 0 4px var(--fg)}
+.swatches{display:flex;flex-wrap:wrap;gap:7px}
+.dot{width:10px;height:10px;border-radius:50%;background:hsl(var(--h,0) 52% 48%);display:inline-block}
+
+/* editor de diagramas */
+.ed{display:flex;flex-direction:column;gap:10px}
+.ed-bar{display:flex;flex-wrap:wrap;gap:6px;align-items:center}
+.ed-bar .grp{display:flex;gap:6px;align-items:center;flex-wrap:wrap;padding-right:10px;margin-right:4px;border-right:1px solid var(--line)}
+.ed-bar .grp:last-child{border-right:0}
+.ed-main{display:grid;gap:12px;grid-template-columns:minmax(0,1fr)}
+@media (min-width:1150px){.ed-main{grid-template-columns:minmax(0,1fr) 330px}}
+.ed-canvas{position:relative;border:1px solid var(--line);border-radius:8px;background:var(--surface);background-image:radial-gradient(var(--line) 1px,transparent 1px);background-size:20px 20px;height:clamp(420px,68vh,780px);overflow:hidden;min-width:0}
+.ed-svg{width:100%;height:100%;display:block;touch-action:none;user-select:none;-webkit-user-select:none}
+.ed-hint{position:absolute;left:10px;bottom:8px;font-size:12px;color:var(--muted);background:var(--surface);border:1px solid var(--line);border-radius:5px;padding:2px 8px;pointer-events:none;max-width:calc(100% - 20px)}
+.ed-panel{border:1px solid var(--line);border-radius:8px;background:var(--surface);padding:14px;display:flex;flex-direction:column;gap:11px;min-width:0;align-self:start;max-height:78vh;overflow:auto}
+.ed-panel h3{font-size:1rem}
+.ed-svg .nd{cursor:grab}
+.ed-svg .nd:active{cursor:grabbing}
+.ed-svg .eh{cursor:pointer}
+.ed-svg .hdl{cursor:crosshair}
+.ed-table{margin-top:4px}
+.edge-row{display:grid;grid-template-columns:minmax(0,1.4fr) minmax(0,1fr) auto;gap:6px;align-items:center}
+
+/* indicadores */
+.kpi-card{border:1px solid var(--line);border-radius:8px;background:var(--surface);padding:12px;display:flex;flex-direction:column;gap:6px;cursor:pointer;text-align:left;min-width:0}
+.kpi-card:hover{border-color:var(--accent)}
+.kpi-card.on{border-color:var(--accent);box-shadow:0 0 0 1px var(--accent)}
+.kpi-card .nm{font-size:13px;color:var(--muted);line-height:1.3}
+.kpi-card .vl{font-family:var(--f-display);font-size:1.5rem;font-weight:700;font-variant-numeric:tabular-nums}
+.chart{width:100%;height:auto;display:block}
+.chart text{font-family:var(--f-body);font-size:11px;fill:var(--muted)}
+.chart .ax{stroke:var(--line);stroke-width:1}
+.chart .bar{fill:var(--accent)}
+.chart .bar.bad{fill:var(--warn)}
+.chart .meta{stroke:var(--danger);stroke-width:1.5;stroke-dasharray:5 4;fill:none}
+.chart .val{fill:var(--fg);font-weight:600}
+
+/* manual */
+.manual{display:grid;gap:14px;grid-template-columns:minmax(0,1fr)}
+@media (min-width:980px){.manual{grid-template-columns:300px minmax(0,1fr)}}
+.chap{display:flex;gap:6px;align-items:center;border:1px solid var(--line);border-radius:6px;padding:6px 8px;background:var(--surface);cursor:pointer}
+.chap.on{border-color:var(--accent);background:var(--accent-soft)}
+.chap span{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:13.5px}
+.preview{background:var(--surface);border:1px solid var(--line);border-radius:6px;padding:14px 18px;min-height:240px}
+.preview h4{margin:14px 0 6px;font-size:1rem}
+.preview p{margin:0 0 8px}
+.preview ul{margin:0 0 8px;padding-left:20px}
+.preview ol{margin:0 0 8px;padding-left:22px}
+
+/* modal e aviso */
+#modal{position:fixed;inset:0;z-index:80;background:rgba(5,15,30,.55);display:flex;align-items:flex-start;justify-content:center;overflow:auto;padding:max(24px,env(safe-area-inset-top,0px)) max(16px,env(safe-area-inset-right,0px)) 24px max(16px,env(safe-area-inset-left,0px))}
+#modal[hidden]{display:none}
+.modal{background:var(--surface);border:1px solid var(--line);border-radius:10px;width:min(560px,100%);padding:18px;display:flex;flex-direction:column;gap:12px;margin-top:6vh}
+.modal h3{font-size:1.1rem}
+#toast{position:fixed;left:0;right:0;bottom:0;display:flex;justify-content:center;pointer-events:none;z-index:90;
+  padding:12px max(16px,env(safe-area-inset-right,0px)) calc(12px + env(safe-area-inset-bottom,0px)) max(16px,env(safe-area-inset-left,0px))}
+#toast[hidden]{display:none}
+.toast-in{pointer-events:auto;display:flex;gap:12px;align-items:center;background:var(--fg);color:var(--bg);border-radius:8px;padding:8px 8px 8px 14px;font-size:14px;max-width:100%}
+.toast-in .btn{background:transparent;color:var(--bg);border-color:var(--bg)}
+
+/* impressão */
+#printSheet{display:none}
+@media print{
+  @page{size:landscape;margin:10mm}
+  body.printing .shell,body.printing #toast,body.printing #modal,body.printing::before{display:none!important}
+  body.printing #printSheet{display:block}
+  #printSheet svg{width:100%;height:auto;max-height:190mm}
+  #printSheet h2{font-family:var(--f-display);font-size:16pt;margin:0 0 6mm;color:#000}
+  body.printing{background:#fff}
+}
+
+</style>
+<div id="app"></div>
+<div id="modal" hidden></div>
+<div id="toast" hidden></div>
+<div id="printSheet"></div>
+<input type="file" id="fileIn" accept="application/json,.json" hidden>
+<script>
+'use strict';
+/* =====================================================================
+   RH Câmara Rio Verde — núcleo: utilitários, dados iniciais, salvamento
+   ===================================================================== */
+const $=(s,r=document)=>r.querySelector(s);
+const $$=(s,r=document)=>[...r.querySelectorAll(s)];
+const esc=s=>String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const oneLine=t=>String(t==null?'':t).replace(/\s+/g,' ').trim();
+const clone=o=>JSON.parse(JSON.stringify(o));
+let _uidn=0;
+const uid=p=>p+Date.now().toString(36).slice(-5)+(++_uidn).toString(36)+Math.random().toString(36).slice(2,5);
+const fmtDT=iso=>{
+  if(!iso) return '—';
+  const d=new Date(iso); if(isNaN(d)) return '—';
+  return d.toLocaleDateString('pt-BR')+' '+d.toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'});
+};
+const slug=s=>(String(s||'arquivo').normalize('NFD').replace(/[̀-ͯ]/g,'').toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-+|-+$/g,'')||'arquivo').slice(0,60);
+
+const LEGAL='Esta ferramenta tem finalidade organizacional e administrativa. As competências, os procedimentos e os fluxos apresentados deverão ser compatibilizados com a legislação municipal vigente, os atos normativos da Câmara Municipal de Rio Verde/GO e as orientações da Procuradoria-Geral e da Controladoria Interna. A ferramenta não substitui a análise jurídica dos atos administrativos.';
+const HUES=[212,190,165,130,95,50,30,350,320,280,250];
+const TIPOS_FLUXO={ini:'Início',fim:'Fim',proc:'Processo',dec:'Decisão',doc:'Documento',unid:'Unidade administrativa',aprov:'Aprovação',arq:'Arquivamento'};
+const TIPOS_ORG={orgao:'Órgão superior',unidade:'Unidade administrativa',nucleo:'Divisão interna de trabalho'};
+const STATUS=['','Planejada','Em andamento','Concluída','Pendente'];
+const PAGES_FLOW={geral:'Fluxograma Geral',gestao:'Gestão Funcional',folha:'Folha de Pagamento',freq:'Frequência e Benefícios',arquivo:'Arquivo e Documentação',desenv:'Desenvolvimento e Capacitação'};
+const MESES=['jan','fev','mar','abr','mai','jun','jul','ago','set','out','nov','dez'];
+
+const ICONS={
+  home:'<path d="M3 11l9-8 9 8M5 10v10h5v-6h4v6h5V10"/>',
+  org:'<rect x="9" y="3" width="6" height="5" rx="1"/><rect x="3" y="16" width="6" height="5" rx="1"/><rect x="15" y="16" width="6" height="5" rx="1"/><path d="M12 8v4M6 16v-4h12v4"/>',
+  flow:'<rect x="3" y="3" width="7" height="6" rx="1"/><rect x="14" y="15" width="7" height="6" rx="1"/><path d="M6.5 9v4a2 2 0 002 2H14"/>',
+  list:'<path d="M9 6h11M9 12h11M9 18h11M4 6h.01M4 12h.01M4 18h.01"/>',
+  building:'<path d="M3 21h18M5 21V8l7-4 7 4v13M9 21v-5h6v5M9 11h.01M12 11h.01M15 11h.01"/>',
+  users:'<circle cx="9" cy="8" r="3.5"/><path d="M2.5 20c0-3.6 2.9-6 6.5-6s6.5 2.4 6.5 6M16 4.5a3.5 3.5 0 010 7M18 14.3c2.2.7 3.5 2.6 3.5 5.7"/>',
+  calc:'<rect x="4" y="3" width="16" height="18" rx="2"/><path d="M8 7h8M8 12h.01M12 12h.01M16 12h.01M8 16h.01M12 16h.01M16 16h.01"/>',
+  archive:'<rect x="3" y="4" width="18" height="4" rx="1"/><path d="M5 8v11a1 1 0 001 1h12a1 1 0 001-1V8M10 12h4"/>',
+  calendar:'<rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4M12 13v3l2 1"/>',
+  cap:'<path d="M2 9l10-5 10 5-10 5z"/><path d="M6 11.5V16c0 1.5 2.7 3 6 3s6-1.5 6-3v-4.5M22 9v6"/>',
+  shield:'<path d="M12 3l8 3v6c0 4.5-3.2 8-8 9-4.8-1-8-4.5-8-9V6z"/><path d="M9 12l2 2 4-4"/>',
+  file:'<path d="M6 3h8l5 5v13H6zM14 3v5h5M9 13h6M9 17h6"/>',
+  grid:'<rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M3 15h18M9 3v18M15 3v18"/>',
+  chart:'<path d="M4 20V10M10 20V4M16 20v-8M22 20H2"/>',
+  book:'<path d="M4 4h6a3 3 0 013 3v13a2 2 0 00-2-2H4zM20 4h-6a3 3 0 00-3 3v13a2 2 0 012-2h7z"/>',
+  gear:'<circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M4.2 4.2l2.1 2.1M17.7 17.7l2.1 2.1M2 12h3M19 12h3M4.2 19.8l2.1-2.1M17.7 6.3l2.1-2.1"/>',
+  menu:'<path d="M4 6h16M4 12h16M4 18h16"/>',
+  plus:'<path d="M12 5v14M5 12h14"/>',
+  up:'<path d="M12 19V5M6 11l6-6 6 6"/>',
+  down:'<path d="M12 5v14M6 13l6 6 6-6"/>',
+  x:'<path d="M6 6l12 12M18 6L6 18"/>',
+  undo:'<path d="M9 14L4 9l5-5M4 9h10a6 6 0 010 12h-3"/>',
+  redo:'<path d="M15 14l5-5-5-5M20 9H10a6 6 0 000 12h3"/>',
+  save:'<path d="M5 3h11l4 4v14H5zM8 3v6h7V3M8 21v-7h8v7"/>',
+  download:'<path d="M12 4v11M7 11l5 5 5-5M5 20h14"/>',
+  print:'<path d="M7 9V3h10v6M7 18H4v-7h16v7h-3M7 14h10v7H7z"/>'
+};
+function icon(name,size){
+  size=size||18;
+  return `<svg class="ic" width="${size}" height="${size}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${ICONS[name]||ICONS.file}</svg>`;
+}
+const UNIT_ICONS={building:'Prédio',users:'Pessoas',calc:'Cálculo',archive:'Arquivo',calendar:'Calendário',cap:'Capacitação',shield:'Controle',file:'Documento'};
+
+/* ---------- dados iniciais ---------- */
+const nd=(id,tipo,t,unit,o)=>Object.assign({id,tipo,t,desc:'',unit:unit||'',resp:'',prazo:'',docs:'',obs:'',status:'',hue:null,x:null,y:null},o||{});
+const ed=(from,to,l)=>({id:'e_'+from+'_'+to+(l?'_'+slug(l):''),from,to,l:l||''});
+
+function buildDefault(){
+  const units=[
+    {id:'u-dir',nome:'Diretoria de Gestão de Pessoas',sigla:'DGP',icone:'building',hue:212,page:'',externa:false,divisao:false,
+     desc:'Planeja, coordena, supervisiona e avalia as atividades de administração de pessoal.',obs:'',comp:[
+      'Planejar, coordenar, supervisionar e avaliar as atividades de administração de pessoal;',
+      'Promover a aplicação da legislação relativa aos servidores;',
+      'Supervisionar os procedimentos de admissão, nomeação, posse, exercício, exoneração e movimentação;',
+      'Supervisionar a elaboração e conferência da folha;',
+      'Acompanhar direitos, vantagens, férias e licenças;',
+      'Coordenar os registros funcionais;',
+      'Promover relatórios gerenciais e indicadores;',
+      'Acompanhar obrigações legais e sistemas oficiais;',
+      'Propor melhorias administrativas;',
+      'Promover capacitação e desenvolvimento;',
+      'Acompanhar recomendações dos órgãos de controle;',
+      'Promover a proteção de dados pessoais.']},
+    {id:'u-chefia',nome:'Chefia de Pessoal',sigla:'CP',icone:'users',hue:165,page:'gestao',externa:false,divisao:false,
+     desc:'Instrui os processos da vida funcional e mantém os registros de cargos e lotações.',obs:'',comp:[
+      'Instruir processos relativos à vida funcional;',
+      'Acompanhar nomeações, exonerações e movimentações;',
+      'Elaborar minutas de atos administrativos;',
+      'Controlar períodos aquisitivos e concessivos de férias;',
+      'Acompanhar licenças e afastamentos;',
+      'Manter registros de cargos e lotações;',
+      'Conferir documentação funcional;',
+      'Orientar servidores;',
+      'Encaminhar informações à folha de pagamento;',
+      'Comunicar inconsistências.']},
+    {id:'u-folha',nome:'Coordenadoria de Folha de Pagamento',sigla:'CFP',icone:'calc',hue:30,page:'folha',externa:false,divisao:false,
+     desc:'Elabora, processa e confere a folha de pagamento e seus demonstrativos.',obs:'',comp:[
+      'Elaborar e processar a folha;',
+      'Calcular vencimentos, subsídios, gratificações e adicionais;',
+      'Calcular férias, décimo terceiro e verbas rescisórias;',
+      'Efetuar descontos legais;',
+      'Conferir informações funcionais e financeiras;',
+      'Preparar informações previdenciárias e tributárias;',
+      'Elaborar demonstrativos;',
+      'Controlar ajustes e retificações;',
+      'Encaminhar a folha para conferência e autorização;',
+      'Elaborar relatórios de despesas com pessoal.']},
+    {id:'u-arq',nome:'Gerência de Arquivo e Documentação',sigla:'GAD',icone:'archive',hue:280,page:'arquivo',externa:false,divisao:false,
+     desc:'Organiza, guarda e conserva os documentos funcionais, físicos e digitais.',obs:'',comp:[
+      'Organizar arquivos físicos e digitais;',
+      'Digitalizar e classificar documentos;',
+      'Garantir integridade e disponibilidade;',
+      'Controlar acesso aos assentamentos;',
+      'Organizar documentos funcionais;',
+      'Manter índices documentais;',
+      'Promover guarda e conservação;',
+      'Apoiar emissão de certidões;',
+      'Observar gestão documental e proteção de dados.']},
+    {id:'u-freq',nome:'Núcleo Operacional de Frequência e Benefícios',sigla:'NFB',icone:'calendar',hue:50,page:'freq',externa:false,divisao:true,
+     desc:'Divisão interna de trabalho que acompanha a frequência e instrui processos de benefícios.',obs:'Divisão interna de trabalho, sem criação automática de novos cargos.',comp:[
+      'Acompanhar registros de frequência;',
+      'Receber informações dos gabinetes;',
+      'Controlar faltas e atrasos;',
+      'Acompanhar férias e afastamentos;',
+      'Instruir processos de benefícios;',
+      'Encaminhar informações à folha;',
+      'Elaborar relatórios de frequência;',
+      'Identificar inconsistências;',
+      'Comunicar situações que demandem providências.']},
+    {id:'u-desenv',nome:'Núcleo de Desenvolvimento e Capacitação',sigla:'NDC',icone:'cap',hue:190,page:'desenv',externa:false,divisao:true,
+     desc:'Divisão interna de trabalho que planeja e registra as ações de capacitação.',obs:'Divisão interna de trabalho, sem criação automática de novos cargos.',comp:[
+      'Identificar necessidades de capacitação;',
+      'Elaborar plano anual de capacitação;',
+      'Organizar cursos e treinamentos;',
+      'Manter registros das capacitações;',
+      'Acompanhar avaliação de desempenho;',
+      'Apoiar gestão de carreiras;',
+      'Promover integração e valorização;',
+      'Elaborar relatórios;',
+      'Propor ações de desenvolvimento profissional.']},
+    {id:'u-aut',nome:'Autoridade competente',sigla:'',icone:'building',hue:350,page:'',externa:true,divisao:false,desc:'Decide e autoriza os atos que lhe competem.',obs:'',comp:[]},
+    {id:'u-cont',nome:'Contabilidade e Tesouraria',sigla:'',icone:'calc',hue:95,page:'',externa:true,divisao:false,desc:'Procedimentos contábeis e financeiros relativos ao pagamento.',obs:'',comp:[]},
+    {id:'u-ctrl',nome:'Controladoria Interna',sigla:'',icone:'shield',hue:250,page:'',externa:true,divisao:false,desc:'Controle interno e auditoria, com independência funcional.',obs:'',comp:[]}
+  ];
+  const org={nodes:[
+    {id:'o-pres',tipo:'orgao',t:'Presidência / Mesa Diretora',desc:'Autoridade superior da Câmara Municipal.',unitId:'',hue:212,icone:'building',obs:'',x:null,y:null},
+    {id:'o-dir',tipo:'unidade',t:'',desc:'',unitId:'u-dir',hue:null,icone:'',obs:'',x:null,y:null},
+    {id:'o-chefia',tipo:'unidade',t:'',desc:'',unitId:'u-chefia',hue:null,icone:'',obs:'',x:null,y:null},
+    {id:'o-folha',tipo:'unidade',t:'',desc:'',unitId:'u-folha',hue:null,icone:'',obs:'',x:null,y:null},
+    {id:'o-arq',tipo:'unidade',t:'',desc:'',unitId:'u-arq',hue:null,icone:'',obs:'',x:null,y:null},
+    {id:'o-freq',tipo:'nucleo',t:'',desc:'',unitId:'u-freq',hue:null,icone:'',obs:'',x:null,y:null},
+    {id:'o-desenv',tipo:'nucleo',t:'',desc:'',unitId:'u-desenv',hue:null,icone:'',obs:'',x:null,y:null}
+  ],edges:[
+    {id:'oe1',from:'o-pres',to:'o-dir',l:''},{id:'oe2',from:'o-dir',to:'o-chefia',l:''},{id:'oe3',from:'o-dir',to:'o-folha',l:''},
+    {id:'oe4',from:'o-dir',to:'o-arq',l:''},{id:'oe5',from:'o-dir',to:'o-freq',l:''},{id:'oe6',from:'o-dir',to:'o-desenv',l:''}
+  ]};
+
+  const geral={id:'fl-geral',page:'geral',nome:'Fluxograma geral do RH',desc:'Do recebimento da demanda ao arquivamento, passando pelas cinco frentes de trabalho do Departamento.',nodes:[
+    nd('a1','ini','INÍCIO — Recebimento da demanda'),
+    nd('a2','proc','Protocolo / Registro da solicitação'),
+    nd('a3','unid','Diretoria de Gestão de Pessoas','u-dir'),
+    nd('a4','proc','Identificação do tipo de demanda'),
+    nd('a5','unid','A. Gestão Funcional — Chefia de Pessoal','u-chefia'),
+    nd('a6','unid','B. Folha de Pagamento','u-folha'),
+    nd('a7','unid','C. Frequência e Benefícios','u-freq'),
+    nd('a8','unid','D. Arquivo e Documentação','u-arq'),
+    nd('a9','unid','E. Desenvolvimento e Capacitação','u-desenv'),
+    nd('a10','proc','Análise e instrução do processo'),
+    nd('a11','dec','Documentação e requisitos estão corretos?'),
+    nd('a12','proc','Solicitar complementação ou correção'),
+    nd('a13','dec','Exige decisão da autoridade competente?'),
+    nd('a14','aprov','Encaminhar para decisão e autorização','u-aut'),
+    nd('a15','proc','Executar pela unidade responsável'),
+    nd('a16','dec','Aprovado?'),
+    nd('a17','proc','Comunicar indeferimento ou arquivar'),
+    nd('a18','proc','Atualizar os registros funcionais e administrativos'),
+    nd('a19','proc','Conferência e controle'),
+    nd('a20','arq','Arquivamento físico ou digital'),
+    nd('a21','fim','ENCERRAMENTO')
+  ],edges:[
+    ed('a1','a2'),ed('a2','a3'),ed('a3','a4'),
+    ed('a4','a5'),ed('a4','a6'),ed('a4','a7'),ed('a4','a8'),ed('a4','a9'),
+    ed('a5','a10'),ed('a6','a10'),ed('a7','a10'),ed('a8','a10'),ed('a9','a10'),
+    ed('a10','a11'),
+    ed('a11','a12','Não'),ed('a12','a2','Retorna ao protocolo'),
+    ed('a11','a13','Sim'),
+    ed('a13','a14','Exige'),ed('a13','a15','Não exige'),
+    ed('a14','a16'),ed('a15','a16'),
+    ed('a16','a17','Não'),ed('a16','a18','Sim'),
+    ed('a17','a20'),ed('a18','a19'),ed('a19','a20'),ed('a20','a21')
+  ]};
+  const nomeacao={id:'fl-nomeacao',page:'gestao',nome:'Nomeação e exoneração',desc:'Instrução, análise e publicação dos atos de nomeação e exoneração. Use "Ramificações" para detalhar posse, exercício e movimentação.',nodes:[
+    nd('b1','ini','INÍCIO'),
+    nd('b2','proc','Solicitação de nomeação ou exoneração'),
+    nd('b3','proc','Protocolo e instrução do processo'),
+    nd('b4','unid','Chefia de Pessoal','u-chefia'),
+    nd('b5','proc','Conferência documental e requisitos legais'),
+    nd('b6','aprov','Análise da autoridade competente','u-aut'),
+    nd('b7','doc','Expedição e publicação do ato'),
+    nd('b8','proc','Atualização cadastral'),
+    nd('b9','proc','Comunicação à Folha de Pagamento'),
+    nd('b10','arq','Registro e arquivamento'),
+    nd('b11','fim','ENCERRAMENTO')
+  ],edges:[ed('b1','b2'),ed('b2','b3'),ed('b3','b4'),ed('b4','b5'),ed('b5','b6'),ed('b6','b7'),ed('b7','b8'),ed('b8','b9'),ed('b9','b10'),ed('b10','b11')]};
+  const folha={id:'fl-folha',page:'folha',nome:'Processamento da folha de pagamento',desc:'Ciclo mensal da folha, da coleta das informações funcionais ao arquivamento.',nodes:[
+    nd('c1','ini','INÍCIO DO CICLO DA FOLHA'),
+    nd('c2','proc','Recebimento das informações funcionais'),
+    nd('c3','proc','Conferência das alterações','u-chefia'),
+    nd('c4','proc','Envio das ocorrências','u-freq'),
+    nd('c5','unid','Coordenadoria de Folha de Pagamento','u-folha'),
+    nd('c6','proc','Lançamento das informações','u-folha'),
+    nd('c7','proc','Processamento da folha','u-folha'),
+    nd('c8','proc','Conferência dos cálculos','u-folha'),
+    nd('c9','dec','Existem inconsistências?','u-folha'),
+    nd('c10','proc','Corrigir lançamentos','u-folha'),
+    nd('c11','proc','Encaminhar à Diretoria de Gestão de Pessoas','u-dir'),
+    nd('c12','proc','Validação da folha','u-dir'),
+    nd('c13','proc','Encaminhamento à autoridade competente','u-dir'),
+    nd('c14','dec','Folha autorizada?','u-aut'),
+    nd('c15','proc','Retornar para ajustes','u-folha'),
+    nd('c16','unid','Encaminhar à Contabilidade e Tesouraria','u-cont'),
+    nd('c17','proc','Pagamento aos servidores','u-cont'),
+    nd('c18','proc','Envio das obrigações legais'),
+    nd('c19','arq','Conciliação e arquivamento'),
+    nd('c20','fim','ENCERRAMENTO')
+  ],edges:[
+    ed('c1','c2'),ed('c2','c3'),ed('c3','c4'),ed('c4','c5'),ed('c5','c6'),ed('c6','c7'),ed('c7','c8'),ed('c8','c9'),
+    ed('c9','c10','Sim'),ed('c10','c7','Retorna ao processamento'),ed('c9','c11','Não'),
+    ed('c11','c12'),ed('c12','c13'),ed('c13','c14'),
+    ed('c14','c15','Não'),ed('c15','c6','Ajustes'),ed('c14','c16','Sim'),
+    ed('c16','c17'),ed('c17','c18'),ed('c18','c19'),ed('c19','c20')
+  ]};
+  const gestao={id:'fl-gestao',page:'gestao',nome:'Gestão funcional',desc:'Tratamento dos atos funcionais, da solicitação à publicação e ao arquivamento.',nodes:[
+    nd('d1','ini','INÍCIO'),
+    nd('d2','proc','Solicitação de ato funcional'),
+    nd('d3','unid','Chefia de Pessoal','u-chefia'),
+    nd('d4','proc','Análise documental e legal'),
+    nd('d5','dec','Processo regular?'),
+    nd('d6','proc','Solicitar documentos ou correções'),
+    nd('d7','proc','Identificar o tipo de ato'),
+    nd('d8','doc','Nomeação / Admissão'),
+    nd('d9','doc','Exoneração / Desligamento'),
+    nd('d10','doc','Férias / Licenças'),
+    nd('d11','doc','Alteração funcional'),
+    nd('d12','doc','Declaração / Certidão'),
+    nd('d13','proc','Encaminhamento à autoridade competente'),
+    nd('d14','dec','Ato autorizado?','u-aut'),
+    nd('d15','proc','Devolução ou arquivamento'),
+    nd('d16','doc','Expedição e publicação do ato'),
+    nd('d17','proc','Atualização do cadastro funcional'),
+    nd('d18','proc','Comunicação à Folha de Pagamento'),
+    nd('d19','arq','Arquivo e documentação','u-arq'),
+    nd('d20','fim','ENCERRAMENTO')
+  ],edges:[
+    ed('d1','d2'),ed('d2','d3'),ed('d3','d4'),ed('d4','d5'),
+    ed('d5','d6','Não'),ed('d6','d1','Retorna ao início'),ed('d5','d7','Sim'),
+    ed('d7','d8'),ed('d7','d9'),ed('d7','d10'),ed('d7','d11'),ed('d7','d12'),
+    ed('d8','d13'),ed('d9','d13'),ed('d10','d13'),ed('d11','d13'),ed('d12','d13'),
+    ed('d13','d14'),ed('d14','d15','Não'),ed('d15','d20'),ed('d14','d16','Sim'),
+    ed('d16','d17'),ed('d17','d18'),ed('d18','d19'),ed('d19','d20')
+  ]};
+  const ferias={id:'fl-ferias',page:'gestao',nome:'Férias',desc:'Controle, autorização e pagamento de férias. Os prazos e direitos ficam nos parâmetros editáveis, conforme a legislação municipal.',nodes:[
+    nd('f1','ini','INÍCIO'),
+    nd('f2','proc','Controle dos períodos aquisitivos'),
+    nd('f3','unid','Chefia de Pessoal','u-chefia'),
+    nd('f4','proc','Verificação dos direitos'),
+    nd('f5','proc','Programação e solicitação de férias'),
+    nd('f6','proc','Análise da chefia competente'),
+    nd('f7','aprov','Autorização'),
+    nd('f8','proc','Registro funcional'),
+    nd('f9','unid','Coordenadoria de Folha','u-folha'),
+    nd('f10','proc','Cálculo e pagamento'),
+    nd('f11','arq','Arquivo e controle do período'),
+    nd('f12','fim','ENCERRAMENTO')
+  ],edges:[ed('f1','f2'),ed('f2','f3'),ed('f3','f4'),ed('f4','f5'),ed('f5','f6'),ed('f6','f7'),ed('f7','f8'),ed('f8','f9'),ed('f9','f10'),ed('f10','f11'),ed('f11','f12')]};
+
+  const matriz=[
+    ['Nomeação e exoneração','Chefia de Pessoal','Diretoria de Gestão de Pessoas'],
+    ['Cadastro funcional','Chefia de Pessoal','Diretoria de Gestão de Pessoas'],
+    ['Folha de pagamento','Coordenadoria de Folha','Diretoria de Gestão de Pessoas'],
+    ['Cálculos de férias','Coordenadoria de Folha','Diretoria de Gestão de Pessoas'],
+    ['Controle de férias','Chefia de Pessoal','Diretoria de Gestão de Pessoas'],
+    ['Frequência','Núcleo de Frequência','Diretoria de Gestão de Pessoas'],
+    ['Arquivo funcional','Gerência de Arquivo','Diretoria de Gestão de Pessoas'],
+    ['Capacitação','Núcleo de Desenvolvimento','Diretoria de Gestão de Pessoas'],
+    ['Autorização de pagamento','Autoridade competente','Conforme legislação'],
+    ['Controle interno e auditoria','Controladoria Interna','Independência funcional']
+  ].map((r,i)=>({id:'m'+(i+1),ativ:r[0],resp:r[1],sup:r[2],obs:''}));
+
+  const kdef=[
+    ['Percentual de folhas processadas sem inconsistências','pct','maior',95],
+    ['Quantidade de retificações de folha','qtd','menor',2],
+    ['Percentual de processos funcionais concluídos no prazo','pct','maior',90],
+    ['Quantidade de férias vencidas ou pendentes','qtd','menor',0],
+    ['Percentual de servidores com cadastro atualizado','pct','maior',98],
+    ['Quantidade de capacitações realizadas','qtd','maior',3],
+    ['Percentual de documentos digitalizados','pct','maior',80],
+    ['Quantidade de inconsistências de frequência','qtd','menor',5],
+    ['Percentual de obrigações acessórias entregues no prazo','pct','maior',100]
+  ];
+  let seed=7; const rnd=()=>{seed=(seed*9301+49297)%233280;return seed/233280;};
+  const kpis=kdef.map((k,i)=>{
+    const vals={};
+    for(let m=1;m<=9;m++){
+      const key='2026-'+String(m).padStart(2,'0');
+      if(k[1]==='pct'){ const base=k[3]>=100?97:k[3]-6; vals[key]=Math.round((base+rnd()*9)*10)/10; if(vals[key]>100) vals[key]=100; }
+      else if(k[0].indexOf('férias')>-1) vals[key]=Math.round(rnd()*4);
+      else if(k[0].indexOf('capacitações')>-1) vals[key]=Math.round(1+rnd()*4);
+      else vals[key]=Math.round(rnd()*7);
+    }
+    return {id:'k'+(i+1),nome:k[0],tipo:k[1],dir:k[2],meta:k[3],vals};
+  });
+
+  const params=['Período aquisitivo','Período concessivo','Fracionamento das férias','Abono pecuniário','Antecedência para solicitação','Adicional de férias','Base legal municipal'].map((n,i)=>({id:'p'+(i+1),nome:n,valor:'',obs:''}));
+
+  const st={
+    v:2,
+    meta:{atualizado:new Date().toISOString(),copiaDia:'',demo:true},
+    inst:{nome:'RH Câmara Rio Verde',sub:'Gestão de Pessoas e Processos Administrativos',orgao:'Câmara Municipal de Rio Verde/GO',setor:'Diretoria de Gestão de Pessoas',obs:''},
+    units,org,flows:[geral,nomeacao,gestao,ferias,folha],matriz,kpis,params,manual:[]
+  };
+  st.manual=defaultManual(st);
+  return st;
+}
+
+/* =====================================================================
+   Estado, salvamento, cópias de segurança, avisos e janelas
+   ===================================================================== */
+let state=null;
+let touched=false,dbh=null,saving=false,pendingSave=false,saveT=null,toastT=null,undoSnap=null,undoFn=null;
+const LS_STATE='rhcrv-estado-v2',LS_VERS='rhcrv-versoes-v2';
+
+function parseState(json){
+  try{
+    const d=typeof json==='string'?JSON.parse(json):json;
+    if(!d||d.v!==2||!Array.isArray(d.units)||!Array.isArray(d.flows)||!d.org||!Array.isArray(d.org.nodes)) return null;
+    d.meta=d.meta||{}; d.meta.atualizado=d.meta.atualizado||new Date().toISOString(); d.meta.copiaDia=d.meta.copiaDia||''; d.meta.demo=!!d.meta.demo;
+    d.inst=Object.assign({nome:'RH Câmara Rio Verde',sub:'Gestão de Pessoas e Processos Administrativos',orgao:'Câmara Municipal de Rio Verde/GO',setor:'',obs:''},d.inst||{});
+    d.units.forEach(u=>{u.nome=String(u.nome||'');u.desc=String(u.desc||'');u.obs=String(u.obs||'');u.hue=Number(u.hue)||0;u.comp=Array.isArray(u.comp)?u.comp.map(String):[];u.icone=u.icone||'file';u.sigla=String(u.sigla||'');u.page=u.page||'';});
+    d.org.edges=Array.isArray(d.org.edges)?d.org.edges:[];
+    d.org.nodes.forEach(n=>{n.t=String(n.t||'');n.desc=String(n.desc||'');n.obs=String(n.obs||'');n.unitId=n.unitId||'';n.tipo=TIPOS_ORG[n.tipo]?n.tipo:'unidade';});
+    d.flows.forEach(f=>{
+      f.nome=String(f.nome||'');f.desc=String(f.desc||'');f.page=PAGES_FLOW[f.page]?f.page:'geral';
+      f.nodes=Array.isArray(f.nodes)?f.nodes:[];f.edges=Array.isArray(f.edges)?f.edges:[];
+      f.nodes.forEach(n=>{n.t=String(n.t||'');n.tipo=TIPOS_FLUXO[n.tipo]?n.tipo:'proc';['desc','unit','resp','prazo','docs','obs','status'].forEach(k=>{n[k]=String(n[k]||'');});});
+      f.edges.forEach(e=>{e.l=String(e.l||'');});
+    });
+    d.matriz=Array.isArray(d.matriz)?d.matriz:[];
+    d.kpis=Array.isArray(d.kpis)?d.kpis:[];
+    d.kpis.forEach(k=>{k.vals=k.vals&&typeof k.vals==='object'?k.vals:{};});
+    d.params=Array.isArray(d.params)?d.params:[];
+    d.manual=Array.isArray(d.manual)?d.manual:[];
+    return d;
+  }catch(e){return null;}
+}
+
+/* ---------- indicador de salvamento ---------- */
+function setStatus(k){
+  const el=$('#saveState'); if(!el) return;
+  const map={ok:['Salvo','ok'],dirty:['Alterações pendentes','dirty'],saving:['Salvando…','saving'],local:['Salvo neste navegador','ok'],err:['Erro ao salvar','err'],load:['Carregando…','dirty']};
+  const m=map[k]||map.ok;
+  el.textContent=m[0]; el.className='pill '+m[1];
+}
+function changed(){
+  touched=true; state.meta.atualizado=new Date().toISOString();
+  setStatus('dirty');
+  const t=$('#lastChange'); if(t) t.textContent='Última alteração: '+fmtDT(state.meta.atualizado);
+  clearTimeout(saveT); saveT=setTimeout(()=>doSave(false),700);
+}
+const todayKey=()=>new Date().toISOString().slice(0,10);
+async function doSave(manual){
+  if(saving){pendingSave=true;return;}
+  saving=true; setStatus('saving');
+  let snapNeeded=false;
+  if(state.meta.copiaDia!==todayKey()){state.meta.copiaDia=todayKey();snapNeeded=true;}
+  const json=JSON.stringify(state);
+  let ok=true;
+  try{localStorage.setItem(LS_STATE,json);}catch(e){}
+  try{
+    if(dbh){await dbh.doc('rh/estado').set({v:2,json});setStatus('ok');}
+    else setStatus('local');
+  }catch(e){ok=false;setStatus('err');}
+  if(ok&&snapNeeded){try{await createVersion('Cópia automática do dia',true);}catch(e){}}
+  saving=false;
+  if(pendingSave){pendingSave=false;doSave(false);}
+  else if(manual&&ok) toast(dbh?'Alterações salvas.':'Alterações salvas neste navegador.');
+}
+
+/* ---------- versões (cópias de segurança) ---------- */
+function localVersions(){try{return JSON.parse(localStorage.getItem(LS_VERS)||'[]');}catch(e){return [];}}
+function putLocalVersions(a){try{localStorage.setItem(LS_VERS,JSON.stringify(a.slice(0,8)));}catch(e){}}
+async function listVersions(){
+  if(dbh){
+    try{
+      const q=await dbh.collection('versoes').orderBy('at','desc').limit(30).get();
+      return q.docs.map(d=>{const x=d.data();return {id:d.id,at:x.at,label:x.label,json:x.json};});
+    }catch(e){return [];}
+  }
+  return localVersions();
+}
+async function createVersion(label,silent){
+  const rec={id:uid('v'),at:new Date().toISOString(),label:label||'Cópia manual',json:JSON.stringify(state)};
+  if(dbh){
+    await dbh.doc('versoes/'+rec.id).set({at:rec.at,label:rec.label,json:rec.json});
+    const all=await listVersions();
+    for(const v of all.slice(15)){try{await dbh.doc('versoes/'+v.id).delete();}catch(e){}}
+  }else{
+    putLocalVersions([rec].concat(localVersions()));
+  }
+  if(!silent) toast('Cópia de segurança criada.');
+}
+async function removeVersion(id){
+  if(dbh){try{await dbh.doc('versoes/'+id).delete();}catch(e){}}
+  else putLocalVersions(localVersions().filter(v=>v.id!==id));
+}
+
+/* ---------- avisos e janelas ---------- */
+function toast(msg,snap){
+  const t=$('#toast'); if(!t) return;
+  undoSnap=snap||null;
+  t.innerHTML=`<div class="toast-in"><span>${esc(msg)}</span>${snap?'<button class="btn sm" data-a="undo">Desfazer</button>':''}</div>`;
+  t.hidden=false; clearTimeout(toastT); toastT=setTimeout(()=>{t.hidden=true;},9000);
+}
+/* Executa uma ação que apaga ou substitui dados, guardando uma cópia para "Desfazer". */
+function destructive(msg,fn){
+  const snap=JSON.stringify(state);
+  fn(); changed(); toast(msg,snap);
+}
+function openModal(title,body,onSubmit,okLabel){
+  const m=$('#modal');
+  m.innerHTML=`<form class="modal" autocomplete="off"><h3>${esc(title)}</h3>${body}<div class="row" style="justify-content:flex-end"><button type="button" class="btn" data-a="modal-close">Cancelar</button><button type="submit" class="btn primary">${esc(okLabel||'Salvar')}</button></div></form>`;
+  m.hidden=false;
+  const f=$('form',m);
+  f.addEventListener('submit',ev=>{ev.preventDefault();if(onSubmit(f)!==false) closeModal();});
+  const first=$('input,textarea,select',f); if(first) first.focus();
+}
+function closeModal(){const m=$('#modal');m.hidden=true;m.innerHTML='';}
+document.addEventListener('keydown',ev=>{if(ev.key==='Escape'&&!$('#modal').hidden) closeModal();});
+document.addEventListener('click',ev=>{
+  if(ev.target.id==='modal'||ev.target.closest('[data-a="modal-close"]')) closeModal();
+  const u=ev.target.closest('#toast [data-a="undo"]');
+  if(u&&undoSnap){
+    const d=parseState(undoSnap); if(!d) return;
+    state=d; undoSnap=null; $('#toast').hidden=true; changed();
+    if(typeof afterRestore==='function') afterRestore();
+  }
+});
+
+function isDarkNow(){
+  const m=/rgba?\((\d+),\s*(\d+),\s*(\d+)/.exec(getComputedStyle(document.body).backgroundColor);
+  if(!m) return false;
+  return (0.2126*m[1]+0.7152*m[2]+0.0722*m[3])/255<0.4;
+}
+
+/* =====================================================================
+   Exportações: arquivos, PDF (gerado aqui, sem bibliotecas), CSV, Excel, impressão
+   ===================================================================== */
+async function saveFile(name,data,mime){
+  if(window.claude&&!window.__dl){toast('A exportação não está disponível nesta visualização.');return false;}
+  if(window.__dl){
+    try{await window.__dl.save({filename:name,data});return true;}
+    catch(e){if(!e||e.code!=='declined') toast('Não foi possível salvar o arquivo.');return false;}
+  }
+  const blob=data instanceof Blob?data:new Blob([data],{type:mime||'application/octet-stream'});
+  const url=URL.createObjectURL(blob);
+  const a=document.createElement('a'); a.href=url; a.download=name; document.body.appendChild(a); a.click(); a.remove();
+  setTimeout(()=>URL.revokeObjectURL(url),4000);
+  return true;
+}
+
+/* ---------- CSV e Excel ---------- */
+function toCsv(rows){
+  const q=v=>{v=String(v==null?'':v);return /[;"\n\r]/.test(v)?'"'+v.replace(/"/g,'""')+'"':v;};
+  return '﻿'+rows.map(r=>r.map(q).join(';')).join('\r\n');
+}
+function loadXlsx(){
+  if(window.XLSX) return Promise.resolve(window.XLSX);
+  return new Promise((res,rej)=>{
+    const s=document.createElement('script');
+    s.src='https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js';
+    s.onload=()=>window.XLSX?res(window.XLSX):rej(new Error('xlsx'));
+    s.onerror=()=>rej(new Error('xlsx'));
+    document.head.appendChild(s);
+  });
+}
+async function exportXlsx(filename,sheets){
+  try{
+    const X=await loadXlsx();
+    const wb=X.utils.book_new();
+    sheets.forEach(sh=>{
+      const ws=X.utils.aoa_to_sheet(sh.rows);
+      ws['!cols']=sh.rows[0].map((_,c)=>({wch:Math.min(60,Math.max(10,...sh.rows.map(r=>String(r[c]==null?'':r[c]).length)))}));
+      X.utils.book_append_sheet(wb,ws,sh.name.slice(0,31));
+    });
+    const out=X.write(wb,{bookType:'xlsx',type:'array'});
+    return saveFile(filename,new Uint8Array(out));
+  }catch(e){
+    toast('Não foi possível gerar o Excel agora. Use a exportação em CSV, que abre no Excel.');
+    return false;
+  }
+}
+
+/* ---------- PDF ---------- */
+const HW=[278,278,355,556,556,889,667,191,333,333,389,584,278,333,278,278,556,556,556,556,556,556,556,556,556,556,278,278,584,584,584,556,1015,667,667,722,722,667,611,778,722,278,500,667,556,833,722,778,667,778,722,667,611,722,667,944,667,667,611,278,278,278,469,556,333,556,556,500,556,556,278,556,556,222,222,500,222,833,556,556,556,556,333,500,278,556,500,722,500,500,500,334,260,334,584];
+const WIN={0x2026:0x85,0x2013:0x96,0x2014:0x97,0x2022:0x95,0x2018:0x91,0x2019:0x92,0x201C:0x93,0x201D:0x94,0x20AC:0x80,0x2192:0x2D,0x2190:0x2D,0x2191:0x5E,0x2193:0x76,0x2212:0x2D};
+function tw(str,size,bold){
+  let w=0;
+  for(const ch of String(str)){
+    let c=ch.codePointAt(0);
+    if(c<32||c>126){const b=ch.normalize('NFD').codePointAt(0);c=(b>=32&&b<=126)?b:0;}
+    w+=c?HW[c-32]:556;
+  }
+  return w*size/1000*(bold?1.06:1);
+}
+function wrapPdf(str,maxW,size,bold){
+  const out=[];
+  String(str==null?'':str).split(/\r?\n/).forEach(par=>{
+    const words=par.split(/\s+/).filter(Boolean);
+    if(!words.length){out.push('');return;}
+    let cur='';
+    words.forEach(w=>{
+      while(tw(w,size,bold)>maxW&&w.length>1){
+        let k=w.length-1; while(k>1&&tw(w.slice(0,k),size,bold)>maxW) k--;
+        if(cur){out.push(cur);cur='';}
+        out.push(w.slice(0,k)); w=w.slice(k);
+      }
+      const t=cur?cur+' '+w:w;
+      if(!cur||tw(t,size,bold)<=maxW) cur=t; else {out.push(cur);cur=w;}
+    });
+    if(cur) out.push(cur);
+  });
+  return out.length?out:[''];
+}
+class PdfDoc{
+  constructor(o){
+    o=o||{};
+    this.W=o.w||595; this.H=o.h||842; this.m=o.margin||48; this.footer=o.footer||'';
+    this.pages=[]; this.images=[]; this.newPage();
+  }
+  newPage(w,h){
+    const p={w:w||this.W,h:h||this.H,ops:[],imgs:[]};
+    this.pages.push(p); this.cur=p; this.y=p.h-this.m; return p;
+  }
+  _enc(s){
+    let o='';
+    for(const ch of String(s)){
+      let c=ch.codePointAt(0);
+      if(WIN[c]!==undefined) c=WIN[c]; else if(c>255) c=63;
+      o+=String.fromCharCode(c);
+    }
+    return o.replace(/[\\()]/g,'\\$&');
+  }
+  text(s,x,y,size,bold,gray){
+    this.cur.ops.push(`BT /${bold?'F2':'F1'} ${size||10} Tf ${gray==null?0:gray} g ${x.toFixed(2)} ${y.toFixed(2)} Td (${this._enc(s)}) Tj ET`);
+  }
+  line(x1,y1,x2,y2,w,gray){
+    this.cur.ops.push(`${gray==null?0.75:gray} G ${w||0.5} w ${x1.toFixed(2)} ${y1.toFixed(2)} m ${x2.toFixed(2)} ${y2.toFixed(2)} l S`);
+  }
+  fillRect(x,y,w,h,gray){
+    this.cur.ops.push(`${gray} g ${x.toFixed(2)} ${y.toFixed(2)} ${w.toFixed(2)} ${h.toFixed(2)} re f`);
+  }
+  addImage(data,w,h){this.images.push({data,w,h});return this.images.length-1;}
+  drawImage(i,x,y,w,h){
+    if(this.cur.imgs.indexOf(i)<0) this.cur.imgs.push(i);
+    this.cur.ops.push(`q ${w.toFixed(2)} 0 0 ${h.toFixed(2)} ${x.toFixed(2)} ${y.toFixed(2)} cm /Im${i} Do Q`);
+  }
+  ensure(h){if(this.y-h<this.m+10) this.newPage();}
+  get width(){return this.cur.w-2*this.m;}
+  h1(s){this.ensure(34);this.text(s,this.m,this.y-16,17,true,0.1);this.y-=30;}
+  h2(s){this.ensure(30);this.y-=6;this.text(s,this.m,this.y-12,12.5,true,0.1);this.y-=22;}
+  para(s,o){
+    o=o||{}; const size=o.size||10.5,lh=size*1.38,ind=o.indent||0;
+    wrapPdf(s,this.width-ind,size,false).forEach(l=>{this.ensure(lh);this.text(l,this.m+ind,this.y-size,size,false,o.gray);this.y-=lh;});
+    this.y-=o.gap==null?4:o.gap;
+  }
+  bullet(s,o){
+    o=o||{}; const size=10.5,lh=size*1.38,ind=14+(o.level||0)*14;
+    const lines=wrapPdf(s,this.width-ind,size,false);
+    lines.forEach((l,i)=>{this.ensure(lh);if(i===0) this.text(o.mark||'•',this.m+ind-11,this.y-size,size,false);this.text(l,this.m+ind,this.y-size,size,false);this.y-=lh;});
+    this.y-=2;
+  }
+  gap(h){this.y-=h;}
+  table(cols,rows,o){
+    o=o||{}; const size=o.size||9,lh=size*1.3,pad=4,avail=this.width;
+    const tot=cols.reduce((a,c)=>a+c.w,0); const xs=[];let acc=this.m;
+    const ws=cols.map(c=>c.w/tot*avail); ws.forEach(w=>{xs.push(acc);acc+=w;});
+    const head=()=>{
+      this.ensure(lh+pad*2+4);
+      this.fillRect(this.m,this.y-lh-pad*2,avail,lh+pad*2,0.9);
+      cols.forEach((c,i)=>this.text(c.label,xs[i]+pad,this.y-pad-size,size,true,0.15));
+      this.y-=lh+pad*2;
+    };
+    head();
+    rows.forEach(r=>{
+      const cells=r.map((v,i)=>wrapPdf(v,ws[i]-pad*2,size,false));
+      const n=Math.max(1,...cells.map(c=>c.length)); const rh=n*lh+pad*2;
+      if(this.y-rh<this.m+10){this.newPage();head();}
+      cells.forEach((c,i)=>c.forEach((l,k)=>this.text(l,xs[i]+pad,this.y-pad-size-k*lh,size,false,0.1)));
+      this.y-=rh; this.line(this.m,this.y,this.m+avail,this.y,0.5,0.8);
+    });
+    this.y-=8;
+  }
+  build(){
+    const total=this.pages.length;
+    this.pages.forEach((p,i)=>{
+      this.cur=p;
+      if(this.footer){this.text(this.footer,this.m,24,8,false,0.45);}
+      const pg='Página '+(i+1)+' de '+total; this.text(pg,p.w-this.m-tw(pg,8,false),24,8,false,0.45);
+    });
+    const chunks=[];let off=0;const offs=[];
+    const push=b=>{
+      if(typeof b==='string'){const u=new Uint8Array(b.length);for(let i=0;i<b.length;i++)u[i]=b.charCodeAt(i)&255;b=u;}
+      chunks.push(b);off+=b.length;
+    };
+    const nImg=this.images.length, firstPage=5+nImg, nObj=4+nImg+total*2;
+    const begin=n=>{offs[n]=off;push(n+' 0 obj\n');}, end=()=>push('\nendobj\n');
+    push('%PDF-1.4\n%\xE2\xE3\xCF\xD3\n');
+    begin(1);push('<< /Type /Catalog /Pages 2 0 R >>');end();
+    begin(2);push('<< /Type /Pages /Count '+total+' /Kids ['+this.pages.map((_,i)=>(firstPage+i*2)+' 0 R').join(' ')+'] >>');end();
+    begin(3);push('<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica /Encoding /WinAnsiEncoding >>');end();
+    begin(4);push('<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica-Bold /Encoding /WinAnsiEncoding >>');end();
+    this.images.forEach((im,i)=>{
+      begin(5+i);
+      push('<< /Type /XObject /Subtype /Image /Width '+im.w+' /Height '+im.h+' /ColorSpace /DeviceRGB /BitsPerComponent 8 /Filter /DCTDecode /Length '+im.data.length+' >>\nstream\n');
+      push(im.data);push('\nendstream');end();
+    });
+    this.pages.forEach((p,i)=>{
+      const po=firstPage+i*2,co=po+1;
+      const xo=p.imgs.map(k=>'/Im'+k+' '+(5+k)+' 0 R').join(' ');
+      begin(po);
+      push('<< /Type /Page /Parent 2 0 R /MediaBox [0 0 '+p.w+' '+p.h+'] /Resources << /Font << /F1 3 0 R /F2 4 0 R >> /XObject << '+xo+' >> >> /Contents '+co+' 0 R >>');end();
+      const content=p.ops.join('\n');
+      begin(co);push('<< /Length '+content.length+' >>\nstream\n');push(content);push('\nendstream');end();
+    });
+    const xref=off;
+    push('xref\n0 '+(nObj+1)+'\n0000000000 65535 f \n');
+    for(let n=1;n<=nObj;n++) push(String(offs[n]).padStart(10,'0')+' 00000 n \n');
+    push('trailer\n<< /Size '+(nObj+1)+' /Root 1 0 R >>\nstartxref\n'+xref+'\n%%EOF');
+    const out=new Uint8Array(off);let p=0;chunks.forEach(c=>{out.set(c,p);p+=c.length;});
+    return out;
+  }
+}
+/* Escreve texto simples do manual (linhas com "# ", "- " e "1. ") no PDF. */
+function pdfRichText(pdf,text){
+  String(text||'').split(/\r?\n/).forEach(line=>{
+    if(!line.trim()){pdf.gap(5);return;}
+    let m;
+    if((m=/^#\s+(.*)/.exec(line))) {pdf.gap(4);pdf.ensure(24);pdf.text(m[1],pdf.m,pdf.y-11,11,true,0.15);pdf.y-=20;}
+    else if((m=/^(\s*)[-*]\s+(.*)/.exec(line))) pdf.bullet(m[2],{level:Math.floor(m[1].length/2)});
+    else if((m=/^(\d+)\.\s+(.*)/.exec(line))) pdf.bullet(m[2],{mark:m[1]+'.'});
+    else pdf.para(line);
+  });
+}
+
+/* ---------- imagem ---------- */
+function svgToCanvas(svgStr,w,h,scale){
+  return new Promise((res,rej)=>{
+    const max=8000; scale=Math.min(scale,max/w,max/h);
+    const img=new Image();
+    img.onload=()=>{
+      const c=document.createElement('canvas'); c.width=Math.max(1,Math.round(w*scale)); c.height=Math.max(1,Math.round(h*scale));
+      const ctx=c.getContext('2d'); ctx.fillStyle='#ffffff'; ctx.fillRect(0,0,c.width,c.height);
+      ctx.drawImage(img,0,0,c.width,c.height); res(c);
+    };
+    img.onerror=()=>rej(new Error('img'));
+    img.src='data:image/svg+xml;charset=utf-8,'+encodeURIComponent(svgStr);
+  });
+}
+function canvasBytes(canvas,type,q){
+  return new Promise((res,rej)=>canvas.toBlob(b=>{
+    if(!b) return rej(new Error('blob'));
+    b.arrayBuffer().then(a=>res(new Uint8Array(a)),rej);
+  },type,q));
+}
+
+/* ---------- impressão ---------- */
+function printHtml(title,html){
+  if(window.claude){toast('A impressão não está disponível nesta visualização. Exporte em PDF e imprima o arquivo.');return;}
+  const sheet=$('#printSheet'); sheet.innerHTML=`<h2>${esc(title)}</h2>${html}`;
+  document.body.classList.add('printing');
+  const done=()=>{document.body.classList.remove('printing');sheet.innerHTML='';window.removeEventListener('afterprint',done);};
+  window.addEventListener('afterprint',done);
+  try{window.print();}catch(e){done();toast('Não foi possível abrir a impressão.');}
+}
+
+/* =====================================================================
+   Textos do manual gerados a partir dos dados do sistema
+   ===================================================================== */
+function orgDisp(n,units){
+  const u=n.unitId&&units.find(x=>x.id===n.unitId);
+  if(u) return {t:u.nome,desc:u.desc,hue:u.hue,icone:u.icone||n.icone||'file'};
+  return {t:n.t,desc:n.desc,hue:n.hue,icone:n.icone||'building'};
+}
+function stepsOrdered(flow){
+  const byId=new Map(flow.nodes.map(n=>[n.id,n]));
+  const seen=new Set(),order=[];
+  const starts=flow.nodes.filter(n=>n.tipo==='ini').map(n=>n.id).concat(flow.nodes.filter(n=>!flow.edges.some(e=>e.to===n.id)).map(n=>n.id));
+  const q=[...new Set(starts)];
+  while(q.length){
+    const id=q.shift();
+    if(seen.has(id)||!byId.has(id)) continue;
+    seen.add(id); order.push(byId.get(id));
+    flow.edges.filter(e=>e.from===id).forEach(e=>q.push(e.to));
+  }
+  flow.nodes.forEach(n=>{if(!seen.has(n.id)) order.push(n);});
+  return order;
+}
+function genFlow(st,flow){
+  const L=[];
+  if(flow.desc) L.push(flow.desc,'');
+  const ord=stepsOrdered(flow); const idx=new Map(ord.map((n,i)=>[n.id,i+1]));
+  const byId=new Map(flow.nodes.map(n=>[n.id,n]));
+  ord.forEach((n,i)=>{
+    const u=st.units.find(x=>x.id===n.unit);
+    const parts=[];
+    if(u) parts.push('unidade: '+u.nome);
+    if(n.resp) parts.push('responsável: '+n.resp);
+    if(n.prazo) parts.push('prazo: '+n.prazo);
+    if(n.docs) parts.push('documentos: '+oneLine(n.docs));
+    if(n.status) parts.push('status: '+n.status);
+    L.push((i+1)+'. '+oneLine(n.t)+(n.tipo==='dec'?' (decisão)':'')+(parts.length?' — '+parts.join('; '):''));
+    const outs=flow.edges.filter(e=>e.from===n.id&&idx.has(e.to));
+    if(n.tipo==='dec'||outs.length>1) outs.forEach(e=>L.push('  - '+(e.l||'Segue')+': etapa '+idx.get(e.to)+' ('+oneLine(byId.get(e.to).t)+')'));
+    if(n.obs) L.push('  - Observações: '+oneLine(n.obs));
+  });
+  return L.join('\n');
+}
+function genOrg(st){
+  const nodes=st.org.nodes,edges=st.org.edges,L=[];
+  const roots=nodes.filter(n=>!edges.some(e=>e.to===n.id));
+  const seen=new Set();
+  const walk=(n,d)=>{
+    if(seen.has(n.id)) return; seen.add(n.id);
+    const x=orgDisp(n,st.units);
+    L.push('  '.repeat(d)+'- '+oneLine(x.t)+(n.tipo==='nucleo'?' (divisão interna de trabalho)':'')+(x.desc?' — '+oneLine(x.desc):''));
+    edges.filter(e=>e.from===n.id).forEach(e=>{const c=nodes.find(k=>k.id===e.to);if(c) walk(c,d+1);});
+  };
+  roots.forEach(r=>walk(r,0));
+  return 'Estrutura do Departamento de Recursos Humanos, da autoridade superior às unidades subordinadas:\n\n'+L.join('\n')+'\n\nOs núcleos operacionais são divisões internas de trabalho e não criam cargos automaticamente.';
+}
+function genUnit(st,u){
+  const L=[];
+  if(u.desc) L.push(u.desc,'');
+  if(u.obs) L.push(u.obs,'');
+  L.push('# Competências');
+  if(!u.comp.length) L.push('(nenhuma competência cadastrada)');
+  u.comp.forEach(c=>L.push('- '+c));
+  const fl=st.flows.filter(f=>f.page===u.page&&u.page);
+  if(fl.length){L.push('','# Fluxogramas relacionados');fl.forEach(f=>L.push('- '+f.nome));}
+  return L.join('\n');
+}
+function genComp(st){
+  const L=[];
+  st.units.filter(u=>!u.externa).forEach(u=>{
+    L.push('# '+u.nome);
+    if(u.divisao) L.push('(Divisão interna de trabalho, sem criação automática de novos cargos.)');
+    if(!u.comp.length) L.push('(nenhuma competência cadastrada)');
+    u.comp.forEach(c=>L.push('- '+c));
+    L.push('');
+  });
+  return L.join('\n').trim();
+}
+function genMatriz(st){
+  return st.matriz.map(m=>'- '+m.ativ+' — responsável principal: '+(m.resp||'—')+'; supervisão: '+(m.sup||'—')+(m.obs?'; observações: '+m.obs:'')).join('\n');
+}
+function genFluxos(st){
+  return st.flows.map(f=>'- '+f.nome+' ('+PAGES_FLOW[f.page]+', '+f.nodes.length+' elementos)'+(f.desc?': '+f.desc:'')).join('\n');
+}
+function genKpis(st){
+  return st.kpis.map(k=>'- '+k.nome+' — meta: '+(k.meta==null||k.meta===''?'não definida':k.meta+(k.tipo==='pct'?'%':''))+' ('+(k.dir==='maior'?'quanto maior, melhor':'quanto menor, melhor')+')').join('\n');
+}
+function genFerias(st){
+  const L=[genFlow(st,st.flows.find(f=>f.id==='fl-ferias')||{desc:'',nodes:[],edges:[]}),'','# Parâmetros de férias (definir conforme a legislação municipal)'];
+  if(!st.params.length) L.push('(nenhum parâmetro cadastrado)');
+  st.params.forEach(p=>L.push('- '+p.nome+': '+(oneLine(p.valor)||'a definir')+(p.obs?' ('+oneLine(p.obs)+')':'')));
+  return L.join('\n');
+}
+function genAuto(st,auto){
+  if(auto==='org') return genOrg(st);
+  if(auto==='comp') return genComp(st);
+  if(auto==='matriz') return genMatriz(st);
+  if(auto==='fluxos') return genFluxos(st);
+  if(auto==='kpis') return genKpis(st);
+  if(auto==='ferias') return genFerias(st);
+  if(auto.indexOf('flow:')===0){
+    const f=st.flows.find(x=>x.id===auto.slice(5));
+    return f?genFlow(st,f):'(fluxograma não encontrado)';
+  }
+  if(auto.indexOf('unit:')===0){
+    const u=st.units.find(x=>x.id===auto.slice(5));
+    return u?genUnit(st,u):'(unidade não encontrada)';
+  }
+  return '';
+}
+function defaultManual(st){
+  const defs=[
+    ['Organização do RH','org'],
+    ['Competências das unidades','comp'],
+    ['Procedimentos de nomeação e exoneração','flow:fl-nomeacao'],
+    ['Procedimentos de folha de pagamento','flow:fl-folha'],
+    ['Procedimentos de férias e licenças','ferias'],
+    ['Controle de frequência','unit:u-freq'],
+    ['Gestão documental','unit:u-arq'],
+    ['Desenvolvimento e capacitação','unit:u-desenv'],
+    ['Matriz de responsabilidades','matriz'],
+    ['Fluxogramas','fluxos'],
+    ['Indicadores','kpis']
+  ];
+  return defs.map((d,i)=>({id:'mc'+(i+1),titulo:d[0],auto:d[1],texto:genAuto(st,d[1])}));
+}
+
+/* =====================================================================
+   Editor de diagramas (fluxogramas e organograma): desenho SVG, layout,
+   arrastar e soltar, conexões, desfazer/refazer, zoom e exportação.
+   ===================================================================== */
+
+/* ---------- medidas e layout automático ---------- */
+function wrapLines(text,maxChars){
+  const out=[];
+  String(text==null?'':text).split(/\r?\n/).forEach(par=>{
+    const words=par.split(/\s+/).filter(Boolean);
+    if(!words.length){out.push('');return;}
+    let cur='';
+    words.forEach(w=>{
+      while(w.length>maxChars){ if(cur){out.push(cur);cur='';} out.push(w.slice(0,maxChars-1)+'-'); w=w.slice(maxChars-1); }
+      if(!cur) cur=w; else if((cur+' '+w).length<=maxChars) cur+=' '+w; else {out.push(cur);cur=w;}
+    });
+    if(cur) out.push(cur);
+  });
+  return out.length?out:[''];
+}
+function nodeSize(n,kind,units){
+  if(kind==='org'){
+    const d=orgDisp(n,units);
+    const tl=wrapLines(d.t||'',21), dl=wrapLines(d.desc||'',30);
+    const dlc=dl.slice(0,3); if(dl.length>3) dlc[2]=dlc[2].slice(0,27)+'…';
+    const tag=n.tipo==='nucleo'?1:0;
+    return {w:250,h:Math.max(74,18+tl.length*18+(d.desc?dlc.length*15+6:0)+(tag?20:0)+12),tl,dl:d.desc?dlc:[],tag};
+  }
+  const t=n.tipo, w=t==='dec'?250:220;
+  const chars=t==='dec'?19:t==='unid'?26:27;
+  const lines=wrapLines(n.t,chars);
+  let h;
+  if(t==='ini'||t==='fim') h=Math.max(46,22+lines.length*17);
+  else if(t==='dec') h=Math.max(100,52+lines.length*18);
+  else if(t==='doc') h=Math.max(70,38+lines.length*17);
+  else h=Math.max(62,28+lines.length*17);
+  return {w,h,lines};
+}
+function autoLayout(doc,kind,units){
+  const nodes=doc.nodes; if(!nodes.length) return;
+  const sz=new Map(nodes.map(n=>[n.id,nodeSize(n,kind,units)]));
+  const out=new Map(nodes.map(n=>[n.id,[]])),inn=new Map(nodes.map(n=>[n.id,[]]));
+  doc.edges.forEach(e=>{if(out.has(e.from)&&out.has(e.to)&&e.from!==e.to){out.get(e.from).push(e.to);inn.get(e.to).push(e.from);}});
+  const st=new Map(),back=new Set(),disc=[];
+  const dfs=u=>{st.set(u,1);disc.push(u);out.get(u).forEach(v=>{const s=st.get(v);if(s===1) back.add(u+'>'+v);else if(!s) dfs(v);});st.set(u,2);};
+  const starts=nodes.filter(n=>n.tipo==='ini').map(n=>n.id).concat(nodes.filter(n=>!inn.get(n.id).length).map(n=>n.id),nodes.map(n=>n.id));
+  starts.forEach(id=>{if(!st.has(id)) dfs(id);});
+  const fwd=[];
+  doc.edges.forEach(e=>{if(out.has(e.from)&&out.has(e.to)&&e.from!==e.to&&!back.has(e.from+'>'+e.to)) fwd.push([e.from,e.to]);});
+  const layer=new Map(nodes.map(n=>[n.id,0]));
+  for(let it=0;it<nodes.length+1;it++){
+    let ch=false;
+    fwd.forEach(([a,b])=>{if(layer.get(b)<layer.get(a)+1){layer.set(b,layer.get(a)+1);ch=true;}});
+    if(!ch) break;
+  }
+  const maxL=Math.max(...layer.values());
+  const layers=[];for(let i=0;i<=maxL;i++) layers.push([]);
+  const rank=new Map(disc.map((id,i)=>[id,i]));
+  nodes.slice().sort((a,b)=>(rank.get(a.id)||0)-(rank.get(b.id)||0)).forEach(n=>layers[layer.get(n.id)].push(n.id));
+  const gapX=44,cx=new Map();
+  layers.forEach(L=>{let x=0;L.forEach(id=>{const w=sz.get(id).w;cx.set(id,x+w/2);x+=w+gapX;});const tot=x-gapX;L.forEach(id=>cx.set(id,cx.get(id)-tot/2));});
+  const preds=new Map(nodes.map(n=>[n.id,[]])),succs=new Map(nodes.map(n=>[n.id,[]]));
+  fwd.forEach(([a,b])=>{succs.get(a).push(b);preds.get(b).push(a);});
+  const place=(L,rel)=>{
+    const want=new Map(L.map(id=>{const r=rel.get(id);const v=r.length?r.reduce((s,k)=>s+cx.get(k),0)/r.length:cx.get(id);return [id,v];}));
+    const ord=L.slice().sort((a,b)=>want.get(a)-want.get(b));
+    const pos=[];let prev=-Infinity,prevW=0;
+    ord.forEach((id,i)=>{const w=sz.get(id).w;let x=want.get(id);if(i>0) x=Math.max(x,prev+prevW/2+w/2+gapX);pos.push(x);prev=x;prevW=w;});
+    const shift=ord.reduce((s,id,i)=>s+(want.get(id)-pos[i]),0)/ord.length;
+    ord.forEach((id,i)=>cx.set(id,pos[i]+shift));
+    return ord;
+  };
+  for(let it=0;it<6;it++){
+    for(let i=1;i<layers.length;i++) layers[i]=place(layers[i],preds);
+    for(let i=layers.length-2;i>=0;i--) layers[i]=place(layers[i],succs);
+  }
+  for(let i=1;i<layers.length;i++) layers[i]=place(layers[i],preds);
+  let minX=Infinity;
+  layers.forEach(L=>L.forEach(id=>{minX=Math.min(minX,cx.get(id)-sz.get(id).w/2);}));
+  const gapY=kind==='org'?70:62;
+  let y=0;
+  layers.forEach(L=>{
+    const mh=Math.max(0,...L.map(id=>sz.get(id).h));
+    L.forEach(id=>{const n=nodes.find(k=>k.id===id);n.x=Math.round(cx.get(id)-sz.get(id).w/2-minX+20);n.y=Math.round(y+(mh-sz.get(id).h)/2+20);});
+    y+=mh+gapY;
+  });
+}
+function layoutAll(st){
+  autoLayout(st.org,'org',st.units);
+  st.flows.forEach(f=>autoLayout(f,'flow',st.units));
+}
+
+/* ---------- aparência ---------- */
+const SP={
+  light:{dark:false,bg:'#ffffff',surface:'#ffffff',line:'#8aa0bb',edge:'#4d6584',fg:'#13233a',muted:'#53657e',accent:'#0b4f9c',accentFg:'#ffffff'},
+  dark:{dark:true,bg:'#0c1522',surface:'#121f31',line:'#4a6585',edge:'#8aa6c8',fg:'#e4edf8',muted:'#93a9c4',accent:'#6aa8f0',accentFg:'#06192f'}
+};
+const curPal=()=>isDarkNow()?SP.dark:SP.light;
+function hsl2hex(h,s,l){
+  s/=100;l/=100;
+  const k=n=>(n+h/30)%12,a=s*Math.min(l,1-l);
+  const f=n=>l-a*Math.max(-1,Math.min(k(n)-3,Math.min(9-k(n),1)));
+  return '#'+[f(0),f(8),f(4)].map(x=>Math.round(x*255).toString(16).padStart(2,'0')).join('');
+}
+const DEF_HUE={dec:45,aprov:145,arq:225};
+function tint(h,pal){
+  return pal.dark?{fill:hsl2hex(h,32,22),stroke:hsl2hex(h,45,62),text:pal.fg}:{fill:hsl2hex(h,62,92),stroke:hsl2hex(h,48,40),text:pal.fg};
+}
+function nodeColors(n,pal,units,kind){
+  if(kind==='org'){const d=orgDisp(n,units);return d.hue==null?{fill:pal.surface,stroke:pal.line,text:pal.fg}:tint(d.hue,pal);}
+  if(n.tipo==='ini'||n.tipo==='fim'){
+    if(n.hue!=null) return {fill:hsl2hex(n.hue,55,pal.dark?42:36),stroke:hsl2hex(n.hue,55,pal.dark?42:36),text:'#ffffff'};
+    return {fill:pal.accent,stroke:pal.accent,text:pal.accentFg};
+  }
+  let h=n.hue;
+  if(h==null){const u=units.find(x=>x.id===n.unit);h=u?u.hue:DEF_HUE[n.tipo];}
+  if(h==null) return {fill:pal.surface,stroke:pal.line,text:pal.fg};
+  return tint(h,pal);
+}
+function shapeEl(t,w,h,a){
+  switch(t){
+    case 'ini':case 'fim': return `<rect width="${w}" height="${h}" rx="${h/2}" ${a}/>`;
+    case 'dec': return `<polygon points="${w/2},0 ${w},${h/2} ${w/2},${h} 0,${h/2}" ${a}/>`;
+    case 'doc': return `<path d="M0 0H${w}V${h-12}Q${w*0.75} ${h-24} ${w/2} ${h-12}T0 ${h-12}Z" ${a}/>`;
+    case 'aprov': return `<polygon points="16,0 ${w-16},0 ${w},${h/2} ${w-16},${h} 16,${h} 0,${h/2}" ${a}/>`;
+    case 'arq': return `<path d="M0 8Q0 0 8 0H${w*0.38}L${w*0.38+10} 9H${w-8}Q${w} 9 ${w} 17V${h-8}Q${w} ${h} ${w-8} ${h}H8Q0 ${h} 0 ${h-8}Z" ${a}/>`;
+    case 'org': return `<rect width="${w}" height="${h}" rx="9" ${a}/>`;
+    default: return `<rect width="${w}" height="${h}" rx="6" ${a}/>`;
+  }
+}
+function textLines(lines,x,y0,lh,attrs){
+  return `<text x="${x}" y="${y0}" text-anchor="middle" ${attrs}>`+lines.map((l,i)=>`<tspan x="${x}" dy="${i?lh:0}">${esc(l)}</tspan>`).join('')+'</text>';
+}
+function iconSvg(name,x,y,s,color){
+  return `<svg x="${x}" y="${y}" width="${s}" height="${s}" viewBox="0 0 24 24" fill="none" stroke="${color}" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">${ICONS[name]||ICONS.file}</svg>`;
+}
+const FONT='font-family="Public Sans,Arial,sans-serif"';
+function nodeSvg(n,sz,pal,units,kind,o){
+  const {w,h}=sz,col=nodeColors(n,pal,units,kind);
+  const a=`fill="${col.fill}" stroke="${col.stroke}" stroke-width="1.6"`;
+  let inner='';
+  if(kind==='org'){
+    const d=orgDisp(n,units);
+    inner=shapeEl('org',w,h,a+(n.tipo==='nucleo'?' stroke-dasharray="6 4"':''));
+    inner+=iconSvg(d.icone,12,12,20,col.stroke);
+    let y=26;
+    inner+=`<text x="40" y="${y}" font-size="13.5" font-weight="700" fill="${col.text}" ${FONT}>`+sz.tl.map((l,i)=>`<tspan x="40" dy="${i?18:0}">${esc(l)}</tspan>`).join('')+'</text>';
+    y+=(sz.tl.length-1)*18+8;
+    if(sz.dl.length){inner+=`<text x="40" y="${y+8}" font-size="11.5" fill="${pal.muted}" ${FONT}>`+sz.dl.map((l,i)=>`<tspan x="40" dy="${i?15:0}">${esc(l)}</tspan>`).join('')+'</text>';y+=sz.dl.length*15+2;}
+    if(sz.tag) inner+=`<text x="40" y="${h-10}" font-size="10.5" font-weight="600" fill="${col.stroke}" ${FONT}>DIVISÃO INTERNA DE TRABALHO</text>`;
+  }else{
+    inner=shapeEl(n.tipo,w,h,a);
+    let cx=w/2,cy=h/2;
+    if(n.tipo==='unid'){inner+=`<rect x="0" y="0" width="9" height="${h}" rx="4" fill="${col.stroke}"/>`;cx+=5;}
+    if(n.tipo==='doc') cy-=6;
+    if(n.tipo==='arq') cy+=4;
+    const lh=n.tipo==='dec'?17:17;
+    const y0=cy-((sz.lines.length-1)*lh)/2+4.5;
+    inner+=textLines(sz.lines,cx,y0,lh,`font-size="13" font-weight="${n.tipo==='ini'||n.tipo==='fim'?700:500}" fill="${col.text}" ${FONT}`);
+  }
+  if(o.sel) inner+=shapeEl(kind==='org'?'org':n.tipo,w,h,`fill="none" stroke="${pal.accent}" stroke-width="4" opacity=".9" pointer-events="none"`);
+  if(o.ui&&o.sel){
+    inner+=`<g class="hdl" data-handle="${esc(n.id)}"><circle cx="${w/2}" cy="${h+14}" r="9" fill="${pal.accent}"/><path d="M${w/2-3.5} ${h+12}L${w/2} ${h+16.5}L${w/2+3.5} ${h+12}" fill="none" stroke="${pal.accentFg}" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></g>`;
+    inner+=`<g class="hdl" data-handle="${esc(n.id)}"><circle cx="${w+14}" cy="${h/2}" r="9" fill="${pal.accent}"/><path d="M${w+12} ${h/2-3.5}L${w+16.5} ${h/2}L${w+12} ${h/2+3.5}" fill="none" stroke="${pal.accentFg}" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></g>`;
+  }
+  return `<g class="nd" data-node="${esc(n.id)}" transform="translate(${n.x||0} ${n.y||0})">${inner}</g>`;
+}
+function edgeGeom(A,B,sa,sb,kind){
+  const a={x:A.x||0,y:A.y||0,w:sa.w,h:sa.h},b={x:B.x||0,y:B.y||0,w:sb.w,h:sb.h};
+  const ac={x:a.x+a.w/2,y:a.y+a.h/2},bc={x:b.x+b.w/2,y:b.y+b.h/2};
+  const bez=(P0,P1,P2,P3)=>({d:`M${P0.x} ${P0.y}C${P1.x} ${P1.y} ${P2.x} ${P2.y} ${P3.x} ${P3.y}`,lx:(P0.x+3*P1.x+3*P2.x+P3.x)/8,ly:(P0.y+3*P1.y+3*P2.y+P3.y)/8});
+  if(kind==='org'){
+    const s={x:ac.x,y:a.y+a.h},t={x:bc.x,y:b.y};
+    if(b.y>=a.y+a.h-1){const my=Math.round((s.y+t.y)/2);return {d:`M${s.x} ${s.y}V${my}H${t.x}V${t.y}`,lx:t.x,ly:my};}
+    return {d:`M${ac.x} ${ac.y}L${bc.x} ${bc.y}`,lx:(ac.x+bc.x)/2,ly:(ac.y+bc.y)/2};
+  }
+  const gapDown=b.y-(a.y+a.h),gapUp=a.y-(b.y+b.h);
+  if(gapDown>=16){
+    const s={x:ac.x,y:a.y+a.h},t={x:bc.x,y:b.y},k=Math.max(24,gapDown/2);
+    return bez(s,{x:s.x,y:s.y+k},{x:t.x,y:t.y-k},t);
+  }
+  if(gapUp>=16){
+    const xo=Math.max(a.x+a.w,b.x+b.w)+56,s={x:a.x+a.w,y:ac.y},t={x:b.x+b.w,y:bc.y};
+    return bez(s,{x:xo,y:s.y},{x:xo,y:t.y},t);
+  }
+  let s,t;
+  if(bc.x>=ac.x){s={x:a.x+a.w,y:ac.y};t={x:b.x,y:bc.y};}else{s={x:a.x,y:ac.y};t={x:b.x+b.w,y:bc.y};}
+  const k=Math.max(24,Math.abs(t.x-s.x)/2),dir=t.x>=s.x?1:-1;
+  return bez(s,{x:s.x+dir*k,y:s.y},{x:t.x-dir*k,y:t.y},t);
+}
+function edgeSvg(e,A,B,sa,sb,pal,kind,o){
+  const g=edgeGeom(A,B,sa,sb,kind),sel=o.sel&&o.sel.k==='e'&&o.sel.id===e.id;
+  const col=sel?pal.accent:pal.edge;
+  const arrow=kind==='flow'?` marker-end="url(#${o.mid}${sel?'S':''})"`:'';
+  let s=`<g class="eg"><path d="${g.d}" fill="none" stroke="${col}" stroke-width="${sel?2.6:1.8}" stroke-linejoin="round"${arrow}/>`;
+  if(o.ui) s+=`<path class="eh" data-edge="${esc(e.id)}" d="${g.d}" fill="none" stroke="transparent" stroke-width="16"/>`;
+  if(e.l&&kind==='flow'){
+    const tw=Math.max(26,e.l.length*6.6+16);
+    s+=`<g${o.ui?` class="eh" data-edge="${esc(e.id)}"`:''}><rect x="${g.lx-tw/2}" y="${g.ly-10}" width="${tw}" height="20" rx="10" fill="${pal.surface}" stroke="${col}" stroke-width="1"/><text x="${g.lx}" y="${g.ly+4}" text-anchor="middle" font-size="11.5" font-weight="600" fill="${col}" ${FONT}>${esc(e.l)}</text></g>`;
+  }
+  return s+'</g>';
+}
+function sceneInner(doc,kind,pal,o){
+  const units=o.units;
+  const sz=new Map(doc.nodes.map(n=>[n.id,nodeSize(n,kind,units)]));
+  const byId=new Map(doc.nodes.map(n=>[n.id,n]));
+  const marker=(id,c)=>`<marker id="${id}" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0 0L10 5L0 10z" fill="${c}"/></marker>`;
+  let s=`<defs>${marker(o.mid,pal.edge)}${marker(o.mid+'S',pal.accent)}</defs>`;
+  doc.edges.forEach(e=>{const A=byId.get(e.from),B=byId.get(e.to);if(A&&B) s+=edgeSvg(e,A,B,sz.get(A.id),sz.get(B.id),pal,kind,o);});
+  const selId=o.sel&&o.sel.k==='n'?o.sel.id:null;
+  doc.nodes.forEach(n=>{s+=nodeSvg(n,sz.get(n.id),pal,units,kind,{sel:n.id===selId,ui:o.ui});});
+  return s;
+}
+function sceneBBox(doc,kind,units){
+  if(!doc.nodes.length) return {x:0,y:0,w:300,h:160};
+  let x0=Infinity,y0=Infinity,x1=-Infinity,y1=-Infinity;
+  doc.nodes.forEach(n=>{const s=nodeSize(n,kind,units);x0=Math.min(x0,n.x||0);y0=Math.min(y0,n.y||0);x1=Math.max(x1,(n.x||0)+s.w);y1=Math.max(y1,(n.y||0)+s.h);});
+  if(kind==='flow') x1+=64;
+  return {x:x0,y:y0,w:x1-x0,h:y1-y0};
+}
+function sceneStandalone(doc,kind,pal,o){
+  const bb=sceneBBox(doc,kind,o.units),pad=36,top=o.title?44:0;
+  const W=Math.ceil(bb.w+pad*2),H=Math.ceil(bb.h+pad*2+top);
+  const svg=`<svg xmlns="http://www.w3.org/2000/svg" width="${W}" height="${H}" viewBox="0 0 ${W} ${H}" ${FONT}>`
+    +`<rect width="100%" height="100%" fill="${pal.bg}"/>`
+    +(o.title?`<text x="${pad}" y="32" font-size="18" font-weight="700" fill="${pal.fg}" ${FONT}>${esc(o.title)}</text>`:'')
+    +`<g transform="translate(${pad-bb.x} ${pad+top-bb.y})">${sceneInner(doc,kind,pal,{units:o.units,sel:null,mid:o.mid||'x',ui:false})}</g></svg>`;
+  return {svg,w:W,h:H};
+}
+
+/* ---------- editor ---------- */
+let activeEd=null,edSeq=0;
+document.addEventListener('keydown',ev=>{
+  const E=activeEd; if(!E||!document.body.contains(E.host)) return;
+  const t=ev.target;
+  if(/^(INPUT|TEXTAREA|SELECT)$/.test(t.tagName)||t.isContentEditable) return;
+  if(!$('#modal').hidden) return;
+  const k=ev.key.toLowerCase(),mod=ev.ctrlKey||ev.metaKey;
+  if((k==='delete'||k==='backspace')&&E.sel){ev.preventDefault();E.api.del();}
+  else if(mod&&k==='z'){ev.preventDefault();ev.shiftKey?E.api.redo():E.api.undo();}
+  else if(mod&&k==='y'){ev.preventDefault();E.api.redo();}
+  else if(k==='escape'&&E.sel){E.api.select(null);}
+});
+window.addEventListener('resize',()=>{if(activeEd&&activeEd.api&&activeEd.api.resize) activeEd.api.resize();});
+
+function createEditor(host,cfg){
+  const kind=cfg.kind,cid=++edSeq;
+  const E={host,kind,doc:cfg.doc,sel:null,view:{x:30,y:30,k:1},touched:false,drag:null,hist:{stack:[],i:-1},branchText:'Nomeação\nExoneração\nPosse\nExercício\nMovimentação funcional'};
+  activeEd=E;
+  const units=()=>state.units;
+  const node=id=>E.doc.nodes.find(n=>n.id===id);
+  const nodeName=n=>kind==='org'?oneLine(orgDisp(n,units()).t)||'(sem nome)':oneLine(n.t)||'(sem texto)';
+  const sizeOf=n=>nodeSize(n,kind,units());
+
+  host.innerHTML=`<div class="ed">
+    <div class="ed-bar"></div>
+    <div class="ed-main">
+      <div class="ed-canvas"><svg class="ed-svg" tabindex="0" role="application" aria-label="Área de edição do diagrama"><g class="vp"></g></svg>
+        <div class="ed-hint">Arraste os elementos para mover. Arraste o fundo para deslocar a vista. Ctrl + roda do mouse para zoom.</div></div>
+      <aside class="ed-panel" aria-live="polite"></aside>
+    </div>
+    ${kind==='flow'?'<div class="ed-table card"></div>':''}
+  </div>`;
+  const bar=$('.ed-bar',host),svg=$('.ed-svg',host),vp=$('.vp',svg),panel=$('.ed-panel',host),tableEl=$('.ed-table',host);
+
+  /* --- barra de ferramentas --- */
+  const addBtns=kind==='flow'
+    ?['proc','dec','doc','unid','aprov','arq','ini','fim'].map(t=>`<button class="btn sm" data-a="add" data-t="${t}" title="Adicionar elemento: ${esc(TIPOS_FLUXO[t])}">${icon('plus',14)}${esc(TIPOS_FLUXO[t])}</button>`).join('')
+    :`<button class="btn sm" data-a="add" data-t="unidade">${icon('plus',14)}Unidade</button><button class="btn sm" data-a="add" data-t="nucleo">${icon('plus',14)}Divisão interna</button><button class="btn sm" data-a="add" data-t="orgao">${icon('plus',14)}Órgão</button>`;
+  bar.innerHTML=`<div class="grp"><span class="lbl">Adicionar</span>${addBtns}</div>
+    <div class="grp"><button class="btn sm" data-a="undo">${icon('undo',14)}Desfazer</button><button class="btn sm" data-a="redo">${icon('redo',14)}Refazer</button><button class="btn sm" data-a="layout" title="Reorganiza as posições automaticamente">Organizar</button></div>
+    <div class="grp"><button class="ibtn" data-a="zout" aria-label="Diminuir zoom">−</button><span class="mono" data-zp style="min-width:44px;text-align:center;font-size:12.5px">100%</span><button class="ibtn" data-a="zin" aria-label="Aumentar zoom">+</button><button class="btn sm" data-a="fit">Ajustar</button></div>
+    <div class="grp"><span class="lbl">Exportar</span><button class="btn sm" data-a="png">PNG</button><button class="btn sm" data-a="svg">SVG</button><button class="btn sm" data-a="pdf">PDF</button><button class="btn sm" data-a="print">${icon('print',14)}Imprimir</button></div>`;
+
+  /* --- coordenadas e vista --- */
+  const toWorld=ev=>{const r=svg.getBoundingClientRect();return {x:(ev.clientX-r.left-E.view.x)/E.view.k,y:(ev.clientY-r.top-E.view.y)/E.view.k};};
+  const snap=v=>Math.round(v/10)*10;
+  function applyView(){
+    vp.setAttribute('transform',`translate(${E.view.x} ${E.view.y}) scale(${E.view.k})`);
+    const z=$('[data-zp]',bar); if(z) z.textContent=Math.round(E.view.k*100)+'%';
+  }
+  function fit(){
+    const bb=sceneBBox(E.doc,kind,units());
+    const W=svg.clientWidth||900,H=svg.clientHeight||520;
+    const k=Math.max(0.15,Math.min(1.1,(W-50)/bb.w,(H-50)/bb.h));
+    E.view.k=k; E.view.x=(W-bb.w*k)/2-bb.x*k; E.view.y=Math.max(20,(H-bb.h*k)/2)-bb.y*k+(H-bb.h*k>40?0:0);
+    applyView();
+  }
+  function zoomAt(cx,cy,f){
+    const k=Math.max(0.15,Math.min(2.5,E.view.k*f)),r=k/E.view.k;
+    E.view.x=cx-(cx-E.view.x)*r; E.view.y=cy-(cy-E.view.y)*r; E.view.k=k; E.touched=true; applyView();
+  }
+  let raf=0;
+  function sched(){if(raf) return;raf=requestAnimationFrame(()=>{raf=0;scene();});}
+  function scene(){
+    const pal=curPal();
+    let s=sceneInner(E.doc,kind,pal,{units:units(),sel:E.sel,mid:'mk'+cid,ui:true});
+    if(E.drag&&E.drag.type==='connect'&&E.drag.pos){
+      const n=node(E.drag.from);
+      if(n){const sz=sizeOf(n),p=E.drag.pos;s+=`<path d="M${n.x+sz.w/2} ${n.y+sz.h}L${p.x} ${p.y}" stroke="${pal.accent}" stroke-width="2" stroke-dasharray="6 4" fill="none" pointer-events="none"/>`;}
+    }
+    vp.innerHTML=s; applyView();
+  }
+
+  /* --- histórico --- */
+  const snapDoc=()=>JSON.stringify({nodes:E.doc.nodes,edges:E.doc.edges});
+  function commit(){
+    const s=snapDoc();
+    if(s===E.hist.stack[E.hist.i]){updHist();return;}
+    E.hist.stack.splice(E.hist.i+1); E.hist.stack.push(s);
+    if(E.hist.stack.length>80) E.hist.stack.shift();
+    E.hist.i=E.hist.stack.length-1; updHist();
+  }
+  let ct=0;
+  const commitSoon=()=>{clearTimeout(ct);ct=setTimeout(commit,600);};
+  function updHist(){
+    const u=$('[data-a="undo"]',bar),r=$('[data-a="redo"]',bar);
+    if(u) u.disabled=E.hist.i<=0; if(r) r.disabled=E.hist.i>=E.hist.stack.length-1;
+  }
+  function restore(i){
+    clearTimeout(ct);
+    const s=JSON.parse(E.hist.stack[i]);
+    E.doc.nodes=s.nodes; E.doc.edges=s.edges; E.hist.i=i;
+    if(E.sel&&E.sel.k==='n'&&!node(E.sel.id)) E.sel=null;
+    if(E.sel&&E.sel.k==='e'&&!E.doc.edges.some(e=>e.id===E.sel.id)) E.sel=null;
+    scene(); renderPanel(); renderTable(); updHist(); cfg.onChange();
+  }
+  const touch=()=>{cfg.onChange();};
+
+  /* --- seleção --- */
+  function select(k,id){
+    E.sel=k?{k,id}:null;
+    scene(); renderPanel(); markTable();
+  }
+
+  /* --- operações no diagrama --- */
+  function defaultLabel(src){
+    if(kind!=='flow'||src.tipo!=='dec') return '';
+    const n=E.doc.edges.filter(e=>e.from===src.id).length;
+    return n===0?'Sim':n===1?'Não':'';
+  }
+  function isDesc(a,b){ // b é descendente de a?
+    const seen=new Set(),st=[a];
+    while(st.length){const x=st.pop();if(x===b) return true;if(seen.has(x)) continue;seen.add(x);E.doc.edges.forEach(e=>{if(e.from===x) st.push(e.to);});}
+    return false;
+  }
+  function connect(from,to,label){
+    if(from===to) return false;
+    if(E.doc.edges.some(e=>e.from===from&&e.to===to)){toast('Esses elementos já estão conectados.');return false;}
+    if(kind==='org'){
+      if(isDesc(to,from)){toast('Essa conexão criaria um ciclo na hierarquia.');return false;}
+      E.doc.edges=E.doc.edges.filter(e=>e.to!==to);
+    }
+    const src=node(from);
+    E.doc.edges.push({id:uid('e'),from,to,l:label!=null?label:defaultLabel(src)});
+    return true;
+  }
+  const freeSpot=(n,sz)=>{
+    let guard=0;
+    while(guard++<40&&E.doc.nodes.some(o=>{if(o===n) return false;const s=sizeOf(o);return n.x<(o.x||0)+s.w+20&&n.x+sz.w+20>(o.x||0)&&n.y<(o.y||0)+s.h+20&&n.y+sz.h+20>(o.y||0);})) n.x+=60;
+  };
+  function addNode(tipo){
+    const sel=E.sel&&E.sel.k==='n'?node(E.sel.id):null;
+    let n;
+    if(kind==='flow'){
+      const names={ini:'INÍCIO',fim:'ENCERRAMENTO',proc:'Nova etapa',dec:'Nova decisão?',doc:'Documento',unid:'Unidade administrativa',aprov:'Aprovação',arq:'Arquivamento'};
+      n=nd(uid('n'),tipo,names[tipo]||'Novo elemento','');
+    }else{
+      if(tipo==='orgao') n={id:uid('o'),tipo:'orgao',t:'Novo órgão',desc:'',unitId:'',hue:212,icone:'building',obs:'',x:0,y:0};
+      else{
+        const u={id:uid('u-'),nome:tipo==='nucleo'?'Nova divisão interna':'Nova unidade',sigla:'',icone:tipo==='nucleo'?'calendar':'users',hue:HUES[state.units.length%HUES.length],page:'',externa:false,divisao:tipo==='nucleo',desc:'',obs:tipo==='nucleo'?'Divisão interna de trabalho, sem criação automática de novos cargos.':'',comp:[]};
+        state.units.push(u);
+        n={id:uid('o'),tipo,t:'',desc:'',unitId:u.id,hue:null,icone:'',obs:'',x:0,y:0};
+      }
+    }
+    const sz=sizeOf(n);
+    if(sel&&!(kind==='flow'&&sel.tipo==='fim')){
+      const ss=sizeOf(sel); n.x=snap((sel.x||0)+(ss.w-sz.w)/2); n.y=snap((sel.y||0)+ss.h+70);
+    }else{
+      const W=svg.clientWidth||800,H=svg.clientHeight||500;
+      n.x=snap((W/2-E.view.x)/E.view.k-sz.w/2); n.y=snap((H/2-E.view.y)/E.view.k-sz.h/2);
+    }
+    freeSpot(n,sz);
+    E.doc.nodes.push(n);
+    if(sel&&!(kind==='flow'&&sel.tipo==='fim')) connect(sel.id,n.id);
+    commit(); touch(); select('n',n.id); renderTable();
+    const f=$('[data-f="t"]',panel); if(f){f.focus();f.select();}
+  }
+  function delSel(){
+    if(!E.sel) return;
+    if(E.sel.k==='n'){
+      const id=E.sel.id;
+      E.doc.nodes=E.doc.nodes.filter(n=>n.id!==id);
+      E.doc.edges=E.doc.edges.filter(e=>e.from!==id&&e.to!==id);
+      toast(kind==='org'?'Elemento removido do organograma. A unidade continua cadastrada em Competências. Use Desfazer (Ctrl+Z) para recuperar.':'Elemento excluído. Use Desfazer (Ctrl+Z) para recuperar.');
+    }else{
+      const id=E.sel.id; E.doc.edges=E.doc.edges.filter(e=>e.id!==id);
+    }
+    E.sel=null; commit(); touch(); scene(); renderPanel(); renderTable();
+  }
+  function relayout(){
+    autoLayout(E.doc,kind,units()); commit(); touch(); fit(); scene();
+  }
+
+  /* --- ponteiro --- */
+  function hitNode(p){
+    for(let i=E.doc.nodes.length-1;i>=0;i--){const n=E.doc.nodes[i],s=sizeOf(n);if(p.x>=n.x&&p.x<=n.x+s.w&&p.y>=n.y&&p.y<=n.y+s.h) return n;}
+    return null;
+  }
+  svg.addEventListener('pointerdown',ev=>{
+    if(ev.pointerType==='mouse'&&ev.button!==0) return;
+    activeEd=E; const w=toWorld(ev);
+    const hd=ev.target.closest('[data-handle]');
+    if(hd){E.drag={type:'connect',from:hd.dataset.handle,pos:w};svg.setPointerCapture(ev.pointerId);return;}
+    const nn=ev.target.closest('[data-node]');
+    if(nn){
+      const n=node(nn.dataset.node); if(!n) return;
+      if(!(E.sel&&E.sel.k==='n'&&E.sel.id===n.id)) select('n',n.id);
+      E.drag={type:'move',id:n.id,dx:w.x-n.x,dy:w.y-n.y,moved:false,sx:ev.clientX,sy:ev.clientY};
+      svg.setPointerCapture(ev.pointerId); return;
+    }
+    const eg=ev.target.closest('[data-edge]');
+    if(eg){select('e',eg.dataset.edge);return;}
+    if(E.sel) select(null);
+    E.drag={type:'pan',sx:ev.clientX,sy:ev.clientY,vx:E.view.x,vy:E.view.y};
+    svg.setPointerCapture(ev.pointerId);
+  });
+  svg.addEventListener('pointermove',ev=>{
+    const d=E.drag; if(!d) return;
+    if(d.type==='pan'){E.view.x=d.vx+ev.clientX-d.sx;E.view.y=d.vy+ev.clientY-d.sy;E.touched=true;applyView();}
+    else if(d.type==='move'){
+      if(!d.moved&&Math.hypot(ev.clientX-d.sx,ev.clientY-d.sy)<4) return;
+      d.moved=true; const w=toWorld(ev),n=node(d.id); if(!n) return;
+      n.x=snap(w.x-d.dx); n.y=snap(w.y-d.dy); sched();
+    }else if(d.type==='connect'){d.pos=toWorld(ev);sched();}
+  });
+  const endDrag=ev=>{
+    const d=E.drag; if(!d) return; E.drag=null;
+    try{svg.releasePointerCapture(ev.pointerId);}catch(e){}
+    if(d.type==='move'&&d.moved){commit();touch();renderTable();}
+    else if(d.type==='connect'){
+      const t=hitNode(d.pos);
+      if(t&&t.id!==d.from&&connect(d.from,t.id)){commit();touch();renderPanel();renderTable();}
+      scene();
+    }
+  };
+  svg.addEventListener('pointerup',endDrag);
+  svg.addEventListener('pointercancel',endDrag);
+  svg.addEventListener('wheel',ev=>{
+    if(!(ev.ctrlKey||ev.metaKey)) return;
+    ev.preventDefault();
+    const r=svg.getBoundingClientRect();
+    zoomAt(ev.clientX-r.left,ev.clientY-r.top,ev.deltaY<0?1.12:1/1.12);
+  },{passive:false});
+  svg.addEventListener('dblclick',ev=>{
+    const nn=ev.target.closest('[data-node]'); if(!nn) return;
+    const f=$('[data-f="t"]',panel); if(f){f.focus();f.select();}
+  });
+
+  /* --- painel de propriedades --- */
+  const optNodes=(sel,except)=>E.doc.nodes.filter(n=>n.id!==except).map(n=>`<option value="${esc(n.id)}"${n.id===sel?' selected':''}>${esc(nodeName(n).slice(0,60))}</option>`).join('');
+  const unitOpts=sel=>'<option value="">— nenhuma —</option>'+units().filter(u=>true).map(u=>`<option value="${esc(u.id)}"${u.id===sel?' selected':''}>${esc(u.nome||'(sem nome)')}</option>`).join('');
+  const swatches=(cur,withAuto)=>`<div class="swatches">${withAuto?`<button class="sw auto" data-a="hue" data-h="" aria-pressed="${cur==null}" aria-label="Cor automática" title="Automática"></button>`:''}${HUES.map(h=>`<button class="sw" style="--h:${h}" data-a="hue" data-h="${h}" aria-pressed="${cur===h}" aria-label="Cor ${h}"></button>`).join('')}</div>`;
+  function getField(n,f){
+    if(kind==='org'){
+      const d=orgDisp(n,units());
+      if(f==='t') return d.t; if(f==='desc') return d.desc; if(f==='icone') return d.icone; if(f==='obs') return n.obs||''; if(f==='tipo') return n.tipo; if(f==='unitId') return n.unitId||'';
+    }
+    return n[f]==null?'':n[f];
+  }
+  function panelNodeFlow(n){
+    const outs=E.doc.edges.filter(e=>e.from===n.id);
+    const rows=outs.map(e=>`<div class="edge-row" data-eid="${esc(e.id)}"><select data-f="eto" aria-label="Segue para"><option value="">Escolha…</option>${optNodes(e.to,n.id)}</select><input data-f="el" placeholder="Rótulo (ex.: Sim)" aria-label="Rótulo da saída" value="${esc(e.l)}"><button class="ibtn danger" data-a="edge-del" aria-label="Remover saída">${icon('x',14)}</button></div>`).join('');
+    const hasSim=outs.some(e=>/^sim/i.test(e.l)),hasNao=outs.some(e=>/^n[ãa]o/i.test(e.l));
+    return `<h3>Elemento</h3>
+      <label class="fld"><span>Tipo</span><select data-f="tipo">${Object.keys(TIPOS_FLUXO).map(k=>`<option value="${k}"${k===n.tipo?' selected':''}>${esc(TIPOS_FLUXO[k])}</option>`).join('')}</select></label>
+      <label class="fld"><span>Título</span><textarea rows="2" data-f="t">${esc(n.t)}</textarea></label>
+      <label class="fld"><span>Descrição</span><textarea rows="2" data-f="desc">${esc(n.desc)}</textarea></label>
+      <div class="r2"><label class="fld"><span>Unidade</span><select data-f="unit">${unitOpts(n.unit)}</select></label>
+      <label class="fld"><span>Responsável pela etapa</span><input data-f="resp" value="${esc(n.resp)}" placeholder="Cargo ou função"></label></div>
+      <div class="r2"><label class="fld"><span>Prazo</span><input data-f="prazo" value="${esc(n.prazo)}" placeholder="A definir"></label>
+      <label class="fld"><span>Status</span><select data-f="status">${STATUS.map(s=>`<option value="${esc(s)}"${s===n.status?' selected':''}>${esc(s||'— não definido —')}</option>`).join('')}</select></label></div>
+      <label class="fld"><span>Documentos necessários</span><textarea rows="2" data-f="docs">${esc(n.docs)}</textarea></label>
+      <label class="fld"><span>Observações</span><textarea rows="2" data-f="obs">${esc(n.obs)}</textarea></label>
+      <div class="fld"><span>Cor</span>${swatches(n.hue==null?null:n.hue,true)}</div>
+      <div class="fld"><span>Saídas (para onde o fluxo segue)</span><div class="list">${rows||'<p class="hint">Nenhuma saída. Arraste a seta do elemento até outro ou use os botões abaixo.</p>'}</div>
+        <div class="row" style="margin-top:6px"><button class="btn sm" data-a="edge-add" data-l="">+ Saída</button>${n.tipo==='dec'?`<button class="btn sm" data-a="edge-add" data-l="Sim"${hasSim?' disabled':''}>+ SIM</button><button class="btn sm" data-a="edge-add" data-l="Não"${hasNao?' disabled':''}>+ NÃO</button>`:''}</div></div>
+      <details><summary class="hint" style="cursor:pointer">Ramificações em paralelo</summary>
+        <p class="hint" style="margin:6px 0">Cria uma etapa por linha, saindo deste elemento e seguindo para o mesmo destino. Reorganiza o diagrama.</p>
+        <textarea rows="5" data-f="branches">${esc(E.branchText)}</textarea><button class="btn sm" data-a="branch" style="margin-top:6px">Criar ramificações</button></details>
+      <div class="row"><button class="btn sm" data-a="dup">Duplicar</button><button class="btn sm danger" data-a="del">Excluir elemento</button></div>`;
+  }
+  function panelNodeOrg(n){
+    const d=orgDisp(n,units());
+    const parent=E.doc.edges.find(e=>e.to===n.id);
+    return `<h3>Unidade no organograma</h3>
+      <label class="fld"><span>Tipo</span><select data-f="tipo">${Object.keys(TIPOS_ORG).map(k=>`<option value="${k}"${k===n.tipo?' selected':''}>${esc(TIPOS_ORG[k])}</option>`).join('')}</select></label>
+      <label class="fld"><span>Nome</span><textarea rows="2" data-f="t">${esc(d.t)}</textarea></label>
+      <label class="fld"><span>Descrição</span><textarea rows="3" data-f="desc">${esc(d.desc)}</textarea></label>
+      <label class="fld"><span>Cadastro de competências vinculado</span><select data-f="unitId">${unitOpts(n.unitId)}</select></label>
+      <label class="fld"><span>Subordinada a</span><select data-f="parent"><option value="">— nenhuma (topo) —</option>${optNodes(parent?parent.from:'',n.id)}</select></label>
+      <label class="fld"><span>Ícone</span><select data-f="icone">${Object.keys(UNIT_ICONS).map(k=>`<option value="${k}"${k===d.icone?' selected':''}>${esc(UNIT_ICONS[k])}</option>`).join('')}</select></label>
+      <div class="fld"><span>Cor</span>${swatches(d.hue,false)}</div>
+      <label class="fld"><span>Observações</span><textarea rows="3" data-f="obs">${esc(n.obs||'')}</textarea></label>
+      ${n.tipo==='nucleo'?'<p class="hint">Divisão interna de trabalho: não cria cargos automaticamente.</p>':''}
+      <div class="row"><button class="btn sm" data-a="child">+ Subordinada</button><button class="btn sm" data-a="dup">Duplicar</button><button class="btn sm danger" data-a="del">Remover do organograma</button></div>`;
+  }
+  function panelEdge(e){
+    const a=node(e.from),b=node(e.to);
+    return `<h3>Conexão</h3>
+      <p class="hint">${esc(a?nodeName(a):'?')} → ${esc(b?nodeName(b):'?')}</p>
+      ${kind==='flow'?`<label class="fld"><span>Rótulo</span><input data-f="elabel" value="${esc(e.l)}" placeholder="Ex.: Sim, Não"></label>
+      <div class="row"><button class="btn sm" data-a="elabel-set" data-l="Sim">SIM</button><button class="btn sm" data-a="elabel-set" data-l="Não">NÃO</button><button class="btn sm" data-a="elabel-set" data-l="">Sem rótulo</button></div>`:''}
+      <label class="fld"><span>Origem</span><select data-f="efrom">${optNodes(e.from,'')}</select></label>
+      <label class="fld"><span>Destino</span><select data-f="eto2">${optNodes(e.to,'')}</select></label>
+      <div class="row"><button class="btn sm" data-a="erev">Inverter direção</button><button class="btn sm danger" data-a="del">${kind==='org'?'Desconectar':'Excluir conexão'}</button></div>`;
+  }
+  function renderPanel(){
+    const s=E.sel;
+    if(s&&s.k==='n'&&node(s.id)){panel.innerHTML=kind==='org'?panelNodeOrg(node(s.id)):panelNodeFlow(node(s.id));return;}
+    if(s&&s.k==='e'){const e=E.doc.edges.find(x=>x.id===s.id);if(e){panel.innerHTML=panelEdge(e);return;}}
+    panel.innerHTML=`<h3>${kind==='org'?'Organograma':'Fluxograma'}</h3>
+      <p class="hint">${kind==='org'?'Clique numa unidade para editar nome, descrição, cor, observações e hierarquia.':'Clique num elemento do diagrama para editar texto, unidade, responsável, prazo, documentos, status e saídas.'}</p>
+      <ul class="hint" style="margin:0;padding-left:18px;display:flex;flex-direction:column;gap:4px">
+        <li>Arraste um elemento para mover.</li>
+        <li>Com um elemento selecionado, use a seta azul para ligar a outro.</li>
+        <li>${kind==='org'?'Um botão "Adicionar" cria a unidade já subordinada à selecionada.':'Um botão "Adicionar" cria o elemento já ligado ao selecionado.'}</li>
+        <li>Delete exclui; Ctrl+Z desfaz; Ctrl+Y refaz.</li>
+      </ul>`;
+  }
+
+  /* --- tabela de etapas (fluxos) --- */
+  function renderTable(){
+    if(kind!=='flow') return;
+    const rows=E.doc.nodes.map((n,i)=>`<tr data-nid="${esc(n.id)}"${E.sel&&E.sel.k==='n'&&E.sel.id===n.id?' class="selrow"':''}>
+      <td class="num">${i+1}</td>
+      <td style="min-width:200px"><input data-f="t" data-nid="${esc(n.id)}" value="${esc(oneLine(n.t))}" aria-label="Título"></td>
+      <td><select data-f="tipo" data-nid="${esc(n.id)}" aria-label="Tipo">${Object.keys(TIPOS_FLUXO).map(k=>`<option value="${k}"${k===n.tipo?' selected':''}>${esc(TIPOS_FLUXO[k])}</option>`).join('')}</select></td>
+      <td style="min-width:170px"><select data-f="unit" data-nid="${esc(n.id)}" aria-label="Unidade">${unitOpts(n.unit)}</select></td>
+      <td><input data-f="resp" data-nid="${esc(n.id)}" value="${esc(n.resp)}" aria-label="Responsável"></td>
+      <td><input data-f="prazo" data-nid="${esc(n.id)}" value="${esc(n.prazo)}" placeholder="A definir" aria-label="Prazo"></td>
+      <td><select data-f="status" data-nid="${esc(n.id)}" aria-label="Status">${STATUS.map(s=>`<option value="${esc(s)}"${s===n.status?' selected':''}>${esc(s||'—')}</option>`).join('')}</select></td></tr>`).join('');
+    tableEl.innerHTML=`<div class="ch"><h2>Etapas do fluxo</h2><span class="hint">Edite responsável, prazo, unidade e status diretamente aqui. Clique na linha para selecionar no diagrama.</span></div>
+      <div class="scroll"><table><thead><tr><th class="num">#</th><th>Etapa</th><th>Tipo</th><th>Unidade</th><th>Responsável</th><th>Prazo</th><th>Status</th></tr></thead><tbody>${rows||'<tr><td colspan="7" class="empty">Sem elementos.</td></tr>'}</tbody></table></div>`;
+  }
+  function markTable(){
+    if(kind!=='flow') return;
+    $$('tr[data-nid]',tableEl).forEach(r=>r.classList.toggle('selrow',!!(E.sel&&E.sel.k==='n'&&E.sel.id===r.dataset.nid)));
+  }
+
+  /* --- alterar campos --- */
+  function setField(n,f,v,src){
+    if(kind==='org'){
+      const u=n.unitId&&units().find(x=>x.id===n.unitId);
+      if(f==='t'){if(u) u.nome=v; else n.t=v;}
+      else if(f==='desc'){if(u) u.desc=v; else n.desc=v;}
+      else if(f==='icone'){if(u) u.icone=v; else n.icone=v;}
+      else if(f==='obs') n.obs=v;
+      else if(f==='tipo'){n.tipo=v;if(u) u.divisao=(v==='nucleo');}
+      else if(f==='unitId'){
+        if(!v&&u){n.t=u.nome;n.desc=u.desc;n.hue=u.hue;n.icone=u.icone;}
+        n.unitId=v;
+      }
+    }else n[f]=v;
+    scene();
+    if(f==='tipo'||f==='unit'||f==='unitId'||f==='unit'){renderPanel();renderTable();}
+    else{
+      if(src!=='panel'&&E.sel&&E.sel.id===n.id){$$('[data-f]',panel).forEach(el=>{if(el!==document.activeElement&&el.dataset.f===f&&el.tagName!=='SELECT') el.value=getField(n,f);});}
+      if(src!=='table'&&kind==='flow'){const inp=$(`input[data-nid="${n.id}"][data-f="${f}"]`,tableEl);if(inp&&inp!==document.activeElement) inp.value=f==='t'?oneLine(n[f]):n[f];}
+    }
+    commitSoon(); touch();
+  }
+  function setParent(n,pid){
+    if(pid){
+      if(isDesc(n.id,pid)){toast('Essa mudança criaria um ciclo na hierarquia.');renderPanel();return;}
+    }
+    E.doc.edges=E.doc.edges.filter(e=>e.to!==n.id);
+    if(pid) E.doc.edges.push({id:uid('e'),from:pid,to:n.id,l:''});
+    commit(); touch(); scene();
+  }
+  function branch(n){
+    const names=E.branchText.split(/\r?\n/).map(oneLine).filter(Boolean);
+    if(!names.length){toast('Informe pelo menos um nome por linha.');return;}
+    const outs=E.doc.edges.filter(e=>e.from===n.id);
+    E.doc.edges=E.doc.edges.filter(e=>e.from!==n.id);
+    names.forEach(nm=>{
+      const b=nd(uid('n'),'proc',nm,n.unit||'');
+      E.doc.nodes.push(b);
+      E.doc.edges.push({id:uid('e'),from:n.id,to:b.id,l:''});
+      outs.forEach(o=>E.doc.edges.push({id:uid('e'),from:b.id,to:o.to,l:''}));
+    });
+    autoLayout(E.doc,kind,units()); commit(); touch(); fit(); scene(); renderPanel(); renderTable();
+    toast(names.length+' ramificações criadas. Use Desfazer (Ctrl+Z) para voltar.');
+  }
+
+  /* --- eventos do painel, tabela e barra --- */
+  host.addEventListener('pointerdown',()=>{activeEd=E;},true);
+  host.addEventListener('click',ev=>{
+    const row=ev.target.closest('tr[data-nid]');
+    if(row&&!ev.target.closest('input,select,button')){select('n',row.dataset.nid);return;}
+    if(row&&ev.target.closest('input,select')&&!(E.sel&&E.sel.id===row.dataset.nid)){select('n',row.dataset.nid);}
+    const b=ev.target.closest('[data-a]'); if(!b||!host.contains(b)) return;
+    const a=b.dataset.a,n=E.sel&&E.sel.k==='n'?node(E.sel.id):null;
+    switch(a){
+      case 'add': addNode(b.dataset.t); break;
+      case 'undo': if(E.hist.i>0) restore(E.hist.i-1); break;
+      case 'redo': if(E.hist.i<E.hist.stack.length-1) restore(E.hist.i+1); break;
+      case 'layout': relayout(); break;
+      case 'zin': zoomAt((svg.clientWidth||800)/2,(svg.clientHeight||500)/2,1.2); break;
+      case 'zout': zoomAt((svg.clientWidth||800)/2,(svg.clientHeight||500)/2,1/1.2); break;
+      case 'fit': E.touched=false; fit(); break;
+      case 'png': case 'svg': case 'pdf': doExport(a); break;
+      case 'print': doPrint(); break;
+      case 'del': delSel(); break;
+      case 'dup': if(n){
+          const c=clone(n); c.id=uid(kind==='org'?'o':'n'); c.x=(n.x||0)+30; c.y=(n.y||0)+30;
+          if(kind==='org'){const d=orgDisp(n,units());c.unitId='';c.t=d.t+' (cópia)';c.desc=d.desc;c.hue=d.hue;c.icone=d.icone;}
+          E.doc.nodes.push(c); commit(); touch(); select('n',c.id); renderTable();
+        } break;
+      case 'child': if(n){
+          const u={id:uid('u-'),nome:'Nova unidade',sigla:'',icone:'users',hue:HUES[state.units.length%HUES.length],page:'',externa:false,divisao:false,desc:'',obs:'',comp:[]};
+          state.units.push(u);
+          const c={id:uid('o'),tipo:'unidade',t:'',desc:'',unitId:u.id,hue:null,icone:'',obs:'',x:0,y:0};
+          const sz=sizeOf(c),ss=sizeOf(n); c.x=snap((n.x||0)+(ss.w-sz.w)/2); c.y=snap((n.y||0)+ss.h+70);
+          freeSpot(c,sz); E.doc.nodes.push(c); E.doc.edges.push({id:uid('e'),from:n.id,to:c.id,l:''});
+          commit(); touch(); select('n',c.id);
+          const f=$('[data-f="t"]',panel); if(f){f.focus();f.select();}
+        } break;
+      case 'hue': if(n){
+          const h=b.dataset.h===''?null:Number(b.dataset.h);
+          if(kind==='org'){const u=n.unitId&&units().find(x=>x.id===n.unitId);if(u) u.hue=h==null?u.hue:h;else n.hue=h;}
+          else n.hue=h;
+          commit(); touch(); scene(); renderPanel();
+        } break;
+      case 'edge-add': if(n){
+          const l=b.dataset.l||defaultLabel(n);
+          E.doc.edges.push({id:uid('e'),from:n.id,to:'',l});
+          renderPanel(); touch();
+        } break;
+      case 'edge-del': {
+          const id=b.closest('[data-eid]').dataset.eid;
+          E.doc.edges=E.doc.edges.filter(e=>e.id!==id); commit(); touch(); scene(); renderPanel();
+        } break;
+      case 'elabel-set': { const e=E.doc.edges.find(x=>x.id===E.sel.id); if(e){e.l=b.dataset.l;commit();touch();scene();renderPanel();} } break;
+      case 'erev': { const e=E.doc.edges.find(x=>x.id===E.sel.id); if(e){const t=e.from;e.from=e.to;e.to=t;commit();touch();scene();renderPanel();} } break;
+      case 'branch': if(n) branch(n); break;
+    }
+  });
+  const onField=(ev,final)=>{
+    const t=ev.target,f=t.dataset&&t.dataset.f; if(!f) return;
+    const inTable=!!t.closest('.ed-table');
+    if(inTable){
+      const n=node(t.dataset.nid); if(!n) return;
+      if(!(E.sel&&E.sel.id===n.id)){E.sel={k:'n',id:n.id};renderPanel();markTable();}
+      setField(n,f,t.value,'table'); return;
+    }
+    const eRow=t.closest('[data-eid]');
+    if(eRow&&(f==='eto'||f==='el')){
+      const e=E.doc.edges.find(x=>x.id===eRow.dataset.eid); if(!e) return;
+      if(f==='eto'){e.to=t.value;if(final){commit();}} else e.l=t.value;
+      scene(); commitSoon(); touch(); return;
+    }
+    if(f==='branches'){E.branchText=t.value;return;}
+    if(E.sel&&E.sel.k==='e'){
+      const e=E.doc.edges.find(x=>x.id===E.sel.id); if(!e) return;
+      if(f==='elabel') e.l=t.value; else if(f==='efrom') e.from=t.value; else if(f==='eto2') e.to=t.value; else return;
+      if(e.from===e.to){toast('Origem e destino devem ser diferentes.');return;}
+      scene(); commitSoon(); touch(); return;
+    }
+    const n=E.sel&&E.sel.k==='n'?node(E.sel.id):null; if(!n) return;
+    if(f==='parent'){setParent(n,t.value);return;}
+    setField(n,f,t.value,'panel');
+  };
+  host.addEventListener('input',ev=>{if(ev.target.tagName==='SELECT') return; onField(ev,false);});
+  host.addEventListener('change',ev=>{if(ev.target.tagName==='SELECT') onField(ev,true);});
+
+  /* --- exportação --- */
+  const title=()=>cfg.title();
+  async function doExport(fmt){
+    const sc=sceneStandalone(E.doc,kind,SP.light,{units:units(),title:title(),mid:'xp'});
+    const base=slug(title());
+    if(fmt==='svg') return saveFile(base+'.svg','<?xml version="1.0" encoding="UTF-8"?>\n'+sc.svg,'image/svg+xml');
+    try{
+      const canvas=await svgToCanvas(sc.svg,sc.w,sc.h,2);
+      if(fmt==='png') return saveFile(base+'.png',await canvasBytes(canvas,'image/png'),'image/png');
+      const jpg=await canvasBytes(canvas,'image/jpeg',0.92);
+      const land=sc.w>=sc.h,W=land?842:595,H=land?595:842,m=28;
+      const pdf=new PdfDoc({w:W,h:H,margin:m,footer:state.inst.nome+' · '+title()});
+      const i=pdf.addImage(jpg,canvas.width,canvas.height);
+      const s=Math.min((W-2*m)/sc.w,(H-2*m-14)/sc.h),dw=sc.w*s,dh=sc.h*s;
+      pdf.drawImage(i,(W-dw)/2,H-m-dh,dw,dh);
+      return saveFile(base+'.pdf',pdf.build(),'application/pdf');
+    }catch(e){toast('Não foi possível gerar o arquivo. Tente exportar em SVG.');}
+  }
+  function doPrint(){
+    const sc=sceneStandalone(E.doc,kind,SP.light,{units:units(),title:'',mid:'pp'});
+    printHtml(title(),sc.svg);
+  }
+
+  /* --- inicialização --- */
+  if(E.doc.nodes.some(n=>n.x==null||n.y==null)) autoLayout(E.doc,kind,units());
+  commit(); renderPanel(); renderTable(); scene(); fit();
+  E.api={
+    del:delSel,select,
+    undo(){if(E.hist.i>0) restore(E.hist.i-1);},
+    redo(){if(E.hist.i<E.hist.stack.length-1) restore(E.hist.i+1);},
+    resize(){if(!E.touched) fit();},
+    theme(){scene();},
+    rerender(){scene();renderPanel();renderTable();},
+    destroy(){if(activeEd===E) activeEd=null;}
+  };
+  E.select=select;
+  return E;
+}
+
+/* =====================================================================
+   Interface: menu, páginas e ações
+   ===================================================================== */
+const NAV=[
+  {k:'home',t:'Painel Inicial',i:'home'},
+  {k:'org',t:'Organograma do RH',i:'org'},
+  {k:'comp',t:'Competências das Unidades',i:'list'},
+  {k:'geral',t:'Fluxograma Geral',i:'flow'},
+  {k:'gestao',t:'Gestão Funcional',i:'users'},
+  {k:'folha',t:'Folha de Pagamento',i:'calc'},
+  {k:'freq',t:'Frequência e Benefícios',i:'calendar'},
+  {k:'arquivo',t:'Arquivo e Documentação',i:'archive'},
+  {k:'desenv',t:'Desenvolvimento e Capacitação',i:'cap'},
+  {k:'matriz',t:'Matriz de Responsabilidades',i:'grid'},
+  {k:'manual',t:'Manual de Procedimentos',i:'book'},
+  {k:'kpi',t:'Indicadores de Desempenho',i:'chart'},
+  {k:'config',t:'Configurações',i:'gear'}
+];
+const ui={page:'home',flowSel:{},chap:null,prev:false,kpiYear:2026,kpiView:'mensal',kpiSel:null,versions:null};
+let curEd=null;
+const U=id=>state.units.find(u=>u.id===id);
+const FL=id=>state.flows.find(f=>f.id===id);
+const mainEl=()=>$('#main');
+const rr=()=>{const y=window.scrollY;renderPage();window.scrollTo(0,y);};
+const head=(t,d,act)=>`<div class="pagehead"><div><h2>${esc(t)}</h2>${d?`<p class="hint">${esc(d)}</p>`:''}</div>${act?`<div class="row">${act}</div>`:''}</div>`;
+const moveItem=(arr,i,d)=>{const j=i+d;if(i<0||j<0||j>=arr.length) return false;[arr[i],arr[j]]=[arr[j],arr[i]];return true;};
+const fnum=v=>v==null||v===''?'—':Number(v).toLocaleString('pt-BR',{maximumFractionDigits:2});
+
+/* ---------- estrutura geral ---------- */
+function buildShell(){
+  $('#app').innerHTML=`<div class="shell" id="shell">
+    <aside class="side" aria-label="Menu principal">
+      <div class="brand"><div class="logo">${icon('building',22)}</div><div><b id="brandName"></b><span id="brandSub"></span></div></div>
+      <nav class="nav">${NAV.map(n=>`<button data-a="nav" data-p="${n.k}">${icon(n.i)}<span>${esc(n.t)}</span></button>`).join('')}</nav>
+      <div class="side-foot" id="brandOrg"></div>
+    </aside>
+    <div class="backdrop" data-a="nav-close"></div>
+    <div class="workspace">
+      <header class="topbar">
+        <button class="ibtn menu-btn" data-a="nav-toggle" aria-label="Abrir menu">${icon('menu')}</button>
+        <h1 id="pageTitle"></h1>
+        <span class="hint hide-sm" id="lastChange"></span>
+        <span class="pill" id="saveState">Carregando…</span>
+        <button class="btn sm primary" data-a="save">${icon('save',14)}Salvar</button>
+      </header>
+      <main class="main" id="main"></main>
+      <footer class="legal"><b>Observação institucional.</b> ${esc(LEGAL)}</footer>
+    </div></div>`;
+  updateBrand();
+}
+function updateBrand(){
+  const i=state.inst;
+  $('#brandName').textContent=i.nome; $('#brandSub').textContent=i.sub; $('#brandOrg').textContent=i.orgao;
+  document.title=i.nome;
+  const t=$('#lastChange'); if(t) t.textContent='Última alteração: '+fmtDT(state.meta.atualizado);
+}
+function go(p){
+  ui.page=p; $('#shell').classList.remove('nav-open'); renderPage(); window.scrollTo(0,0);
+}
+function renderPage(){
+  if(curEd){curEd.api.destroy();curEd=null;}
+  const n=NAV.find(x=>x.k===ui.page)||NAV[0];
+  $$('.nav button').forEach(b=>{if(b.dataset.p===ui.page) b.setAttribute('aria-current','page'); else b.removeAttribute('aria-current');});
+  $('#pageTitle').textContent=n.t;
+  const k=ui.page;
+  if(k==='home') pageHome();
+  else if(k==='org') pageOrg();
+  else if(k==='comp') pageComp();
+  else if(PAGES_FLOW[k]) pageFlows(k);
+  else if(k==='matriz') pageMatriz();
+  else if(k==='manual') pageManual();
+  else if(k==='kpi') pageKpi();
+  else pageConfig();
+}
+function afterRestore(){
+  ui.flowSel={};ui.chap=null;ui.versions=null;
+  updateBrand(); renderPage();
+}
+
+/* ---------- indicadores: cálculo ---------- */
+const mkey=(y,m)=>y+'-'+String(m).padStart(2,'0');
+function kpiPeriods(k,year,view){
+  if(view==='mensal') return MESES.map((_,i)=>{const v=k.vals[mkey(year,i+1)];return v===''||v==null?null:Number(v);});
+  return [0,1,2,3].map(q=>{
+    const vs=[1,2,3].map(j=>k.vals[mkey(year,q*3+j)]).filter(v=>v!==''&&v!=null).map(Number);
+    if(!vs.length) return null;
+    const s=vs.reduce((a,b)=>a+b,0);
+    return k.tipo==='pct'?Math.round(s/vs.length*10)/10:s;
+  });
+}
+function kpiLatest(k,year){
+  for(let m=12;m>=1;m--){const v=k.vals[mkey(year,m)];if(v!==''&&v!=null) return {m,v:Number(v)};}
+  return null;
+}
+function kpiOk(k,v){
+  if(v==null||k.meta===''||k.meta==null) return null;
+  return k.dir==='maior'?v>=Number(k.meta):v<=Number(k.meta);
+}
+const fmtKpi=(k,v)=>v==null?'—':fnum(v)+(k.tipo==='pct'?'%':'');
+function kpiTag(k,v){
+  const ok=kpiOk(k,v);
+  return ok==null?'<span class="tag">Sem meta</span>':ok?'<span class="tag ok">Meta atingida</span>':'<span class="tag bad">Fora da meta</span>';
+}
+function niceMax(v){
+  const p=Math.pow(10,Math.floor(Math.log10(v))),n=v/p;
+  return (n<=1?1:n<=2?2:n<=5?5:10)*p;
+}
+function chartSvg(k,year,view){
+  const vals=kpiPeriods(k,year,view),labels=view==='mensal'?MESES:['T1','T2','T3','T4'];
+  const W=720,H=290,L=48,R=16,T=20,B=34,pw=W-L-R,ph=H-T-B,n=vals.length;
+  const meta=k.meta===''||k.meta==null?null:Number(k.meta);
+  let max=Math.max(k.tipo==='pct'?100:0,...vals.filter(v=>v!=null),meta||0);
+  if(max<=0) max=1; max=niceMax(max);
+  const y=v=>T+ph*(1-v/max);
+  let s=`<svg class="chart" viewBox="0 0 ${W} ${H}" role="img" aria-label="${esc(k.nome)}, ${year}">`;
+  for(let i=0;i<=4;i++){
+    const v=max/4*i,yy=y(v);
+    s+=`<line class="ax" x1="${L}" x2="${W-R}" y1="${yy}" y2="${yy}"/><text x="${L-7}" y="${yy+4}" text-anchor="end">${fnum(v)}</text>`;
+  }
+  const bw=Math.min(40,pw/n*0.58);
+  vals.forEach((v,i)=>{
+    const cx=L+(i+0.5)*pw/n;
+    s+=`<text x="${cx}" y="${H-12}" text-anchor="middle">${labels[i]}</text>`;
+    if(v==null) return;
+    const bad=kpiOk(k,v)===false,yy=y(v);
+    s+=`<rect class="bar${bad?' bad':''}" x="${cx-bw/2}" y="${yy}" width="${bw}" height="${Math.max(1,T+ph-yy)}" rx="2"/><text class="val" x="${cx}" y="${yy-5}" text-anchor="middle">${fnum(v)}</text>`;
+  });
+  if(meta!=null) s+=`<line class="meta" x1="${L}" x2="${W-R}" y1="${y(meta)}" y2="${y(meta)}"/><text x="${W-R}" y="${y(meta)-5}" text-anchor="end" style="fill:var(--danger);font-weight:600">Meta ${fnum(meta)}</text>`;
+  return s+'</svg>';
+}
+
+/* ---------- Painel inicial ---------- */
+function pageHome(){
+  const rh=state.units.filter(u=>!u.externa).length;
+  const etapas=state.flows.reduce((a,f)=>a+f.nodes.length,0);
+  const base=curPal(),pal=Object.assign({},base,{bg:base.surface});
+  const mini=sceneStandalone(state.org,'org',pal,{units:state.units,title:'',mid:'hm'});
+  const kp=state.kpis.slice(0,6).map(k=>{
+    const l=kpiLatest(k,ui.kpiYear);
+    return `<tr><td>${esc(k.nome)}</td><td class="num"><b>${fmtKpi(k,l?l.v:null)}</b></td><td class="num">${k.meta===''||k.meta==null?'—':fmtKpi(k,Number(k.meta))}</td><td>${kpiTag(k,l?l.v:null)}</td></tr>`;
+  }).join('');
+  mainEl().innerHTML=`
+    ${head(state.inst.nome,state.inst.orgao+' · '+state.inst.sub,`<button class="btn" data-a="inst-edit">Editar dados institucionais</button>`)}
+    <div class="grid g4">
+      <div class="card stat"><b>${rh}</b><span>Unidades administrativas do RH</span></div>
+      <div class="card stat"><b>${state.flows.length}</b><span>Fluxogramas cadastrados</span></div>
+      <div class="card stat"><b>${state.manual.length}</b><span>Procedimentos no manual · ${etapas} etapas mapeadas</span></div>
+      <div class="card stat"><b style="font-size:1.15rem;line-height:1.5">${esc(fmtDT(state.meta.atualizado))}</b><span>Última atualização</span></div>
+    </div>
+    <div class="grid g2">
+      <section class="card"><div class="ch"><h2>Organograma resumido</h2><button class="btn sm" data-a="nav" data-p="org">Abrir organograma</button></div>
+        <div class="scroll"><div style="min-width:520px">${mini.svg.replace('<svg ','<svg style="max-width:100%;height:auto;display:block" ')}</div></div></section>
+      <section class="card"><div class="ch"><h2>Indicadores de desempenho</h2><button class="btn sm" data-a="nav" data-p="kpi">Ver todos</button></div>
+        ${state.meta.demo?'<div class="banner info" style="margin-bottom:10px">Dados demonstrativos. Substitua pelos resultados reais na página de indicadores.</div>':''}
+        <div class="scroll"><table><thead><tr><th>Indicador</th><th class="num">Último</th><th class="num">Meta</th><th>Situação</th></tr></thead><tbody>${kp}</tbody></table></div></section>
+    </div>
+    <section class="card"><div class="ch"><h2>Atalhos para os fluxogramas</h2></div>
+      <div class="chips">${state.flows.map(f=>`<button class="chip" data-a="flow-go" data-id="${esc(f.id)}">${esc(f.nome)}<br><span class="hint" style="color:inherit;opacity:.75">${esc(PAGES_FLOW[f.page])}</span></button>`).join('')}</div></section>`;
+}
+
+/* ---------- Organograma ---------- */
+function pageOrg(){
+  mainEl().innerHTML=`${head('Organograma do Departamento de RH','Estrutura editável: arraste, conecte, renomeie e altere a hierarquia. Selecione uma unidade para editar nome, descrição, cor e observações.')}
+    <div class="banner info">Os Núcleos Operacionais de Frequência e Benefícios e de Desenvolvimento e Capacitação são divisões internas de trabalho (borda tracejada), sem criação automática de novos cargos.</div>
+    <div id="edHost"></div>`;
+  curEd=createEditor($('#edHost'),{kind:'org',doc:state.org,title:()=>'Organograma do RH — '+state.inst.orgao,onChange:changed});
+}
+
+/* ---------- Competências ---------- */
+function compListHtml(u){
+  const rows=u.comp.map((c,i)=>`<div class="lrow" data-i="${i}"><input data-pf="u.comp" data-id="${esc(u.id)}" data-i="${i}" value="${esc(c)}" aria-label="Competência ${i+1}"><button class="ibtn" data-a="comp-up" data-id="${esc(u.id)}" data-i="${i}" aria-label="Subir"${i===0?' disabled':''}>${icon('up',14)}</button><button class="ibtn" data-a="comp-down" data-id="${esc(u.id)}" data-i="${i}" aria-label="Descer"${i===u.comp.length-1?' disabled':''}>${icon('down',14)}</button><button class="ibtn danger" data-a="comp-del" data-id="${esc(u.id)}" data-i="${i}" aria-label="Excluir competência">${icon('x',14)}</button></div>`).join('');
+  return `<div class="list">${rows||'<p class="hint">Nenhuma competência cadastrada.</p>'}</div><div style="margin-top:8px"><button class="btn sm" data-a="comp-add" data-id="${esc(u.id)}">${icon('plus',14)}Adicionar competência</button></div>`;
+}
+function unitCardFull(u){
+  const hues=HUES.map(h=>`<button class="sw" style="--h:${h}" data-a="u-hue" data-id="${esc(u.id)}" data-h="${h}" aria-pressed="${u.hue===h}" aria-label="Cor ${h}"></button>`).join('');
+  return `<section class="card" data-uid="${esc(u.id)}">
+    <div class="ch"><div class="row" style="flex:1;min-width:260px"><span class="uicon" style="--h:${u.hue}">${icon(u.icone,20)}</span><input data-pf="u.nome" data-id="${esc(u.id)}" value="${esc(u.nome)}" aria-label="Nome da unidade" style="font-weight:700;font-size:1.02rem"></div>
+      <button class="btn sm danger" data-a="u-del" data-id="${esc(u.id)}">Excluir unidade</button></div>
+    <div class="grid g2" style="margin-bottom:10px">
+      <label class="fld"><span>Descrição</span><textarea rows="2" data-pf="u.desc" data-id="${esc(u.id)}">${esc(u.desc)}</textarea></label>
+      <div class="grid" style="gap:10px">
+        <div class="r2"><label class="fld"><span>Sigla</span><input data-pf="u.sigla" data-id="${esc(u.id)}" value="${esc(u.sigla)}"></label>
+        <label class="fld"><span>Ícone</span><select data-pf="u.icone" data-id="${esc(u.id)}">${Object.keys(UNIT_ICONS).map(k=>`<option value="${k}"${k===u.icone?' selected':''}>${esc(UNIT_ICONS[k])}</option>`).join('')}</select></label></div>
+        <label class="fld"><span>Página de fluxogramas associada</span><select data-pf="u.page" data-id="${esc(u.id)}"><option value="">— nenhuma —</option>${Object.keys(PAGES_FLOW).map(k=>`<option value="${k}"${k===u.page?' selected':''}>${esc(PAGES_FLOW[k])}</option>`).join('')}</select></label>
+      </div></div>
+    <label class="row" style="margin-bottom:10px"><input type="checkbox" data-pf="u.divisao" data-id="${esc(u.id)}"${u.divisao?' checked':''}><span>Divisão interna de trabalho (não cria cargos automaticamente)</span></label>
+    <div class="lbl" style="margin-bottom:6px">Competências</div>
+    ${compListHtml(u)}
+    <div class="grid g2" style="margin-top:12px">
+      <label class="fld"><span>Observações</span><textarea rows="2" data-pf="u.obs" data-id="${esc(u.id)}">${esc(u.obs)}</textarea></label>
+      <div class="fld"><span>Cor da unidade nos diagramas</span><div class="swatches">${hues}</div></div>
+    </div></section>`;
+}
+function pageComp(){
+  const rh=state.units.filter(u=>!u.externa),ext=state.units.filter(u=>u.externa);
+  mainEl().innerHTML=`${head('Competências das unidades','Cadastro e edição das competências de cada unidade. As alterações valem para o organograma, os fluxogramas e o manual.',`<button class="btn primary" data-a="u-add">${icon('plus',14)}Adicionar unidade</button>`)}
+    <div class="list" style="gap:14px">${rh.map(unitCardFull).join('')}</div>
+    <section class="card"><div class="ch"><div><h2>Autoridades e unidades externas ao RH</h2><p class="hint">Aparecem como opção de unidade nos fluxogramas e na matriz.</p></div><button class="btn sm" data-a="u-add-ext">${icon('plus',14)}Adicionar</button></div>
+      <div class="list">${ext.map(u=>`<div class="lrow"><span class="dot" style="--h:${u.hue}"></span><input data-pf="u.nome" data-id="${esc(u.id)}" value="${esc(u.nome)}" aria-label="Nome"><input data-pf="u.desc" data-id="${esc(u.id)}" value="${esc(u.desc)}" aria-label="Descrição" placeholder="Descrição"><button class="ibtn danger" data-a="u-del" data-id="${esc(u.id)}" aria-label="Excluir">${icon('x',14)}</button></div>`).join('')||'<p class="hint">Nenhuma cadastrada.</p>'}</div></section>`;
+}
+function deleteUnit(id){
+  const u=U(id); if(!u) return;
+  destructive('Unidade excluída: '+u.nome,()=>{
+    state.units=state.units.filter(x=>x.id!==id);
+    const gone=state.org.nodes.filter(n=>n.unitId===id).map(n=>n.id);
+    state.org.nodes=state.org.nodes.filter(n=>n.unitId!==id);
+    state.org.edges=state.org.edges.filter(e=>!gone.includes(e.from)&&!gone.includes(e.to));
+    state.flows.forEach(f=>f.nodes.forEach(n=>{if(n.unit===id) n.unit='';}));
+  });
+  rr();
+}
+
+/* ---------- Fluxogramas por página ---------- */
+function paramsCard(){
+  const rows=state.params.map((p,i)=>`<div class="edge-row" style="grid-template-columns:minmax(0,1fr) minmax(0,1.2fr) minmax(0,1.2fr) auto" data-i="${i}"><input data-pf="p.nome" data-id="${esc(p.id)}" value="${esc(p.nome)}" aria-label="Parâmetro"><input data-pf="p.valor" data-id="${esc(p.id)}" value="${esc(p.valor)}" placeholder="Definir conforme a legislação municipal" aria-label="Valor"><input data-pf="p.obs" data-id="${esc(p.id)}" value="${esc(p.obs)}" placeholder="Observações" aria-label="Observações"><button class="ibtn danger" data-a="p-del" data-id="${esc(p.id)}" aria-label="Excluir">${icon('x',14)}</button></div>`).join('');
+  return `<section class="card"><div class="ch"><div><h2>Parâmetros e regras de férias</h2><p class="hint">Sem valores pré-definidos. Preencha somente o que estiver previsto na legislação municipal e nos atos normativos da Câmara.</p></div><button class="btn sm" data-a="p-add">${icon('plus',14)}Adicionar parâmetro</button></div>
+    <div class="scroll"><div class="list" style="min-width:560px">${rows||'<p class="hint">Nenhum parâmetro cadastrado.</p>'}</div></div></section>`;
+}
+function newFlow(page){
+  return {id:uid('fl-'),page,nome:'Novo fluxograma',desc:'',nodes:[nd('n1','ini','INÍCIO'),nd('n2','proc','Primeira etapa'),nd('n3','fim','ENCERRAMENTO')],edges:[ed('n1','n2'),ed('n2','n3')]};
+}
+function pageFlows(key){
+  const unit=state.units.find(u=>u.page===key&&!u.externa);
+  const flows=state.flows.filter(f=>f.page===key);
+  if(!ui.flowSel[key]||!flows.some(f=>f.id===ui.flowSel[key])) ui.flowSel[key]=flows[0]?flows[0].id:null;
+  const f=flows.find(x=>x.id===ui.flowSel[key]);
+  const desc=key==='geral'?'Visão geral do funcionamento do RH, do recebimento da demanda ao arquivamento.':(unit?unit.desc:'');
+  let h=head(PAGES_FLOW[key],desc);
+  if(unit){
+    h+=`<section class="card"><div class="ch"><div class="row"><span class="uicon" style="--h:${unit.hue}">${icon(unit.icone,20)}</span><div><h2>${esc(unit.nome)}</h2>${unit.divisao?'<span class="tag warn">Divisão interna de trabalho</span>':''}</div></div></div>
+      <details><summary style="cursor:pointer;font-weight:600">Competências (${unit.comp.length})</summary><div style="margin-top:10px">${compListHtml(unit)}</div></details></section>`;
+  }
+  h+=`<div class="chips">${flows.map(x=>`<button class="chip${f&&x.id===f.id?' on':''}" data-a="flow-pick" data-id="${esc(x.id)}">${esc(x.nome||'Sem título')}</button>`).join('')}<button class="chip add" data-a="flow-add" data-p="${key}">+ Novo fluxograma</button></div>`;
+  if(f){
+    h+=`<section class="card"><div class="grid g2" style="margin-bottom:10px">
+      <label class="fld"><span>Nome do fluxograma</span><input data-pf="f.nome" data-id="${esc(f.id)}" value="${esc(f.nome)}"></label>
+      <label class="fld"><span>Página do menu</span><select data-pf="f.page" data-id="${esc(f.id)}">${Object.keys(PAGES_FLOW).map(k=>`<option value="${k}"${k===f.page?' selected':''}>${esc(PAGES_FLOW[k])}</option>`).join('')}</select></label>
+      <label class="fld" style="grid-column:1/-1"><span>Descrição</span><textarea rows="2" data-pf="f.desc" data-id="${esc(f.id)}">${esc(f.desc)}</textarea></label></div>
+      <div class="row" style="margin-bottom:12px"><button class="btn sm" data-a="flow-dup" data-id="${esc(f.id)}">Duplicar fluxograma</button><button class="btn sm danger" data-a="flow-del" data-id="${esc(f.id)}">Excluir fluxograma</button></div>
+      <div id="edHost"></div></section>`;
+  }else h+='<div class="card empty">Nenhum fluxograma nesta página. Crie o primeiro com o botão acima.</div>';
+  if(key==='gestao') h+=paramsCard();
+  mainEl().innerHTML=h;
+  if(f) curEd=createEditor($('#edHost'),{kind:'flow',doc:f,title:()=>f.nome||'Fluxograma',onChange:changed});
+}
+
+/* ---------- Matriz de responsabilidades ---------- */
+function matrizRows(){return [['Atividade','Responsável principal','Supervisão','Observações']].concat(state.matriz.map(m=>[m.ativ,m.resp,m.sup,m.obs]));}
+function pageMatriz(){
+  const names=[...new Set(state.units.map(u=>u.nome).concat(state.matriz.map(m=>m.resp),state.matriz.map(m=>m.sup)))].filter(Boolean);
+  const rows=state.matriz.map((m,i)=>`<tr data-id="${esc(m.id)}"><td class="num">${i+1}</td>
+    <td style="min-width:200px"><input data-pf="m.ativ" data-id="${esc(m.id)}" value="${esc(m.ativ)}" aria-label="Atividade"></td>
+    <td style="min-width:190px"><input list="dlNomes" data-pf="m.resp" data-id="${esc(m.id)}" value="${esc(m.resp)}" aria-label="Responsável principal"></td>
+    <td style="min-width:190px"><input list="dlNomes" data-pf="m.sup" data-id="${esc(m.id)}" value="${esc(m.sup)}" aria-label="Supervisão"></td>
+    <td style="min-width:180px"><input data-pf="m.obs" data-id="${esc(m.id)}" value="${esc(m.obs)}" aria-label="Observações"></td>
+    <td><div class="lrow"><button class="ibtn" data-a="m-up" data-id="${esc(m.id)}" aria-label="Subir"${i===0?' disabled':''}>${icon('up',14)}</button><button class="ibtn" data-a="m-down" data-id="${esc(m.id)}" aria-label="Descer"${i===state.matriz.length-1?' disabled':''}>${icon('down',14)}</button><button class="ibtn danger" data-a="m-del" data-id="${esc(m.id)}" aria-label="Excluir">${icon('x',14)}</button></div></td></tr>`).join('');
+  mainEl().innerHTML=`${head('Matriz de responsabilidades','Quem executa e quem supervisiona cada atividade. Edite os campos diretamente na tabela.',
+    `<button class="btn" data-a="m-csv">CSV</button><button class="btn" data-a="m-xlsx">Excel</button><button class="btn" data-a="m-pdf">PDF</button>`)}
+    <section class="card"><datalist id="dlNomes">${names.map(n=>`<option value="${esc(n)}">`).join('')}</datalist>
+      <div class="scroll"><table><thead><tr><th class="num">#</th><th>Atividade</th><th>Responsável principal</th><th>Supervisão</th><th>Observações</th><th></th></tr></thead><tbody>${rows}</tbody></table></div>
+      <div style="margin-top:12px"><button class="btn primary" data-a="m-add">${icon('plus',14)}Adicionar atividade</button></div></section>`;
+}
+
+/* ---------- Manual ---------- */
+function richHtml(text){
+  const out=[];let list=null;
+  const close=()=>{if(list){out.push(`</${list}>`);list=null;}};
+  String(text||'').split(/\r?\n/).forEach(line=>{
+    let m;
+    if(!line.trim()){close();return;}
+    if((m=/^#\s+(.*)/.exec(line))){close();out.push(`<h4>${esc(m[1])}</h4>`);}
+    else if((m=/^\s*[-*]\s+(.*)/.exec(line))){if(list!=='ul'){close();out.push('<ul>');list='ul';}out.push(`<li>${esc(m[1])}</li>`);}
+    else if((m=/^(\d+)\.\s+(.*)/.exec(line))){if(list!=='ol'){close();out.push('<ol>');list='ol';}out.push(`<li>${esc(m[2])}</li>`);}
+    else{close();out.push(`<p>${esc(line)}</p>`);}
+  });
+  close(); return out.join('');
+}
+function pageManual(){
+  if(!state.manual.length) state.manual.push({id:uid('mc'),titulo:'Novo capítulo',texto:'',auto:''});
+  if(!ui.chap||!state.manual.some(c=>c.id===ui.chap)) ui.chap=state.manual[0].id;
+  const c=state.manual.find(x=>x.id===ui.chap);
+  const list=state.manual.map((x,i)=>`<div class="chap${x.id===ui.chap?' on':''}" data-a="chap-pick" data-id="${esc(x.id)}"><span>${i+1}. ${esc(x.titulo||'Sem título')}</span>
+    <button class="ibtn" data-a="chap-up" data-id="${esc(x.id)}" aria-label="Subir"${i===0?' disabled':''}>${icon('up',14)}</button><button class="ibtn" data-a="chap-down" data-id="${esc(x.id)}" aria-label="Descer"${i===state.manual.length-1?' disabled':''}>${icon('down',14)}</button></div>`).join('');
+  mainEl().innerHTML=`${head('Manual de procedimentos administrativos','Edite o texto de cada capítulo, reordene e exporte. Capítulos ligados aos dados podem ser atualizados com um clique.',
+    `<button class="btn" data-a="man-md">Markdown</button><button class="btn primary" data-a="man-pdf">Exportar PDF</button>`)}
+    <div class="manual">
+      <section class="card"><div class="ch"><h2>Capítulos</h2><button class="btn sm" data-a="chap-add">${icon('plus',14)}Capítulo</button></div><div class="list">${list}</div></section>
+      <section class="card">
+        <div class="ch"><input data-pf="c.titulo" data-id="${esc(c.id)}" value="${esc(c.titulo)}" aria-label="Título do capítulo" style="font-weight:700;font-size:1.05rem;flex:1;min-width:220px">
+          <div class="row"><div class="seg"><button data-a="man-edit" aria-pressed="${!ui.prev}">Editar</button><button data-a="man-prev" aria-pressed="${ui.prev}">Visualizar</button></div>
+          <button class="btn sm danger" data-a="chap-del" data-id="${esc(c.id)}">Excluir</button></div></div>
+        ${c.auto?`<div class="banner info" style="margin-bottom:10px"><span>Este capítulo foi gerado a partir dos dados do sistema. Pode editar livremente; para trazer os dados atuais de volta, use o botão.</span><button class="btn sm" data-a="chap-regen" data-id="${esc(c.id)}">Atualizar com os dados do sistema</button></div>`:''}
+        ${ui.prev?`<div class="preview">${richHtml(c.texto)||'<p class="hint">Capítulo vazio.</p>'}</div>`
+          :`<textarea data-pf="c.texto" data-id="${esc(c.id)}" rows="22" style="font-family:var(--f-mono);font-size:13px;line-height:1.55" aria-label="Texto do capítulo">${esc(c.texto)}</textarea>
+          <p class="hint" style="margin-top:6px">Formatação simples: "# " no início da linha cria um subtítulo, "- " cria um item de lista e "1. " cria um item numerado.</p>`}
+      </section></div>`;
+}
+function manualPdf(){
+  const pdf=new PdfDoc({footer:state.inst.nome+' · Manual de procedimentos'});
+  pdf.gap(60);
+  pdf.text(state.inst.orgao,pdf.m,pdf.y,11,false,0.4);pdf.y-=30;
+  pdf.text('Manual de Procedimentos Administrativos',pdf.m,pdf.y,22,true,0.1);pdf.y-=26;
+  pdf.text(state.inst.setor||'Departamento de Recursos Humanos',pdf.m,pdf.y,13,false,0.3);pdf.y-=20;
+  pdf.text('Gerado em '+new Date().toLocaleDateString('pt-BR'),pdf.m,pdf.y,10,false,0.45);pdf.y-=40;
+  pdf.text('Sumário',pdf.m,pdf.y,12,true,0.1);pdf.y-=20;
+  state.manual.forEach((c,i)=>{pdf.text((i+1)+'. '+c.titulo,pdf.m+8,pdf.y,10.5,false,0.2);pdf.y-=16;});
+  state.manual.forEach((c,i)=>{pdf.newPage();pdf.h1((i+1)+'. '+c.titulo);pdfRichText(pdf,c.texto);});
+  pdf.newPage();pdf.h1('Observação institucional');pdf.para(LEGAL);
+  return saveFile('manual-de-procedimentos-rh.pdf',pdf.build(),'application/pdf');
+}
+function manualMd(){
+  const L=['# Manual de Procedimentos Administrativos','',state.inst.orgao+' — '+(state.inst.setor||'Departamento de Recursos Humanos'),''];
+  state.manual.forEach((c,i)=>{L.push('## '+(i+1)+'. '+c.titulo,'',String(c.texto||'').replace(/^#\s+/gm,'### '),'');});
+  L.push('## Observação institucional','',LEGAL,'');
+  return saveFile('manual-de-procedimentos-rh.md',L.join('\n'),'text/markdown');
+}
+
+/* ---------- Indicadores ---------- */
+function kpiTableRows(){
+  const yr=ui.kpiYear,view=ui.kpiView;
+  const head=['Indicador','Tipo','Meta','Melhor quando'].concat(view==='mensal'?MESES.map(m=>m+'/'+yr):['T1/'+yr,'T2/'+yr,'T3/'+yr,'T4/'+yr]);
+  return [head].concat(state.kpis.map(k=>[k.nome,k.tipo==='pct'?'Percentual':'Quantidade',k.meta==null?'':k.meta,k.dir==='maior'?'Maior':'Menor'].concat(kpiPeriods(k,yr,view).map(v=>v==null?'':v))));
+}
+function kpiOutputs(){
+  const k=state.kpis.find(x=>x.id===ui.kpiSel); if(!k) return;
+  const cards=state.kpis.map(x=>{const l=kpiLatest(x,ui.kpiYear);return `<button class="kpi-card${x.id===ui.kpiSel?' on':''}" data-a="kpi-pick" data-id="${esc(x.id)}"><span class="nm">${esc(x.nome)}</span><span class="vl">${fmtKpi(x,l?l.v:null)}</span><span>${kpiTag(x,l?l.v:null)}<span class="hint"> ${l?'· '+MESES[l.m-1]+'/'+ui.kpiYear:''}</span></span></button>`;}).join('');
+  $('#kpiCards').innerHTML=cards;
+  $('#kpiChartT').textContent=k.nome+' — '+ui.kpiYear+' ('+(ui.kpiView==='mensal'?'por mês':'por trimestre')+')';
+  $('#kpiChart').innerHTML=chartSvg(k,ui.kpiYear,ui.kpiView);
+}
+function pageKpi(){
+  if(!ui.kpiSel||!state.kpis.some(k=>k.id===ui.kpiSel)) ui.kpiSel=state.kpis[0]?state.kpis[0].id:null;
+  const yr=ui.kpiYear,view=ui.kpiView;
+  const years=[2025,2026,2027,2028];
+  const rows=state.kpis.map(k=>{
+    const per=kpiPeriods(k,yr,view);
+    const cells=view==='mensal'
+      ?MESES.map((_,i)=>`<td><input type="number" step="any" data-pf="k.val" data-id="${esc(k.id)}" data-m="${i+1}" value="${k.vals[mkey(yr,i+1)]==null?'':esc(k.vals[mkey(yr,i+1)])}" aria-label="${esc(k.nome)} ${MESES[i]}" style="min-width:64px;text-align:right"></td>`).join('')
+      :per.map(v=>`<td class="num">${v==null?'—':fnum(v)}</td>`).join('');
+    return `<tr><td style="min-width:240px">${esc(k.nome)}</td><td><input type="number" step="any" data-pf="k.meta" data-id="${esc(k.id)}" value="${k.meta==null?'':esc(k.meta)}" aria-label="Meta" style="min-width:70px;text-align:right"></td>${cells}</tr>`;
+  }).join('');
+  const sel=state.kpis.find(k=>k.id===ui.kpiSel);
+  mainEl().innerHTML=`${head('Indicadores de desempenho','Cadastre metas e resultados por mês. A visão trimestral consolida os meses (média para percentuais, soma para quantidades).',
+    `<button class="btn" data-a="kpi-csv">CSV</button><button class="btn" data-a="kpi-xlsx">Excel</button>`)}
+    ${state.meta.demo?`<div class="banner"><span><b>Dados demonstrativos.</b> Os valores abaixo são fictícios e servem só para mostrar o funcionamento. Não representam o RH da Câmara.</span><button class="btn sm" data-a="demo-clear">Limpar dados demonstrativos</button></div>`:''}
+    <div class="row"><label class="row"><span class="lbl">Ano</span><select data-pf="kpi.year" style="width:auto">${years.map(y=>`<option value="${y}"${y===yr?' selected':''}>${y}</option>`).join('')}</select></label>
+      <div class="seg"><button data-a="kpi-view" data-v="mensal" aria-pressed="${view==='mensal'}">Mensal</button><button data-a="kpi-view" data-v="trimestral" aria-pressed="${view==='trimestral'}">Trimestral</button></div></div>
+    <div class="grid g4" id="kpiCards"></div>
+    <section class="card"><div class="ch"><h2 id="kpiChartT"></h2></div><div id="kpiChart"></div></section>
+    <section class="card"><div class="ch"><h2>Metas e resultados</h2><button class="btn sm" data-a="kpi-add">${icon('plus',14)}Adicionar indicador</button></div>
+      <div class="scroll"><table><thead><tr><th>Indicador</th><th>Meta</th>${(view==='mensal'?MESES:['T1','T2','T3','T4']).map(m=>`<th class="num">${m}</th>`).join('')}</tr></thead><tbody>${rows}</tbody></table></div>
+      ${view==='trimestral'?'<p class="hint" style="margin-top:8px">Na visão trimestral os valores são calculados. Mude para Mensal para lançar resultados.</p>':''}</section>
+    ${sel?`<section class="card"><div class="ch"><h2>Editar indicador selecionado</h2><button class="btn sm danger" data-a="kpi-del" data-id="${esc(sel.id)}">Excluir indicador</button></div>
+      <div class="grid g2"><label class="fld"><span>Nome</span><input data-pf="k.nome" data-id="${esc(sel.id)}" value="${esc(sel.nome)}"></label>
+      <div class="r2"><label class="fld"><span>Tipo</span><select data-pf="k.tipo" data-id="${esc(sel.id)}"><option value="pct"${sel.tipo==='pct'?' selected':''}>Percentual</option><option value="qtd"${sel.tipo==='qtd'?' selected':''}>Quantidade</option></select></label>
+      <label class="fld"><span>Melhor quando</span><select data-pf="k.dir" data-id="${esc(sel.id)}"><option value="maior"${sel.dir==='maior'?' selected':''}>O valor é maior</option><option value="menor"${sel.dir==='menor'?' selected':''}>O valor é menor</option></select></label></div></div></section>`:''}`;
+  kpiOutputs();
+}
+
+/* ---------- Configurações ---------- */
+async function loadVersionList(){
+  ui.versions=await listVersions();
+  const box=$('#verList'); if(box) box.innerHTML=versionsHtml();
+}
+function versionsHtml(){
+  const v=ui.versions;
+  if(!v) return '<p class="hint">Carregando…</p>';
+  if(!v.length) return '<p class="hint">Nenhuma cópia criada ainda.</p>';
+  return `<div class="scroll"><table><thead><tr><th>Data</th><th>Descrição</th><th></th></tr></thead><tbody>${v.map(x=>`<tr><td>${esc(fmtDT(x.at))}</td><td>${esc(x.label)}</td><td><div class="row" style="justify-content:flex-end"><button class="btn sm" data-a="ver-restore" data-id="${esc(x.id)}">Restaurar</button><button class="btn sm danger" data-a="ver-del" data-id="${esc(x.id)}">Excluir</button></div></td></tr>`).join('')}</tbody></table></div>`;
+}
+function pageConfig(){
+  const i=state.inst;
+  mainEl().innerHTML=`${head('Configurações','Dados institucionais, parâmetros, cópias de segurança e importação/exportação.')}
+    <section class="card"><div class="ch"><h2>Dados institucionais</h2></div>
+      <div class="grid g2"><label class="fld"><span>Nome do sistema</span><input data-pf="inst.nome" value="${esc(i.nome)}"></label>
+      <label class="fld"><span>Subtítulo</span><input data-pf="inst.sub" value="${esc(i.sub)}"></label>
+      <label class="fld"><span>Órgão</span><input data-pf="inst.orgao" value="${esc(i.orgao)}"></label>
+      <label class="fld"><span>Setor responsável pelo sistema</span><input data-pf="inst.setor" value="${esc(i.setor)}"></label>
+      <label class="fld" style="grid-column:1/-1"><span>Observações</span><textarea rows="2" data-pf="inst.obs">${esc(i.obs)}</textarea></label></div></section>
+    ${paramsCard()}
+    <section class="card"><div class="ch"><div><h2>Cópias de segurança e versões</h2><p class="hint">Uma cópia automática é criada no primeiro salvamento de cada dia. Restaurar substitui os dados atuais, e dá para desfazer logo em seguida.</p></div></div>
+      <div class="row" style="margin-bottom:12px"><input id="verLabel" placeholder="Descrição da cópia (opcional)" style="max-width:340px"><button class="btn primary" data-a="ver-new">Criar cópia agora</button></div>
+      <div id="verList">${versionsHtml()}</div></section>
+    <section class="card"><div class="ch"><h2>Dados</h2></div>
+      <div class="row" style="margin-bottom:10px"><button class="btn" data-a="json-export">Exportar JSON</button><button class="btn" data-a="json-import">Importar JSON</button><button class="btn danger" data-a="reset">Restaurar modelo inicial</button></div>
+      <p class="hint" id="storeInfo"></p></section>
+    <section class="card"><div class="ch"><h2>Observação institucional</h2></div><p>${esc(LEGAL)}</p>
+      <p class="hint" style="margin-top:8px">O sistema não autoriza nomeações, exonerações, pagamentos ou concessões de direitos. A autoridade competente permanece responsável pelas decisões administrativas. Não cadastre dados pessoais reais de servidores.</p></section>`;
+  $('#storeInfo').textContent=dbh
+    ?'Os dados ficam salvos neste documento, no banco do próprio sistema, e acompanham quem abrir o mesmo link com permissão de edição. Uma cópia local também fica neste navegador.'
+    :'Os dados ficam salvos somente neste navegador, neste computador. Não existe sincronização automática entre computadores: use Exportar JSON e Importar JSON para levar os dados para outro lugar.';
+  if(!ui.versions) loadVersionList();
+}
+
+/* ---------- campos de página (input) ---------- */
+const PF={
+  'inst.nome':el=>{state.inst.nome=el.value;updateBrand();},
+  'inst.sub':el=>{state.inst.sub=el.value;updateBrand();},
+  'inst.orgao':el=>{state.inst.orgao=el.value;updateBrand();},
+  'inst.setor':el=>{state.inst.setor=el.value;},
+  'inst.obs':el=>{state.inst.obs=el.value;},
+  'u.nome':(el,id)=>{const u=U(id);if(u) u.nome=el.value;},
+  'u.sigla':(el,id)=>{const u=U(id);if(u) u.sigla=el.value;},
+  'u.desc':(el,id)=>{const u=U(id);if(u) u.desc=el.value;},
+  'u.obs':(el,id)=>{const u=U(id);if(u) u.obs=el.value;},
+  'u.icone':(el,id)=>{const u=U(id);if(u){u.icone=el.value;return 'rr';}},
+  'u.page':(el,id)=>{const u=U(id);if(u) u.page=el.value;},
+  'u.divisao':(el,id)=>{const u=U(id);if(u){u.divisao=el.checked;state.org.nodes.forEach(n=>{if(n.unitId===id) n.tipo=el.checked?'nucleo':(n.tipo==='nucleo'?'unidade':n.tipo);});}},
+  'u.comp':(el,id,i)=>{const u=U(id);if(u) u.comp[Number(i)]=el.value;},
+  'f.nome':(el,id)=>{const f=FL(id);if(f){f.nome=el.value;const c=$('.chip.on',mainEl());if(c) c.textContent=f.nome||'Sem título';}},
+  'f.desc':(el,id)=>{const f=FL(id);if(f) f.desc=el.value;},
+  'f.page':(el,id)=>{const f=FL(id);if(f){f.page=el.value;ui.flowSel[f.page]=f.id;toast('Fluxograma movido para '+PAGES_FLOW[f.page]+'.');setTimeout(()=>go(f.page),0);return 'keep';}},
+  'p.nome':(el,id)=>{const p=state.params.find(x=>x.id===id);if(p) p.nome=el.value;},
+  'p.valor':(el,id)=>{const p=state.params.find(x=>x.id===id);if(p) p.valor=el.value;},
+  'p.obs':(el,id)=>{const p=state.params.find(x=>x.id===id);if(p) p.obs=el.value;},
+  'm.ativ':(el,id)=>{const m=state.matriz.find(x=>x.id===id);if(m) m.ativ=el.value;},
+  'm.resp':(el,id)=>{const m=state.matriz.find(x=>x.id===id);if(m) m.resp=el.value;},
+  'm.sup':(el,id)=>{const m=state.matriz.find(x=>x.id===id);if(m) m.sup=el.value;},
+  'm.obs':(el,id)=>{const m=state.matriz.find(x=>x.id===id);if(m) m.obs=el.value;},
+  'c.titulo':(el,id)=>{const c=state.manual.find(x=>x.id===id);if(c){c.titulo=el.value;const s=$(`.chap[data-id="${id}"] span`,mainEl());if(s){const i=state.manual.indexOf(c);s.textContent=(i+1)+'. '+(c.titulo||'Sem título');}}},
+  'c.texto':(el,id)=>{const c=state.manual.find(x=>x.id===id);if(c) c.texto=el.value;},
+  'k.nome':(el,id)=>{const k=state.kpis.find(x=>x.id===id);if(k){k.nome=el.value;kpiOutputs();}},
+  'k.tipo':(el,id)=>{const k=state.kpis.find(x=>x.id===id);if(k){k.tipo=el.value;return 'rr';}},
+  'k.dir':(el,id)=>{const k=state.kpis.find(x=>x.id===id);if(k){k.dir=el.value;kpiOutputs();}},
+  'k.meta':(el,id)=>{const k=state.kpis.find(x=>x.id===id);if(k){k.meta=el.value===''?null:Number(el.value);kpiOutputs();}},
+  'k.val':(el,id)=>{const k=state.kpis.find(x=>x.id===id);if(k){const key=mkey(ui.kpiYear,Number(el.dataset.m));if(el.value==='') delete k.vals[key]; else k.vals[key]=Number(el.value);state.meta.demo=state.meta.demo;kpiOutputs();}},
+  'kpi.year':el=>{ui.kpiYear=Number(el.value);setTimeout(rr,0);return 'keep';}
+};
+document.addEventListener('input',ev=>{
+  const el=ev.target,k=el.dataset&&el.dataset.pf;
+  if(!k||!PF[k]||!el.closest('#app')) return;
+  const r=PF[k](el,el.dataset.id,el.dataset.i);
+  if(r!=='keep') changed();
+  if(r==='rr') rr();
+});
+
+/* ---------- ações (cliques) ---------- */
+const ACT={
+  'nav':b=>go(b.dataset.p),
+  'nav-toggle':()=>$('#shell').classList.toggle('nav-open'),
+  'nav-close':()=>$('#shell').classList.remove('nav-open'),
+  'save':()=>{clearTimeout(saveT);doSave(true);},
+  'inst-edit':()=>openModal('Dados institucionais',
+    `<label class="fld"><span>Nome do sistema</span><input name="nome" value="${esc(state.inst.nome)}"></label>
+     <label class="fld"><span>Subtítulo</span><input name="sub" value="${esc(state.inst.sub)}"></label>
+     <label class="fld"><span>Órgão</span><input name="orgao" value="${esc(state.inst.orgao)}"></label>
+     <label class="fld"><span>Setor responsável</span><input name="setor" value="${esc(state.inst.setor)}"></label>`,
+    f=>{state.inst.nome=f.nome.value.trim()||state.inst.nome;state.inst.sub=f.sub.value.trim();state.inst.orgao=f.orgao.value.trim();state.inst.setor=f.setor.value.trim();changed();updateBrand();renderPage();}),
+  'flow-go':b=>{const f=FL(b.dataset.id);if(f){ui.flowSel[f.page]=f.id;go(f.page);}},
+  'flow-pick':b=>{const f=FL(b.dataset.id);if(f){ui.flowSel[f.page]=f.id;rr();}},
+  'flow-add':b=>{const f=newFlow(b.dataset.p);state.flows.push(f);ui.flowSel[f.page]=f.id;changed();rr();},
+  'flow-dup':b=>{const f=FL(b.dataset.id);if(f){const c=clone(f);c.id=uid('fl-');c.nome=f.nome+' (cópia)';state.flows.push(c);ui.flowSel[c.page]=c.id;changed();rr();}},
+  'flow-del':b=>{const f=FL(b.dataset.id);if(f) destructive('Fluxograma excluído: '+f.nome,()=>{state.flows=state.flows.filter(x=>x.id!==f.id);});rr();},
+  'u-add':()=>{state.units.push({id:uid('u-'),nome:'Nova unidade',sigla:'',icone:'users',hue:HUES[state.units.length%HUES.length],page:'',externa:false,divisao:false,desc:'',obs:'',comp:[]});changed();rr();},
+  'u-add-ext':()=>{state.units.push({id:uid('u-'),nome:'Nova autoridade ou unidade externa',sigla:'',icone:'building',hue:HUES[state.units.length%HUES.length],page:'',externa:true,divisao:false,desc:'',obs:'',comp:[]});changed();rr();},
+  'u-del':b=>deleteUnit(b.dataset.id),
+  'u-hue':b=>{const u=U(b.dataset.id);if(u){u.hue=Number(b.dataset.h);changed();rr();}},
+  'comp-add':b=>{const u=U(b.dataset.id);if(u){u.comp.push('');changed();rr();const ins=$$(`input[data-pf="u.comp"][data-id="${b.dataset.id}"]`);if(ins.length) ins[ins.length-1].focus();}},
+  'comp-del':b=>{const u=U(b.dataset.id);if(u){u.comp.splice(Number(b.dataset.i),1);changed();rr();}},
+  'comp-up':b=>{const u=U(b.dataset.id);if(u&&moveItem(u.comp,Number(b.dataset.i),-1)){changed();rr();}},
+  'comp-down':b=>{const u=U(b.dataset.id);if(u&&moveItem(u.comp,Number(b.dataset.i),1)){changed();rr();}},
+  'p-add':()=>{state.params.push({id:uid('p'),nome:'Novo parâmetro',valor:'',obs:''});changed();rr();},
+  'p-del':b=>{state.params=state.params.filter(p=>p.id!==b.dataset.id);changed();rr();},
+  'm-add':()=>{state.matriz.push({id:uid('m'),ativ:'Nova atividade',resp:'',sup:'Diretoria de Gestão de Pessoas',obs:''});changed();rr();},
+  'm-del':b=>{const m=state.matriz.find(x=>x.id===b.dataset.id);if(m) destructive('Atividade excluída.',()=>{state.matriz=state.matriz.filter(x=>x.id!==m.id);});rr();},
+  'm-up':b=>{if(moveItem(state.matriz,state.matriz.findIndex(x=>x.id===b.dataset.id),-1)){changed();rr();}},
+  'm-down':b=>{if(moveItem(state.matriz,state.matriz.findIndex(x=>x.id===b.dataset.id),1)){changed();rr();}},
+  'm-csv':()=>saveFile('matriz-de-responsabilidades.csv',toCsv(matrizRows()),'text/csv'),
+  'm-xlsx':()=>exportXlsx('matriz-de-responsabilidades.xlsx',[{name:'Matriz',rows:matrizRows()}]),
+  'm-pdf':()=>{
+    const pdf=new PdfDoc({w:842,h:595,margin:40,footer:state.inst.nome+' · Matriz de responsabilidades'});
+    pdf.h1('Matriz de responsabilidades');pdf.para(state.inst.orgao+' — '+(state.inst.setor||''),{gray:0.4});
+    pdf.table([{label:'Atividade',w:3},{label:'Responsável principal',w:3},{label:'Supervisão',w:3},{label:'Observações',w:3}],state.matriz.map(m=>[m.ativ,m.resp,m.sup,m.obs]));
+    pdf.para(LEGAL,{size:8,gray:0.45});
+    saveFile('matriz-de-responsabilidades.pdf',pdf.build(),'application/pdf');
+  },
+  'chap-pick':(b,ev)=>{if(ev.target.closest('.ibtn')) return;ui.chap=b.dataset.id;rr();},
+  'chap-add':()=>{const c={id:uid('mc'),titulo:'Novo capítulo',texto:'',auto:''};state.manual.push(c);ui.chap=c.id;ui.prev=false;changed();rr();},
+  'chap-del':b=>{const c=state.manual.find(x=>x.id===b.dataset.id);if(c) destructive('Capítulo excluído.',()=>{state.manual=state.manual.filter(x=>x.id!==c.id);});ui.chap=null;rr();},
+  'chap-up':b=>{if(moveItem(state.manual,state.manual.findIndex(x=>x.id===b.dataset.id),-1)){changed();rr();}},
+  'chap-down':b=>{if(moveItem(state.manual,state.manual.findIndex(x=>x.id===b.dataset.id),1)){changed();rr();}},
+  'chap-regen':b=>{const c=state.manual.find(x=>x.id===b.dataset.id);if(c) destructive('Capítulo atualizado com os dados do sistema.',()=>{c.texto=genAuto(state,c.auto);});rr();},
+  'man-edit':()=>{ui.prev=false;rr();},
+  'man-prev':()=>{ui.prev=true;rr();},
+  'man-pdf':()=>manualPdf(),
+  'man-md':()=>manualMd(),
+  'kpi-pick':b=>{ui.kpiSel=b.dataset.id;rr();},
+  'kpi-view':b=>{ui.kpiView=b.dataset.v;rr();},
+  'kpi-add':()=>{const k={id:uid('k'),nome:'Novo indicador',tipo:'qtd',dir:'maior',meta:null,vals:{}};state.kpis.push(k);ui.kpiSel=k.id;changed();rr();},
+  'kpi-del':b=>{const k=state.kpis.find(x=>x.id===b.dataset.id);if(k) destructive('Indicador excluído.',()=>{state.kpis=state.kpis.filter(x=>x.id!==k.id);});ui.kpiSel=null;rr();},
+  'kpi-csv':()=>saveFile('indicadores-'+ui.kpiYear+'-'+ui.kpiView+'.csv',toCsv(kpiTableRows()),'text/csv'),
+  'kpi-xlsx':()=>exportXlsx('indicadores-'+ui.kpiYear+'.xlsx',[{name:'Mensal',rows:(()=>{const v=ui.kpiView;ui.kpiView='mensal';const r=kpiTableRows();ui.kpiView=v;return r;})()},{name:'Trimestral',rows:(()=>{const v=ui.kpiView;ui.kpiView='trimestral';const r=kpiTableRows();ui.kpiView=v;return r;})()}]),
+  'demo-clear':()=>destructive('Dados demonstrativos removidos.',()=>{state.kpis.forEach(k=>{k.vals={};k.meta=null;});state.meta.demo=false;}),
+  'ver-new':async()=>{const l=$('#verLabel');await createVersion((l&&l.value.trim())||'Cópia manual');ui.versions=null;rr();},
+  'ver-del':async b=>{await removeVersion(b.dataset.id);ui.versions=null;rr();},
+  'ver-restore':b=>{
+    const v=(ui.versions||[]).find(x=>x.id===b.dataset.id); if(!v) return;
+    const d=parseState(v.json); if(!d){toast('Esta cópia não pôde ser lida.');return;}
+    destructive('Versão restaurada: '+fmtDT(v.at),()=>{state=d;});afterRestore();
+  },
+  'json-export':()=>saveFile('rh-camara-rio-verde-'+todayKey()+'.json',JSON.stringify(state,null,2),'application/json'),
+  'json-import':()=>$('#fileIn').click(),
+  'reset':()=>{destructive('Modelo inicial restaurado.',()=>{state=buildDefault();layoutAll(state);});afterRestore();}
+};
+document.addEventListener('click',ev=>{
+  const b=ev.target.closest('[data-a]'); if(!b||!b.closest('#app')) return;
+  if(b.closest('.ed')) return;
+  const f=ACT[b.dataset.a]; if(f) f(b,ev);
+});
+$('#fileIn').addEventListener('change',ev=>{
+  const file=ev.target.files&&ev.target.files[0]; if(!file) return;
+  const r=new FileReader();
+  r.onload=()=>{
+    const d=parseState(String(r.result));
+    if(!d){toast('Arquivo inválido. Use um JSON exportado por este sistema.');return;}
+    destructive('Dados importados.',()=>{state=d;});afterRestore();
+  };
+  r.onerror=()=>toast('Não foi possível ler o arquivo.');
+  r.readAsText(file); ev.target.value='';
+});
+
+/* ---------- tema e início ---------- */
+function onTheme(){
+  if(curEd) curEd.api.theme();
+  if(ui.page==='home') rr();
+}
+try{
+  matchMedia('(prefers-color-scheme: dark)').addEventListener('change',onTheme);
+  new MutationObserver(onTheme).observe(document.documentElement,{attributes:true,attributeFilter:['data-theme']});
+}catch(e){}
+
+function init(){
+  state=buildDefault(); layoutAll(state);
+  buildShell(); renderPage(); setStatus('load');
+  const h=(location.hash||'').replace('#','');
+  if(NAV.some(n=>n.k===h)) go(h);
+  (async()=>{
+    try{if(window.claude&&window.claude.use) window.__dl=await window.claude.use('downloads');}catch(e){}
+    try{if(window.claude&&window.claude.use) dbh=await window.claude.use('db');}catch(e){dbh=null;}
+    let loaded=null;
+    try{if(dbh){const s=await dbh.doc('rh/estado').get();if(s.exists){const d=s.data();loaded=parseState(d&&d.json);}}}catch(e){}
+    if(!loaded){try{loaded=parseState(localStorage.getItem(LS_STATE));}catch(e){}}
+    if(loaded&&!touched){state=loaded;afterRestore();}
+    setStatus(dbh?'ok':'local');
+  })();
+}
+init();
+
+</script>
+
+</body></html>

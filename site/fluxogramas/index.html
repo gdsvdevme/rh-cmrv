@@ -2569,12 +2569,26 @@ h2.t{font-size:24pt;color:#0a3b27;margin:0 0 2mm;line-height:1.15}
 const VOL_MOTIF='<svg class="motif" viewBox="0 0 400 400" fill="none" stroke="#fff" stroke-width="2.2"><rect x="150" y="20" width="100" height="46" rx="6"/><path d="M200 66v40M70 106h260M70 106v40M200 106v40M330 106v40"/><rect x="20" y="146" width="100" height="46" rx="6"/><rect x="150" y="146" width="100" height="46" rx="6"/><rect x="280" y="146" width="100" height="46" rx="6"/><path d="M70 192v40M200 192v40M330 192v40M30 232h80M160 232h80M290 232h80"/><rect x="20" y="232" width="100" height="46" rx="6"/><rect x="150" y="232" width="100" height="46" rx="6"/><rect x="280" y="232" width="100" height="46" rx="6"/></svg>';
 const VOL_PW=172,VOL_PH=208,VOL_LW=259,VOL_LH=138;
 
-function volFreeCut(ranges,target){
+/* Posições livres de corte: o meio de cada vão entre os blocos e rótulos do desenho. */
+function volGaps(ranges){
   const rs=ranges.slice().sort((a,b)=>a[0]-b[0]),m=[];
   rs.forEach(r=>{if(m.length&&r[0]<=m[m.length-1][1]) m[m.length-1][1]=Math.max(m[m.length-1][1],r[1]); else m.push([r[0],r[1]]);});
   const gaps=[];for(let i=0;i<m.length-1;i++) gaps.push((m[i][1]+m[i+1][0])/2);
-  if(!gaps.length) return target;
-  return gaps.reduce((a,g)=>Math.abs(g-target)<Math.abs(a-target)?g:a,gaps[0]);
+  return gaps;
+}
+/* Escolhe os S-1 cortes: cada faixa precisa caber na altura da página (maxH) e o corte vai para o vão livre mais próximo da divisão igual. */
+function volCuts(d,S,maxH){
+  const gaps=volGaps(d.ranges),cuts=[0];let ok=true;
+  for(let i=1;i<S;i++){
+    const prev=cuts[i-1],lo=Math.max(prev+1,d.h-(S-i)*maxH),hi=prev+maxH,target=d.h*i/S;
+    let best=null;
+    gaps.forEach(c=>{if(c>=lo&&c<=hi&&(best===null||Math.abs(c-target)<Math.abs(best-target))) best=c;});
+    if(best===null){ok=false;best=Math.min(hi,Math.max(lo,target));}
+    cuts.push(best);
+  }
+  cuts.push(d.h);
+  if(d.h-cuts[S-1]>maxH+0.01) ok=false;
+  return {cuts,ok};
 }
 function volPlan(d){
   let best=null;
@@ -2583,13 +2597,13 @@ function volPlan(d){
       const S=P*K; if(S>4) continue;
       const colw=(aw-6*(K-1))/K, s=Math.min(colw/d.w,ah/(d.h/S));
       const score=Math.min(s,0.30)-0.02*(P-1)-0.01*(K-1);
-      if(!best||score>best.score) best={score,s,rot,P,K};
+      if(!best||score>best.score) best={score,s,rot,P,K,ah};
     }
   });
-  const S=best.P*best.K, cuts=[0];
-  for(let i=1;i<S;i++) cuts.push(volFreeCut(d.ranges,d.h*i/S));
-  cuts.push(d.h);
-  return {scale:best.s,rot:best.rot,P:best.P,K:best.K,cuts};
+  const S=best.P*best.K;let s=best.s,r=volCuts(d,S,best.ah/s);
+  // sem vão livre que respeite a página: reduz um pouco a escala até os cortes caírem em espaços vazios
+  for(let n=0;n<12&&!r.ok;n++){s*=0.96;r=volCuts(d,S,best.ah/s);}
+  return {scale:s,rot:best.rot,P:best.P,K:best.K,cuts:r.cuts};
 }
 function volStrip(d,y0,y1,wmm,hmm){
   const h=y1-y0;
@@ -2615,6 +2629,15 @@ function volData(st){
     const sc=sceneStandalone(doc,kind,pal,{units:st.units,title:'',mid});
     const bb=sceneBBox(doc,kind,st.units);
     const ranges=doc.nodes.map(n=>{const s=nodeSize(n,kind,st.units),y=(n.y||0)-bb.y+36;return [y,y+s.h];});
+    // os rótulos das setas (Sim/Não) também são áreas livres de corte, para não saírem partidos entre as páginas
+    if(kind==='flow'){
+      const byId=new Map(doc.nodes.map(n=>[n.id,n]));
+      doc.edges.forEach(e=>{
+        const A=byId.get(e.from),B=byId.get(e.to); if(!(A&&B&&e.l)) return;
+        const g=edgeGeom(A,B,nodeSize(A,kind,st.units),nodeSize(B,kind,st.units),kind),y=g.ly-bb.y+36;
+        ranges.push([y-14,y+14]);
+      });
+    }
     const d={t,page,desc,svg:sc.svg,w:sc.w,h:sc.h,ranges};d.plan=volPlan(d);out.push(d);
   };
   add('Organograma do RH','Organograma','Estrutura do Departamento de Recursos Humanos.',st.org,'org','vo');

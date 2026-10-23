@@ -9,6 +9,7 @@
 Uso: python3 build.py [--flow-url URL] [--home-url URL]
   --flow-url  endereço do sistema de fluxogramas usado no painel (artefato)
   --home-url  endereço do painel usado no botão "Sistema Interno do RH" (artefato)
+  --pb-url  endereço do PocketBase (padrão: https://pb.devgabriel.app.br)
   --pessoal-url  endereço da Hierarquia de Pessoal usado no painel (artefato)
 """
 import glob, os, sys
@@ -23,10 +24,11 @@ def wr(p, s):
 css = rd('src/styles.css')
 js = '\n'.join(open(f, encoding='utf-8').read() for f in sorted(glob.glob(os.path.join(root, 'src/js/*.js'))))
 js = js.replace('/*VOLUME_CSS*/', rd('src/volume.css').replace('`', '\\`'))
+pbjs = rd('src/pb.js').replace('/*PB_URL*/', opt('--pb-url', 'https://pb.devgabriel.app.br'))
 js = js.replace('</script>', '<\\/script>')
-flow = rd('src/index.template.html').replace('/*CSS*/', css).replace('/*JS*/', js)
-launcher = rd('src/launcher.template.html')
-pessoal = rd('src/pessoal.template.html')
+flow = rd('src/index.template.html').replace('/*CSS*/', css).replace('/*PB_JS*/', pbjs).replace('/*JS*/', js)
+launcher = rd('src/launcher.template.html').replace('/*PB_JS*/', pbjs)
+pessoal = rd('src/pessoal.template.html').replace('/*PB_JS*/', pbjs)
 
 head = ('<!doctype html>\n<html lang="pt-BR"><head><meta charset="utf-8">'
         '<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"></head>'

@@ -50,7 +50,7 @@ async function doSave(manual){
   if(state.meta.copiaDia!==todayKey()){state.meta.copiaDia=todayKey();snapNeeded=true;}
   const json=JSON.stringify(state);
   let ok=true;
-  try{localStorage.setItem(LS_STATE,json);}catch(e){}
+  if(!dbh){try{localStorage.setItem(LS_STATE,json);}catch(e){}}
   try{
     if(dbh){await dbh.doc('rh/estado').set({v:2,json});setStatus('ok');}
     else setStatus('local');
@@ -59,6 +59,19 @@ async function doSave(manual){
   saving=false;
   if(pendingSave){pendingSave=false;doSave(false);}
   else if(manual&&ok) toast(dbh?'Alterações salvas.':'Alterações salvas neste navegador.');
+}
+
+/* Envia ao servidor os dados que estavam só neste navegador e, depois de conferir, apaga a cópia local. */
+async function migrateLocal(){
+  try{
+    const vs=localVersions();
+    await doSave(false);
+    const s=await dbh.doc('rh/estado').get();
+    if(!s.exists||!parseState(s.data().json)) throw new Error('verificação');
+    for(const v of vs){await dbh.doc('versoes/'+v.id).set({at:v.at,label:v.label,json:v.json});}
+    try{localStorage.removeItem(LS_STATE);localStorage.removeItem(LS_VERS);}catch(e){}
+    toast('Dados deste navegador enviados ao servidor.');
+  }catch(e){toast('Não foi possível enviar os dados locais ao servidor. Eles continuam neste navegador.');}
 }
 
 /* ---------- versões (cópias de segurança) ---------- */

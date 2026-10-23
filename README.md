@@ -28,7 +28,20 @@ Na página **Painel Inicial** ou **Manual de Procedimentos**, o botão **Gerar v
 - Matriz e indicadores: CSV, Excel e PDF. Manual: PDF e Markdown.
 
 ## Onde ficam os dados
-Ao abrir os arquivos de `site/`, os dados ficam **somente no navegador deste computador** (localStorage). **Não há sincronização entre computadores**; use Exportar/Importar JSON.
+Os dados ficam no **PocketBase** (`https://pb.devgabriel.app.br`), nas coleções `docs` (painel, fluxogramas e hierarquia de pessoal) e `versoes` (cópias de segurança). Ao abrir o sistema, uma tela de login pede e-mail e senha da conta de acesso; o navegador guarda apenas esse login (e o tema).
+
+- **Migração automática:** se houver dados antigos no localStorage do navegador e o servidor ainda não os tiver, eles são enviados ao servidor na primeira abertura, conferidos e só então apagados do navegador. Abra uma vez cada sistema (painel, fluxogramas, pessoal) em cada computador que tenha dados locais.
+- **Sem conexão:** se o servidor não responder (ou você escolher "Usar só neste navegador"), o sistema volta a salvar localmente, como antes.
+- Outro endereço de servidor: `python3 build.py --pb-url https://seu-pocketbase`.
+
+### Configurar o PocketBase
+```
+export PB_URL=https://pb.devgabriel.app.br
+export PB_ADMIN_EMAIL=...  PB_ADMIN_PASSWORD=...        # superusuário
+export PB_APP_EMAIL=...    PB_APP_PASSWORD=...          # conta que entra no sistema
+python3 pocketbase/setup.py
+```
+O script cria as coleções (acesso só para usuários autenticados), desativa o cadastro público e cria a conta do app. Pode ser executado de novo sem duplicar nada. Nunca grave senhas no repositório.
 
 ## Avisos
 Os indicadores iniciais são demonstrativos e fictícios. Os parâmetros de férias começam vazios, sem prazos ou direitos pré-definidos. O sistema não autoriza nomeações, exonerações, pagamentos ou concessões; a autoridade competente permanece responsável. Não cadastre dados pessoais reais.

@@ -103,6 +103,7 @@ details.grp[open]>summary::before{transform:rotate(90deg)}
 <div id="toast" hidden></div>
 
 <script>
+/*PB_JS*/
 const HOME_URL="/*HOME_URL*/";
 const LS='rhcrv-pessoal-v1',TEMA_KEY='rhcrv-tema';
 const $=s=>document.querySelector(s);
@@ -179,7 +180,7 @@ function lerCsv(texto){
 /* ---------- armazenamento ---------- */
 function salvar(){
   const json=JSON.stringify(dados);
-  try{if(dados) localStorage.setItem(LS,json); else localStorage.removeItem(LS);}catch(e){}
+  if(!dbh){try{if(dados) localStorage.setItem(LS,json); else localStorage.removeItem(LS);}catch(e){}}
   if(dbh){(dados?dbh.doc('pessoal/dados').set({json}):dbh.doc('pessoal/dados').delete()).catch(()=>{});}
 }
 function toast(m){const t=$('#toast');t.textContent=m;t.hidden=false;clearTimeout(toast.t);toast.t=setTimeout(()=>t.hidden=true,4000);}
@@ -257,7 +258,7 @@ $('#file').addEventListener('change',async ev=>{
   ev.target.value='';
 });
 $('#clrBtn').addEventListener('click',()=>{
-  if($('#clrBtn').dataset.sure){delete $('#clrBtn').dataset.sure;$('#clrBtn').textContent='Remover dados';dados=null;salvar();render();toast('Dados removidos deste navegador.');}
+  if($('#clrBtn').dataset.sure){delete $('#clrBtn').dataset.sure;$('#clrBtn').textContent='Remover dados';dados=null;salvar();render();toast('Dados removidos.');}
   else{$('#clrBtn').dataset.sure='1';$('#clrBtn').textContent='Confirmar remoção';setTimeout(()=>{delete $('#clrBtn').dataset.sure;$('#clrBtn').textContent='Remover dados';},4000);}
 });
 $('#expBtn').addEventListener('click',()=>{allOpen=!allOpen;$('#expBtn').textContent=allOpen?'Recolher tudo':'Expandir tudo';render();});
@@ -269,9 +270,16 @@ try{matchMedia('(prefers-color-scheme: dark)').addEventListener('change',themeBt
   themeBtn();render();
   (async()=>{
     try{
-      if(window.claude&&window.claude.use){
-        dbh=await window.claude.use('db');
-        if(dbh){const s=await dbh.doc('pessoal/dados').get();if(s.exists){try{const d=JSON.parse(s.data().json);if(d&&Array.isArray(d.pessoas)){dados=d;render();}}catch(e){}}}
+      if(window.claude&&window.claude.use) dbh=await window.claude.use('db');
+      if(!dbh) dbh=await PB.connect();
+      if(dbh){
+        const s=await dbh.doc('pessoal/dados').get();
+        if(s.exists){try{const d=JSON.parse(s.data().json);if(d&&Array.isArray(d.pessoas)){dados=d;render();}}catch(e){}}
+        else if(dados){
+          await dbh.doc('pessoal/dados').set({json:JSON.stringify(dados)});
+          const v=await dbh.doc('pessoal/dados').get();
+          if(v.exists){try{localStorage.removeItem(LS);}catch(e){}toast('Dados deste navegador enviados ao servidor.');}
+        }
       }
     }catch(e){dbh=null;}
   })();

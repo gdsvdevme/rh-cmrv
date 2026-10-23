@@ -103,6 +103,7 @@ footer{padding-block:0 28px;color:var(--muted);font-size:12.5px}
 <div id="toast" hidden></div>
 
 <script>
+/*PB_JS*/
 const FLOW_URL="/*FLOW_URL*/";
 const PESSOAL_URL="/*PESSOAL_URL*/";
 const LS='rhcrv-painel-v1';
@@ -155,7 +156,7 @@ function persist(){
   clearTimeout(saveT);
   saveT=setTimeout(async()=>{
     const json=JSON.stringify(st);
-    try{localStorage.setItem(LS,json);}catch(e){}
+    if(!dbh){try{localStorage.setItem(LS,json);}catch(e){}}
     if(dbh){try{await dbh.doc('painel/tiles').set({json});}catch(e){}}
   },300);
 }
@@ -252,12 +253,16 @@ function migrar(){
   render();themeBtn();
   (async()=>{
     try{
-      if(window.claude&&window.claude.use){
-        dbh=await window.claude.use('db');
-        if(dbh){
-          $('#storeNote').textContent='As alterações deste painel ficam salvas no documento.';
-          const s=await dbh.doc('painel/tiles').get();
-          if(s.exists){try{const d=JSON.parse(s.data().json);if(d&&Array.isArray(d.tiles)){st=d;migrar();render();}}catch(e){}}
+      if(window.claude&&window.claude.use) dbh=await window.claude.use('db');
+      if(!dbh) dbh=await PB.connect();
+      if(dbh){
+        $('#storeNote').textContent='As alterações deste painel ficam salvas no servidor.';
+        const s=await dbh.doc('painel/tiles').get();
+        if(s.exists){try{const d=JSON.parse(s.data().json);if(d&&Array.isArray(d.tiles)){st=d;migrar();render();}}catch(e){}}
+        else if(load()){
+          await dbh.doc('painel/tiles').set({json:JSON.stringify(st)});
+          const v=await dbh.doc('painel/tiles').get();
+          if(v.exists){try{localStorage.removeItem(LS);}catch(e){}toast('Dados deste navegador enviados ao servidor.');}
         }
       }
     }catch(e){dbh=null;}

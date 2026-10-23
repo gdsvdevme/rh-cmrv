@@ -546,7 +546,7 @@ try{
 }catch(e){}
 
 function init(){
-  try{const s=localStorage.getItem(TEMA_KEY);if(s==='dark'||s==='light') document.documentElement.setAttribute('data-theme',s);}catch(e){}
+  try{const s=localStorage.getItem(TEMA_KEY);document.documentElement.setAttribute('data-theme',s==='dark'?'dark':'light');}catch(e){document.documentElement.setAttribute('data-theme','light');}
   state=buildDefault(); layoutAll(state);
   buildShell(); renderPage(); setStatus('load'); themeBtn();
   const h=(location.hash||'').replace('#','');

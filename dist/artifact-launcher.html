@@ -236,7 +236,7 @@ document.querySelector('#themeBtn').addEventListener('click',()=>{const n=isDark
 try{matchMedia('(prefers-color-scheme: dark)').addEventListener('change',()=>{render();themeBtn();});new MutationObserver(()=>{render();themeBtn();}).observe(document.documentElement,{attributes:true,attributeFilter:['data-theme']});}catch(e){}
 
 (function init(){
-  try{const s=localStorage.getItem(TEMA_KEY);if(s==='dark'||s==='light') document.documentElement.setAttribute('data-theme',s);}catch(e){}
+  try{const s=localStorage.getItem(TEMA_KEY);document.documentElement.setAttribute('data-theme',s==='dark'?'dark':'light');}catch(e){document.documentElement.setAttribute('data-theme','light');}
   const l=load(); if(l) st=l;
   // mantém o endereço do sistema de fluxogramas atualizado
   const fl=st.tiles.find(t=>t.id==='t-fluxos'); if(fl&&!fl.url) fl.url=FLOW_URL;

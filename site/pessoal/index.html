@@ -248,19 +248,59 @@ const PB=(function(){
   }
 
   /* ---------- conexão ---------- */
+  const sleep=ms=>new Promise(r=>setTimeout(r,ms));
+  async function alive(){
+    for(let i=0;i<3;i++){
+      const ac=new AbortController(),t=setTimeout(()=>ac.abort(),6000);
+      try{const r=await fetch(URL_BASE+'/api/health',{cache:'no-store',signal:ac.signal});clearTimeout(t);if(r.ok) return true;}catch(e){clearTimeout(t);}
+      if(i<2) await sleep(1500);
+    }
+    return false;
+  }
+  const box='position:fixed;inset:0;z-index:99999;display:flex;align-items:center;justify-content:center;padding:16px;background:rgba(0,0,0,.5)';
+  const card='width:100%;max-width:380px;background:var(--surface,#fff);color:var(--fg,#12281d);border:1px solid var(--line,#d1ddd6);border-radius:12px;padding:22px;box-shadow:0 10px 40px rgba(0,0,0,.3);font:15px/1.45 system-ui,sans-serif';
+  const bt='padding:9px 14px;border-radius:8px;font:inherit;font-weight:600;cursor:pointer;';
+  /* servidor fora do ar: pergunta antes de seguir, para não trabalhar sem querer só neste navegador */
+  function offlineDialog(){
+    return new Promise(resolve=>{
+      const w=document.createElement('div');w.style.cssText=box;
+      w.innerHTML='<div role="alertdialog" aria-modal="true" style="'+card+'"><h3 style="margin:0 0 6px;font-size:18px">Sem conexão com o servidor</h3>'+
+        '<p style="margin:0 0 14px;color:var(--muted,#4f665a);font-size:13.5px">Não foi possível falar com o servidor dos dados. Verifique a internet e tente de novo. Se continuar só neste navegador, o que você fizer <b>não será salvo no servidor</b> e não aparecerá em outros computadores.</p>'+
+        '<div style="display:flex;gap:8px;justify-content:flex-end;flex-wrap:wrap"><button type="button" data-loc style="'+bt+'border:1px solid var(--line,#d1ddd6);background:transparent;color:inherit">Usar só neste navegador</button>'+
+        '<button type="button" data-retry style="'+bt+'border:0;background:var(--accent,#0a6b3d);color:var(--accent-fg,#fff)">Tentar novamente</button></div></div>';
+      document.body.appendChild(w);
+      const done=v=>{w.remove();resolve(v);};
+      w.querySelector('[data-retry]').addEventListener('click',()=>done(true));
+      w.querySelector('[data-loc]').addEventListener('click',()=>done(false));
+      w.querySelector('[data-retry]').focus();
+    });
+  }
+  function markLocal(){
+    if(document.getElementById('pb-local')) return;
+    const b=document.createElement('div');b.id='pb-local';
+    b.style.cssText='position:fixed;left:0;right:0;bottom:0;z-index:99998;background:#8a5a00;color:#fff;padding:8px 14px;font:13.5px/1.35 system-ui,sans-serif;display:flex;gap:10px;align-items:center;justify-content:center;flex-wrap:wrap;text-align:center';
+    b.innerHTML='<span>Modo local: os dados ficam só neste navegador e <b>não são salvos no servidor</b>.</span><button type="button" style="border:1px solid #fff;background:transparent;color:#fff;border-radius:7px;padding:3px 10px;font:inherit;font-weight:600;cursor:pointer">Reconectar</button>';
+    b.querySelector('button').addEventListener('click',()=>location.reload());
+    document.body.appendChild(b);
+  }
   async function connect(){
     if(!URL_BASE) return null;
-    try{
-      readAuth();
-      await fetch(URL_BASE+'/api/health',{cache:'no-store'}).then(r=>{if(!r.ok) throw new Error('offline');});
-      let ok=false;
-      if(token){
-        try{const r=await raw('POST','/api/collections/'+col+'/auth-refresh');token=r.token;email=(r.record&&(r.record.email||r.record.username))||email;saveAuth();ok=true;}
-        catch(e){if(e.status!==401&&e.status!==403&&e.status!==404) throw e; clearAuth();}
+    readAuth();
+    for(;;){
+      if(!(await alive())){if(await offlineDialog()) continue;markLocal();return null;}
+      try{
+        let ok=false;
+        if(token){
+          try{const r=await raw('POST','/api/collections/'+col+'/auth-refresh');token=r.token;email=(r.record&&(r.record.email||r.record.username))||email;saveAuth();ok=true;}
+          catch(e){if(e.status!==401&&e.status!==403&&e.status!==404) throw e; clearAuth();}
+        }
+        if(!ok&&!(await login())){markLocal();return null;}
+        return {doc,collection};
+      }catch(e){
+        if(await offlineDialog()) continue;
+        markLocal();return null;
       }
-      if(!ok&&!(await login())) return null;
-      return {doc,collection};
-    }catch(e){return null;}
+    }
   }
   return {connect,logout(){clearAuth();location.reload();},get email(){return email;},url:URL_BASE};
 })();
@@ -342,7 +382,7 @@ function lerCsv(texto){
 function salvar(){
   const json=JSON.stringify(dados);
   if(!dbh){try{if(dados) localStorage.setItem(LS,json); else localStorage.removeItem(LS);}catch(e){}}
-  if(dbh){(dados?dbh.doc('pessoal/dados').set({json}):dbh.doc('pessoal/dados').delete()).catch(()=>{});}
+  if(dbh){(dados?dbh.doc('pessoal/dados').set({json}):dbh.doc('pessoal/dados').delete()).catch(()=>toast('Não foi possível salvar no servidor. Verifique a conexão e tente de novo.'));}
 }
 function toast(m,undo){
   const t=$('#toast');t.textContent=m;

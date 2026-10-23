@@ -161,7 +161,7 @@ function persist(){
   saveT=setTimeout(async()=>{
     const json=JSON.stringify(st);
     if(!dbh){try{localStorage.setItem(LS,json);}catch(e){}}
-    if(dbh){try{await dbh.doc('painel/tiles').set({json});}catch(e){}}
+    if(dbh){try{await dbh.doc('painel/tiles').set({json});}catch(e){toast('Não foi possível salvar no servidor. Verifique a conexão.');}}
   },300);
 }
 function toast(m){const t=$('#toast');t.textContent=m;t.hidden=false;clearTimeout(toast.t);toast.t=setTimeout(()=>t.hidden=true,3500);}

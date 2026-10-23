@@ -207,7 +207,7 @@ function lerCsv(texto){
 function salvar(){
   const json=JSON.stringify(dados);
   if(!dbh){try{if(dados) localStorage.setItem(LS,json); else localStorage.removeItem(LS);}catch(e){}}
-  if(dbh){(dados?dbh.doc('pessoal/dados').set({json}):dbh.doc('pessoal/dados').delete()).catch(()=>{});}
+  if(dbh){(dados?dbh.doc('pessoal/dados').set({json}):dbh.doc('pessoal/dados').delete()).catch(()=>toast('Não foi possível salvar no servidor. Verifique a conexão e tente de novo.'));}
 }
 function toast(m,undo){
   const t=$('#toast');t.textContent=m;

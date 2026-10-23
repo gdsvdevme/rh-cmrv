@@ -179,7 +179,7 @@ const PB=(function(){
   const esc=s=>String(s).replace(/\\/g,'\\\\').replace(/"/g,'\\"');
   const spec=path=>{
     const i=path.indexOf('/'),col=path.slice(0,i),id=path.slice(i+1);
-    return col==='versoes'?{c:'versoes',f:'vid',k:id}:{c:'docs',f:'key',k:path};
+    return col==='versoes'?{c:'rhcmrv_versoes',f:'vid',k:id}:{c:'rhcmrv_docs',f:'key',k:path};
   };
   async function find(path){
     const s=spec(path);
@@ -189,8 +189,8 @@ const PB=(function(){
     if(rec) ids[path]=rec.id; else delete ids[path];
     return rec||null;
   }
-  const payload=(s,data)=>s.c==='versoes'?Object.assign({vid:s.k},data):{key:s.k,data};
-  const unwrap=(s,rec)=>s.c==='versoes'?{at:rec.at,label:rec.label,json:rec.json}:rec.data;
+  const payload=(s,data)=>s.c==='rhcmrv_versoes'?Object.assign({vid:s.k},data):{key:s.k,data};
+  const unwrap=(s,rec)=>s.c==='rhcmrv_versoes'?{at:rec.at,label:rec.label,json:rec.json}:rec.data;
 
   function doc(path){
     const s=spec(path);
@@ -213,7 +213,7 @@ const PB=(function(){
       orderBy(f,dir){q.sort=(dir==='desc'?'-':'')+f;return api_;},
       limit(n){q.n=n;return api_;},
       async get(){
-        const r=await api('GET','/api/collections/'+name+'/records?perPage='+q.n+(q.sort?'&sort='+encodeURIComponent(q.sort):''));
+        const r=await api('GET','/api/collections/rhcmrv_'+name+'/records?perPage='+q.n+(q.sort?'&sort='+encodeURIComponent(q.sort):''));
         return {docs:r.items.map(rec=>({id:rec.vid,data:()=>({at:rec.at,label:rec.label,json:rec.json})}))};
       }
     };

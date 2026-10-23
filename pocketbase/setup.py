@@ -5,12 +5,13 @@ Variáveis de ambiente (nunca grave senhas no repositório):
   PB_URL             endereço do PocketBase (ex.: https://pb.devgabriel.app.br)
   PB_ADMIN_EMAIL     e-mail do superusuário
   PB_ADMIN_PASSWORD  senha do superusuário
-  PB_APP_EMAIL       (opcional) e-mail da conta que entra no sistema
-  PB_APP_PASSWORD    (opcional) senha dessa conta (mínimo 8 caracteres)
+  PB_ALLOWED_EMAILS  e-mails (separados por vírgula) que podem usar o sistema; a conta
+                     precisa existir na coleção `users` do PocketBase
+  PB_APP_EMAIL / PB_APP_PASSWORD  (opcional) cria essa conta em `users` se ainda não existir
 
-Coleções (todas exigem login; sem cadastro público):
-  docs     key (único) + data (json)   -> painel, estado dos fluxogramas, hierarquia de pessoal
-  versoes  vid (único), at, label, json -> cópias de segurança dos fluxogramas
+Coleções (acesso só para os e-mails permitidos; a coleção `users` não é alterada):
+  rhcmrv_docs     key (único) + data (json)   -> painel, estado dos fluxogramas, hierarquia de pessoal
+  rhcmrv_versoes  vid (único), at, label, json -> cópias de segurança dos fluxogramas
 O script é repetível: o que já existe é mantido.
 """
 import json, os, sys, urllib.request, urllib.error
@@ -47,7 +48,10 @@ if r is None:
 token = r['token']
 print('Autenticado (%s).' % ('>=0.23' if new_api else '<0.23'))
 
-RULE = '@request.auth.id != ""'
+allowed = [e.strip() for e in (os.environ.get('PB_ALLOWED_EMAILS') or os.environ.get('PB_APP_EMAIL', '')).split(',') if e.strip()]
+if not allowed:
+    sys.exit('Defina PB_ALLOWED_EMAILS (ou PB_APP_EMAIL) com quem pode usar o sistema.')
+RULE = '@request.auth.collectionName = "users" && (' + ' || '.join('@request.auth.email = "%s"' % e.replace('"', '') for e in allowed) + ')'
 BIG = 20 * 1024 * 1024
 
 def fields(defs):
@@ -66,8 +70,8 @@ def old_schema(defs):
     return out
 
 COLS = [
-    ('docs', [('key', 'text'), ('data', 'json')], 'key'),
-    ('versoes', [('vid', 'text'), ('at', 'text'), ('label', 'text'), ('json', 'json')], 'vid'),
+    ('rhcmrv_docs', [('key', 'text'), ('data', 'json')], 'key'),
+    ('rhcmrv_versoes', [('vid', 'text'), ('at', 'text'), ('label', 'text'), ('json', 'json')], 'vid'),
 ]
 for name, defs, uniq in COLS:
     if call('GET', '/api/collections/' + name, ok404=True):
@@ -78,12 +82,6 @@ for name, defs, uniq in COLS:
     body['fields' if new_api else 'schema'] = fields(defs) if new_api else old_schema(defs)
     call('POST', '/api/collections', body)
     print('Coleção %s criada.' % name)
-
-# a coleção de usuários não deve aceitar cadastro público
-users = call('GET', '/api/collections/users', ok404=True)
-if users and users.get('createRule') is not None:
-    call('PATCH', '/api/collections/users', {'createRule': None})
-    print('Cadastro público de usuários desativado.')
 
 app_email, app_pass = os.environ.get('PB_APP_EMAIL', ''), os.environ.get('PB_APP_PASSWORD', '')
 if app_email and app_pass:

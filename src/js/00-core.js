@@ -25,6 +25,8 @@ const PAGES_FLOW={geral:'Fluxograma Geral',gestao:'Gestão Funcional',folha:'Fol
 const MESES=['jan','fev','mar','abr','mai','jun','jul','ago','set','out','nov','dez'];
 
 const ICONS={
+  sun:'<circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/>',
+  moon:'<path d="M21 12.8A9 9 0 1111.2 3a7 7 0 009.8 9.8z"/>',
   home:'<path d="M3 11l9-8 9 8M5 10v10h5v-6h4v6h5V10"/>',
   org:'<rect x="9" y="3" width="6" height="5" rx="1"/><rect x="3" y="16" width="6" height="5" rx="1"/><rect x="15" y="16" width="6" height="5" rx="1"/><path d="M12 8v4M6 16v-4h12v4"/>',
   flow:'<rect x="3" y="3" width="7" height="6" rx="1"/><rect x="14" y="15" width="7" height="6" rx="1"/><path d="M6.5 9v4a2 2 0 002 2H14"/>',
@@ -64,7 +66,7 @@ const ed=(from,to,l)=>({id:'e_'+from+'_'+to+(l?'_'+slug(l):''),from,to,l:l||''})
 
 function buildDefault(){
   const units=[
-    {id:'u-dir',nome:'Diretoria de Gestão de Pessoas',sigla:'DGP',icone:'building',hue:212,page:'',externa:false,divisao:false,
+    {id:'u-dir',nome:'Diretoria de Gestão de Pessoas',sigla:'DGP',icone:'building',hue:152,page:'',externa:false,divisao:false,
      desc:'Planeja, coordena, supervisiona e avalia as atividades de administração de pessoal.',obs:'',comp:[
       'Planejar, coordenar, supervisionar e avaliar as atividades de administração de pessoal;',
       'Promover a aplicação da legislação relativa aos servidores;',

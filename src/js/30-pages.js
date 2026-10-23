@@ -40,6 +40,7 @@ function buildShell(){
         <button class="ibtn menu-btn" data-a="nav-toggle" aria-label="Abrir menu">${icon('menu')}</button>
         <h1 id="pageTitle"></h1>
         <span class="hint hide-sm" id="lastChange"></span>
+        <button class="themebtn" data-a="theme" id="themeBtn" type="button"></button>
         <span class="pill" id="saveState">Carregando…</span>
         <button class="btn sm primary" data-a="save">${icon('save',14)}Salvar</button>
       </header>
@@ -47,6 +48,19 @@ function buildShell(){
       <footer class="legal"><b>Observação institucional.</b> ${esc(LEGAL)}</footer>
     </div></div>`;
   updateBrand();
+}
+const TEMA_KEY='rhcrv-tema';
+function themeBtn(){
+  const b=$('#themeBtn'); if(!b) return;
+  const dark=isDarkNow();
+  b.innerHTML=icon(dark?'sun':'moon',15)+'<span class="hide-sm">'+(dark?'Modo claro':'Modo escuro')+'</span>';
+  b.setAttribute('aria-label',dark?'Mudar para o modo claro':'Mudar para o modo escuro');
+}
+function toggleTheme(){
+  const next=isDarkNow()?'light':'dark';
+  document.documentElement.setAttribute('data-theme',next);
+  try{localStorage.setItem(TEMA_KEY,next);}catch(e){}
+  themeBtn();
 }
 function updateBrand(){
   const i=state.inst;
@@ -439,6 +453,7 @@ const ACT={
   'nav':b=>go(b.dataset.p),
   'nav-toggle':()=>$('#shell').classList.toggle('nav-open'),
   'nav-close':()=>$('#shell').classList.remove('nav-open'),
+  'theme':()=>toggleTheme(),
   'save':()=>{clearTimeout(saveT);doSave(true);},
   'inst-edit':()=>openModal('Dados institucionais',
     `<label class="fld"><span>Nome do sistema</span><input name="nome" value="${esc(state.inst.nome)}"></label>
@@ -521,6 +536,7 @@ $('#fileIn').addEventListener('change',ev=>{
 
 /* ---------- tema e início ---------- */
 function onTheme(){
+  themeBtn();
   if(curEd) curEd.api.theme();
   if(ui.page==='home') rr();
 }
@@ -530,8 +546,9 @@ try{
 }catch(e){}
 
 function init(){
+  try{const s=localStorage.getItem(TEMA_KEY);if(s==='dark'||s==='light') document.documentElement.setAttribute('data-theme',s);}catch(e){}
   state=buildDefault(); layoutAll(state);
-  buildShell(); renderPage(); setStatus('load');
+  buildShell(); renderPage(); setStatus('load'); themeBtn();
   const h=(location.hash||'').replace('#','');
   if(NAV.some(n=>n.k===h)) go(h);
   (async()=>{

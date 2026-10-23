@@ -1,9 +1,9 @@
-/* RH Câmara Rio Verde — layout: menu lateral azul institucional, barra superior, área de trabalho clara. */
+/* RH Câmara Rio Verde — layout: menu lateral verde (cores da Câmara), barra superior, área de trabalho clara. */
 :root{
-  --bg:#f1f4f8; --surface:#ffffff; --surface-2:#e9eef5; --line:#d3dce8;
-  --fg:#13233a; --muted:#53657e;
-  --accent:#0b4f9c; --accent-fg:#ffffff; --accent-soft:#dbe8f7;
-  --side-bg:#0b2f5c; --side-fg:#e6eefa; --side-muted:#9db4d3; --side-active:#1a4f8f; --side-line:#22497d;
+  --bg:#eff5f1; --surface:#ffffff; --surface-2:#e6efe9; --line:#d0ddd5;
+  --fg:#12281d; --muted:#4f665a;
+  --accent:#0a6b3d; --accent-fg:#ffffff; --accent-soft:#d9efe2;
+  --side-bg:#0a3b27; --side-fg:#e6f4ec; --side-muted:#9fc7b2; --side-active:#14684a; --side-line:#1d5a41;
   --warn:#8a5200; --warn-soft:#fbecd0; --danger:#b3261e; --danger-soft:#f9dedc; --ok:#1b7a3d; --ok-soft:#dcf2e3;
   --f-display:"Libre Franklin",system-ui,sans-serif;
   --f-body:"Public Sans",system-ui,sans-serif;
@@ -11,19 +11,19 @@
 }
 @media (prefers-color-scheme: dark){
   :root:not([data-theme="light"]){
-    --bg:#0c1522; --surface:#121f31; --surface-2:#1a2b42; --line:#2a3f5b;
-    --fg:#e4edf8; --muted:#93a9c4;
-    --accent:#6aa8f0; --accent-fg:#06192f; --accent-soft:#1a3556;
-    --side-bg:#0a1a2e; --side-fg:#e4edf8; --side-muted:#8aa3c2; --side-active:#173a64; --side-line:#1c3252;
+    --bg:#09140f; --surface:#101e18; --surface-2:#182a22; --line:#264236;
+    --fg:#e3f1ea; --muted:#90b0a0;
+    --accent:#52c98a; --accent-fg:#04210f; --accent-soft:#16372a;
+    --side-bg:#07140e; --side-fg:#e3f1ea; --side-muted:#8db09d; --side-active:#134a35; --side-line:#183a2b;
     --warn:#f0b45a; --warn-soft:#3a2c12; --danger:#ff8f86; --danger-soft:#3b1a18; --ok:#6fd58f; --ok-soft:#14301f;
     color-scheme:dark;
   }
 }
 :root[data-theme="dark"]{
-  --bg:#0c1522; --surface:#121f31; --surface-2:#1a2b42; --line:#2a3f5b;
-  --fg:#e4edf8; --muted:#93a9c4;
-  --accent:#6aa8f0; --accent-fg:#06192f; --accent-soft:#1a3556;
-  --side-bg:#0a1a2e; --side-fg:#e4edf8; --side-muted:#8aa3c2; --side-active:#173a64; --side-line:#1c3252;
+  --bg:#09140f; --surface:#101e18; --surface-2:#182a22; --line:#264236;
+  --fg:#e3f1ea; --muted:#90b0a0;
+  --accent:#52c98a; --accent-fg:#04210f; --accent-soft:#16372a;
+  --side-bg:#07140e; --side-fg:#e3f1ea; --side-muted:#8db09d; --side-active:#134a35; --side-line:#183a2b;
   --warn:#f0b45a; --warn-soft:#3a2c12; --danger:#ff8f86; --danger-soft:#3b1a18; --ok:#6fd58f; --ok-soft:#14301f;
   color-scheme:dark;
 }
@@ -217,3 +217,7 @@ tr.selrow td{background:var(--accent-soft)}
 
 .homelink{display:flex;align-items:center;gap:8px;color:#fff;text-decoration:none;font-weight:600;font-size:13px;padding:8px 10px;margin:0 -10px 10px;border-radius:8px;background:rgba(255,255,255,.08)}
 .homelink:hover{background:rgba(255,255,255,.16)}
+
+.themebtn{display:inline-flex;align-items:center;gap:6px;border:1px solid var(--line);background:var(--surface);color:var(--fg);border-radius:9px;padding:6px 10px;font-weight:600;font-size:13px;cursor:pointer}
+.themebtn:hover{border-color:var(--accent)}
+@media (max-width:760px){.hide-sm{display:none!important}}

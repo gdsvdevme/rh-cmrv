@@ -2,12 +2,12 @@
 <meta name="claude:viewport-fit-sides" content="cover">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=Libre+Franklin:wght@500;600;700&family=Public+Sans:wght@400;500;600&display=swap">
 <style>
-/* RH Câmara Rio Verde — layout: menu lateral azul institucional, barra superior, área de trabalho clara. */
+/* RH Câmara Rio Verde — layout: menu lateral verde (cores da Câmara), barra superior, área de trabalho clara. */
 :root{
-  --bg:#f1f4f8; --surface:#ffffff; --surface-2:#e9eef5; --line:#d3dce8;
-  --fg:#13233a; --muted:#53657e;
-  --accent:#0b4f9c; --accent-fg:#ffffff; --accent-soft:#dbe8f7;
-  --side-bg:#0b2f5c; --side-fg:#e6eefa; --side-muted:#9db4d3; --side-active:#1a4f8f; --side-line:#22497d;
+  --bg:#eff5f1; --surface:#ffffff; --surface-2:#e6efe9; --line:#d0ddd5;
+  --fg:#12281d; --muted:#4f665a;
+  --accent:#0a6b3d; --accent-fg:#ffffff; --accent-soft:#d9efe2;
+  --side-bg:#0a3b27; --side-fg:#e6f4ec; --side-muted:#9fc7b2; --side-active:#14684a; --side-line:#1d5a41;
   --warn:#8a5200; --warn-soft:#fbecd0; --danger:#b3261e; --danger-soft:#f9dedc; --ok:#1b7a3d; --ok-soft:#dcf2e3;
   --f-display:"Libre Franklin",system-ui,sans-serif;
   --f-body:"Public Sans",system-ui,sans-serif;
@@ -15,19 +15,19 @@
 }
 @media (prefers-color-scheme: dark){
   :root:not([data-theme="light"]){
-    --bg:#0c1522; --surface:#121f31; --surface-2:#1a2b42; --line:#2a3f5b;
-    --fg:#e4edf8; --muted:#93a9c4;
-    --accent:#6aa8f0; --accent-fg:#06192f; --accent-soft:#1a3556;
-    --side-bg:#0a1a2e; --side-fg:#e4edf8; --side-muted:#8aa3c2; --side-active:#173a64; --side-line:#1c3252;
+    --bg:#09140f; --surface:#101e18; --surface-2:#182a22; --line:#264236;
+    --fg:#e3f1ea; --muted:#90b0a0;
+    --accent:#52c98a; --accent-fg:#04210f; --accent-soft:#16372a;
+    --side-bg:#07140e; --side-fg:#e3f1ea; --side-muted:#8db09d; --side-active:#134a35; --side-line:#183a2b;
     --warn:#f0b45a; --warn-soft:#3a2c12; --danger:#ff8f86; --danger-soft:#3b1a18; --ok:#6fd58f; --ok-soft:#14301f;
     color-scheme:dark;
   }
 }
 :root[data-theme="dark"]{
-  --bg:#0c1522; --surface:#121f31; --surface-2:#1a2b42; --line:#2a3f5b;
-  --fg:#e4edf8; --muted:#93a9c4;
-  --accent:#6aa8f0; --accent-fg:#06192f; --accent-soft:#1a3556;
-  --side-bg:#0a1a2e; --side-fg:#e4edf8; --side-muted:#8aa3c2; --side-active:#173a64; --side-line:#1c3252;
+  --bg:#09140f; --surface:#101e18; --surface-2:#182a22; --line:#264236;
+  --fg:#e3f1ea; --muted:#90b0a0;
+  --accent:#52c98a; --accent-fg:#04210f; --accent-soft:#16372a;
+  --side-bg:#07140e; --side-fg:#e3f1ea; --side-muted:#8db09d; --side-active:#134a35; --side-line:#183a2b;
   --warn:#f0b45a; --warn-soft:#3a2c12; --danger:#ff8f86; --danger-soft:#3b1a18; --ok:#6fd58f; --ok-soft:#14301f;
   color-scheme:dark;
 }
@@ -222,6 +222,10 @@ tr.selrow td{background:var(--accent-soft)}
 .homelink{display:flex;align-items:center;gap:8px;color:#fff;text-decoration:none;font-weight:600;font-size:13px;padding:8px 10px;margin:0 -10px 10px;border-radius:8px;background:rgba(255,255,255,.08)}
 .homelink:hover{background:rgba(255,255,255,.16)}
 
+.themebtn{display:inline-flex;align-items:center;gap:6px;border:1px solid var(--line);background:var(--surface);color:var(--fg);border-radius:9px;padding:6px 10px;font-weight:600;font-size:13px;cursor:pointer}
+.themebtn:hover{border-color:var(--accent)}
+@media (max-width:760px){.hide-sm{display:none!important}}
+
 </style>
 <div id="app"></div>
 <div id="modal" hidden></div>
@@ -256,6 +260,8 @@ const PAGES_FLOW={geral:'Fluxograma Geral',gestao:'Gestão Funcional',folha:'Fol
 const MESES=['jan','fev','mar','abr','mai','jun','jul','ago','set','out','nov','dez'];
 
 const ICONS={
+  sun:'<circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/>',
+  moon:'<path d="M21 12.8A9 9 0 1111.2 3a7 7 0 009.8 9.8z"/>',
   home:'<path d="M3 11l9-8 9 8M5 10v10h5v-6h4v6h5V10"/>',
   org:'<rect x="9" y="3" width="6" height="5" rx="1"/><rect x="3" y="16" width="6" height="5" rx="1"/><rect x="15" y="16" width="6" height="5" rx="1"/><path d="M12 8v4M6 16v-4h12v4"/>',
   flow:'<rect x="3" y="3" width="7" height="6" rx="1"/><rect x="14" y="15" width="7" height="6" rx="1"/><path d="M6.5 9v4a2 2 0 002 2H14"/>',
@@ -295,7 +301,7 @@ const ed=(from,to,l)=>({id:'e_'+from+'_'+to+(l?'_'+slug(l):''),from,to,l:l||''})
 
 function buildDefault(){
   const units=[
-    {id:'u-dir',nome:'Diretoria de Gestão de Pessoas',sigla:'DGP',icone:'building',hue:212,page:'',externa:false,divisao:false,
+    {id:'u-dir',nome:'Diretoria de Gestão de Pessoas',sigla:'DGP',icone:'building',hue:152,page:'',externa:false,divisao:false,
      desc:'Planeja, coordena, supervisiona e avalia as atividades de administração de pessoal.',obs:'',comp:[
       'Planejar, coordenar, supervisionar e avaliar as atividades de administração de pessoal;',
       'Promover a aplicação da legislação relativa aos servidores;',
@@ -1131,8 +1137,8 @@ function layoutAll(st){
 
 /* ---------- aparência ---------- */
 const SP={
-  light:{dark:false,bg:'#ffffff',surface:'#ffffff',line:'#8aa0bb',edge:'#4d6584',fg:'#13233a',muted:'#53657e',accent:'#0b4f9c',accentFg:'#ffffff'},
-  dark:{dark:true,bg:'#0c1522',surface:'#121f31',line:'#4a6585',edge:'#8aa6c8',fg:'#e4edf8',muted:'#93a9c4',accent:'#6aa8f0',accentFg:'#06192f'}
+  light:{dark:false,bg:'#ffffff',surface:'#ffffff',line:'#8aa89a',edge:'#4d6b5c',fg:'#12281d',muted:'#4f665a',accent:'#0a6b3d',accentFg:'#ffffff'},
+  dark:{dark:true,bg:'#09140f',surface:'#101e18',line:'#44705c',edge:'#8ab8a0',fg:'#e3f1ea',muted:'#90b0a0',accent:'#52c98a',accentFg:'#04210f'}
 };
 const curPal=()=>isDarkNow()?SP.dark:SP.light;
 function hsl2hex(h,s,l){
@@ -1786,7 +1792,7 @@ function buildShell(){
     <aside class="side" aria-label="Menu principal">
       <div class="brand"><div class="logo">${icon('building',22)}</div><div><b id="brandName"></b><span id="brandSub"></span></div></div>
       <nav class="nav">${NAV.map(n=>`<button data-a="nav" data-p="${n.k}">${icon(n.i)}<span>${esc(n.t)}</span></button>`).join('')}</nav>
-      <div class="side-foot"><a class="homelink" href="../" target="_top">${icon('home',14)}Sistema Interno do RH</a><div id="brandOrg"></div></div>
+      <div class="side-foot"><a class="homelink" href="https://claude.ai/artifact/K6ccdEW8xSHd91VV4oNXoy" target="_top">${icon('home',14)}Sistema Interno do RH</a><div id="brandOrg"></div></div>
     </aside>
     <div class="backdrop" data-a="nav-close"></div>
     <div class="workspace">
@@ -1794,6 +1800,7 @@ function buildShell(){
         <button class="ibtn menu-btn" data-a="nav-toggle" aria-label="Abrir menu">${icon('menu')}</button>
         <h1 id="pageTitle"></h1>
         <span class="hint hide-sm" id="lastChange"></span>
+        <button class="themebtn" data-a="theme" id="themeBtn" type="button"></button>
         <span class="pill" id="saveState">Carregando…</span>
         <button class="btn sm primary" data-a="save">${icon('save',14)}Salvar</button>
       </header>
@@ -1801,6 +1808,19 @@ function buildShell(){
       <footer class="legal"><b>Observação institucional.</b> ${esc(LEGAL)}</footer>
     </div></div>`;
   updateBrand();
+}
+const TEMA_KEY='rhcrv-tema';
+function themeBtn(){
+  const b=$('#themeBtn'); if(!b) return;
+  const dark=isDarkNow();
+  b.innerHTML=icon(dark?'sun':'moon',15)+'<span class="hide-sm">'+(dark?'Modo claro':'Modo escuro')+'</span>';
+  b.setAttribute('aria-label',dark?'Mudar para o modo claro':'Mudar para o modo escuro');
+}
+function toggleTheme(){
+  const next=isDarkNow()?'light':'dark';
+  document.documentElement.setAttribute('data-theme',next);
+  try{localStorage.setItem(TEMA_KEY,next);}catch(e){}
+  themeBtn();
 }
 function updateBrand(){
   const i=state.inst;
@@ -2193,6 +2213,7 @@ const ACT={
   'nav':b=>go(b.dataset.p),
   'nav-toggle':()=>$('#shell').classList.toggle('nav-open'),
   'nav-close':()=>$('#shell').classList.remove('nav-open'),
+  'theme':()=>toggleTheme(),
   'save':()=>{clearTimeout(saveT);doSave(true);},
   'inst-edit':()=>openModal('Dados institucionais',
     `<label class="fld"><span>Nome do sistema</span><input name="nome" value="${esc(state.inst.nome)}"></label>
@@ -2275,6 +2296,7 @@ $('#fileIn').addEventListener('change',ev=>{
 
 /* ---------- tema e início ---------- */
 function onTheme(){
+  themeBtn();
   if(curEd) curEd.api.theme();
   if(ui.page==='home') rr();
 }
@@ -2284,8 +2306,9 @@ try{
 }catch(e){}
 
 function init(){
+  try{const s=localStorage.getItem(TEMA_KEY);if(s==='dark'||s==='light') document.documentElement.setAttribute('data-theme',s);}catch(e){}
   state=buildDefault(); layoutAll(state);
-  buildShell(); renderPage(); setStatus('load');
+  buildShell(); renderPage(); setStatus('load'); themeBtn();
   const h=(location.hash||'').replace('#','');
   if(NAV.some(n=>n.k===h)) go(h);
   (async()=>{

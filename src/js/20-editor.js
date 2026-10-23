@@ -92,8 +92,8 @@ function layoutAll(st){
 
 /* ---------- aparência ---------- */
 const SP={
-  light:{dark:false,bg:'#ffffff',surface:'#ffffff',line:'#8aa0bb',edge:'#4d6584',fg:'#13233a',muted:'#53657e',accent:'#0b4f9c',accentFg:'#ffffff'},
-  dark:{dark:true,bg:'#0c1522',surface:'#121f31',line:'#4a6585',edge:'#8aa6c8',fg:'#e4edf8',muted:'#93a9c4',accent:'#6aa8f0',accentFg:'#06192f'}
+  light:{dark:false,bg:'#ffffff',surface:'#ffffff',line:'#8aa89a',edge:'#4d6b5c',fg:'#12281d',muted:'#4f665a',accent:'#0a6b3d',accentFg:'#ffffff'},
+  dark:{dark:true,bg:'#09140f',surface:'#101e18',line:'#44705c',edge:'#8ab8a0',fg:'#e3f1ea',muted:'#90b0a0',accent:'#52c98a',accentFg:'#04210f'}
 };
 const curPal=()=>isDarkNow()?SP.dark:SP.light;
 function hsl2hex(h,s,l){

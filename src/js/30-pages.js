@@ -401,8 +401,8 @@ function pageConfig(){
     <section class="card"><div class="ch"><h2>Observação institucional</h2></div><p>${esc(LEGAL)}</p>
       <p class="hint" style="margin-top:8px">O sistema não autoriza nomeações, exonerações, pagamentos ou concessões de direitos. A autoridade competente permanece responsável pelas decisões administrativas. Não cadastre dados pessoais reais de servidores.</p></section>`;
   $('#storeInfo').textContent=dbh
-    ?'Os dados ficam salvos neste documento, no banco do próprio sistema, e acompanham quem abrir o mesmo link com permissão de edição. Uma cópia local também fica neste navegador.'
-    :'Os dados ficam salvos somente neste navegador, neste computador. Não existe sincronização automática entre computadores: use Exportar JSON e Importar JSON para levar os dados para outro lugar.';
+    ?'Os dados ficam salvos no servidor (PocketBase) e acompanham quem entrar com acesso, em qualquer computador. Nada fica guardado neste navegador além do login.'
+    :'Sem conexão com o servidor: os dados ficam salvos somente neste navegador, neste computador. Recarregue a página para tentar conectar de novo; use Exportar JSON para guardar uma cópia.';
   if(!ui.versions) loadVersionList();
 }
 
@@ -555,11 +555,13 @@ function init(){
   (async()=>{
     try{if(window.claude&&window.claude.use) window.__dl=await window.claude.use('downloads');}catch(e){}
     try{if(window.claude&&window.claude.use) dbh=await window.claude.use('db');}catch(e){dbh=null;}
-    let loaded=null;
-    try{if(dbh){const s=await dbh.doc('rh/estado').get();if(s.exists){const d=s.data();loaded=parseState(d&&d.json);}}}catch(e){}
+    if(!dbh) dbh=await PB.connect();
+    let loaded=null,readOk=false,remote=false;
+    try{if(dbh){const s=await dbh.doc('rh/estado').get();readOk=true;if(s.exists){const d=s.data();loaded=parseState(d&&d.json);remote=!!loaded;}}}catch(e){}
     if(!loaded){try{loaded=parseState(localStorage.getItem(LS_STATE));}catch(e){}}
     if(loaded&&!touched){state=loaded;afterRestore();}
     setStatus(dbh?'ok':'local');
+    if(dbh&&readOk&&!remote&&loaded) migrateLocal();
   })();
 }
 init();

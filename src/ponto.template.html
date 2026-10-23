@@ -1,0 +1,526 @@
+<title>Ponto – Servidores Externos</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Libre+Franklin:wght@500;600;700&family=Public+Sans:wght@400;500;600&display=swap">
+<style>
+:root{
+  --bg:#eef4f0;--surface:#fff;--fg:#12281d;--muted:#4f665a;--line:#d1ddd6;--accent:#0a6b3d;--accent-fg:#fff;--soft:#e3efe8;
+  --hero-a:#063d27;--hero-b:#0b7a49;--gold:#d4aa4a;--shadow:0 1px 2px rgba(6,61,39,.09),0 6px 20px rgba(6,61,39,.07);
+  --warn:#8a5a00;--warn-bg:#fdf0d5;--danger:#b3261e;--danger-bg:#fbe3e0;--ok-bg:#dff3e7;--blue:#2f6fb5;--blue-bg:#e2edf9;
+  --map:#e9efe9;--map-line:#d3ddd5;
+  --f-display:"Libre Franklin",system-ui,sans-serif;--f-body:"Public Sans",system-ui,sans-serif;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --bg:#08130e;--surface:#0f1e17;--fg:#e3f1ea;--muted:#90b0a0;--line:#234034;--accent:#52c98a;--accent-fg:#04210f;--soft:#15291f;
+  --hero-a:#04150d;--hero-b:#0b4d31;--gold:#d8b45e;--shadow:0 1px 2px rgba(0,0,0,.4),0 6px 20px rgba(0,0,0,.3);
+  --warn:#f0c26a;--warn-bg:#3a2d10;--danger:#ff8a80;--danger-bg:#3d1a17;--ok-bg:#12382a;--blue:#7fb2ee;--blue-bg:#14273d;
+  --map:#13241b;--map-line:#1f382b;color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#08130e;--surface:#0f1e17;--fg:#e3f1ea;--muted:#90b0a0;--line:#234034;--accent:#52c98a;--accent-fg:#04210f;--soft:#15291f;
+  --hero-a:#04150d;--hero-b:#0b4d31;--gold:#d8b45e;--shadow:0 1px 2px rgba(0,0,0,.4),0 6px 20px rgba(0,0,0,.3);
+  --warn:#f0c26a;--warn-bg:#3a2d10;--danger:#ff8a80;--danger-bg:#3d1a17;--ok-bg:#12382a;--blue:#7fb2ee;--blue-bg:#14273d;
+  --map:#13241b;--map-line:#1f382b;color-scheme:dark}
+[hidden]{display:none!important}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--fg);font-family:var(--f-body);font-size:15px;line-height:1.5}
+h1,h2,h3{font-family:var(--f-display);margin:0;text-wrap:balance}
+button,input,select,textarea{font:inherit;color:inherit}
+.wrap{padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+.inner{max-width:1280px;margin:0 auto}
+.hero{background:linear-gradient(135deg,var(--hero-a),var(--hero-b));color:#fff;padding-block:22px 40px}
+.top{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:18px}
+.home{color:#fff;text-decoration:none;font-weight:600;font-size:13.5px;display:inline-flex;align-items:center;gap:8px;padding:8px 12px;border-radius:10px;background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.28)}
+.home:hover,.themebtn:hover{background:rgba(255,255,255,.22)}
+.themebtn{margin-left:auto;display:inline-flex;align-items:center;gap:8px;border:1px solid rgba(255,255,255,.35);background:rgba(255,255,255,.12);color:#fff;border-radius:10px;padding:8px 12px;font-weight:600;font-size:13.5px;cursor:pointer}
+.goldrule{width:56px;height:4px;background:var(--gold);border-radius:2px;margin:0 0 14px}
+.hero h1{font-size:clamp(1.5rem,4vw,2.2rem);line-height:1.12}
+.hero p{margin:8px 0 0;opacity:.88;max-width:70ch}
+.demo-pill{display:inline-block;margin-left:10px;vertical-align:middle;font-size:11px;letter-spacing:.1em;text-transform:uppercase;background:var(--gold);color:#3b2a00;padding:3px 9px;border-radius:99px;font-family:var(--f-body);font-weight:700}
+main{padding-block:0 40px}
+.layout{display:grid;grid-template-columns:minmax(0,1fr);gap:22px;margin-top:-18px;align-items:start}
+@media (min-width:1020px){.layout{grid-template-columns:372px minmax(0,1fr)}.phone-col{position:sticky;top:12px}}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:16px;box-shadow:var(--shadow)}
+.script{padding:14px 16px;font-size:13.5px}
+.script summary{cursor:pointer;font-weight:700;font-family:var(--f-display)}
+.script ol{margin:10px 0 0;padding-left:20px;color:var(--muted)}.script li{margin:3px 0}
+.script b{color:var(--fg)}
+
+/* ---------- celular ---------- */
+.phone-col{display:flex;flex-direction:column;gap:12px;align-items:center}
+.phone{width:332px;max-width:100%;height:680px;border-radius:44px;background:#0d1411;padding:11px;box-shadow:0 18px 50px rgba(0,0,0,.35),inset 0 0 0 2px #2a3a31;position:relative}
+.screen{position:relative;width:100%;height:100%;border-radius:34px;overflow:hidden;background:#f4f7f5;color:#12281d;display:flex;flex-direction:column;isolation:isolate;
+  --p-fg:#12281d;--p-muted:#5b6f64;--p-line:#d6e0da;--p-card:#fff;--p-soft:#e8f1ec}
+.notch{position:absolute;top:8px;left:50%;transform:translateX(-50%);width:92px;height:22px;background:#0d1411;border-radius:14px;z-index:5}
+.sbar{height:38px;flex:none;display:flex;justify-content:space-between;align-items:flex-end;padding:0 24px 4px;font-size:12px;font-weight:700;background:#0a5a34;color:#fff}
+.sbar .ic{display:flex;gap:5px;align-items:center}
+.appbar{flex:none;background:#0a5a34;color:#fff;padding:6px 16px 14px}
+.appbar small{display:block;opacity:.8;font-size:11px;letter-spacing:.06em;text-transform:uppercase}
+.appbar b{font-family:var(--f-display);font-size:16px;line-height:1.2;display:block}
+.pbody{flex:1;overflow:auto;padding:14px 14px 18px;display:flex;flex-direction:column;gap:12px;scrollbar-width:thin}
+.pcard{background:var(--p-card);border:1px solid var(--p-line);border-radius:14px;padding:12px 13px}
+.pcard h4{margin:0 0 8px;font-size:12px;text-transform:uppercase;letter-spacing:.08em;color:var(--p-muted);font-family:var(--f-body)}
+.step{display:flex;gap:8px;align-items:center;font-size:12px;font-weight:700;color:var(--p-muted);margin-bottom:6px}
+.step i{width:20px;height:20px;border-radius:50%;background:var(--p-soft);display:grid;place-items:center;font-style:normal;font-size:11px;color:#0a6b3d}
+.step.done i{background:#0a6b3d;color:#fff}
+.pbtn{width:100%;border:0;border-radius:12px;padding:13px;font-weight:700;font-size:15px;background:#0a6b3d;color:#fff;cursor:pointer}
+.pbtn:disabled{background:#b6c6bd;cursor:not-allowed}
+.pbtn.ghost{background:var(--p-soft);color:#0a6b3d}
+.pbtn.sm{padding:9px;font-size:13.5px}
+.psel,.pta{width:100%;border:1px solid var(--p-line);border-radius:10px;padding:10px;background:#fff;color:#12281d}
+.pta{resize:none;min-height:56px}
+.chips{display:flex;flex-wrap:wrap;gap:6px}
+.chip{border:1px solid var(--p-line);background:#fff;color:#12281d;border-radius:99px;padding:7px 12px;font-size:13px;font-weight:600;cursor:pointer}
+.chip.on{background:#0a6b3d;color:#fff;border-color:#0a6b3d}
+.seg{display:grid;grid-template-columns:1fr 1fr;gap:6px}
+.seg .chip{border-radius:10px;text-align:center}
+.clock{font-family:var(--f-display);font-size:34px;font-weight:700;text-align:center;line-height:1.1}
+.clock small{display:block;font-size:12px;font-weight:500;color:var(--p-muted);font-family:var(--f-body)}
+.kv{display:grid;grid-template-columns:auto 1fr;gap:3px 10px;font-size:12.5px}.kv dt{color:var(--p-muted)}.kv dd{margin:0;font-weight:600;word-break:break-all}
+.badge{display:inline-block;border-radius:99px;padding:2px 9px;font-size:11.5px;font-weight:700}
+.badge.ok{background:#dff3e7;color:#0a6b3d}.badge.warn{background:#fdf0d5;color:#8a5a00}.badge.bad{background:#fbe3e0;color:#b3261e}.badge.info{background:#e2edf9;color:#2f6fb5}
+.sig{width:100%;height:110px;border:1.5px dashed #9db3a6;border-radius:10px;background:#fff;touch-action:none;display:block;cursor:crosshair}
+.chk{display:flex;gap:8px;font-size:12px;align-items:flex-start;color:var(--p-muted)}
+.chk input{margin-top:2px}
+.thumb{width:100%;border-radius:10px;display:block;border:1px solid var(--p-line)}
+.sheet{position:absolute;inset:0;z-index:20;background:rgba(0,0,0,.45);display:flex;align-items:flex-end}
+.sheet>div{width:100%;background:#fff;color:#12281d;border-radius:22px 22px 0 0;padding:20px 18px 22px;display:flex;flex-direction:column;gap:10px;text-align:center}
+.sheet h4{margin:0;font-family:var(--f-display);font-size:16px}.sheet p{margin:0;font-size:13px;color:#5b6f64}
+.cam{position:absolute;inset:0;z-index:20;background:#101814;display:flex;flex-direction:column}
+.cam .vf{flex:1;position:relative;background:linear-gradient(160deg,#35564a,#6a8f7c 45%,#b7c9a1);overflow:hidden}
+.cam .vf::after{content:"";position:absolute;inset:34px 22px;border:1.5px solid rgba(255,255,255,.5);border-radius:6px}
+.cam .bar{height:120px;display:flex;align-items:center;justify-content:space-around;color:#fff;background:#000}
+.shutter{width:66px;height:66px;border-radius:50%;border:4px solid #fff;background:rgba(255,255,255,.25);cursor:pointer}
+.shutter:active{background:#fff}
+.spin{width:30px;height:30px;border-radius:50%;border:4px solid #cfe3d7;border-top-color:#0a6b3d;animation:sp .8s linear infinite;margin:8px auto}
+@keyframes sp{to{transform:rotate(360deg)}}
+.okmark{width:74px;height:74px;border-radius:50%;background:#dff3e7;color:#0a6b3d;display:grid;place-items:center;margin:6px auto}
+.phone-tools{display:flex;flex-wrap:wrap;gap:8px;justify-content:center;font-size:13px;color:var(--muted)}
+.phone-tools label{display:flex;gap:6px;align-items:center;cursor:pointer}
+
+/* ---------- painel administrativo ---------- */
+.admin{padding:18px}
+.admin-h{display:flex;flex-wrap:wrap;align-items:center;gap:10px;margin-bottom:14px}
+.admin-h h2{font-size:1.2rem}
+.live{display:inline-flex;align-items:center;gap:6px;font-size:11.5px;font-weight:700;letter-spacing:.08em;color:var(--danger);text-transform:uppercase}
+.live::before{content:"";width:9px;height:9px;border-radius:50%;background:var(--danger);animation:pulse 1.4s infinite}
+@keyframes pulse{50%{opacity:.25}}
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:10px;margin-bottom:14px}
+.stat{background:var(--soft);border-radius:12px;padding:10px 12px}
+.stat b{font-family:var(--f-display);font-size:1.6rem;display:block;line-height:1.1}
+.stat span{color:var(--muted);font-size:12.5px}
+.stat.alert b{color:var(--danger)}
+.tabs{display:flex;gap:4px;border-bottom:1px solid var(--line);margin-bottom:12px;flex-wrap:wrap}
+.tab{border:0;background:none;padding:10px 14px;font-weight:700;color:var(--muted);cursor:pointer;border-bottom:3px solid transparent;margin-bottom:-1px}
+.tab[aria-selected="true"]{color:var(--accent);border-color:var(--accent)}
+.bar2{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px}
+.bar2 select,.bar2 input{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:8px 10px}
+.btn{border:1px solid var(--line);background:var(--surface);border-radius:10px;padding:8px 13px;cursor:pointer;font-weight:600;font-size:13.5px;display:inline-flex;align-items:center;gap:8px}
+.btn:hover{border-color:var(--accent)}.btn.primary{background:var(--accent);color:var(--accent-fg);border-color:var(--accent)}
+.tw{overflow:auto;border:1px solid var(--line);border-radius:12px;max-height:520px}
+table{border-collapse:collapse;width:100%;font-size:13.5px;min-width:860px}
+th{position:sticky;top:0;background:var(--soft);text-align:left;font-size:11.5px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);padding:9px 10px;white-space:nowrap}
+td{padding:9px 10px;border-top:1px solid var(--line);vertical-align:middle}
+tbody tr{cursor:pointer}tbody tr:hover{background:var(--soft)}
+tbody tr.new{animation:flash 2.4s ease-out}
+@keyframes flash{0%{background:color-mix(in srgb,var(--accent) 35%,transparent)}100%{background:transparent}}
+.nm b{display:block;line-height:1.2}.nm span{color:var(--muted);font-size:12px}
+.pill{display:inline-block;border-radius:99px;padding:2px 9px;font-size:11.5px;font-weight:700;white-space:nowrap}
+.pill.ok{background:var(--ok-bg);color:var(--accent)}.pill.warn{background:var(--warn-bg);color:var(--warn)}.pill.bad{background:var(--danger-bg);color:var(--danger)}.pill.info{background:var(--blue-bg);color:var(--blue)}.pill.mut{background:var(--soft);color:var(--muted)}
+.mini{width:44px;height:33px;object-fit:cover;border-radius:6px;border:1px solid var(--line);display:block}
+.mono{font-family:ui-monospace,Menlo,Consolas,monospace;font-size:12px}
+.mapbox{border:1px solid var(--line);border-radius:12px;overflow:hidden;background:var(--map)}
+.mapbox svg{display:block;width:100%;height:auto}
+.legend{display:flex;gap:14px;flex-wrap:wrap;font-size:12.5px;color:var(--muted);margin-top:8px}
+.legend i{display:inline-block;width:10px;height:10px;border-radius:50%;margin-right:5px}
+.srv{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:10px}
+.srvc{border:1px solid var(--line);border-radius:12px;padding:12px;display:flex;flex-direction:column;gap:6px}
+.srvc b{font-family:var(--f-display)}.srvc span{color:var(--muted);font-size:13px}
+.empty{padding:30px;text-align:center;color:var(--muted)}
+.note{margin-top:14px;font-size:12.8px;color:var(--muted)}
+dialog{border:1px solid var(--line);border-radius:16px;padding:0;background:var(--surface);color:var(--fg);width:min(760px,94vw);box-shadow:0 20px 60px rgba(0,0,0,.4)}
+dialog::backdrop{background:rgba(0,0,0,.5)}
+.dh{display:flex;align-items:center;gap:10px;padding:14px 18px;border-bottom:1px solid var(--line)}
+.dh h3{flex:1;font-size:1.1rem}
+.db{padding:18px;display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:16px}
+.dl{display:grid;grid-template-columns:auto 1fr;gap:6px 12px;font-size:13.5px;align-content:start}.dl dt{color:var(--muted)}.dl dd{margin:0;font-weight:600;word-break:break-word}
+.sigimg{background:#fff;border:1px solid var(--line);border-radius:10px;width:100%;display:block}
+.photo{width:100%;border-radius:10px;border:1px solid var(--line);display:block}
+.stamp{font-size:12px;color:var(--muted);margin-top:6px}
+#toast{position:fixed;left:50%;transform:translateX(-50%);bottom:max(18px,env(safe-area-inset-bottom,0px));background:var(--fg);color:var(--bg);padding:10px 16px;border-radius:10px;font-size:14px;z-index:60;max-width:90vw}
+</style>
+
+<header class="hero wrap"><div class="inner">
+  <div class="top"><a class="home" href="/*HOME_URL*/" target="_top"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 11l9-8 9 8M5 10v10h14V10"/></svg>Sistema Interno do RH</a>
+  <button class="themebtn" id="themeBtn" type="button"></button></div>
+  <div class="goldrule"></div>
+  <h1>Ponto – Servidores Externos<span class="demo-pill">Simulação</span></h1>
+  <p>Demonstração de como a Câmara controla o ponto de servidores externos: o servidor registra pelo celular, com localização, assinatura digital e foto, e o RH acompanha tudo em tempo real. Todos os dados desta tela são fictícios.</p>
+</div></header>
+
+<main class="wrap"><div class="inner">
+  <div class="layout">
+    <section class="phone-col" aria-label="Celular do servidor (simulado)">
+      <div class="phone"><div class="screen" id="screen"></div><div class="notch"></div></div>
+      <div class="phone-tools">
+        <label><input type="checkbox" id="gpsOff"> Demonstrar GPS fora da área</label>
+        <button class="btn" id="resetBtn" type="button">Reiniciar simulação</button>
+      </div>
+    </section>
+
+    <section class="admin card" aria-label="Painel administrativo">
+      <div class="admin-h"><h2>Painel administrativo do RH</h2><span class="live">Ao vivo</span><span class="pill mut" id="clockAdm"></span></div>
+      <div class="stats" id="stats"></div>
+      <div class="tabs" role="tablist">
+        <button class="tab" role="tab" data-t="reg" aria-selected="true">Registros</button>
+        <button class="tab" role="tab" data-t="map" aria-selected="false">Mapa</button>
+        <button class="tab" role="tab" data-t="srv" aria-selected="false">Servidores</button>
+      </div>
+      <div id="tabBody"></div>
+      <p class="note">Dados fictícios, só para apresentação: nomes, matrículas, IPs (faixa reservada para documentação), coordenadas e fotos são simulados e não ficam gravados em nenhum lugar. A sede é representada por uma área de 150 m; registros fora dela são sinalizados.</p>
+    </section>
+  </div>
+  <details class="card script" style="margin-top:22px"><summary>Roteiro sugerido para a apresentação</summary>
+    <ol>
+      <li><b>No celular:</b> selecione um servidor e toque em <b>Entrar</b>.</li>
+      <li>Toque em <b>Registrar ponto</b> e em <b>Ativar localização</b>: o aparelho pede permissão e a posição é capturada.</li>
+      <li>Escolha <b>Atividade externa</b>, informe o gabinete solicitante e use <b>Tirar foto</b> (opcional).</li>
+      <li><b>Assine</b> com o dedo (ou o mouse), marque a declaração e toque em <b>Assinar e registrar</b>.</li>
+      <li><b>No painel:</b> o registro aparece na hora, com nome, matrícula, IP, localização, foto e assinatura. Clique na linha para ver o comprovante completo e o mapa.</li>
+      <li>Marque <b>Demonstrar GPS fora da área</b> e registre "Na sede": o painel mostra o alerta de divergência.</li>
+    </ol>
+  </details>
+</div></main>
+<dialog id="dlg"></dialog>
+<div id="toast" hidden></div>
+
+<script>
+const HOME_URL="/*HOME_URL*/";
+const ICO2={sun:'<circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/>',moon:'<path d="M21 12.8A9 9 0 1111.2 3a7 7 0 009.8 9.8z"/>'};
+const TEMA_KEY='rhcrv-tema';
+const $=s=>document.querySelector(s);
+const esc=s=>String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+function isDark(){const m=/rgba?\((\d+),\s*(\d+),\s*(\d+)/.exec(getComputedStyle(document.body).backgroundColor);return m?(0.2126*m[1]+0.7152*m[2]+0.0722*m[3])/255<0.4:false;}
+function themeBtn(){const b=$('#themeBtn');const d=isDark();
+  b.innerHTML=`<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${ICO2[d?'sun':'moon']}</svg>${d?'Modo claro':'Modo escuro'}`;
+  b.setAttribute('aria-label',d?'Mudar para o modo claro':'Mudar para o modo escuro');}
+$('#themeBtn').addEventListener('click',()=>{const n=isDark()?'light':'dark';document.documentElement.setAttribute('data-theme',n);try{localStorage.setItem(TEMA_KEY,n);}catch(e){}themeBtn();rerender();});
+try{const s=localStorage.getItem(TEMA_KEY);document.documentElement.setAttribute('data-theme',s==='dark'?'dark':'light');}catch(e){document.documentElement.setAttribute('data-theme','light');}
+function toast(m){const t=$('#toast');t.textContent=m;t.hidden=false;clearTimeout(toast.t);toast.t=setTimeout(()=>t.hidden=true,4200);}
+
+/* ---------- dados fictícios ---------- */
+const SEDE={nome:'Sede da Câmara',lat:-17.7979,lon:-50.9262,raio:150};
+const SERV=[
+  {id:1,nome:'Ana Paula Ribeiro',mat:'000412',cargo:'Assessora externa',lot:'Gabinete – Vereador(a) Exemplo 1'},
+  {id:2,nome:'Carlos Eduardo Lima',mat:'000518',cargo:'Agente de campo',lot:'Gabinete – Vereador(a) Exemplo 2'},
+  {id:3,nome:'Juliana Martins',mat:'000377',cargo:'Assessora de comunicação',lot:'Gabinete – Vereador(a) Exemplo 3'},
+  {id:4,nome:'Roberto Alves',mat:'000603',cargo:'Motorista',lot:'Setor Administrativo'},
+  {id:5,nome:'Fernanda Costa',mat:'000291',cargo:'Assessora parlamentar',lot:'Gabinete – Vereador(a) Exemplo 1'},
+];
+const GAB=['Gabinete – Vereador(a) Exemplo 1','Gabinete – Vereador(a) Exemplo 2','Gabinete – Vereador(a) Exemplo 3','Presidência','Setor Administrativo'];
+const LUGARES=[
+  {n:'Escola Municipal (exemplo)',d:2300,b:40},{n:'Praça do bairro (exemplo)',d:3600,b:200},
+  {n:'Posto de saúde (exemplo)',d:1700,b:310},{n:'Associação de moradores (exemplo)',d:5200,b:120},
+];
+const TIPOS={ent:'Entrada',ias:'Saída p/ intervalo',ret:'Retorno',sai:'Saída'};
+const DISP=['Android 14 · Chrome 126','iOS 17 · Safari','Android 13 · Chrome 125','Android 12 · Chrome 124'];
+const ipOf=(sid,k)=>`203.0.113.${20+sid*9+(k||0)%7}`;
+const R=(a,b)=>a+Math.random()*(b-a);
+const pad=n=>String(n).padStart(2,'0');
+const fmtH=d=>pad(d.getHours())+':'+pad(d.getMinutes());
+const fmtDT=d=>pad(d.getDate())+'/'+pad(d.getMonth()+1)+'/'+d.getFullYear()+' '+pad(d.getHours())+':'+pad(d.getMinutes())+':'+pad(d.getSeconds());
+function dist(lat1,lon1,lat2,lon2){const r=Math.PI/180,x=(lon2-lon1)*r*Math.cos((lat1+lat2)*r/2),y=(lat2-lat1)*r;return Math.sqrt(x*x+y*y)*6371000;}
+function offset(lat,lon,metros,graus){const a=graus*Math.PI/180;return {lat:lat+Math.cos(a)*metros/111320,lon:lon+Math.sin(a)*metros/(111320*Math.cos(lat*Math.PI/180))};}
+const fmtD=m=>m<1000?Math.round(m)+' m':(m/1000).toFixed(1).replace('.',',')+' km';
+const fmtC=(la,lo)=>la.toFixed(5).replace('.',',')+', '+lo.toFixed(5).replace('.',',');
+
+/* foto simulada (canvas) com carimbo de data, hora e coordenadas */
+function fakePhoto(seed,carimbo){
+  const c=document.createElement('canvas');c.width=480;c.height=360;const g=c.getContext('2d');
+  const hue=(seed*47)%360;
+  const gr=g.createLinearGradient(0,0,0,360);gr.addColorStop(0,`hsl(${200+hue%40} 55% 72%)`);gr.addColorStop(.62,`hsl(${200+hue%40} 45% 86%)`);gr.addColorStop(.62,`hsl(${90+hue%50} 28% 52%)`);gr.addColorStop(1,`hsl(${90+hue%50} 30% 38%)`);
+  g.fillStyle=gr;g.fillRect(0,0,480,360);
+  const bx=60+(seed*37)%120;
+  g.fillStyle=`hsl(${hue} 30% 62%)`;g.fillRect(bx,150,200,110);
+  g.fillStyle=`hsl(${hue} 35% 38%)`;g.beginPath();g.moveTo(bx-14,150);g.lineTo(bx+100,98);g.lineTo(bx+214,150);g.closePath();g.fill();
+  g.fillStyle='#f5f0dc';for(let i=0;i<3;i++){g.fillRect(bx+18+i*60,176,34,40);}
+  g.fillStyle='#4a2f1b';g.fillRect(bx+86,222,28,38);
+  g.fillStyle=`hsl(${hue+120} 30% 30%)`;g.beginPath();g.arc(bx+250,208,30,0,7);g.fill();g.fillStyle='#4a2f1b';g.fillRect(bx+246,230,8,34);
+  g.fillStyle='rgba(0,0,0,.55)';g.fillRect(0,318,480,42);
+  g.fillStyle='#fff';g.font='bold 15px system-ui,sans-serif';g.fillText(carimbo[0],12,336);
+  g.font='13px system-ui,sans-serif';g.fillText(carimbo[1],12,353);
+  g.font='bold 11px system-ui,sans-serif';g.textAlign='right';g.fillText('FOTO SIMULADA',468,22);
+  return c.toDataURL('image/jpeg',.82);
+}
+/* assinatura simulada */
+function fakeSign(seed){
+  const c=document.createElement('canvas');c.width=360;c.height=110;const g=c.getContext('2d');
+  g.fillStyle='#fff';g.fillRect(0,0,360,110);g.strokeStyle='#14325a';g.lineWidth=2.4;g.lineCap='round';g.beginPath();
+  let x=24,y=60;g.moveTo(x,y);
+  for(let i=0;i<9;i++){x+=28+(seed*7+i*5)%12;y=60+Math.sin(i*1.7+seed)*26;g.quadraticCurveTo(x-14,y-30+(i%3)*14,x,y);}
+  g.stroke();g.beginPath();g.moveTo(40,92);g.lineTo(150+(seed*13)%140,86);g.stroke();
+  return c.toDataURL('image/png');
+}
+async function sha(txt){
+  try{const b=await crypto.subtle.digest('SHA-256',new TextEncoder().encode(txt));return [...new Uint8Array(b)].map(x=>x.toString(16).padStart(2,'0')).join('');}
+  catch(e){let h=2166136261;for(let i=0;i<txt.length;i++){h^=txt.charCodeAt(i);h=Math.imul(h,16777619);}let o='';for(let i=0;i<8;i++){h=Math.imul(h^i,16777619);o+=(h>>>0).toString(16).padStart(8,'0');}return o;}
+}
+
+/* ---------- estado ---------- */
+let regs=[],seq=0,tab='reg',filt={s:'',t:'',l:''},newId=null;
+const ph={scr:'login',sid:1,perm:null,loc:null,tipo:'ent',local:'sede',lugar:LUGARES[0],gab:GAB[0],obs:'',foto:null,sig:null,decl:false,ult:null,busy:false,cam:false,sheet:false};
+
+function seedRegs(){
+  regs=[];seq=0;const hoje=new Date();
+  const M=hoje.getHours()*60+hoje.getMinutes(),esc_=Math.min(1,Math.max(.04,(M-3)/520));
+  const mk=(sid,ago,tipo,ext,li,k)=>{
+    const d=new Date(hoje.getTime()-Math.max(2,ago*esc_)*60000);
+    const s=SERV.find(x=>x.id===sid);let pos,lug=SEDE.nome,foto=null,obs='',gab=s.lot;
+    if(ext){const L=LUGARES[li];pos=offset(SEDE.lat,SEDE.lon,L.d+R(-60,60),L.b+R(-8,8));lug=L.n;gab=GAB[(sid+li)%3];obs=['Vistoria de demanda de moradores','Acompanhamento de visita do vereador','Entrega de documentos à comunidade','Levantamento de pedido do gabinete'][li%4];foto=fakePhoto(sid*10+li,[fmtDT(d),fmtC(pos.lat,pos.lon)+' · Mat. '+s.mat]);}
+    else pos=offset(SEDE.lat,SEDE.lon,R(8,90),R(0,360));
+    const r={id:++seq,t:d,sid,tipo,local:ext?'externo':'sede',lugar:lug,gab,obs,lat:pos.lat,lon:pos.lon,prec:Math.round(R(6,18)),
+      dist:dist(SEDE.lat,SEDE.lon,pos.lat,pos.lon),ip:ipOf(sid,k),disp:DISP[(sid+k)%DISP.length],foto,sig:fakeSign(sid+k),prot:'PT-'+d.getFullYear()+'-'+String(1000+seq)};
+    r.hash='';regs.push(r);
+    sha(JSON.stringify([r.prot,r.sid,r.t,r.lat,r.lon,r.tipo])).then(h=>{r.hash=h;if(tab==='reg')renderAdmin();});
+  };
+  mk(4,520,'ent',false,0,1);mk(5,514,'ent',false,0,2);mk(1,507,'ent',true,0,3);mk(2,490,'ent',true,2,4);
+  mk(3,471,'ent',false,0,5);mk(1,396,'ias',true,0,6);mk(2,369,'ias',true,2,7);mk(4,314,'ias',false,0,8);mk(1,250,'ret',true,1,9);
+  regs.sort((a,b)=>b.t-a.t);
+}
+
+/* ---------- celular ---------- */
+const svgi=(p,n)=>`<svg width="${n||18}" height="${n||18}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${p}</svg>`;
+const I={pin:'<path d="M12 21s-7-6.2-7-11a7 7 0 0114 0c0 4.8-7 11-7 11z"/><circle cx="12" cy="10" r="2.5"/>',cam:'<path d="M4 8h3l2-3h6l2 3h3v11H4z"/><circle cx="12" cy="13" r="3.5"/>',pen:'<path d="M4 20l1-4L17 4l3 3L8 19z"/>',chk:'<path d="M5 12l5 5 9-10"/>'};
+function sb(){const d=new Date();return `<div class="sbar"><span>${fmtH(d)}</span><span class="ic">${svgi('<path d="M2 20h2v-4H2zM7 20h2v-8H7zM12 20h2V8h-2zM17 20h2V4h-2z"/>',14)}${svgi('<rect x="3" y="7" width="16" height="10" rx="2"/><path d="M21 11v2"/>',16)}</span></div>`;}
+function appbar(t,s){return `<div class="appbar"><small>${esc(s||'Câmara Municipal de Rio Verde')}</small><b>${esc(t)}</b></div>`;}
+const me=()=>SERV.find(s=>s.id===ph.sid);
+
+function phoneHTML(){
+  const s=me();let body='';
+  if(ph.scr==='login'){
+    body=`${appbar('Ponto – Servidores Externos')}<div class="pbody">
+      <div class="pcard"><h4>Acesso do servidor</h4>
+        <label style="font-size:12.5px;color:var(--p-muted)">Servidor (simulado)</label>
+        <select class="psel" id="pSid">${SERV.map(x=>`<option value="${x.id}"${x.id===ph.sid?' selected':''}>${esc(x.nome)}</option>`).join('')}</select>
+        <dl class="kv" style="margin-top:10px"><dt>Matrícula</dt><dd>${s.mat}</dd><dt>Cargo</dt><dd>${esc(s.cargo)}</dd><dt>Lotação</dt><dd>${esc(s.lot)}</dd></dl></div>
+      <button class="pbtn" data-p="entrar">Entrar</button>
+      <p style="font-size:12px;color:var(--p-muted);margin:0;text-align:center">Ao registrar o ponto serão coletados: nome, matrícula, IP, data e hora, localização e assinatura digital.</p></div>`;
+  }else if(ph.scr==='home'){
+    const hoje=regs.filter(r=>r.sid===s.id).length;
+    body=`${appbar('Olá, '+s.nome.split(' ')[0],s.cargo)}<div class="pbody">
+      <div class="pcard"><div class="clock" id="pClock">${fmtH(new Date())}<small>${new Date().toLocaleDateString('pt-BR',{weekday:'long',day:'2-digit',month:'long'})}</small></div></div>
+      <div class="pcard"><h4>Seus dados</h4><dl class="kv"><dt>Nome</dt><dd>${esc(s.nome)}</dd><dt>Matrícula</dt><dd>${s.mat}</dd><dt>Lotação</dt><dd>${esc(s.lot)}</dd><dt>Registros hoje</dt><dd>${hoje}</dd></dl></div>
+      ${ph.ult?`<div class="pcard"><h4>Último registro</h4><div style="font-size:13px"><b>${TIPOS[ph.ult.tipo]}</b> às ${fmtH(ph.ult.t)} · <span class="badge ok">Protocolo ${esc(ph.ult.prot)}</span></div></div>`:''}
+      <button class="pbtn" data-p="reg">Registrar ponto</button>
+      <button class="pbtn ghost sm" data-p="sair">Trocar servidor</button></div>`;
+  }else if(ph.scr==='reg'){
+    const l=ph.loc;
+    const stp=(n,t,ok)=>`<div class="step${ok?' done':''}"><i>${ok?'✓':n}</i>${t}</div>`;
+    const podeAss=!!ph.sig;
+    const pronto=!!l&&podeAss&&ph.decl&&!ph.busy;
+    body=`${appbar('Registrar ponto',s.nome)}<div class="pbody">
+      <div class="pcard">${stp(1,'Local de trabalho',true)}
+        <div class="seg"><button class="chip${ph.local==='sede'?' on':''}" data-p="local" data-v="sede">Na sede</button><button class="chip${ph.local==='externo'?' on':''}" data-p="local" data-v="externo">Atividade externa</button></div>
+        ${ph.local==='externo'?`<div style="margin-top:10px;display:flex;flex-direction:column;gap:8px">
+          <label style="font-size:12px;color:var(--p-muted)">Solicitante</label>
+          <select class="psel" id="pGab">${GAB.map(g=>`<option${g===ph.gab?' selected':''}>${esc(g)}</option>`).join('')}</select>
+          <label style="font-size:12px;color:var(--p-muted)">Motivo / observação</label>
+          <textarea class="pta" id="pObs" placeholder="Ex.: visita a pedido do vereador">${esc(ph.obs)}</textarea></div>`:''}</div>
+      <div class="pcard">${stp(2,'Localização',!!l)}
+        ${!l?(ph.busy==='loc'?`<div class="spin"></div><p style="text-align:center;font-size:12.5px;margin:0;color:var(--p-muted)">Obtendo posição…</p>`:`<button class="pbtn ghost sm" data-p="gps">${svgi(I.pin)} Ativar localização</button>${ph.perm==='neg'?'<p style="font-size:12.5px;color:#b3261e;margin:8px 0 0">Permissão negada. Sem localização não é possível registrar o ponto.</p>':''}`)
+        :`<dl class="kv"><dt>Coordenadas</dt><dd>${fmtC(l.lat,l.lon)}</dd><dt>Precisão</dt><dd>± ${l.prec} m</dd><dt>Distância da sede</dt><dd>${fmtD(l.dist)}</dd><dt>IP (simulado)</dt><dd>${ipOf(s.id,0)}</dd></dl>
+          <div style="margin-top:8px"><span class="badge ${l.dist<=SEDE.raio?'ok':'info'}">${l.dist<=SEDE.raio?'Dentro da área da sede':'Fora da sede'}</span></div>`}</div>
+      <div class="pcard">${stp(3,'Tipo de registro',true)}<div class="chips">${Object.keys(TIPOS).map(k=>`<button class="chip${ph.tipo===k?' on':''}" data-p="tipo" data-v="${k}">${TIPOS[k]}</button>`).join('')}</div></div>
+      ${ph.local==='externo'?`<div class="pcard"><h4>Foto da atividade (opcional)</h4>${ph.foto?`<img class="thumb" src="${ph.foto}" alt="Foto tirada"><button class="pbtn ghost sm" style="margin-top:8px" data-p="cam">Refazer foto</button>`:`<button class="pbtn ghost sm" data-p="cam">${svgi(I.cam)} Tirar foto</button>`}</div>`:''}
+      <div class="pcard">${stp(4,'Assinatura digital',podeAss)}<canvas class="sig" id="sig" width="600" height="220"></canvas>
+        <div style="display:flex;justify-content:space-between;margin:6px 0 10px"><span style="font-size:11.5px;color:var(--p-muted)">Assine com o dedo</span><button class="chip" style="padding:3px 10px;font-size:12px" data-p="limpar">Limpar</button></div>
+        <label class="chk"><input type="checkbox" id="pDecl"${ph.decl?' checked':''}> Declaro que as informações acima são verdadeiras e que estou no local informado.</label></div>
+      <button class="pbtn" data-p="enviar"${pronto?'':' disabled'}>${ph.busy==='send'?'Registrando…':'Assinar e registrar ponto'}</button>
+      <button class="pbtn ghost sm" data-p="voltar">Voltar</button></div>`;
+  }else if(ph.scr==='ok'){
+    const r=ph.ult;
+    body=`${appbar('Ponto registrado','Comprovante')}<div class="pbody">
+      <div class="okmark">${svgi(I.chk,38)}</div>
+      <div style="text-align:center"><b style="font-family:var(--f-display);font-size:18px">${TIPOS[r.tipo]} registrada</b><div style="font-size:13px;color:var(--p-muted)">${fmtDT(r.t)}</div></div>
+      <div class="pcard"><dl class="kv"><dt>Protocolo</dt><dd>${esc(r.prot)}</dd><dt>Nome</dt><dd>${esc(me().nome)}</dd><dt>Matrícula</dt><dd>${me().mat}</dd><dt>IP</dt><dd>${r.ip}</dd><dt>Local</dt><dd>${esc(r.lugar)}</dd><dt>Coordenadas</dt><dd>${fmtC(r.lat,r.lon)}</dd><dt>Assinatura</dt><dd>Digital · ✓</dd><dt>Foto</dt><dd>${r.foto?'Anexada':'Não enviada'}</dd><dt>Selo (SHA-256)</dt><dd class="mono" style="font-size:10.5px">${r.hash?r.hash.slice(0,24)+'…':'…'}</dd></dl></div>
+      <button class="pbtn" data-p="home">Concluir</button></div>`;
+  }
+  let over='';
+  if(ph.sheet) over=`<div class="sheet"><div><div style="margin:0 auto;color:#0a6b3d">${svgi(I.pin,34)}</div><h4>Permitir que "Ponto – Servidores" acesse a localização do dispositivo?</h4><p>A localização será usada somente no momento do registro do ponto.</p>
+    <button class="pbtn" data-p="perm" data-v="ok">Permitir ao usar o app</button><button class="pbtn ghost" data-p="perm" data-v="neg">Não permitir</button></div></div>`;
+  if(ph.cam) over=`<div class="cam"><div class="vf"><div style="position:absolute;left:0;right:0;bottom:10px;text-align:center;color:#fff;font-size:12px;opacity:.9">Enquadre o local da atividade</div></div><div class="bar"><button class="pbtn ghost sm" style="width:auto;padding:10px 14px" data-p="camx">Cancelar</button><button class="shutter" data-p="shot" aria-label="Fotografar"></button><span style="width:76px"></span></div></div>`;
+  return `${sb()}${body}${over}`;
+}
+
+function drawSigBack(){
+  const c=$('#sig');if(!c) return;
+  if(ph.sigPts&&ph.sigPts.length){const g=c.getContext('2d');g.lineWidth=4;g.lineCap='round';g.lineJoin='round';g.strokeStyle='#14325a';
+    ph.sigPts.forEach(st=>{g.beginPath();st.forEach((p,i)=>i?g.lineTo(p[0],p[1]):g.moveTo(p[0],p[1]));g.stroke();});}
+}
+function bindSig(){
+  const c=$('#sig');if(!c) return;const g=c.getContext('2d');let cur=null;
+  g.lineWidth=4;g.lineCap='round';g.lineJoin='round';g.strokeStyle='#14325a';drawSigBack();
+  const pt=e=>{const r=c.getBoundingClientRect();return [(e.clientX-r.left)*c.width/r.width,(e.clientY-r.top)*c.height/r.height];};
+  c.addEventListener('pointerdown',e=>{c.setPointerCapture(e.pointerId);cur=[pt(e)];g.beginPath();g.moveTo(...cur[0]);ph.sigPts=ph.sigPts||[];ph.sigPts.push(cur);e.preventDefault();});
+  c.addEventListener('pointermove',e=>{if(!cur) return;const p=pt(e);cur.push(p);g.lineTo(p[0],p[1]);g.stroke();});
+  const end=()=>{if(!cur) return;cur=null;ph.sig=c.toDataURL('image/png');const b=$('[data-p=enviar]');if(b) b.disabled=!(ph.loc&&ph.sig&&ph.decl&&!ph.busy);};
+  c.addEventListener('pointerup',end);c.addEventListener('pointercancel',end);
+}
+function renderPhone(){
+  const sc=$('#screen');const keep=sc.querySelector('.pbody');const top=keep?keep.scrollTop:0;
+  sc.innerHTML=phoneHTML();const b=sc.querySelector('.pbody');if(b) b.scrollTop=top;
+  bindSig();
+}
+function resetForm(){Object.assign(ph,{perm:null,loc:null,tipo:'ent',local:'sede',gab:GAB[0],obs:'',foto:null,sig:null,sigPts:[],decl:false,busy:false,cam:false,sheet:false});}
+
+async function enviar(){
+  const s=me(),l=ph.loc,d=new Date();
+  ph.busy='send';renderPhone();
+  const ext=ph.local==='externo';
+  const r={id:++seq,t:d,sid:s.id,tipo:ph.tipo,local:ph.local,lugar:ext?ph.lugar.n:SEDE.nome,gab:ext?ph.gab:s.lot,obs:ext?ph.obs.trim():'',lat:l.lat,lon:l.lon,prec:l.prec,dist:l.dist,
+    ip:ipOf(s.id,0),disp:DISP[s.id%DISP.length],foto:ext?ph.foto:null,sig:ph.sig,prot:'PT-'+d.getFullYear()+'-'+String(1000+seq)};
+  r.hash=await sha(JSON.stringify([r.prot,r.sid,r.t,r.lat,r.lon,r.tipo]));
+  await new Promise(res=>setTimeout(res,700));
+  regs.unshift(r);newId=r.id;ph.ult=r;ph.busy=false;ph.scr='ok';
+  renderPhone();renderAdmin();
+  toast('Novo registro recebido: '+s.nome+' ('+TIPOS[r.tipo]+')');
+  setTimeout(()=>{newId=null;},2600);
+}
+
+$('#screen').addEventListener('click',e=>{
+  const b=e.target.closest('[data-p]');if(!b) return;const a=b.dataset.p,v=b.dataset.v;
+  if(a==='entrar'){ph.scr='home';}
+  else if(a==='sair'){ph.scr='login';}
+  else if(a==='reg'){resetForm();ph.scr='reg';}
+  else if(a==='voltar'||a==='home'){ph.scr='home';}
+  else if(a==='local'){ph.local=v;if(v==='externo'){ph.lugar=LUGARES[Math.floor(Math.random()*LUGARES.length)];}ph.loc=null;ph.perm=null;}
+  else if(a==='tipo'){ph.tipo=v;}
+  else if(a==='gps'){ph.sheet=true;}
+  else if(a==='perm'){
+    ph.sheet=false;
+    if(v==='neg'){ph.perm='neg';}
+    else{ph.perm='ok';ph.busy='loc';renderPhone();
+      setTimeout(()=>{
+        const fora=$('#gpsOff').checked;let p,pr=Math.round(R(6,16));
+        if(ph.local==='externo'){p=offset(SEDE.lat,SEDE.lon,ph.lugar.d+R(-60,60),ph.lugar.b+R(-8,8));}
+        else if(fora){p=offset(SEDE.lat,SEDE.lon,R(1800,2800),R(0,360));}
+        else{p=offset(SEDE.lat,SEDE.lon,R(8,90),R(0,360));}
+        ph.loc={lat:p.lat,lon:p.lon,prec:pr,dist:dist(SEDE.lat,SEDE.lon,p.lat,p.lon)};ph.busy=false;renderPhone();},1300);
+      return;}
+  }
+  else if(a==='cam'){ph.cam=true;}
+  else if(a==='camx'){ph.cam=false;}
+  else if(a==='shot'){
+    const n=new Date(),p=ph.loc||{lat:SEDE.lat,lon:SEDE.lon};
+    ph.foto=fakePhoto(Math.floor(Math.random()*90),[fmtDT(n),fmtC(p.lat,p.lon)+' · Mat. '+me().mat]);ph.cam=false;
+  }
+  else if(a==='limpar'){ph.sig=null;ph.sigPts=[];}
+  else if(a==='enviar'){enviar();return;}
+  renderPhone();
+});
+$('#screen').addEventListener('change',e=>{
+  if(e.target.id==='pSid'){ph.sid=+e.target.value;renderPhone();}
+  else if(e.target.id==='pGab'){ph.gab=e.target.value;}
+  else if(e.target.id==='pDecl'){ph.decl=e.target.checked;const b=$('[data-p=enviar]');if(b) b.disabled=!(ph.loc&&ph.sig&&ph.decl&&!ph.busy);}
+});
+$('#screen').addEventListener('input',e=>{if(e.target.id==='pObs') ph.obs=e.target.value;});
+
+/* ---------- painel administrativo ---------- */
+function alertas(r){
+  const a=[];
+  if(r.local==='sede'&&r.dist>SEDE.raio) a.push(['bad','GPS fora da área (informado: sede)']);
+  if(r.local==='externo'&&!r.foto) a.push(['warn','Atividade externa sem foto']);
+  if(r.local==='externo'&&!r.obs) a.push(['warn','Sem motivo informado']);
+  return a;
+}
+function mapSvg(pts,opt){
+  opt=opt||{};const W=720,H=opt.h||380;
+  let la=[SEDE.lat],lo=[SEDE.lon];pts.forEach(p=>{la.push(p.lat);lo.push(p.lon);});
+  const c=SEDE.lat*Math.PI/180,k=Math.cos(c);
+  const mx=lo.map(x=>x*111320*k),my=la.map(y=>y*111320);
+  let x0=Math.min(...mx),x1=Math.max(...mx),y0=Math.min(...my),y1=Math.max(...my);
+  const span=Math.max(x1-x0,(y1-y0)*W/H,600),cx=(x0+x1)/2,cy=(y0+y1)/2,sc=(W*.8)/span;
+  const X=lon=>W/2+(lon*111320*k-cx)*sc,Y=lat=>H/2-(lat*111320-cy)*sc;
+  let s=`<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Mapa esquemático das posições">`;
+  for(let i=-12;i<=12;i++){const o=i*(span/8)*sc;s+=`<line x1="${W/2+o}" y1="0" x2="${W/2+o*.92+H*.12}" y2="${H}" stroke="var(--map-line)" stroke-width="${i%4?1:2.4}"/><line x1="0" y1="${H/2+o*.7}" x2="${W}" y2="${H/2+o*.7-30}" stroke="var(--map-line)" stroke-width="${i%3?1:2.4}"/>`;}
+  const sx=X(SEDE.lon),sy=Y(SEDE.lat),rr=Math.max(SEDE.raio*sc,7);
+  s+=`<circle cx="${sx}" cy="${sy}" r="${rr}" fill="color-mix(in srgb,var(--accent) 22%,transparent)" stroke="var(--accent)" stroke-width="2" stroke-dasharray="5 4"/><rect x="${sx-7}" y="${sy-7}" width="14" height="14" rx="3" fill="var(--accent)"/><text x="${sx+12}" y="${sy-10}" font-size="13" font-weight="700" fill="var(--fg)" font-family="Public Sans,sans-serif">${esc(SEDE.nome)}</text>`;
+  pts.forEach(p=>{const px=X(p.lon),py=Y(p.lat),col=p.local==='sede'?(p.dist>SEDE.raio?'#d93a2f':'#0a6b3d'):'#2f6fb5';
+    s+=`<g><circle cx="${px}" cy="${py}" r="${p.big?11:8}" fill="${col}" stroke="#fff" stroke-width="2.5"/>${p.label?`<text x="${px+14}" y="${py+4}" font-size="12.5" font-weight="600" fill="var(--fg)" font-family="Public Sans,sans-serif">${esc(p.label)}</text>`:''}</g>`;});
+  return s+'</svg>';
+}
+function filtrar(){
+  return regs.filter(r=>(!filt.s||String(r.sid)===filt.s)&&(!filt.t||r.tipo===filt.t)&&(!filt.l||r.local===filt.l));
+}
+function renderStats(){
+  const ext=regs.filter(r=>r.local==='externo'),al=regs.filter(r=>alertas(r).length).length;
+  const campo=SERV.filter(s=>{const u=regs.find(r=>r.sid===s.id);return u&&u.local==='externo'&&u.tipo!=='sai';}).length;
+  $('#stats').innerHTML=`<div class="stat"><b>${regs.length}</b><span>Registros hoje</span></div><div class="stat"><b>${campo}</b><span>Servidores em campo</span></div><div class="stat"><b>${ext.filter(r=>r.foto).length}/${ext.length}</b><span>Externos com foto</span></div><div class="stat${al?' alert':''}"><b>${al}</b><span>Alertas</span></div>`;
+}
+function renderAdmin(){
+  renderStats();
+  document.querySelectorAll('.tab').forEach(t=>t.setAttribute('aria-selected',t.dataset.t===tab));
+  const B=$('#tabBody');
+  if(tab==='reg'){
+    const L=filtrar();
+    B.innerHTML=`<div class="bar2"><select id="fS" aria-label="Servidor"><option value="">Todos os servidores</option>${SERV.map(s=>`<option value="${s.id}"${filt.s==String(s.id)?' selected':''}>${esc(s.nome)}</option>`).join('')}</select>
+      <select id="fT" aria-label="Tipo"><option value="">Todos os tipos</option>${Object.keys(TIPOS).map(k=>`<option value="${k}"${filt.t===k?' selected':''}>${TIPOS[k]}</option>`).join('')}</select>
+      <select id="fL" aria-label="Local"><option value="">Sede e externo</option><option value="sede"${filt.l==='sede'?' selected':''}>Na sede</option><option value="externo"${filt.l==='externo'?' selected':''}>Atividade externa</option></select>
+      <button class="btn" id="csv" type="button">Exportar CSV</button></div>
+      <div class="tw"><table><thead><tr><th>Hora</th><th>Servidor</th><th>Tipo</th><th>Local</th><th>IP</th><th>Localização</th><th>Foto</th><th>Assin.</th><th>Alertas</th></tr></thead><tbody>
+      ${L.map(r=>{const s=SERV.find(x=>x.id===r.sid),al=alertas(r);return `<tr data-id="${r.id}"${r.id===newId?' class="new"':''} tabindex="0"><td class="mono">${fmtH(r.t)}</td>
+        <td class="nm"><b>${esc(s.nome)}</b><span>Mat. ${s.mat}</span></td><td>${TIPOS[r.tipo]}</td>
+        <td>${r.local==='sede'?'<span class="pill ok">Sede</span>':`<span class="pill info">Externo</span>`}<div style="font-size:12px;color:var(--muted)">${esc(r.lugar)}</div></td>
+        <td class="mono">${r.ip}</td><td><span class="mono">${fmtC(r.lat,r.lon)}</span><div style="font-size:12px;color:var(--muted)">${fmtD(r.dist)} da sede · ±${r.prec} m</div></td>
+        <td>${r.foto?`<img class="mini" src="${r.foto}" alt="Foto do registro">`:'<span class="pill mut">—</span>'}</td><td><span class="pill ok">✓ Assinado</span></td>
+        <td>${al.length?al.map(a=>`<span class="pill ${a[0]}" style="margin:1px 0;display:inline-block">${esc(a[1])}</span>`).join(' '):'<span class="pill mut">—</span>'}</td></tr>`;}).join('')||'<tr><td colspan="9" class="empty">Nenhum registro com esses filtros.</td></tr>'}
+      </tbody></table></div>`;
+  }else if(tab==='map'){
+    const pts=regs.slice(0,40).map(r=>({lat:r.lat,lon:r.lon,local:r.local,dist:r.dist,label:r.local==='externo'?SERV.find(s=>s.id===r.sid).nome.split(' ')[0]:''}));
+    B.innerHTML=`<div class="mapbox">${mapSvg(pts,{h:420})}</div><div class="legend"><span><i style="background:#0a6b3d"></i>Na sede</span><span><i style="background:#2f6fb5"></i>Atividade externa</span><span><i style="background:#d93a2f"></i>Divergência (GPS fora da área)</span><span>Mapa esquemático, sem referência de ruas reais.</span></div>`;
+  }else{
+    B.innerHTML=`<div class="srv">${SERV.map(s=>{const u=regs.find(r=>r.sid===s.id),n=regs.filter(r=>r.sid===s.id).length;
+      const st=!u?['mut','Sem registro hoje']:u.tipo==='sai'?['mut','Encerrou o expediente']:u.tipo==='ias'?['warn','Em intervalo']:u.local==='externo'?['info','Em atividade externa']:['ok','Na sede'];
+      return `<div class="srvc"><b>${esc(s.nome)}</b><span>Mat. ${s.mat} · ${esc(s.cargo)}</span><span>${esc(s.lot)}</span><div><span class="pill ${st[0]}">${st[1]}</span></div><span>${u?'Último: '+TIPOS[u.tipo]+' às '+fmtH(u.t):'—'} · ${n} registro(s) hoje</span></div>`;}).join('')}</div>`;
+  }
+}
+$('#tabBody').addEventListener('change',e=>{
+  if(e.target.id==='fS') filt.s=e.target.value;else if(e.target.id==='fT') filt.t=e.target.value;else if(e.target.id==='fL') filt.l=e.target.value;else return;
+  renderAdmin();
+});
+$('#tabBody').addEventListener('click',e=>{
+  if(e.target.closest('#csv')){csv();return;}
+  const tr=e.target.closest('tr[data-id]');if(tr) detalhe(+tr.dataset.id);
+});
+$('#tabBody').addEventListener('keydown',e=>{if(e.key==='Enter'){const tr=e.target.closest('tr[data-id]');if(tr) detalhe(+tr.dataset.id);}});
+document.querySelectorAll('.tab').forEach(t=>t.addEventListener('click',()=>{tab=t.dataset.t;renderAdmin();}));
+
+function detalhe(id){
+  const r=regs.find(x=>x.id===id);if(!r) return;const s=SERV.find(x=>x.id===r.sid),al=alertas(r);
+  $('#dlg').innerHTML=`<div class="dh"><h3>Comprovante ${esc(r.prot)}</h3><button class="btn" data-close>Fechar</button></div>
+  <div class="db"><div><dl class="dl"><dt>Servidor</dt><dd>${esc(s.nome)}</dd><dt>Matrícula</dt><dd>${s.mat}</dd><dt>Cargo</dt><dd>${esc(s.cargo)}</dd><dt>Registro</dt><dd>${TIPOS[r.tipo]}</dd>
+    <dt>Data e hora</dt><dd>${fmtDT(r.t)}</dd><dt>IP</dt><dd class="mono">${r.ip} (simulado)</dd><dt>Dispositivo</dt><dd>${esc(r.disp)}</dd>
+    <dt>Local</dt><dd>${r.local==='sede'?'Na sede':'Atividade externa'} · ${esc(r.lugar)}</dd>${r.local==='externo'?`<dt>Solicitante</dt><dd>${esc(r.gab)}</dd><dt>Motivo</dt><dd>${esc(r.obs||'—')}</dd>`:''}
+    <dt>Coordenadas</dt><dd class="mono">${fmtC(r.lat,r.lon)}</dd><dt>Precisão</dt><dd>± ${r.prec} m</dd><dt>Distância da sede</dt><dd>${fmtD(r.dist)}</dd>
+    <dt>Selo SHA-256</dt><dd class="mono" style="font-size:10.5px">${esc(r.hash||'—')}</dd></dl>
+    ${al.length?`<div style="margin-top:10px">${al.map(a=>`<span class="pill ${a[0]}">${esc(a[1])}</span>`).join(' ')}</div>`:''}</div>
+    <div><div class="mapbox">${mapSvg([{lat:r.lat,lon:r.lon,local:r.local,dist:r.dist,big:true}],{h:230})}</div>
+    ${r.foto?`<div class="stamp">Foto enviada pelo servidor</div><img class="photo" src="${r.foto}" alt="Foto da atividade">`:''}
+    <div class="stamp">Assinatura digital do servidor</div><img class="sigimg" src="${r.sig}" alt="Assinatura"></div></div>`;
+  $('#dlg').showModal();
+}
+$('#dlg').addEventListener('click',e=>{if(e.target.matches('[data-close]')||e.target===$('#dlg')) $('#dlg').close();});
+
+function csv(){
+  const h=['Protocolo','Data/Hora','Servidor','Matrícula','Tipo','Local','Lugar','Solicitante','IP (simulado)','Latitude','Longitude','Distância da sede (m)','Foto','Assinatura','Alertas'];
+  const rows=filtrar().map(r=>{const s=SERV.find(x=>x.id===r.sid);return [r.prot,fmtDT(r.t),s.nome,s.mat,TIPOS[r.tipo],r.local==='sede'?'Sede':'Externo',r.lugar,r.gab,r.ip,r.lat.toFixed(6),r.lon.toFixed(6),Math.round(r.dist),r.foto?'Sim':'Não','Sim',alertas(r).map(a=>a[1]).join(' | ')];});
+  const txt='﻿'+[h].concat(rows).map(l=>l.map(c=>'"'+String(c).replace(/"/g,'""')+'"').join(';')).join('\r\n');
+  const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([txt],{type:'text/csv;charset=utf-8'}));a.download='ponto-servidores-externos-simulacao.csv';
+  document.body.appendChild(a);a.click();setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove();},500);
+  toast('Planilha exportada (dados fictícios).');
+}
+
+function rerender(){renderPhone();renderAdmin();}
+$('#resetBtn').addEventListener('click',()=>{seedRegs();resetForm();ph.scr='login';ph.ult=null;newId=null;filt={s:'',t:'',l:''};rerender();toast('Simulação reiniciada.');});
+setInterval(()=>{const t=new Date();$('#clockAdm').textContent=fmtDT(t);const c=$('#pClock');if(c) c.firstChild.nodeValue=fmtH(t);},1000);
+try{matchMedia('(prefers-color-scheme: dark)').addEventListener('change',themeBtn);new MutationObserver(themeBtn).observe(document.documentElement,{attributes:true,attributeFilter:['data-theme']});}catch(e){}
+seedRegs();themeBtn();rerender();
+</script>

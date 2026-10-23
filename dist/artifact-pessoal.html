@@ -75,6 +75,27 @@ details.grp[open]>summary::before{transform:rotate(90deg)}
 .empty{margin-top:30px;text-align:center;padding:38px 20px;background:var(--surface);border:2px dashed var(--line);border-radius:16px;color:var(--muted)}
 .empty h2{color:var(--fg);margin-bottom:6px}
 .note{margin-top:20px;font-size:12.8px;color:var(--muted)}
+/* edição */
+.person{flex-wrap:wrap}
+.pact{display:flex;gap:4px;margin-left:auto}
+.pact .btn,.gact .btn{padding:4px 9px;font-size:12.5px;box-shadow:none}
+.gact{display:flex;gap:4px;margin-left:auto}
+details.grp>summary .gact{margin-left:8px}
+body.editando .person{cursor:grab}
+body.editando .person[draggable=true]:active{cursor:grabbing}
+.person.dragging{opacity:.35}
+details.grp.over{outline:2px dashed var(--accent);outline-offset:2px;background:var(--soft)}
+.banner.edit{background:var(--soft);color:var(--fg);border:1px solid var(--accent)}
+.undo{margin-left:12px;border:1px solid currentColor;background:transparent;color:inherit;border-radius:8px;padding:3px 10px;cursor:pointer;font-weight:600}
+dialog{border:1px solid var(--line);border-radius:16px;padding:0;background:var(--surface);color:var(--fg);width:min(460px,94vw);box-shadow:0 20px 60px rgba(0,0,0,.4)}
+dialog::backdrop{background:rgba(0,0,0,.5)}
+dialog form{padding:20px;display:flex;flex-direction:column;gap:12px}
+dialog h3{font-size:1.1rem}
+dialog label{display:flex;flex-direction:column;gap:4px;font-size:13px;color:var(--muted);font-weight:600}
+dialog input,dialog select{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:10px 12px;color:var(--fg);font-weight:400}
+dialog .row{display:flex;gap:8px;justify-content:flex-end;flex-wrap:wrap}
+dialog p{margin:0;font-size:14px}
+@media (max-width:560px){.pact{width:100%;justify-content:flex-end}}
 #toast{position:fixed;left:50%;transform:translateX(-50%);bottom:max(18px,env(safe-area-inset-bottom,0px));background:var(--fg);color:var(--bg);padding:10px 16px;border-radius:10px;font-size:14px;z-index:60;max-width:90vw}
 @media (pointer:coarse){input,select,textarea{font-size:16px}.btn{min-height:42px}.btn.sm{min-height:38px}}
 </style>
@@ -93,6 +114,9 @@ details.grp[open]>summary::before{transform:rotate(90deg)}
     <label class="search"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></svg><input id="q" type="search" placeholder="Buscar por nome, cargo ou gabinete" aria-label="Buscar" autocomplete="off"></label>
     <select id="ft" aria-label="Filtrar por vínculo"><option value="">Todos os vínculos</option><option value="com">Comissionados</option><option value="efe">Efetivos</option><option value="ced">Cedidos</option><option value="ant">Admissão anterior a 1988</option><option value="pen">Pensionistas</option></select>
     <button class="btn" id="expBtn" type="button">Expandir tudo</button>
+    <button class="btn" id="edtBtn" type="button">Editar hierarquia</button>
+    <button class="btn" id="addBtn" type="button" hidden>+ Pessoa</button>
+    <button class="btn" id="undoBtn" type="button" hidden>Desfazer</button>
     <button class="btn primary" id="impBtn" type="button">Importar planilha (CSV)</button>
     <button class="btn danger" id="clrBtn" type="button">Remover dados</button>
     <input type="file" id="file" accept=".csv,text/csv" hidden>
@@ -101,6 +125,7 @@ details.grp[open]>summary::before{transform:rotate(90deg)}
   <div id="view"></div>
   <p class="note" id="foot"></p>
 </div></main>
+<dialog id="dlg"></dialog>
 <div id="toast" hidden></div>
 
 <script>
@@ -221,19 +246,59 @@ const PB=(function(){
   }
 
   /* ---------- conexão ---------- */
+  const sleep=ms=>new Promise(r=>setTimeout(r,ms));
+  async function alive(){
+    for(let i=0;i<3;i++){
+      const ac=new AbortController(),t=setTimeout(()=>ac.abort(),6000);
+      try{const r=await fetch(URL_BASE+'/api/health',{cache:'no-store',signal:ac.signal});clearTimeout(t);if(r.ok) return true;}catch(e){clearTimeout(t);}
+      if(i<2) await sleep(1500);
+    }
+    return false;
+  }
+  const box='position:fixed;inset:0;z-index:99999;display:flex;align-items:center;justify-content:center;padding:16px;background:rgba(0,0,0,.5)';
+  const card='width:100%;max-width:380px;background:var(--surface,#fff);color:var(--fg,#12281d);border:1px solid var(--line,#d1ddd6);border-radius:12px;padding:22px;box-shadow:0 10px 40px rgba(0,0,0,.3);font:15px/1.45 system-ui,sans-serif';
+  const bt='padding:9px 14px;border-radius:8px;font:inherit;font-weight:600;cursor:pointer;';
+  /* servidor fora do ar: pergunta antes de seguir, para não trabalhar sem querer só neste navegador */
+  function offlineDialog(){
+    return new Promise(resolve=>{
+      const w=document.createElement('div');w.style.cssText=box;
+      w.innerHTML='<div role="alertdialog" aria-modal="true" style="'+card+'"><h3 style="margin:0 0 6px;font-size:18px">Sem conexão com o servidor</h3>'+
+        '<p style="margin:0 0 14px;color:var(--muted,#4f665a);font-size:13.5px">Não foi possível falar com o servidor dos dados. Verifique a internet e tente de novo. Se continuar só neste navegador, o que você fizer <b>não será salvo no servidor</b> e não aparecerá em outros computadores.</p>'+
+        '<div style="display:flex;gap:8px;justify-content:flex-end;flex-wrap:wrap"><button type="button" data-loc style="'+bt+'border:1px solid var(--line,#d1ddd6);background:transparent;color:inherit">Usar só neste navegador</button>'+
+        '<button type="button" data-retry style="'+bt+'border:0;background:var(--accent,#0a6b3d);color:var(--accent-fg,#fff)">Tentar novamente</button></div></div>';
+      document.body.appendChild(w);
+      const done=v=>{w.remove();resolve(v);};
+      w.querySelector('[data-retry]').addEventListener('click',()=>done(true));
+      w.querySelector('[data-loc]').addEventListener('click',()=>done(false));
+      w.querySelector('[data-retry]').focus();
+    });
+  }
+  function markLocal(){
+    if(document.getElementById('pb-local')) return;
+    const b=document.createElement('div');b.id='pb-local';
+    b.style.cssText='position:fixed;left:0;right:0;bottom:0;z-index:99998;background:#8a5a00;color:#fff;padding:8px 14px;font:13.5px/1.35 system-ui,sans-serif;display:flex;gap:10px;align-items:center;justify-content:center;flex-wrap:wrap;text-align:center';
+    b.innerHTML='<span>Modo local: os dados ficam só neste navegador e <b>não são salvos no servidor</b>.</span><button type="button" style="border:1px solid #fff;background:transparent;color:#fff;border-radius:7px;padding:3px 10px;font:inherit;font-weight:600;cursor:pointer">Reconectar</button>';
+    b.querySelector('button').addEventListener('click',()=>location.reload());
+    document.body.appendChild(b);
+  }
   async function connect(){
     if(!URL_BASE) return null;
-    try{
-      readAuth();
-      await fetch(URL_BASE+'/api/health',{cache:'no-store'}).then(r=>{if(!r.ok) throw new Error('offline');});
-      let ok=false;
-      if(token){
-        try{const r=await raw('POST','/api/collections/'+col+'/auth-refresh');token=r.token;email=(r.record&&(r.record.email||r.record.username))||email;saveAuth();ok=true;}
-        catch(e){if(e.status!==401&&e.status!==403&&e.status!==404) throw e; clearAuth();}
+    readAuth();
+    for(;;){
+      if(!(await alive())){if(await offlineDialog()) continue;markLocal();return null;}
+      try{
+        let ok=false;
+        if(token){
+          try{const r=await raw('POST','/api/collections/'+col+'/auth-refresh');token=r.token;email=(r.record&&(r.record.email||r.record.username))||email;saveAuth();ok=true;}
+          catch(e){if(e.status!==401&&e.status!==403&&e.status!==404) throw e; clearAuth();}
+        }
+        if(!ok&&!(await login())){markLocal();return null;}
+        return {doc,collection};
+      }catch(e){
+        if(await offlineDialog()) continue;
+        markLocal();return null;
       }
-      if(!ok&&!(await login())) return null;
-      return {doc,collection};
-    }catch(e){return null;}
+    }
   }
   return {connect,logout(){clearAuth();location.reload();},get email(){return email;},url:URL_BASE};
 })();
@@ -243,7 +308,7 @@ const LS='rhcrv-pessoal-v1',TEMA_KEY='rhcrv-tema';
 const $=s=>document.querySelector(s);
 const esc=s=>String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const norm=s=>String(s||'').normalize('NFD').replace(/[̀-ͯ]/g,'').toLowerCase().trim();
-let dbh=null,dados=null,allOpen=false;
+let dbh=null,dados=null,allOpen=false,edit=false,hist=[],abertos=new Set();
 
 /* ---------- tema ---------- */
 const ICO2={sun:'<circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/>',moon:'<path d="M21 12.8A9 9 0 1111.2 3a7 7 0 009.8 9.8z"/>'};
@@ -315,30 +380,123 @@ function lerCsv(texto){
 function salvar(){
   const json=JSON.stringify(dados);
   if(!dbh){try{if(dados) localStorage.setItem(LS,json); else localStorage.removeItem(LS);}catch(e){}}
-  if(dbh){(dados?dbh.doc('pessoal/dados').set({json}):dbh.doc('pessoal/dados').delete()).catch(()=>{});}
+  if(dbh){(dados?dbh.doc('pessoal/dados').set({json}):dbh.doc('pessoal/dados').delete()).catch(()=>toast('Não foi possível salvar no servidor. Verifique a conexão e tente de novo.'));}
 }
-function toast(m){const t=$('#toast');t.textContent=m;t.hidden=false;clearTimeout(toast.t);toast.t=setTimeout(()=>t.hidden=true,4000);}
+function toast(m,undo){
+  const t=$('#toast');t.textContent=m;
+  if(undo){const b=document.createElement('button');b.className='undo';b.type='button';b.textContent='Desfazer';b.addEventListener('click',desfazer);t.appendChild(b);}
+  t.hidden=false;clearTimeout(toast.t);toast.t=setTimeout(()=>t.hidden=true,undo?9000:4000);
+}
 
-/* ---------- exibição ---------- */
-function montar(filtroTexto,filtroVinc){
-  const q=norm(filtroTexto);
+/* ---------- edição ---------- */
+function snap(){hist.push(JSON.stringify(dados.pessoas));if(hist.length>30) hist.shift();}
+function mudou(msg){dados.editado=new Date().toISOString();salvar();render();toast(msg,true);}
+function desfazer(){
+  const j=hist.pop();if(!j) return;
+  dados.pessoas=JSON.parse(j);dados.editado=new Date().toISOString();salvar();render();toast('Alteração desfeita.');
+}
+function agrupar(){
   const grupos=new Map();
   dados.pessoas.forEach(p=>{
     const g=grupoInfo(p.g);
-    if(!grupos.has(g.k)) grupos.set(g.k,Object.assign({pessoas:[]},g));
+    if(!grupos.has(g.k)) grupos.set(g.k,Object.assign({pessoas:[],raw:g.ramo===0?'Setor Administrativo':String(p.g).trim()},g));
     grupos.get(g.k).pessoas.push(p);
   });
   const lista=[...grupos.values()];
   lista.forEach(g=>g.pessoas.sort((a,b)=>a.o-b.o));
   lista.sort((a,b)=>a.ramo-b.ramo||a.sort.localeCompare(b.sort));
-  return lista.map(g=>{
+  return lista;
+}
+function fechar(){const d=$('#dlg');if(d.open) d.close();}
+function abrirDlg(html,onSubmit){
+  const d=$('#dlg');d.innerHTML='<form method="dialog" autocomplete="off">'+html+'</form>';
+  const f=d.querySelector('form');
+  f.addEventListener('submit',ev=>{ev.preventDefault();if(onSubmit(f)!==false) fechar();});
+  d.querySelector('[data-x]').addEventListener('click',fechar);
+  d.showModal();const first=d.querySelector('input,select');if(first) first.focus();
+}
+function opcoesGrupo(sel){
+  const op=agrupar().map(g=>`<option value="${esc(g.raw)}"${norm(g.raw)===norm(sel)?' selected':''}>${esc(g.nome)} (${g.pessoas.length})</option>`).join('');
+  return op+'<option value="__novo">+ Novo gabinete ou grupo…</option>';
+}
+function campoGrupo(sel){
+  return `<label>Grupo<select name="g">${opcoesGrupo(sel)}</select></label>
+    <label data-novo hidden>Nome do novo grupo (ex.: Vereador João Silva)<input name="novo" maxlength="80"></label>`;
+}
+function ligarGrupo(f){
+  const s=f.elements.g,n=f.querySelector('[data-novo]');
+  const sync=()=>{n.hidden=s.value!=='__novo';if(!n.hidden) f.elements.novo.focus();};
+  s.addEventListener('change',sync);sync();
+}
+function lerGrupo(f){
+  const v=f.elements.g.value;
+  if(v!=='__novo') return v;
+  const n=f.elements.novo.value.trim();
+  if(!n){f.elements.novo.focus();return null;}
+  return n;
+}
+function dlgPessoa(i){
+  const nova=i==null,p=nova?{n:'',c:'',t:'com',g:'Setor Administrativo'}:dados.pessoas[i];
+  abrirDlg(`<h3>${nova?'Adicionar pessoa':'Editar pessoa'}</h3>
+    <label>Nome<input name="n" required maxlength="90" value="${esc(p.n)}"></label>
+    <label>Cargo<input name="c" maxlength="90" value="${esc(p.c)}"></label>
+    <label>Vínculo<select name="t">${Object.keys(VINC).map(k=>`<option value="${k}"${k===p.t?' selected':''}>${VINC[k]}</option>`).join('')}</select></label>
+    ${campoGrupo(p.g)}
+    <div class="row"><button type="button" class="btn" data-x>Cancelar</button><button class="btn primary" type="submit">Salvar</button></div>`,
+  f=>{
+    const g=lerGrupo(f);if(g==null) return false;
+    snap();
+    abertos.add(grupoInfo(g).k);
+    const nome=titulo(f.elements.n.value),r={n:nome,c:titulo(f.elements.c.value),t:f.elements.t.value,g};
+    if(nova){r.o=dados.pessoas.reduce((m,x)=>Math.max(m,x.o),-1)+1;dados.pessoas.push(r);mudou(nome+' adicionado(a).');}
+    else{Object.assign(dados.pessoas[i],r);mudou(nome+' atualizado(a).');}
+  });
+  ligarGrupo($('#dlg form'));
+}
+function dlgMover(i){
+  const p=dados.pessoas[i];
+  abrirDlg(`<h3>Mover ${esc(p.n)}</h3><p>Hoje em: <b>${esc(grupoInfo(p.g).nome)}</b></p>
+    ${campoGrupo(p.g)}
+    <div class="row"><button type="button" class="btn" data-x>Cancelar</button><button class="btn primary" type="submit">Mover</button></div>`,
+  f=>{const g=lerGrupo(f);if(g==null) return false;moverPara(i,g);});
+  ligarGrupo($('#dlg form'));
+}
+function moverPara(i,raw){
+  const p=dados.pessoas[i];
+  if(!p||norm(raw)===norm(p.g)) return;
+  snap();p.g=raw;abertos.add(grupoInfo(raw).k);mudou(p.n+' movido(a) para '+grupoInfo(raw).nome+'.');
+}
+function dlgRenomear(raw){
+  const g=grupoInfo(raw);
+  abrirDlg(`<h3>Renomear grupo</h3><p>Todas as ${g.nome?'pessoas de <b>'+esc(g.nome)+'</b>':'pessoas'} passam para o novo nome. Se o nome já existir, os grupos se juntam.</p>
+    <label>Novo nome (ex.: Vereador João Silva)<input name="n" required maxlength="80" value="${esc(raw)}"></label>
+    <div class="row"><button type="button" class="btn" data-x>Cancelar</button><button class="btn primary" type="submit">Renomear</button></div>`,
+  f=>{
+    const n=f.elements.n.value.trim();if(!n||norm(n)===norm(raw)) return;
+    snap();dados.pessoas.forEach(p=>{if(norm(p.g)===norm(raw)) p.g=n;});abertos.delete(grupoInfo(raw).k);abertos.add(grupoInfo(n).k);mudou('Grupo renomeado para '+grupoInfo(n).nome+'.');
+  });
+}
+function excluir(i){
+  const p=dados.pessoas[i];if(!p) return;
+  snap();dados.pessoas.splice(i,1);mudou(p.n+' removido(a).');
+}
+function confirmar(msg,ok){
+  abrirDlg(`<h3>Confirmar</h3><p>${esc(msg)}</p><div class="row"><button type="button" class="btn" data-x>Cancelar</button><button class="btn primary" type="submit">Continuar</button></div>`,()=>{ok();});
+}
+
+/* ---------- exibição ---------- */
+function montar(filtroTexto,filtroVinc){
+  const q=norm(filtroTexto);
+  return agrupar().map(g=>{
     const ok=p=>(!filtroVinc||p.t===filtroVinc)&&(!q||norm(p.n+' '+p.c+' '+g.nome).includes(q));
     return Object.assign({},g,{visiveis:g.pessoas.filter(ok)});
   }).filter(g=>g.visiveis.length);
 }
 function iniciais(n){const p=n.split(' ').filter(w=>!MIN.has(w.toLowerCase()));return ((p[0]||'')[0]||'')+((p.length>1?p[p.length-1][0]:'')||'');}
 function pessoaHtml(p){
-  return `<li class="person"><span class="av" aria-hidden="true">${esc(iniciais(p.n))}</span><div class="pn"><b>${esc(p.n)}</b><span>${esc(p.c)}</span></div><span class="tag ${p.t}">${VINC[p.t]}</span></li>`;
+  const i=dados.pessoas.indexOf(p);
+  const acoes=edit?`<span class="pact"><button class="btn sm" type="button" data-mv="${i}" title="Mover para outro grupo">Mover</button><button class="btn sm" type="button" data-ed="${i}" title="Editar">Editar</button><button class="btn sm danger" type="button" data-rm="${i}" title="Excluir" aria-label="Excluir ${esc(p.n)}">Excluir</button></span>`:'';
+  return `<li class="person"${edit?` draggable="true" data-i="${i}"`:''}><span class="av" aria-hidden="true">${esc(iniciais(p.n))}</span><div class="pn"><b>${esc(p.n)}</b><span>${esc(p.c)}</span></div><span class="tag ${p.t}">${VINC[p.t]}</span>${acoes}</li>`;
 }
 function grupoHtml(g,abrir,cor){
   let corpo='';
@@ -349,22 +507,27 @@ function grupoHtml(g,abrir,cor){
     });
   }else corpo=`<ul class="people">${g.visiveis.map(pessoaHtml).join('')}</ul>`;
   const total=g.pessoas.length,vis=g.visiveis.length;
-  return `<details class="grp" style="--bc:${cor}"${abrir?' open':''}><summary><span class="gname">${esc(g.nome)}</span><span class="cnt">${vis===total?total:vis+' de '+total}</span></summary>${corpo}</details>`;
+  const gact=edit?`<span class="gact"><button class="btn sm" type="button" data-gadd="${esc(g.raw)}">+ Pessoa</button>${g.ramo===0?'':`<button class="btn sm" type="button" data-gren="${esc(g.raw)}">Renomear</button>`}</span>`:'';
+  return `<details class="grp" data-k="${esc(g.k)}" data-raw="${esc(g.raw)}" style="--bc:${cor}"${abrir||abertos.has(g.k)?' open':''}><summary><span class="gname">${esc(g.nome)}</span><span class="cnt">${vis===total?total:vis+' de '+total}</span>${gact}</summary>${corpo}</details>`;
 }
 function render(){
   const stats=$('#stats'),view=$('#view'),has=dados&&dados.pessoas.length;
-  document.querySelectorAll('#bar .search,#ft,#expBtn,#clrBtn').forEach(e=>e.hidden=!has);
+  document.querySelectorAll('#bar .search,#ft,#expBtn,#clrBtn,#edtBtn').forEach(e=>e.hidden=!has);
+  if(!has) edit=false;
+  document.body.classList.toggle('editando',edit);
+  $('#edtBtn').textContent=edit?'Concluir edição':'Editar hierarquia';$('#edtBtn').classList.toggle('primary',edit);
+  $('#addBtn').hidden=!(has&&edit);$('#undoBtn').hidden=!(has&&edit);$('#undoBtn').disabled=!hist.length;
   $('#impBtn').textContent=has?'Atualizar planilha (CSV)':'Importar planilha (CSV)';
   if(!has){
     stats.innerHTML='';$('#notice').innerHTML='';$('#foot').textContent='';
-    view.innerHTML=`<div class="empty"><h2>Nenhuma planilha importada</h2><p>Importe o arquivo CSV de pessoal (colunas Nome, Cargo, Tipo de admissão e Hierarquia). Os dados ficam salvos neste navegador e não vão para o código do sistema.</p><button class="btn primary" type="button" data-imp>Importar planilha (CSV)</button></div>`;
+    view.innerHTML=`<div class="empty"><h2>Nenhuma planilha importada</h2><p>Importe o arquivo CSV de pessoal (colunas Nome, Cargo, Tipo de admissão e Hierarquia). Os dados ficam salvos no servidor (ou neste navegador, se você não entrar) e não vão para o código do sistema.</p><button class="btn primary" type="button" data-imp>Importar planilha (CSV)</button></div>`;
     return;
   }
   const P=dados.pessoas,cont=k=>P.filter(p=>p.t===k).length;
   const setor=P.filter(p=>grupoInfo(p.g).ramo===0).length,gab=P.filter(p=>grupoInfo(p.g).ramo===1).length;
   const ngab=new Set(P.filter(p=>grupoInfo(p.g).ramo===1).map(p=>grupoInfo(p.g).k)).size;
   stats.innerHTML=[[P.length,'Pessoas no quadro'],[setor,'No Setor Administrativo'],[gab,`Em ${ngab} gabinetes de vereadores`],[cont('com'),'Comissionados'],[cont('efe'),'Efetivos'],[cont('ced'),'Cedidos']].map(s=>`<div class="stat"><b>${s[0]}</b><span>${s[1]}</span></div>`).join('');
-  $('#notice').innerHTML=`<div class="banner"><b>Dados pessoais.</b> Esta tela mostra nomes de servidores. Os dados ficam apenas neste navegador; use somente em ambiente interno e não compartilhe o endereço com a planilha carregada.</div>`;
+  $('#notice').innerHTML=edit?`<div class="banner edit"><b>Modo de edição.</b> ${matchMedia('(pointer:coarse)').matches?'Use <b>Mover</b> para trocar uma pessoa de grupo.':'Arraste uma pessoa para outro grupo (soltar sobre o grupo), ou use <b>Mover</b>.'} Também é possível editar, adicionar e excluir pessoas, e renomear gabinetes. As alterações são salvas na hora e podem ser desfeitas.</div>`:`<div class="banner"><b>Dados pessoais.</b> Esta tela mostra nomes de servidores. Use somente em ambiente interno e não compartilhe o acesso.</div>`;
   const filtrando=!!$('#q').value.trim()||!!$('#ft').value;
   const gs=montar($('#q').value,$('#ft').value);
   const por=r=>gs.filter(g=>g.ramo===r);
@@ -374,11 +537,14 @@ function render(){
   view.innerHTML=`<div class="root"><div class="rootbox"><small>Câmara Municipal</small><b>Rio Verde/GO</b></div></div>
    <div class="branches">${ramo('Setor Administrativo','var(--c1)',r0,n(r0)+' pessoas')}${ramo('Gabinetes dos Vereadores','var(--c2)',r1,r1.length+' gabinetes · '+n(r1)+' pessoas')}${ramo('Outros vínculos','var(--c4)',r2,n(r2)+' pessoas')}</div>
    ${gs.length?'':'<div class="empty">Nada encontrado para esta busca.</div>'}`;
-  $('#foot').textContent='Planilha importada em '+new Date(dados.importado).toLocaleString('pt-BR')+(dados.fonte?' ('+dados.fonte+')':'')+'. Dentro de cada grupo, a ordem segue a hierarquia dos cargos, do mais alto para o mais baixo. Salário e matrícula não são guardados.';
+  $('#foot').textContent='Planilha importada em '+new Date(dados.importado).toLocaleString('pt-BR')+(dados.fonte?' ('+dados.fonte+')':'')+(dados.editado?'. Última edição manual em '+new Date(dados.editado).toLocaleString('pt-BR'):'')+'. Dentro de cada grupo, a ordem segue a hierarquia dos cargos, do mais alto para o mais baixo. Salário e matrícula não são guardados.';
 }
 
 /* ---------- eventos ---------- */
-function importar(){$('#file').click();}
+function importar(){
+  if(dados&&dados.editado) confirmar('Atualizar a planilha substitui todas as alterações feitas manualmente na hierarquia (movimentações, edições e exclusões). Deseja continuar?',()=>$('#file').click());
+  else $('#file').click();
+}
 $('#impBtn').addEventListener('click',importar);
 document.addEventListener('click',e=>{if(e.target.closest('[data-imp]')) importar();});
 $('#file').addEventListener('change',async ev=>{
@@ -386,7 +552,7 @@ $('#file').addEventListener('change',async ev=>{
   try{
     const pessoas=lerCsv(decodificar(await f.arrayBuffer()));
     if(!pessoas.length) throw new Error('Nenhuma pessoa encontrada na planilha.');
-    dados={v:1,importado:new Date().toISOString(),fonte:f.name,pessoas};
+    dados={v:1,importado:new Date().toISOString(),fonte:f.name,pessoas};hist=[];
     salvar();render();toast(pessoas.length+' pessoas importadas.');
   }catch(e){toast(e.message||'Não foi possível ler a planilha.');}
   ev.target.value='';
@@ -394,6 +560,36 @@ $('#file').addEventListener('change',async ev=>{
 $('#clrBtn').addEventListener('click',()=>{
   if($('#clrBtn').dataset.sure){delete $('#clrBtn').dataset.sure;$('#clrBtn').textContent='Remover dados';dados=null;salvar();render();toast('Dados removidos.');}
   else{$('#clrBtn').dataset.sure='1';$('#clrBtn').textContent='Confirmar remoção';setTimeout(()=>{delete $('#clrBtn').dataset.sure;$('#clrBtn').textContent='Remover dados';},4000);}
+});
+$('#edtBtn').addEventListener('click',()=>{edit=!edit;render();});
+$('#addBtn').addEventListener('click',()=>dlgPessoa(null));
+$('#undoBtn').addEventListener('click',desfazer);
+document.addEventListener('keydown',e=>{if(edit&&(e.ctrlKey||e.metaKey)&&e.key.toLowerCase()==='z'&&!/^(INPUT|TEXTAREA|SELECT)$/.test(e.target.tagName)&&!$('#dlg').open){e.preventDefault();desfazer();}});
+const dv=$('#view');
+dv.addEventListener('click',e=>{
+  const b=e.target.closest('button');if(!b||!dv.contains(b)) return;
+  if(b.closest('summary')) e.preventDefault();
+  if(b.dataset.mv!=null) dlgMover(+b.dataset.mv);
+  else if(b.dataset.ed!=null) dlgPessoa(+b.dataset.ed);
+  else if(b.dataset.rm!=null) excluir(+b.dataset.rm);
+  else if(b.dataset.gadd!=null){dlgPessoa(null);const s=$('#dlg select[name=g]');if(s){[...s.options].forEach(o=>{if(norm(o.value)===norm(b.dataset.gadd)) s.value=o.value;});}}
+  else if(b.dataset.gren!=null) dlgRenomear(b.dataset.gren);
+});
+document.addEventListener('toggle',e=>{const d=e.target;if(d.matches&&d.matches('details.grp')){d.open?abertos.add(d.dataset.k):abertos.delete(d.dataset.k);}},true);
+/* arrastar e soltar entre grupos */
+let abrirT=null;
+dv.addEventListener('dragstart',e=>{const li=e.target.closest('.person[data-i]');if(!li) return;e.dataTransfer.setData('text/plain',li.dataset.i);e.dataTransfer.effectAllowed='move';li.classList.add('dragging');});
+dv.addEventListener('dragend',()=>{dv.querySelectorAll('.dragging,.over').forEach(x=>x.classList.remove('dragging','over'));clearTimeout(abrirT);});
+dv.addEventListener('dragover',e=>{
+  const g=e.target.closest('details.grp');if(!g) return;
+  e.preventDefault();e.dataTransfer.dropEffect='move';
+  if(!g.classList.contains('over')){dv.querySelectorAll('.over').forEach(x=>x.classList.remove('over'));g.classList.add('over');clearTimeout(abrirT);if(!g.open) abrirT=setTimeout(()=>{g.open=true;},600);}
+});
+dv.addEventListener('drop',e=>{
+  const g=e.target.closest('details.grp');if(!g) return;
+  e.preventDefault();const i=e.dataTransfer.getData('text/plain');
+  dv.querySelectorAll('.over,.dragging').forEach(x=>x.classList.remove('over','dragging'));clearTimeout(abrirT);
+  if(i!=='') moverPara(+i,g.dataset.raw);
 });
 $('#expBtn').addEventListener('click',()=>{allOpen=!allOpen;$('#expBtn').textContent=allOpen?'Recolher tudo':'Expandir tudo';render();});
 $('#q').addEventListener('input',render);$('#ft').addEventListener('change',render);

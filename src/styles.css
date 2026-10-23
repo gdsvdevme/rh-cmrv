@@ -214,3 +214,6 @@ tr.selrow td{background:var(--accent-soft)}
   #printSheet h2{font-family:var(--f-display);font-size:16pt;margin:0 0 6mm;color:#000}
   body.printing{background:#fff}
 }
+
+.homelink{display:flex;align-items:center;gap:8px;color:#fff;text-decoration:none;font-weight:600;font-size:13px;padding:8px 10px;margin:0 -10px 10px;border-radius:8px;background:rgba(255,255,255,.08)}
+.homelink:hover{background:rgba(255,255,255,.16)}

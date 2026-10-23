@@ -1,5 +1,3 @@
-<!doctype html>
-<html lang="pt-BR"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"></head><body style="margin:0">
 <title>RH Câmara Rio Verde</title>
 <meta name="claude:viewport-fit-sides" content="cover">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=Libre+Franklin:wght@500;600;700&family=Public+Sans:wght@400;500;600&display=swap">
@@ -220,6 +218,9 @@ tr.selrow td{background:var(--accent-soft)}
   #printSheet h2{font-family:var(--f-display);font-size:16pt;margin:0 0 6mm;color:#000}
   body.printing{background:#fff}
 }
+
+.homelink{display:flex;align-items:center;gap:8px;color:#fff;text-decoration:none;font-weight:600;font-size:13px;padding:8px 10px;margin:0 -10px 10px;border-radius:8px;background:rgba(255,255,255,.08)}
+.homelink:hover{background:rgba(255,255,255,.16)}
 
 </style>
 <div id="app"></div>
@@ -1785,7 +1786,7 @@ function buildShell(){
     <aside class="side" aria-label="Menu principal">
       <div class="brand"><div class="logo">${icon('building',22)}</div><div><b id="brandName"></b><span id="brandSub"></span></div></div>
       <nav class="nav">${NAV.map(n=>`<button data-a="nav" data-p="${n.k}">${icon(n.i)}<span>${esc(n.t)}</span></button>`).join('')}</nav>
-      <div class="side-foot" id="brandOrg"></div>
+      <div class="side-foot"><a class="homelink" href="https://claude.ai/artifact/K6ccdEW8xSHd91VV4oNXoy" target="_top">${icon('home',14)}Sistema Interno do RH</a><div id="brandOrg"></div></div>
     </aside>
     <div class="backdrop" data-a="nav-close"></div>
     <div class="workspace">
@@ -1902,7 +1903,7 @@ function pageHome(){
     </div>
     <div class="grid g2">
       <section class="card"><div class="ch"><h2>Organograma resumido</h2><button class="btn sm" data-a="nav" data-p="org">Abrir organograma</button></div>
-        <div class="scroll"><div style="min-width:520px">${mini.svg.replace('<svg ','<svg style="max-width:100%;height:auto;display:block" ')}</div></div></section>
+        <div><div>${mini.svg.replace('<svg ','<svg style="max-width:100%;height:auto;display:block" ')}</div></div></section>
       <section class="card"><div class="ch"><h2>Indicadores de desempenho</h2><button class="btn sm" data-a="nav" data-p="kpi">Ver todos</button></div>
         ${state.meta.demo?'<div class="banner info" style="margin-bottom:10px">Dados demonstrativos. Substitua pelos resultados reais na página de indicadores.</div>':''}
         <div class="scroll"><table><thead><tr><th>Indicador</th><th class="num">Último</th><th class="num">Meta</th><th>Situação</th></tr></thead><tbody>${kp}</tbody></table></div></section>
@@ -2300,5 +2301,3 @@ function init(){
 init();
 
 </script>
-
-</body></html>

@@ -2,8 +2,15 @@
 
 Sistema web editável (sem servidor, sem dependências para rodar) com organograma, fluxogramas, competências, matriz de responsabilidades, manual e indicadores.
 
+## Estrutura
+- `site/index.html`: painel **Sistema Interno – RH Câmara Municipal de Rio Verde** (tela inicial, com um ícone para cada mini sistema).
+- `site/fluxogramas/index.html`: sistema de fluxogramas, competências, matriz, manual e indicadores.
+- Cada novo mini sistema deve ter sua pasta em `site/` (por exemplo `site/ferias/`) e ser cadastrado no painel com o botão **Editar painel**, informando o endereço (por exemplo `ferias/`).
+- `src/`: código-fonte. `build.py`: gera `site/` e `dist/`.
+
 ## Como executar
-- Abra `dist/index.html` em um navegador (Chrome, Edge ou Firefox). Funciona sem internet, exceto as fontes e a exportação Excel (que carrega a biblioteca SheetJS).
+- Abra `site/index.html` em um navegador (Chrome, Edge ou Firefox). Funciona sem internet, exceto as fontes e a exportação Excel (que carrega a biblioteca SheetJS).
+- Publicação na Vercel: framework **Other**, sem Build Command e **Output Directory = `site`**.
 - Para reconstruir a partir do código: `python3 build.py` (junta `src/` em `dist/`).
 
 ## Como editar fluxogramas e organograma
@@ -18,7 +25,7 @@ Sistema web editável (sem servidor, sem dependências para rodar) com organogra
 - Matriz e indicadores: CSV, Excel e PDF. Manual: PDF e Markdown.
 
 ## Onde ficam os dados
-Ao abrir `dist/index.html`, os dados ficam **somente no navegador deste computador** (localStorage). **Não há sincronização entre computadores**; use Exportar/Importar JSON.
+Ao abrir os arquivos de `site/`, os dados ficam **somente no navegador deste computador** (localStorage). **Não há sincronização entre computadores**; use Exportar/Importar JSON.
 
 ## Avisos
 Os indicadores iniciais são demonstrativos e fictícios. Os parâmetros de férias começam vazios, sem prazos ou direitos pré-definidos. O sistema não autoriza nomeações, exonerações, pagamentos ou concessões; a autoridade competente permanece responsável. Não cadastre dados pessoais reais.

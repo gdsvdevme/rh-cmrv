@@ -1,0 +1,250 @@
+<title>Sistema Interno RH</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Libre+Franklin:wght@500;600;700&family=Public+Sans:wght@400;500;600&display=swap">
+<style>
+:root{
+  --bg:#eef2f7;--surface:#fff;--fg:#13233a;--muted:#53657e;--line:#d5deea;--accent:#0b4f9c;--accent-fg:#fff;
+  --hero-a:#0b2f5c;--hero-b:#0b4f9c;--gold:#c9a24b;--shadow:0 1px 2px rgba(11,47,92,.08),0 6px 20px rgba(11,47,92,.07);
+  --ok:#17794a;--ok-bg:#e1f4ea;--warn:#8a5a00;--warn-bg:#fdf0d5;--soft:#e9eff7;--danger:#b3261e;
+  --f-display:"Libre Franklin",system-ui,sans-serif;--f-body:"Public Sans",system-ui,sans-serif;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --bg:#0a1220;--surface:#111d2f;--fg:#e4edf8;--muted:#93a9c4;--line:#243750;--accent:#6aa8f0;--accent-fg:#06192f;
+  --hero-a:#07182e;--hero-b:#0e3a70;--gold:#d8b45e;--shadow:0 1px 2px rgba(0,0,0,.4),0 6px 20px rgba(0,0,0,.3);
+  --ok:#6fd3a0;--ok-bg:#12382a;--warn:#f0c26a;--warn-bg:#3a2d10;--soft:#16263c;--danger:#ff8a80;color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#0a1220;--surface:#111d2f;--fg:#e4edf8;--muted:#93a9c4;--line:#243750;--accent:#6aa8f0;--accent-fg:#06192f;
+  --hero-a:#07182e;--hero-b:#0e3a70;--gold:#d8b45e;--shadow:0 1px 2px rgba(0,0,0,.4),0 6px 20px rgba(0,0,0,.3);
+  --ok:#6fd3a0;--ok-bg:#12382a;--warn:#f0c26a;--warn-bg:#3a2d10;--soft:#16263c;--danger:#ff8a80;color-scheme:dark}
+[hidden]{display:none!important}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--fg);font-family:var(--f-body);font-size:15px;line-height:1.5}
+h1,h2,h3{font-family:var(--f-display);margin:0;text-wrap:balance}
+button,input,select,textarea{font:inherit;color:inherit}
+.wrap{padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+.inner{max-width:1120px;margin:0 auto}
+.hero{background:linear-gradient(135deg,var(--hero-a),var(--hero-b));color:#fff;padding-block:clamp(28px,6vw,56px) clamp(40px,7vw,72px);position:relative;overflow:hidden}
+.hero::after{content:"";position:absolute;right:-60px;top:-40px;width:340px;height:340px;border-radius:50%;border:1px solid rgba(255,255,255,.14);box-shadow:0 0 0 46px rgba(255,255,255,.04),0 0 0 92px rgba(255,255,255,.025)}
+.brandrow{display:flex;align-items:center;gap:14px;margin-bottom:clamp(22px,4vw,40px);position:relative;z-index:1}
+.logo{width:46px;height:46px;border-radius:12px;background:rgba(255,255,255,.14);display:grid;place-items:center;border:1px solid rgba(255,255,255,.25);flex:none}
+.brandrow small{display:block;letter-spacing:.14em;text-transform:uppercase;font-size:11.5px;opacity:.85}
+.hero h1{font-size:clamp(1.7rem,4.6vw,2.7rem);line-height:1.12;max-width:20ch;position:relative;z-index:1}
+.hero p{margin:14px 0 0;max-width:56ch;opacity:.88;font-size:1.02rem;position:relative;z-index:1}
+.goldrule{width:56px;height:4px;background:var(--gold);border-radius:2px;margin:0 0 18px;position:relative;z-index:1}
+main{padding-block:0 40px}
+.bar{display:flex;flex-wrap:wrap;gap:10px;align-items:center;margin-top:-26px;position:relative;z-index:2}
+.search{flex:1 1 260px;display:flex;align-items:center;gap:10px;background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:0 14px;box-shadow:var(--shadow);min-width:0}
+.search input{border:0;background:transparent;outline:0;padding:13px 0;flex:1;min-width:0}
+.search:focus-within{border-color:var(--accent);box-shadow:0 0 0 3px color-mix(in srgb,var(--accent) 22%,transparent)}
+.btn{border:1px solid var(--line);background:var(--surface);border-radius:10px;padding:10px 14px;cursor:pointer;font-weight:600;font-size:14px;display:inline-flex;align-items:center;gap:8px;box-shadow:var(--shadow)}
+.btn:hover{border-color:var(--accent)}
+.btn.primary{background:var(--accent);color:var(--accent-fg);border-color:var(--accent)}
+.btn.sm{padding:6px 10px;font-size:13px;box-shadow:none}
+.btn.danger{color:var(--danger)}
+.btn:disabled{opacity:.45;cursor:default}
+.sec{display:flex;align-items:baseline;justify-content:space-between;gap:12px;margin:30px 0 14px}
+.sec h2{font-size:1.15rem}.sec span{color:var(--muted);font-size:13.5px}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,250px),1fr));gap:16px}
+.tile{position:relative;background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:20px;display:flex;flex-direction:column;gap:12px;min-width:0;box-shadow:var(--shadow);text-decoration:none;color:inherit;transition:transform .15s,border-color .15s}
+a.tile:hover{transform:translateY(-3px);border-color:var(--accent)}
+a.tile:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
+.tile.off{background:color-mix(in srgb,var(--surface) 70%,var(--bg))}
+.ico{width:56px;height:56px;border-radius:15px;display:grid;place-items:center;background:var(--tint);color:var(--ink);flex:none}
+.tile h3{font-size:1.05rem;line-height:1.25}
+.tile p{margin:0;color:var(--muted);font-size:13.8px;flex:1}
+.foot{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-top:2px}
+.pill{font-size:11.5px;font-weight:700;letter-spacing:.04em;text-transform:uppercase;padding:3px 9px;border-radius:99px;background:var(--soft);color:var(--muted)}
+.pill.ok{background:var(--ok-bg);color:var(--ok)}.pill.warn{background:var(--warn-bg);color:var(--warn)}
+.open{font-weight:600;color:var(--accent);font-size:13.5px;display:inline-flex;align-items:center;gap:4px}
+.tools{display:flex;flex-wrap:wrap;gap:6px;margin-top:4px}
+.add{border:2px dashed var(--line);background:transparent;box-shadow:none;align-items:center;justify-content:center;text-align:center;color:var(--muted);cursor:pointer;min-height:180px}
+.add:hover{border-color:var(--accent);color:var(--accent)}
+.empty{padding:40px;text-align:center;color:var(--muted);border:1px dashed var(--line);border-radius:14px}
+.note{margin-top:34px;padding:14px 16px;border-left:4px solid var(--gold);background:var(--surface);border-radius:8px;font-size:12.8px;color:var(--muted);box-shadow:var(--shadow)}
+footer{padding-block:0 28px;color:var(--muted);font-size:12.5px}
+#modal{position:fixed;inset:0;background:rgba(5,15,30,.55);display:grid;place-items:center;padding:16px;z-index:50;overflow:auto}
+.modal{background:var(--surface);border-radius:16px;padding:22px;width:min(520px,100%);display:grid;gap:12px;box-shadow:0 20px 60px rgba(0,0,0,.35);max-height:100%;overflow:auto}
+.fld{display:grid;gap:5px;font-size:13px;font-weight:600;color:var(--muted)}
+.fld input,.fld textarea,.fld select{border:1px solid var(--line);background:var(--bg);border-radius:9px;padding:9px 11px;font-weight:400;color:var(--fg);min-width:0;width:100%}
+.fld input:focus,.fld textarea:focus,.fld select:focus{outline:2px solid var(--accent);border-color:transparent}
+.r2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+@media (max-width:480px){.r2{grid-template-columns:1fr}}
+.icons,.hues{display:flex;flex-wrap:wrap;gap:6px}
+.icons button{width:40px;height:40px;border-radius:10px;border:1px solid var(--line);background:var(--bg);display:grid;place-items:center;cursor:pointer;color:var(--fg)}
+.icons button[aria-pressed="true"]{border-color:var(--accent);background:var(--soft);color:var(--accent);box-shadow:0 0 0 2px var(--accent)}
+.hues button{width:28px;height:28px;border-radius:50%;border:2px solid var(--surface);outline:1px solid var(--line);background:hsl(var(--h) 55% 45%);cursor:pointer}
+.hues button[aria-pressed="true"]{outline:2px solid var(--fg)}
+.actions{display:flex;gap:8px;justify-content:flex-end;flex-wrap:wrap;margin-top:4px}
+#toast{position:fixed;left:50%;transform:translateX(-50%);bottom:max(18px,env(safe-area-inset-bottom,0px));background:var(--fg);color:var(--bg);padding:10px 16px;border-radius:10px;font-size:14px;z-index:60;max-width:90vw}
+.edit-banner{margin-top:14px;background:var(--warn-bg);color:var(--warn);border-radius:10px;padding:10px 14px;font-size:13.5px}
+</style>
+
+<header class="hero wrap"><div class="inner">
+  <div class="brandrow"><div class="logo" aria-hidden="true"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 21h18M5 21V8l7-4 7 4v13M9 21v-5h6v5M9 11h.01M12 11h.01M15 11h.01"/></svg></div>
+    <div><small>Câmara Municipal de Rio Verde/GO</small><b style="font-family:var(--f-display)">Departamento de Recursos Humanos</b></div></div>
+  <div class="goldrule"></div>
+  <h1>Sistema Interno – RH Câmara Municipal de Rio Verde</h1>
+  <p>Ferramentas de apoio à gestão de pessoas e aos processos administrativos. Escolha um sistema para começar.</p>
+</div></header>
+
+<main class="wrap"><div class="inner">
+  <div class="bar">
+    <label class="search"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></svg><input id="q" type="search" placeholder="Buscar sistema" aria-label="Buscar sistema" autocomplete="off"></label>
+    <button class="btn" id="editBtn" type="button"></button>
+  </div>
+  <div id="editInfo"></div>
+  <div class="sec"><h2>Sistemas</h2><span id="count"></span></div>
+  <div class="grid" id="grid"></div>
+  <div class="note"><b>Observação institucional.</b> Esta ferramenta tem finalidade organizacional e administrativa. As competências, os procedimentos e os fluxos apresentados deverão ser compatibilizados com a legislação municipal vigente, os atos normativos da Câmara Municipal de Rio Verde/GO e as orientações da Procuradoria-Geral e da Controladoria Interna. A ferramenta não substitui a análise jurídica dos atos administrativos.</div>
+</div></main>
+<footer class="wrap"><div class="inner"><span id="storeNote"></span></div></footer>
+<div id="modal" hidden></div>
+<div id="toast" hidden></div>
+
+<script>
+const FLOW_URL="/*FLOW_URL*/";
+const LS='rhcrv-painel-v1';
+const ICONS={
+  org:'<rect x="9" y="3" width="6" height="5" rx="1"/><rect x="3" y="16" width="6" height="5" rx="1"/><rect x="15" y="16" width="6" height="5" rx="1"/><path d="M12 8v4M6 16v-4h12v4"/>',
+  flow:'<rect x="3" y="3" width="7" height="6" rx="1"/><rect x="14" y="15" width="7" height="6" rx="1"/><path d="M6.5 9v4a2 2 0 002 2H14"/>',
+  users:'<circle cx="9" cy="8" r="3.5"/><path d="M2.5 20c0-3.6 2.9-6 6.5-6s6.5 2.4 6.5 6M16 4.5a3.5 3.5 0 010 7M18 14.3c2.2.7 3.5 2.6 3.5 5.7"/>',
+  calendar:'<rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/>',
+  calc:'<rect x="5" y="3" width="14" height="18" rx="2"/><path d="M8 7h8M8 12h.01M12 12h.01M16 12h.01M8 16h.01M12 16h.01M16 16h.01"/>',
+  archive:'<rect x="3" y="4" width="18" height="5" rx="1"/><path d="M5 9v10a1 1 0 001 1h12a1 1 0 001-1V9M10 13h4"/>',
+  cap:'<path d="M2 9l10-5 10 5-10 5-10-5zM6 11.5V16c0 1.5 2.7 3 6 3s6-1.5 6-3v-4.5"/>',
+  chart:'<path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/>',
+  book:'<path d="M4 4.5A1.5 1.5 0 015.5 3H20v16H5.5A1.5 1.5 0 004 20.5v-16zM4 20.5A1.5 1.5 0 005.5 22H20"/>',
+  file:'<path d="M6 3h8l5 5v13H6z"/><path d="M14 3v5h5M9 13h6M9 17h6"/>',
+  heart:'<path d="M12 20s-7-4.4-9-9a5 5 0 019-3 5 5 0 019 3c-2 4.6-9 9-9 9z"/>',
+  clock:'<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/>',
+  shield:'<path d="M12 3l8 3v6c0 5-3.5 8-8 9-4.5-1-8-4-8-9V6l8-3z"/><path d="M9 12l2 2 4-4"/>',
+  mail:'<rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3 7l9 6 9-6"/>',
+  grid:'<rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/>',
+  gear:'<circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 00.3 1.8l.1.1a2 2 0 11-2.8 2.8l-.1-.1a1.7 1.7 0 00-1.8-.3 1.7 1.7 0 00-1 1.5V21a2 2 0 11-4 0v-.1a1.7 1.7 0 00-1.1-1.5 1.7 1.7 0 00-1.8.3l-.1.1a2 2 0 11-2.8-2.8l.1-.1a1.7 1.7 0 00.3-1.8 1.7 1.7 0 00-1.5-1H3a2 2 0 110-4h.1a1.7 1.7 0 001.5-1.1 1.7 1.7 0 00-.3-1.8l-.1-.1a2 2 0 112.8-2.8l.1.1a1.7 1.7 0 001.8.3H9a1.7 1.7 0 001-1.5V3a2 2 0 114 0v.1a1.7 1.7 0 001 1.5 1.7 1.7 0 001.8-.3l.1-.1a2 2 0 112.8 2.8l-.1.1a1.7 1.7 0 00-.3 1.8V9a1.7 1.7 0 001.5 1H21a2 2 0 110 4h-.1a1.7 1.7 0 00-1.5 1z"/>'
+};
+const STATUS={ok:'Disponível',dev:'Em desenvolvimento',plan:'Planejado'};
+const HUES=[212,168,28,282,48,186,350,140];
+const $=s=>document.querySelector(s);
+const esc=s=>String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const svg=(k,n)=>`<svg width="${n||28}" height="${n||28}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${ICONS[k]||ICONS.grid}</svg>`;
+const uid=()=>'t'+Math.random().toString(36).slice(2,9);
+
+function defaults(){
+  return {v:1,tiles:[
+    {id:'t-fluxos',nome:'Fluxogramas e Manual do RH',desc:'Organograma, fluxogramas editáveis, competências, matriz de responsabilidades, manual de procedimentos e indicadores.',icone:'flow',hue:212,status:'ok',url:FLOW_URL},
+    {id:'t-ferias',nome:'Férias e Licenças',desc:'Controle de períodos aquisitivos, programação e acompanhamento.',icone:'calendar',hue:28,status:'plan',url:''},
+    {id:'t-freq',nome:'Frequência e Benefícios',desc:'Registro e conferência de frequência e instrução de benefícios.',icone:'clock',hue:48,status:'plan',url:''},
+    {id:'t-arq',nome:'Arquivo e Documentação',desc:'Gestão de documentos funcionais físicos e digitais.',icone:'archive',hue:282,status:'plan',url:''},
+    {id:'t-cap',nome:'Desenvolvimento e Capacitação',desc:'Planejamento e registro das ações de capacitação.',icone:'cap',hue:186,status:'plan',url:''}
+  ]};
+}
+let st=defaults(),edit=false,dbh=null,filter='',saveT=null;
+
+function load(){
+  try{const d=JSON.parse(localStorage.getItem(LS)||'null');if(d&&Array.isArray(d.tiles)) return d;}catch(e){}
+  return null;
+}
+function persist(){
+  clearTimeout(saveT);
+  saveT=setTimeout(async()=>{
+    const json=JSON.stringify(st);
+    try{localStorage.setItem(LS,json);}catch(e){}
+    if(dbh){try{await dbh.doc('painel/tiles').set({json});}catch(e){}}
+  },300);
+}
+function toast(m){const t=$('#toast');t.textContent=m;t.hidden=false;clearTimeout(toast.t);toast.t=setTimeout(()=>t.hidden=true,3500);}
+
+function render(){
+  const q=filter.trim().toLowerCase();
+  const tiles=st.tiles.filter(t=>!q||(t.nome+' '+t.desc).toLowerCase().includes(q));
+  $('#count').textContent=st.tiles.length+(st.tiles.length===1?' sistema':' sistemas');
+  $('#editBtn').innerHTML=edit?'Concluir edição':'Editar painel';
+  $('#editBtn').className='btn'+(edit?' primary':'');
+  $('#editInfo').innerHTML=edit?'<div class="edit-banner">Modo de edição: altere, reordene, exclua ou adicione sistemas. Para abrir um sistema, conclua a edição.</div>':'';
+  const cards=tiles.map(t=>{
+    const i=st.tiles.indexOf(t);
+    const on=t.status==='ok'&&t.url;
+    const style=`--tint:hsl(${t.hue} 70% ${document.documentElement.dataset.theme==='dark'?'22%':'93%'});--ink:hsl(${t.hue} 60% 38%)`;
+    const pill=`<span class="pill ${t.status==='ok'?'ok':t.status==='dev'?'warn':''}">${STATUS[t.status]||''}</span>`;
+    const inner=`<div class="ico">${svg(t.icone)}</div><h3>${esc(t.nome)}</h3><p>${esc(t.desc)}</p>`;
+    if(edit) return `<div class="tile" style="${style}">${inner}<div class="foot">${pill}</div>
+      <div class="tools"><button class="btn sm" data-a="edit" data-id="${t.id}">Editar</button><button class="btn sm" data-a="up" data-id="${t.id}"${i===0?' disabled':''} aria-label="Mover para antes">↑</button><button class="btn sm" data-a="down" data-id="${t.id}"${i===st.tiles.length-1?' disabled':''} aria-label="Mover para depois">↓</button><button class="btn sm danger" data-a="del" data-id="${t.id}">Excluir</button></div></div>`;
+    const foot=`<div class="foot">${pill}${on?'<span class="open">Abrir ›</span>':''}</div>`;
+    return on?`<a class="tile" style="${style}" href="${esc(t.url)}" target="_top">${inner}${foot}</a>`
+             :`<div class="tile off" style="${style}">${inner}${foot}</div>`;
+  });
+  if(edit) cards.push(`<button class="tile add" data-a="add" type="button"><span style="font-size:30px;line-height:1">+</span><b>Adicionar sistema</b></button>`);
+  $('#grid').innerHTML=cards.join('')||'<div class="empty" style="grid-column:1/-1">Nenhum sistema encontrado.</div>';
+}
+
+function openForm(t){
+  const isNew=!t.id;
+  const d=Object.assign({nome:'',desc:'',icone:'grid',hue:212,status:'dev',url:''},t);
+  const m=$('#modal');
+  m.innerHTML=`<form class="modal" autocomplete="off"><h3>${isNew?'Novo sistema':'Editar sistema'}</h3>
+   <label class="fld">Nome<input name="nome" value="${esc(d.nome)}" required maxlength="70"></label>
+   <label class="fld">Descrição<textarea name="desc" rows="3" maxlength="220">${esc(d.desc)}</textarea></label>
+   <div class="r2"><label class="fld">Situação<select name="status">${Object.keys(STATUS).map(k=>`<option value="${k}"${k===d.status?' selected':''}>${STATUS[k]}</option>`).join('')}</select></label>
+   <label class="fld">Endereço (link)<input name="url" value="${esc(d.url)}" placeholder="ex.: ferias/ ou https://…"></label></div>
+   <div class="fld">Ícone<div class="icons">${Object.keys(ICONS).map(k=>`<button type="button" data-ic="${k}" aria-pressed="${k===d.icone}" aria-label="${k}">${svg(k,20)}</button>`).join('')}</div></div>
+   <div class="fld">Cor<div class="hues">${HUES.map(h=>`<button type="button" data-h="${h}" style="--h:${h}" aria-pressed="${h===d.hue}" aria-label="Cor ${h}"></button>`).join('')}</div></div>
+   <div class="actions"><button type="button" class="btn" data-a="close">Cancelar</button><button class="btn primary" type="submit">Salvar</button></div></form>`;
+  m.hidden=false;
+  const f=m.querySelector('form');
+  f.addEventListener('click',ev=>{
+    const ic=ev.target.closest('[data-ic]'),h=ev.target.closest('[data-h]');
+    if(ic){d.icone=ic.dataset.ic;f.querySelectorAll('[data-ic]').forEach(b=>b.setAttribute('aria-pressed',b===ic));}
+    if(h){d.hue=Number(h.dataset.h);f.querySelectorAll('[data-h]').forEach(b=>b.setAttribute('aria-pressed',b===h));}
+  });
+  f.addEventListener('submit',ev=>{
+    ev.preventDefault();
+    const E=f.elements;d.nome=E.nome.value.trim();d.desc=E.desc.value.trim();d.status=E.status.value;d.url=E.url.value.trim();
+    if(!d.nome) return;
+    if(isNew){d.id=uid();st.tiles.push(d);}else{const i=st.tiles.findIndex(x=>x.id===d.id);st.tiles[i]=d;}
+    persist();closeModal();render();
+  });
+  f.elements.nome.focus();
+}
+function closeModal(){const m=$('#modal');m.hidden=true;m.innerHTML='';}
+
+document.addEventListener('click',ev=>{
+  if(ev.target.id==='modal'){closeModal();return;}
+  const b=ev.target.closest('[data-a]');if(!b) return;
+  const id=b.dataset.id,i=st.tiles.findIndex(t=>t.id===id);
+  switch(b.dataset.a){
+    case 'close':closeModal();break;
+    case 'add':openForm({});break;
+    case 'edit':openForm(Object.assign({},st.tiles[i]));break;
+    case 'up':if(i>0){[st.tiles[i-1],st.tiles[i]]=[st.tiles[i],st.tiles[i-1]];persist();render();}break;
+    case 'down':if(i<st.tiles.length-1){[st.tiles[i+1],st.tiles[i]]=[st.tiles[i],st.tiles[i+1]];persist();render();}break;
+    case 'del':
+      if(b.dataset.sure){st.tiles.splice(i,1);persist();render();toast('Sistema removido do painel.');}
+      else{b.dataset.sure='1';b.textContent='Confirmar exclusão';setTimeout(()=>{if(b.isConnected){delete b.dataset.sure;b.textContent='Excluir';}},4000);}
+      break;
+  }
+});
+$('#editBtn').addEventListener('click',()=>{edit=!edit;render();});
+$('#q').addEventListener('input',e=>{filter=e.target.value;render();});
+document.addEventListener('keydown',e=>{if(e.key==='Escape'&&!$('#modal').hidden) closeModal();});
+try{matchMedia('(prefers-color-scheme: dark)').addEventListener('change',render);new MutationObserver(render).observe(document.documentElement,{attributes:true,attributeFilter:['data-theme']});}catch(e){}
+
+(function init(){
+  const l=load(); if(l) st=l;
+  // mantém o endereço do sistema de fluxogramas atualizado
+  const fl=st.tiles.find(t=>t.id==='t-fluxos'); if(fl&&!fl.url) fl.url=FLOW_URL;
+  $('#storeNote').textContent='As alterações deste painel ficam salvas neste navegador.';
+  render();
+  (async()=>{
+    try{
+      if(window.claude&&window.claude.use){
+        dbh=await window.claude.use('db');
+        if(dbh){
+          $('#storeNote').textContent='As alterações deste painel ficam salvas no documento.';
+          const s=await dbh.doc('painel/tiles').get();
+          if(s.exists){try{const d=JSON.parse(s.data().json);if(d&&Array.isArray(d.tiles)){st=d;render();}}catch(e){}}
+        }
+      }
+    }catch(e){dbh=null;}
+  })();
+})();
+</script>

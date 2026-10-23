@@ -32,7 +32,7 @@ function buildShell(){
     <aside class="side" aria-label="Menu principal">
       <div class="brand"><div class="logo">${icon('building',22)}</div><div><b id="brandName"></b><span id="brandSub"></span></div></div>
       <nav class="nav">${NAV.map(n=>`<button data-a="nav" data-p="${n.k}">${icon(n.i)}<span>${esc(n.t)}</span></button>`).join('')}</nav>
-      <div class="side-foot" id="brandOrg"></div>
+      <div class="side-foot"><a class="homelink" href="/*HOME_URL*/" target="_top">${icon('home',14)}Sistema Interno do RH</a><div id="brandOrg"></div></div>
     </aside>
     <div class="backdrop" data-a="nav-close"></div>
     <div class="workspace">
@@ -149,7 +149,7 @@ function pageHome(){
     </div>
     <div class="grid g2">
       <section class="card"><div class="ch"><h2>Organograma resumido</h2><button class="btn sm" data-a="nav" data-p="org">Abrir organograma</button></div>
-        <div class="scroll"><div style="min-width:520px">${mini.svg.replace('<svg ','<svg style="max-width:100%;height:auto;display:block" ')}</div></div></section>
+        <div><div>${mini.svg.replace('<svg ','<svg style="max-width:100%;height:auto;display:block" ')}</div></div></section>
       <section class="card"><div class="ch"><h2>Indicadores de desempenho</h2><button class="btn sm" data-a="nav" data-p="kpi">Ver todos</button></div>
         ${state.meta.demo?'<div class="banner info" style="margin-bottom:10px">Dados demonstrativos. Substitua pelos resultados reais na página de indicadores.</div>':''}
         <div class="scroll"><table><thead><tr><th>Indicador</th><th class="num">Último</th><th class="num">Meta</th><th>Situação</th></tr></thead><tbody>${kp}</tbody></table></div></section>

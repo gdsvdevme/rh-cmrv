@@ -154,7 +154,7 @@ function pageHome(){
     return `<tr><td>${esc(k.nome)}</td><td class="num"><b>${fmtKpi(k,l?l.v:null)}</b></td><td class="num">${k.meta===''||k.meta==null?'—':fmtKpi(k,Number(k.meta))}</td><td>${kpiTag(k,l?l.v:null)}</td></tr>`;
   }).join('');
   mainEl().innerHTML=`
-    ${head(state.inst.nome,state.inst.orgao+' · '+state.inst.sub,`<button class="btn" data-a="inst-edit">Editar dados institucionais</button>`)}
+    ${head(state.inst.nome,state.inst.orgao+' · '+state.inst.sub,`<button class="btn" data-a="volume">Gerar volume (fluxogramas + manual)</button><button class="btn" data-a="inst-edit">Editar dados institucionais</button>`)}
     <div class="grid g4">
       <div class="card stat"><b>${rh}</b><span>Unidades administrativas do RH</span></div>
       <div class="card stat"><b>${state.flows.length}</b><span>Fluxogramas cadastrados</span></div>
@@ -296,7 +296,7 @@ function pageManual(){
   const list=state.manual.map((x,i)=>`<div class="chap${x.id===ui.chap?' on':''}" data-a="chap-pick" data-id="${esc(x.id)}"><span>${i+1}. ${esc(x.titulo||'Sem título')}</span>
     <button class="ibtn" data-a="chap-up" data-id="${esc(x.id)}" aria-label="Subir"${i===0?' disabled':''}>${icon('up',14)}</button><button class="ibtn" data-a="chap-down" data-id="${esc(x.id)}" aria-label="Descer"${i===state.manual.length-1?' disabled':''}>${icon('down',14)}</button></div>`).join('');
   mainEl().innerHTML=`${head('Manual de procedimentos administrativos','Edite o texto de cada capítulo, reordene e exporte. Capítulos ligados aos dados podem ser atualizados com um clique.',
-    `<button class="btn" data-a="man-md">Markdown</button><button class="btn primary" data-a="man-pdf">Exportar PDF</button>`)}
+    `<button class="btn" data-a="man-md">Markdown</button><button class="btn" data-a="man-pdf">Exportar PDF</button><button class="btn primary" data-a="volume">Gerar volume para encadernação</button>`)}
     <div class="manual">
       <section class="card"><div class="ch"><h2>Capítulos</h2><button class="btn sm" data-a="chap-add">${icon('plus',14)}Capítulo</button></div><div class="list">${list}</div></section>
       <section class="card">
@@ -454,6 +454,7 @@ const ACT={
   'nav-toggle':()=>$('#shell').classList.toggle('nav-open'),
   'nav-close':()=>$('#shell').classList.remove('nav-open'),
   'theme':()=>toggleTheme(),
+  'volume':()=>gerarVolume(),
   'save':()=>{clearTimeout(saveT);doSave(true);},
   'inst-edit':()=>openModal('Dados institucionais',
     `<label class="fld"><span>Nome do sistema</span><input name="nome" value="${esc(state.inst.nome)}"></label>

@@ -1,0 +1,85 @@
+
+@page{size:A4;margin:18mm 14mm 18mm 24mm}
+@page:left{margin:18mm 24mm 18mm 14mm}
+@page cover{margin:0;background:#0a3b27}
+@page part1{margin:0;background:#0a6b3d}
+@page part2{margin:0;background:#0a3b27}
+@page plain{margin:18mm 14mm 18mm 24mm}
+@page plain:left{margin:18mm 24mm 18mm 14mm}
+@page main{margin:26mm 14mm 20mm 24mm;
+ @top-left{content:"RH Câmara Rio Verde";font:500 8pt "Public Sans";color:#6b7c93;letter-spacing:.04em;border-bottom:.5pt solid #c9d4e2;padding-bottom:2mm;vertical-align:bottom}
+ @top-right{content:"Fluxogramas e Manual de Procedimentos";font:500 8pt "Public Sans";color:#6b7c93;border-bottom:.5pt solid #c9d4e2;padding-bottom:2mm;vertical-align:bottom}
+ @bottom-right{content:counter(page);font:600 9pt "Public Sans";color:#0a3b27} }
+@page main:left{margin:26mm 24mm 20mm 14mm;
+ @top-left{content:"RH Câmara Rio Verde";font:500 8pt "Public Sans";color:#6b7c93;border-bottom:.5pt solid #c9d4e2;padding-bottom:2mm;vertical-align:bottom}
+ @top-right{content:"Fluxogramas e Manual de Procedimentos";font:500 8pt "Public Sans";color:#6b7c93;border-bottom:.5pt solid #c9d4e2;padding-bottom:2mm;vertical-align:bottom}
+ @bottom-right{content:none} @bottom-left{content:counter(page);font:600 9pt "Public Sans";color:#0a3b27} }
+
+@page fig{margin:26mm 14mm 20mm 24mm;
+ @top-left{content:"RH Câmara Rio Verde";font:500 8pt "Public Sans";color:#6b7c93;border-bottom:.5pt solid #c9d4e2;padding-bottom:2mm;vertical-align:bottom}
+ @top-right{content:"Fluxogramas e Manual de Procedimentos";font:500 8pt "Public Sans";color:#6b7c93;border-bottom:.5pt solid #c9d4e2;padding-bottom:2mm;vertical-align:bottom}
+ @bottom-right{content:counter(page);font:600 9pt "Public Sans";color:#0a3b27} }
+@page fig:left{margin:26mm 24mm 20mm 14mm;
+ @top-left{content:"RH Câmara Rio Verde";font:500 8pt "Public Sans";color:#6b7c93;border-bottom:.5pt solid #c9d4e2;padding-bottom:2mm;vertical-align:bottom}
+ @top-right{content:"Fluxogramas e Manual de Procedimentos";font:500 8pt "Public Sans";color:#6b7c93;border-bottom:.5pt solid #c9d4e2;padding-bottom:2mm;vertical-align:bottom}
+ @bottom-right{content:none} @bottom-left{content:counter(page);font:600 9pt "Public Sans";color:#0a3b27} }
+@page figl{size:A4 landscape;margin:20mm 14mm 16mm 24mm;
+ @top-left{content:"RH Câmara Rio Verde";font:500 8pt "Public Sans";color:#6b7c93;vertical-align:bottom;padding-bottom:2mm}
+ @top-right{content:"Fluxogramas e Manual de Procedimentos";font:500 8pt "Public Sans";color:#6b7c93;vertical-align:bottom;padding-bottom:2mm}
+ @bottom-right{content:counter(page);font:600 9pt "Public Sans";color:#0a3b27} }
+@page figl:left{size:A4 landscape;margin:20mm 24mm 16mm 14mm;
+ @top-left{content:"RH Câmara Rio Verde";font:500 8pt "Public Sans";color:#6b7c93;vertical-align:bottom;padding-bottom:2mm}
+ @top-right{content:"Fluxogramas e Manual de Procedimentos";font:500 8pt "Public Sans";color:#6b7c93;vertical-align:bottom;padding-bottom:2mm}
+ @bottom-right{content:none} @bottom-left{content:counter(page);font:600 9pt "Public Sans";color:#0a3b27} }
+*{box-sizing:border-box}
+body{margin:0;font-family:"Public Sans",Inter,"Liberation Sans",Arial,sans-serif;color:#1b2a3f;font-size:10pt;line-height:1.55}
+.serif,h1,h2,h3{font-family:"Source Serif 4","Bitstream Charter",Charter,Georgia,serif}
+.cover{page:cover;width:210mm;height:296mm;color:#fff;position:relative;overflow:hidden;break-after:page}
+.cover .motif{position:absolute;right:-20mm;top:20mm;width:170mm;opacity:.22}
+.cover .in{position:absolute;left:24mm;right:20mm;bottom:48mm}
+.cover .org{font-size:9.5pt;letter-spacing:.2em;text-transform:uppercase;opacity:.85;margin-bottom:10mm}
+.cover .rule{width:22mm;height:1.2mm;background:#b8923a;margin:0 0 8mm}
+.cover h1{font-size:34pt;line-height:1.1;margin:0 0 6mm;font-weight:700}
+.cover p{font-size:13pt;margin:0;opacity:.88}
+.cover .foot{position:absolute;left:24mm;right:20mm;bottom:18mm;font-size:8.5pt;opacity:.7;display:flex;justify-content:space-between}
+.part{width:210mm;height:296mm;color:#fff;position:relative;overflow:hidden;break-before:page;break-after:page}
+.part.p1{page:part1}.part.m{page:part2}
+.part .num{position:absolute;left:24mm;top:88mm;font-size:120pt;font-family:"Source Serif 4",Georgia,serif;opacity:.18;line-height:1}
+.part .in{position:absolute;left:24mm;right:20mm;top:138mm}
+.part .rule{width:22mm;height:1.2mm;background:#b8923a;margin:0 0 8mm}
+.part h1{font-size:30pt;margin:0 0 4mm;line-height:1.15} .part p{font-size:12pt;opacity:.85;margin:0;max-width:120mm}
+.pg{page:main;break-before:page}
+h2.t{font-size:24pt;color:#0a3b27;margin:0 0 2mm;line-height:1.15}
+.lead{color:#53657e;margin:0 0 5mm;font-size:10.5pt}
+.rulegold{width:16mm;height:1mm;background:#b8923a;margin:2mm 0 6mm}
+.toc h3{font-size:10pt;font-family:"Public Sans",sans-serif;letter-spacing:.14em;text-transform:uppercase;color:#0a6b3d;margin:8mm 0 2mm;font-weight:700}
+.toc ol{list-style:none;margin:0;padding:0} .toc li a{display:flex;align-items:baseline;gap:3mm;padding:1.6mm 0;color:inherit;text-decoration:none;font-size:10.5pt}
+.toc .n{color:#0a6b3d;font-weight:700;width:7mm;font-variant-numeric:tabular-nums} .toc .tt small{color:#6b7c93;font-size:8.2pt;margin-left:2mm}
+.toc .d{flex:1;border-bottom:1.2pt dotted #9fb2c9;transform:translateY(-1.2mm)} .toc .pn{font-weight:700;color:#0a3b27;font-variant-numeric:tabular-nums}
+.about{display:grid;grid-template-columns:1fr;gap:3mm}
+.card{border:.6pt solid #d3dcea;border-left:1.2mm solid #0a6b3d;border-radius:1.5mm;padding:4mm 5mm;background:#f7f9fc}
+.card h4{margin:0 0 1.5mm;font-size:10.5pt;color:#0a3b27} .card p{margin:0;font-size:9.3pt;color:#33455e}
+.leg{display:block;margin:1mm 0 2mm} .leg svg{width:92%;height:auto;display:block}
+.legtitle{font-size:9pt;letter-spacing:.12em;text-transform:uppercase;color:#0a6b3d;font-weight:700;margin:2mm 0 1mm}
+.fpg{page:fig;break-before:page;height:250mm;overflow:hidden} .fpg.land{page:figl;height:173mm}
+.fh{border-bottom:.6pt solid #c9d4e2;padding-bottom:2.5mm;margin-bottom:3mm}
+.kick{font-size:8.5pt;letter-spacing:.16em;text-transform:uppercase;color:#0a6b3d;font-weight:700}
+.fh h2{font-size:19pt;margin:.5mm 0 0;color:#0a3b27;line-height:1.2} .pp{font-family:"Public Sans",sans-serif;font-size:9.5pt;color:#6b7c93;font-weight:500}
+.sub{font-size:9.2pt;color:#53657e;margin-top:1mm}
+.figs{display:flex;justify-content:center;align-items:flex-start} .col{position:relative} .col svg{display:block}
+.cont{position:absolute;right:0;bottom:-5mm;font-size:7.5pt;color:#6b7c93;font-style:italic}
+.man{page:main}
+@media print{.chap{break-before:page}}
+.chap{page:main}
+.chap .ck{font-size:9pt;letter-spacing:.16em;text-transform:uppercase;color:#0a6b3d;font-weight:700}
+.chap h2{font-size:25pt;color:#0a3b27;margin:1mm 0 0;line-height:1.15}
+.chap .rulegold{margin:4mm 0 7mm}
+.chap h4{font-size:11.5pt;color:#0a6b3d;margin:6mm 0 1.5mm;break-after:avoid;font-family:"Public Sans",sans-serif;font-weight:700;border-left:1mm solid #b8923a;padding-left:2.5mm}
+.chap p{margin:0 0 2.4mm} .chap ul,.chap ol{margin:0 0 3.5mm;padding-left:5.5mm} .chap li{margin-bottom:1.1mm;break-inside:avoid} .chap li::marker{color:#0a6b3d}
+.closing{page:main;break-before:page}
+
+@media screen{body{background:#cfd8d3}.vbar{position:sticky;top:0;z-index:5;background:#0a3b27;color:#fff;padding:10px 16px;display:flex;gap:12px;align-items:center;flex-wrap:wrap;font:500 13px "Public Sans",sans-serif}.vbar button{border:0;border-radius:8px;padding:8px 14px;font-weight:700;cursor:pointer;background:#d4aa4a;color:#1b1500}.vbar span{opacity:.85}
+.cover,.part,.fpg,.pg,.chap,.closing{margin:14px auto;box-shadow:0 2px 14px rgba(0,0,0,.25);background:#fff;overflow:hidden}
+.pg,.chap,.closing{width:210mm;min-height:297mm;padding:26mm 14mm 20mm 24mm}.fpg{padding:26mm 14mm 20mm 24mm;width:210mm;height:297mm}.fpg.land{width:297mm;height:210mm;padding:20mm 14mm 16mm 24mm}
+.cover{background:#0a3b27}.part{background:#0a6b3d}.part.m{background:#0a3b27}}
+@media print{.vbar{display:none}}

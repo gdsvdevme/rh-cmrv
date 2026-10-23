@@ -20,6 +20,7 @@ def wr(p, s):
 
 css = rd('src/styles.css')
 js = '\n'.join(open(f, encoding='utf-8').read() for f in sorted(glob.glob(os.path.join(root, 'src/js/*.js'))))
+js = js.replace('/*VOLUME_CSS*/', rd('src/volume.css').replace('`', '\\`'))
 js = js.replace('</script>', '<\\/script>')
 flow = rd('src/index.template.html').replace('/*CSS*/', css).replace('/*JS*/', js)
 launcher = rd('src/launcher.template.html')

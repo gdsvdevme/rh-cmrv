@@ -18,6 +18,9 @@ Sistema web editável (sem servidor, sem dependências para rodar) com organogra
 - Arraste para mover. Arraste da bolinha azul de um elemento até outro para conectar. Decisões têm saídas SIM/NÃO configuráveis.
 - Botões da barra: adicionar elementos, Desfazer/Refazer (Ctrl+Z / Ctrl+Y), Organizar, zoom (Ctrl+roda), Ajustar, PNG, SVG, PDF, Imprimir. Delete remove o selecionado.
 
+## Volume para encadernação
+Na página **Painel Inicial** ou **Manual de Procedimentos**, o botão **Gerar volume** monta capa, sumário, fluxogramas e manual em A4 com margens espelhadas e numeração. Ele abre uma página própria: clique em **Imprimir / Salvar como PDF** (Chrome ou Edge, tamanho A4, com gráficos de plano de fundo). Na versão publicada como artefato, o botão baixa um arquivo `.html` para abrir no navegador.
+
 ## Como salvar e exportar
 - Salva automaticamente após cada alteração; o botão Salvar força o salvamento.
 - Configurações: cópias de segurança e restauração de versões, exportar/importar JSON, restaurar modelo inicial.

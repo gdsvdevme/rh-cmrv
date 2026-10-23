@@ -5,6 +5,8 @@ Sistema web editável (sem servidor, sem dependências para rodar) com organogra
 ## Estrutura
 - `site/index.html`: painel **Sistema Interno – RH Câmara Municipal de Rio Verde** (tela inicial, com um ícone para cada mini sistema).
 - `site/fluxogramas/index.html`: sistema de fluxogramas, competências, matriz, manual e indicadores.
+- `site/pessoal/index.html`: **Hierarquia de Pessoal** (importa planilha CSV).
+- `site/ponto/index.html`: **Ponto – Servidores Externos**, simulação para apresentação: celular simulado (localização, assinatura digital e foto opcional) e painel administrativo em tempo real. Usa só dados fictícios, mantidos em memória, e não depende do PocketBase.
 - Cada novo mini sistema deve ter sua pasta em `site/` (por exemplo `site/ferias/`) e ser cadastrado no painel com o botão **Editar painel**, informando o endereço (por exemplo `ferias/`).
 - `src/`: código-fonte. `build.py`: gera `site/` e `dist/`.
 

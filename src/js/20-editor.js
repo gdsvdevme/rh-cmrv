@@ -256,7 +256,7 @@ function createEditor(host,cfg){
     <div class="ed-bar"></div>
     <div class="ed-main">
       <div class="ed-canvas"><svg class="ed-svg" tabindex="0" role="application" aria-label="Área de edição do diagrama"><g class="vp"></g></svg>
-        <div class="ed-hint">Arraste os elementos para mover. Arraste o fundo para deslocar a vista. Ctrl + roda do mouse para zoom.</div></div>
+        <div class="ed-hint">${matchMedia('(pointer:coarse)').matches?'Arraste para mover · arraste o fundo para deslocar · dois dedos para zoom':'Arraste os elementos para mover. Arraste o fundo para deslocar a vista. Ctrl + roda do mouse para zoom.'}</div></div>
       <aside class="ed-panel" aria-live="polite"></aside>
     </div>
     ${kind==='flow'?'<div class="ed-table card"></div>':''}
@@ -407,8 +407,25 @@ function createEditor(host,cfg){
     for(let i=E.doc.nodes.length-1;i>=0;i--){const n=E.doc.nodes[i],s=sizeOf(n);if(p.x>=n.x&&p.x<=n.x+s.w&&p.y>=n.y&&p.y<=n.y+s.h) return n;}
     return null;
   }
+  /* zoom e deslocamento com dois dedos */
+  const ptrs=new Map();let pinch=null;
+  const rel=()=>{const r=svg.getBoundingClientRect(),[a,b]=[...ptrs.values()];return {x:(a[0]+b[0])/2-r.left,y:(a[1]+b[1])/2-r.top,d:Math.hypot(a[0]-b[0],a[1]-b[1])||1};};
+  function startPinch(){
+    const d=E.drag; E.drag=null;
+    if(d&&d.type==='move'&&d.moved){commit();touch();renderTable();}
+    const m=rel(); pinch={x:m.x,y:m.y,d:m.d,vx:E.view.x,vy:E.view.y,k:E.view.k};
+  }
+  function movePinch(){
+    const m=rel(),k=Math.max(0.15,Math.min(2.5,pinch.k*m.d/pinch.d)),r=k/pinch.k;
+    E.view.k=k;E.view.x=m.x-(pinch.x-pinch.vx)*r;E.view.y=m.y-(pinch.y-pinch.vy)*r;E.touched=true;applyView();
+  }
   svg.addEventListener('pointerdown',ev=>{
     if(ev.pointerType==='mouse'&&ev.button!==0) return;
+    if(ev.pointerType==='touch'){
+      ptrs.set(ev.pointerId,[ev.clientX,ev.clientY]);
+      if(ptrs.size===2){startPinch();return;}
+      if(ptrs.size>2) return;
+    }
     activeEd=E; const w=toWorld(ev);
     const hd=ev.target.closest('[data-handle]');
     if(hd){E.drag={type:'connect',from:hd.dataset.handle,pos:w};svg.setPointerCapture(ev.pointerId);return;}
@@ -426,6 +443,7 @@ function createEditor(host,cfg){
     svg.setPointerCapture(ev.pointerId);
   });
   svg.addEventListener('pointermove',ev=>{
+    if(ptrs.has(ev.pointerId)){ptrs.set(ev.pointerId,[ev.clientX,ev.clientY]);if(pinch){movePinch();return;}}
     const d=E.drag; if(!d) return;
     if(d.type==='pan'){E.view.x=d.vx+ev.clientX-d.sx;E.view.y=d.vy+ev.clientY-d.sy;E.touched=true;applyView();}
     else if(d.type==='move'){
@@ -435,6 +453,8 @@ function createEditor(host,cfg){
     }else if(d.type==='connect'){d.pos=toWorld(ev);sched();}
   });
   const endDrag=ev=>{
+    ptrs.delete(ev.pointerId);
+    if(pinch){if(ptrs.size<2) pinch=null;E.drag=null;return;}
     const d=E.drag; if(!d) return; E.drag=null;
     try{svg.releasePointerCapture(ev.pointerId);}catch(e){}
     if(d.type==='move'&&d.moved){commit();touch();renderTable();}
@@ -516,6 +536,11 @@ function createEditor(host,cfg){
       <div class="row"><button class="btn sm" data-a="erev">Inverter direção</button><button class="btn sm danger" data-a="del">${kind==='org'?'Desconectar':'Excluir conexão'}</button></div>`;
   }
   function renderPanel(){
+    renderPanelBody();
+    panel.classList.toggle('has-sel',!!E.sel);
+    if(E.sel) panel.insertAdjacentHTML('afterbegin','<button class="btn sm ed-sheet-close" data-a="deselect" type="button">Fechar</button>');
+  }
+  function renderPanelBody(){
     const s=E.sel;
     if(s&&s.k==='n'&&node(s.id)){panel.innerHTML=kind==='org'?panelNodeOrg(node(s.id)):panelNodeFlow(node(s.id));return;}
     if(s&&s.k==='e'){const e=E.doc.edges.find(x=>x.id===s.id);if(e){panel.innerHTML=panelEdge(e);return;}}
@@ -611,6 +636,7 @@ function createEditor(host,cfg){
       case 'fit': E.touched=false; fit(); break;
       case 'png': case 'svg': case 'pdf': doExport(a); break;
       case 'print': doPrint(); break;
+      case 'deselect': select(null); break;
       case 'del': delSel(); break;
       case 'dup': if(n){
           const c=clone(n); c.id=uid(kind==='org'?'o':'n'); c.x=(n.x||0)+30; c.y=(n.y||0)+30;

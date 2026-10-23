@@ -148,6 +148,8 @@ dialog::backdrop{background:rgba(0,0,0,.5)}
 .photo{width:100%;border-radius:10px;border:1px solid var(--line);display:block}
 .stamp{font-size:12px;color:var(--muted);margin-top:6px}
 #toast{position:fixed;left:50%;transform:translateX(-50%);bottom:max(18px,env(safe-area-inset-bottom,0px));background:var(--fg);color:var(--bg);padding:10px 16px;border-radius:10px;font-size:14px;z-index:60;max-width:90vw}
+@media (pointer:coarse){input,select,textarea{font-size:16px}.btn{min-height:42px}.chip{min-height:40px}}
+@media (max-width:480px){.admin{padding:14px}.stat b{font-size:1.4rem}}
 </style>
 
 <header class="hero wrap"><div class="inner">

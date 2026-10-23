@@ -1,0 +1,283 @@
+<!doctype html>
+<html lang="pt-BR"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"></head><body style="margin:0">
+<title>Hierarquia de Pessoal</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Libre+Franklin:wght@500;600;700&family=Public+Sans:wght@400;500;600&display=swap">
+<style>
+:root{
+  --bg:#eef4f0;--surface:#fff;--fg:#12281d;--muted:#4f665a;--line:#d1ddd6;--accent:#0a6b3d;--accent-fg:#fff;--soft:#e3efe8;
+  --hero-a:#063d27;--hero-b:#0b7a49;--gold:#d4aa4a;--shadow:0 1px 2px rgba(6,61,39,.09),0 6px 20px rgba(6,61,39,.07);
+  --warn:#8a5a00;--warn-bg:#fdf0d5;--danger:#b3261e;
+  --f-display:"Libre Franklin",system-ui,sans-serif;--f-body:"Public Sans",system-ui,sans-serif;
+  --c1:#0a6b3d;--c2:#2f6fb5;--c3:#8a5a00;--c4:#6f4aa8;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --bg:#08130e;--surface:#0f1e17;--fg:#e3f1ea;--muted:#90b0a0;--line:#234034;--accent:#52c98a;--accent-fg:#04210f;--soft:#15291f;
+  --hero-a:#04150d;--hero-b:#0b4d31;--gold:#d8b45e;--shadow:0 1px 2px rgba(0,0,0,.4),0 6px 20px rgba(0,0,0,.3);
+  --warn:#f0c26a;--warn-bg:#3a2d10;--danger:#ff8a80;--c1:#52c98a;--c2:#7fb2ee;--c3:#e6b663;--c4:#b99be8;color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#08130e;--surface:#0f1e17;--fg:#e3f1ea;--muted:#90b0a0;--line:#234034;--accent:#52c98a;--accent-fg:#04210f;--soft:#15291f;
+  --hero-a:#04150d;--hero-b:#0b4d31;--gold:#d8b45e;--shadow:0 1px 2px rgba(0,0,0,.4),0 6px 20px rgba(0,0,0,.3);
+  --warn:#f0c26a;--warn-bg:#3a2d10;--danger:#ff8a80;--c1:#52c98a;--c2:#7fb2ee;--c3:#e6b663;--c4:#b99be8;color-scheme:dark}
+[hidden]{display:none!important}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--fg);font-family:var(--f-body);font-size:15px;line-height:1.5}
+h1,h2,h3{font-family:var(--f-display);margin:0;text-wrap:balance}
+button,input,select{font:inherit;color:inherit}
+.wrap{padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+.inner{max-width:1120px;margin:0 auto}
+.hero{background:linear-gradient(135deg,var(--hero-a),var(--hero-b));color:#fff;padding-block:22px 54px}
+.top{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:22px}
+.home{color:#fff;text-decoration:none;font-weight:600;font-size:13.5px;display:inline-flex;align-items:center;gap:8px;padding:8px 12px;border-radius:10px;background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.28)}
+.home:hover,.themebtn:hover{background:rgba(255,255,255,.22)}
+.themebtn{margin-left:auto;display:inline-flex;align-items:center;gap:8px;border:1px solid rgba(255,255,255,.35);background:rgba(255,255,255,.12);color:#fff;border-radius:10px;padding:8px 12px;font-weight:600;font-size:13.5px;cursor:pointer}
+.goldrule{width:56px;height:4px;background:var(--gold);border-radius:2px;margin:0 0 14px}
+.hero h1{font-size:clamp(1.6rem,4.4vw,2.4rem);line-height:1.12}
+.hero p{margin:8px 0 0;opacity:.85}
+main{padding-block:0 40px}
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,170px),1fr));gap:12px;margin-top:-30px}
+.stat{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:14px 16px;box-shadow:var(--shadow)}
+.stat b{font-family:var(--f-display);font-size:1.7rem;display:block;line-height:1.1}
+.stat span{color:var(--muted);font-size:13px}
+.bar{display:flex;flex-wrap:wrap;gap:10px;align-items:center;margin-top:18px}
+.search{flex:1 1 260px;display:flex;align-items:center;gap:10px;background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:0 14px;box-shadow:var(--shadow);min-width:0}
+.search input{border:0;background:transparent;outline:0;padding:12px 0;flex:1;min-width:0}
+.search:focus-within{border-color:var(--accent)}
+select{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:10px 12px;box-shadow:var(--shadow)}
+.btn{border:1px solid var(--line);background:var(--surface);border-radius:10px;padding:10px 14px;cursor:pointer;font-weight:600;font-size:14px;display:inline-flex;align-items:center;gap:8px;box-shadow:var(--shadow)}
+.btn:hover{border-color:var(--accent)}.btn.primary{background:var(--accent);color:var(--accent-fg);border-color:var(--accent)}.btn.danger{color:var(--danger)}
+.banner{margin-top:14px;border-radius:12px;padding:12px 16px;font-size:13.5px;background:var(--warn-bg);color:var(--warn)}
+.root{margin:26px 0 8px;display:flex;justify-content:center}
+.rootbox{background:linear-gradient(135deg,var(--hero-a),var(--hero-b));color:#fff;border-radius:14px;padding:14px 22px;text-align:center;box-shadow:var(--shadow)}
+.rootbox small{display:block;letter-spacing:.14em;text-transform:uppercase;font-size:11px;opacity:.85}
+.rootbox b{font-family:var(--f-display);font-size:1.1rem}
+.branches{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,420px),1fr));gap:16px;align-items:start;margin-top:14px;position:relative}
+.branch>h2{font-size:1.05rem;display:flex;align-items:center;gap:10px;margin:0 0 10px}
+.branch>h2 i{width:10px;height:10px;border-radius:50%;background:var(--bc,var(--accent));display:inline-block}
+.branch>h2 span{color:var(--muted);font-weight:500;font-size:13px;font-family:var(--f-body)}
+details.grp{background:var(--surface);border:1px solid var(--line);border-left:5px solid var(--bc,var(--accent));border-radius:12px;box-shadow:var(--shadow);margin-bottom:10px}
+details.grp>summary{list-style:none;cursor:pointer;padding:12px 14px;display:flex;align-items:center;gap:10px;font-weight:600}
+details.grp>summary::-webkit-details-marker{display:none}
+details.grp>summary::before{content:"›";font-size:20px;line-height:1;transition:transform .15s;color:var(--muted)}
+details.grp[open]>summary::before{transform:rotate(90deg)}
+.gname{flex:1;min-width:0}
+.gname small{display:block;font-weight:400;color:var(--muted);font-size:12.5px}
+.cnt{background:var(--soft);color:var(--accent);border-radius:99px;padding:2px 10px;font-size:12.5px;font-weight:700}
+.lvl{padding:6px 14px 4px;font-size:11.5px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);font-weight:700;border-top:1px solid var(--line)}
+.people{list-style:none;margin:0;padding:0 8px 8px}
+.person{display:flex;align-items:center;gap:12px;padding:8px 6px;border-radius:9px}
+.person:hover{background:var(--soft)}
+.av{width:36px;height:36px;border-radius:50%;background:var(--soft);color:var(--accent);display:grid;place-items:center;font-weight:700;font-size:12.5px;flex:none}
+.pn{flex:1;min-width:0}.pn b{display:block;font-weight:600;line-height:1.25}.pn span{color:var(--muted);font-size:13px}
+.tag{font-size:11px;font-weight:700;padding:2px 8px;border-radius:99px;background:var(--soft);color:var(--muted);white-space:nowrap}
+.tag.com{background:color-mix(in srgb,var(--c2) 18%,transparent);color:var(--c2)}
+.tag.efe{background:color-mix(in srgb,var(--c1) 18%,transparent);color:var(--c1)}
+.tag.ced{background:color-mix(in srgb,var(--c3) 20%,transparent);color:var(--c3)}
+.tag.ant,.tag.pen{background:color-mix(in srgb,var(--c4) 18%,transparent);color:var(--c4)}
+.empty{margin-top:30px;text-align:center;padding:38px 20px;background:var(--surface);border:2px dashed var(--line);border-radius:16px;color:var(--muted)}
+.empty h2{color:var(--fg);margin-bottom:6px}
+.note{margin-top:20px;font-size:12.8px;color:var(--muted)}
+#toast{position:fixed;left:50%;transform:translateX(-50%);bottom:max(18px,env(safe-area-inset-bottom,0px));background:var(--fg);color:var(--bg);padding:10px 16px;border-radius:10px;font-size:14px;z-index:60;max-width:90vw}
+</style>
+
+<header class="hero wrap"><div class="inner">
+  <div class="top"><a class="home" href="../" target="_top"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 11l9-8 9 8M5 10v10h5v-6h4v6h5V10"/></svg>Sistema Interno do RH</a>
+  <button class="themebtn" id="themeBtn" type="button"></button></div>
+  <div class="goldrule"></div>
+  <h1>Hierarquia de Pessoal</h1>
+  <p>Câmara Municipal de Rio Verde/GO</p>
+</div></header>
+
+<main class="wrap"><div class="inner">
+  <div class="stats" id="stats"></div>
+  <div class="bar" id="bar">
+    <label class="search"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></svg><input id="q" type="search" placeholder="Buscar por nome, cargo ou gabinete" aria-label="Buscar" autocomplete="off"></label>
+    <select id="ft" aria-label="Filtrar por vínculo"><option value="">Todos os vínculos</option><option value="com">Comissionados</option><option value="efe">Efetivos</option><option value="ced">Cedidos</option><option value="ant">Admissão anterior a 1988</option><option value="pen">Pensionistas</option></select>
+    <button class="btn" id="expBtn" type="button">Expandir tudo</button>
+    <button class="btn primary" id="impBtn" type="button">Importar planilha (CSV)</button>
+    <button class="btn danger" id="clrBtn" type="button">Remover dados</button>
+    <input type="file" id="file" accept=".csv,text/csv" hidden>
+  </div>
+  <div id="notice"></div>
+  <div id="view"></div>
+  <p class="note" id="foot"></p>
+</div></main>
+<div id="toast" hidden></div>
+
+<script>
+const HOME_URL="../";
+const LS='rhcrv-pessoal-v1',TEMA_KEY='rhcrv-tema';
+const $=s=>document.querySelector(s);
+const esc=s=>String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const norm=s=>String(s||'').normalize('NFD').replace(/[̀-ͯ]/g,'').toLowerCase().trim();
+let dbh=null,dados=null,allOpen=false;
+
+/* ---------- tema ---------- */
+const ICO2={sun:'<circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/>',moon:'<path d="M21 12.8A9 9 0 1111.2 3a7 7 0 009.8 9.8z"/>'};
+function isDark(){const m=/rgba?\((\d+),\s*(\d+),\s*(\d+)/.exec(getComputedStyle(document.body).backgroundColor);return m?(0.2126*m[1]+0.7152*m[2]+0.0722*m[3])/255<0.4:false;}
+function themeBtn(){const d=isDark();$('#themeBtn').innerHTML=`<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${ICO2[d?'sun':'moon']}</svg>${d?'Modo claro':'Modo escuro'}`;}
+$('#themeBtn').addEventListener('click',()=>{const n=isDark()?'light':'dark';document.documentElement.setAttribute('data-theme',n);try{localStorage.setItem(TEMA_KEY,n);}catch(e){}themeBtn();});
+try{const s=localStorage.getItem(TEMA_KEY);document.documentElement.setAttribute('data-theme',s==='dark'?'dark':'light');}catch(e){document.documentElement.setAttribute('data-theme','light');}
+
+/* ---------- tratamento dos dados ---------- */
+const MIN=new Set(['de','da','do','das','dos','e','a','o']);
+const ROMAN=/^(i|ii|iii|iv|v|vi|vii|viii|ix|x)$/i;
+function titulo(s){
+  return String(s||'').toLowerCase().replace(/\s+/g,' ').trim().split(' ').map((w,i)=>{
+    if(ROMAN.test(w)&&i>0) return w.toUpperCase();
+    if(MIN.has(w)&&i>0) return w;
+    return w.replace(/(^|[-\/(])(\p{L})/gu,(m,a,b)=>a+b.toUpperCase());
+  }).join(' ');
+}
+function vinculo(t){
+  const n=norm(t);
+  if(n.includes('comission')) return 'com';
+  if(n.includes('efetivo')) return 'efe';
+  if(n.includes('disposi')) return 'ced';
+  if(n.includes('pension')) return 'pen';
+  if(n.includes('admissao')) return 'ant';
+  return 'com';
+}
+const VINC={com:'Comissionado',efe:'Efetivo',ced:'Cedido',ant:'Adm. anterior a 1988',pen:'Pensionista'};
+function nivel(cargo){
+  const c=norm(cargo);
+  if(/procurador|diretor|gerente|chefe do|ouvidor|supervisor|assessor- ?chefe|assessor-chefe/.test(c)) return 0;
+  if(/assessor/.test(c)) return 1;
+  if(/analista/.test(c)) return 2;
+  return 3;
+}
+const NIVEIS=['Direção e chefia','Assessoria','Análise e técnica','Apoio e operacional'];
+function grupoInfo(h){
+  const n=norm(h);
+  if(n==='setor administrativo') return {k:'setor',nome:'Setor Administrativo',ramo:0,sort:'0'};
+  const m=/^vereador(a)?\s+(.+)$/.exec(n);
+  if(m){const nm=titulo(String(h).replace(/^vereador(a)?\s+/i,''));return {k:'g:'+n,nome:'Gabinete '+(m[1]?'da Vereadora ':'do Vereador ')+nm,curto:nm,ramo:1,sort:norm(nm)};}
+  return {k:'o:'+n,nome:titulo(h),ramo:2,sort:norm(h)};
+}
+function decodificar(buf){
+  try{return new TextDecoder('utf-8',{fatal:true}).decode(buf);}catch(e){return new TextDecoder('windows-1252').decode(buf);}
+}
+function lerCsv(texto){
+  texto=texto.replace(/^﻿/,'');
+  const linhas=texto.split(/\r?\n/).filter(l=>l.trim());
+  if(linhas.length<2) throw new Error('A planilha está vazia.');
+  const sep=(linhas[0].match(/;/g)||[]).length>=(linhas[0].match(/,/g)||[]).length?';':',';
+  const cab=linhas[0].split(sep).map(norm);
+  const ix=nome=>cab.findIndex(c=>c===nome||c.startsWith(nome));
+  const iN=ix('nome'),iC=ix('cargo'),iT=ix('tipo'),iH=ix('hierarquia'),iS=ix('salario');
+  if(iN<0||iC<0||iH<0) throw new Error('Não encontrei as colunas Nome, Cargo e Hierarquia.');
+  const rows=[];
+  linhas.slice(1).forEach(l=>{
+    const c=l.split(sep).map(x=>x.trim());
+    if(!c[iN]) return;
+    const sal=iS>=0?parseFloat(String(c[iS]||'').replace(/\./g,'').replace(',','.')):NaN;
+    rows.push({n:c[iN],c:c[iC]||'',t:iT>=0?c[iT]||'':'',g:c[iH]||'',s:isNaN(sal)?0:sal});
+  });
+  // a posição de cada pessoa na ordem hierárquica (do maior para o menor cargo) é guardada; os valores de salário e a matrícula não são guardados
+  rows.sort((a,b)=>b.s-a.s||a.n.localeCompare(b.n,'pt-BR'));
+  return rows.map((r,i)=>({n:titulo(r.n),c:titulo(r.c),t:vinculo(r.t),g:r.g,o:i}));
+}
+
+/* ---------- armazenamento ---------- */
+function salvar(){
+  const json=JSON.stringify(dados);
+  try{if(dados) localStorage.setItem(LS,json); else localStorage.removeItem(LS);}catch(e){}
+  if(dbh){(dados?dbh.doc('pessoal/dados').set({json}):dbh.doc('pessoal/dados').delete()).catch(()=>{});}
+}
+function toast(m){const t=$('#toast');t.textContent=m;t.hidden=false;clearTimeout(toast.t);toast.t=setTimeout(()=>t.hidden=true,4000);}
+
+/* ---------- exibição ---------- */
+function montar(filtroTexto,filtroVinc){
+  const q=norm(filtroTexto);
+  const grupos=new Map();
+  dados.pessoas.forEach(p=>{
+    const g=grupoInfo(p.g);
+    if(!grupos.has(g.k)) grupos.set(g.k,Object.assign({pessoas:[]},g));
+    grupos.get(g.k).pessoas.push(p);
+  });
+  const lista=[...grupos.values()];
+  lista.forEach(g=>g.pessoas.sort((a,b)=>a.o-b.o));
+  lista.sort((a,b)=>a.ramo-b.ramo||a.sort.localeCompare(b.sort));
+  return lista.map(g=>{
+    const ok=p=>(!filtroVinc||p.t===filtroVinc)&&(!q||norm(p.n+' '+p.c+' '+g.nome).includes(q));
+    return Object.assign({},g,{visiveis:g.pessoas.filter(ok)});
+  }).filter(g=>g.visiveis.length);
+}
+function iniciais(n){const p=n.split(' ').filter(w=>!MIN.has(w.toLowerCase()));return ((p[0]||'')[0]||'')+((p.length>1?p[p.length-1][0]:'')||'');}
+function pessoaHtml(p){
+  return `<li class="person"><span class="av" aria-hidden="true">${esc(iniciais(p.n))}</span><div class="pn"><b>${esc(p.n)}</b><span>${esc(p.c)}</span></div><span class="tag ${p.t}">${VINC[p.t]}</span></li>`;
+}
+function grupoHtml(g,abrir,cor){
+  let corpo='';
+  if(g.ramo===1||g.ramo===0){
+    [0,1,2,3].forEach(nv=>{
+      const ps=g.visiveis.filter(p=>nivel(p.c)===nv);
+      if(ps.length) corpo+=`<div class="lvl">${NIVEIS[nv]} · ${ps.length}</div><ul class="people">${ps.map(pessoaHtml).join('')}</ul>`;
+    });
+  }else corpo=`<ul class="people">${g.visiveis.map(pessoaHtml).join('')}</ul>`;
+  const total=g.pessoas.length,vis=g.visiveis.length;
+  return `<details class="grp" style="--bc:${cor}"${abrir?' open':''}><summary><span class="gname">${esc(g.nome)}</span><span class="cnt">${vis===total?total:vis+' de '+total}</span></summary>${corpo}</details>`;
+}
+function render(){
+  const stats=$('#stats'),view=$('#view'),has=dados&&dados.pessoas.length;
+  document.querySelectorAll('#bar .search,#ft,#expBtn,#clrBtn').forEach(e=>e.hidden=!has);
+  $('#impBtn').textContent=has?'Atualizar planilha (CSV)':'Importar planilha (CSV)';
+  if(!has){
+    stats.innerHTML='';$('#notice').innerHTML='';$('#foot').textContent='';
+    view.innerHTML=`<div class="empty"><h2>Nenhuma planilha importada</h2><p>Importe o arquivo CSV de pessoal (colunas Nome, Cargo, Tipo de admissão e Hierarquia). Os dados ficam salvos neste navegador e não vão para o código do sistema.</p><button class="btn primary" type="button" data-imp>Importar planilha (CSV)</button></div>`;
+    return;
+  }
+  const P=dados.pessoas,cont=k=>P.filter(p=>p.t===k).length;
+  const setor=P.filter(p=>grupoInfo(p.g).ramo===0).length,gab=P.filter(p=>grupoInfo(p.g).ramo===1).length;
+  const ngab=new Set(P.filter(p=>grupoInfo(p.g).ramo===1).map(p=>grupoInfo(p.g).k)).size;
+  stats.innerHTML=[[P.length,'Pessoas no quadro'],[setor,'No Setor Administrativo'],[gab,`Em ${ngab} gabinetes de vereadores`],[cont('com'),'Comissionados'],[cont('efe'),'Efetivos'],[cont('ced'),'Cedidos']].map(s=>`<div class="stat"><b>${s[0]}</b><span>${s[1]}</span></div>`).join('');
+  $('#notice').innerHTML=`<div class="banner"><b>Dados pessoais.</b> Esta tela mostra nomes de servidores. Os dados ficam apenas neste navegador; use somente em ambiente interno e não compartilhe o endereço com a planilha carregada.</div>`;
+  const filtrando=!!$('#q').value.trim()||!!$('#ft').value;
+  const gs=montar($('#q').value,$('#ft').value);
+  const por=r=>gs.filter(g=>g.ramo===r);
+  const ramo=(tit,cor,arr,sub)=>arr.length?`<section class="branch" style="--bc:${cor}"><h2><i></i>${tit} <span>${sub}</span></h2>${arr.map(g=>grupoHtml(g,filtrando||allOpen,cor)).join('')}</section>`:'';
+  const r0=por(0),r1=por(1),r2=por(2);
+  const n=a=>a.reduce((s,g)=>s+g.visiveis.length,0);
+  view.innerHTML=`<div class="root"><div class="rootbox"><small>Câmara Municipal</small><b>Rio Verde/GO</b></div></div>
+   <div class="branches">${ramo('Setor Administrativo','var(--c1)',r0,n(r0)+' pessoas')}${ramo('Gabinetes dos Vereadores','var(--c2)',r1,r1.length+' gabinetes · '+n(r1)+' pessoas')}${ramo('Outros vínculos','var(--c4)',r2,n(r2)+' pessoas')}</div>
+   ${gs.length?'':'<div class="empty">Nada encontrado para esta busca.</div>'}`;
+  $('#foot').textContent='Planilha importada em '+new Date(dados.importado).toLocaleString('pt-BR')+(dados.fonte?' ('+dados.fonte+')':'')+'. Dentro de cada grupo, a ordem segue a hierarquia dos cargos, do mais alto para o mais baixo. Salário e matrícula não são guardados.';
+}
+
+/* ---------- eventos ---------- */
+function importar(){$('#file').click();}
+$('#impBtn').addEventListener('click',importar);
+document.addEventListener('click',e=>{if(e.target.closest('[data-imp]')) importar();});
+$('#file').addEventListener('change',async ev=>{
+  const f=ev.target.files&&ev.target.files[0];if(!f) return;
+  try{
+    const pessoas=lerCsv(decodificar(await f.arrayBuffer()));
+    if(!pessoas.length) throw new Error('Nenhuma pessoa encontrada na planilha.');
+    dados={v:1,importado:new Date().toISOString(),fonte:f.name,pessoas};
+    salvar();render();toast(pessoas.length+' pessoas importadas.');
+  }catch(e){toast(e.message||'Não foi possível ler a planilha.');}
+  ev.target.value='';
+});
+$('#clrBtn').addEventListener('click',()=>{
+  if($('#clrBtn').dataset.sure){delete $('#clrBtn').dataset.sure;$('#clrBtn').textContent='Remover dados';dados=null;salvar();render();toast('Dados removidos deste navegador.');}
+  else{$('#clrBtn').dataset.sure='1';$('#clrBtn').textContent='Confirmar remoção';setTimeout(()=>{delete $('#clrBtn').dataset.sure;$('#clrBtn').textContent='Remover dados';},4000);}
+});
+$('#expBtn').addEventListener('click',()=>{allOpen=!allOpen;$('#expBtn').textContent=allOpen?'Recolher tudo':'Expandir tudo';render();});
+$('#q').addEventListener('input',render);$('#ft').addEventListener('change',render);
+try{matchMedia('(prefers-color-scheme: dark)').addEventListener('change',themeBtn);new MutationObserver(themeBtn).observe(document.documentElement,{attributes:true,attributeFilter:['data-theme']});}catch(e){}
+
+(function init(){
+  try{const d=JSON.parse(localStorage.getItem(LS)||'null');if(d&&Array.isArray(d.pessoas)) dados=d;}catch(e){}
+  themeBtn();render();
+  (async()=>{
+    try{
+      if(window.claude&&window.claude.use){
+        dbh=await window.claude.use('db');
+        if(dbh){const s=await dbh.doc('pessoal/dados').get();if(s.exists){try{const d=JSON.parse(s.data().json);if(d&&Array.isArray(d.pessoas)){dados=d;render();}}catch(e){}}}
+      }
+    }catch(e){dbh=null;}
+  })();
+})();
+</script>
+
+</body></html>

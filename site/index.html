@@ -106,6 +106,7 @@ footer{padding-block:0 28px;color:var(--muted);font-size:12.5px}
 
 <script>
 const FLOW_URL="fluxogramas/";
+const PESSOAL_URL="pessoal/";
 const LS='rhcrv-painel-v1';
 const ICONS={
   org:'<rect x="9" y="3" width="6" height="5" rx="1"/><rect x="3" y="16" width="6" height="5" rx="1"/><rect x="15" y="16" width="6" height="5" rx="1"/><path d="M12 8v4M6 16v-4h12v4"/>',
@@ -139,8 +140,9 @@ const svg=(k,n)=>`<svg width="${n||28}" height="${n||28}" viewBox="0 0 24 24" fi
 const uid=()=>'t'+Math.random().toString(36).slice(2,9);
 
 function defaults(){
-  return {v:1,tiles:[
+  return {v:2,tiles:[
     {id:'t-fluxos',nome:'Fluxogramas e Manual do RH',desc:'Organograma, fluxogramas editáveis, competências, matriz de responsabilidades, manual de procedimentos e indicadores.',icone:'flow',hue:152,status:'ok',url:FLOW_URL},
+    {id:'t-pessoal',nome:'Hierarquia de Pessoal',desc:'Quadro de pessoal organizado por hierarquia: setor administrativo e gabinetes dos vereadores.',icone:'org',hue:262,status:'ok',url:PESSOAL_URL},
     {id:'t-ferias',nome:'Férias e Licenças',desc:'Controle de períodos aquisitivos, programação e acompanhamento.',icone:'calendar',hue:28,status:'plan',url:''},
     {id:'t-freq',nome:'Frequência',desc:'Registro e conferência de frequência.',icone:'clock',hue:48,status:'plan',url:''},
   ]};
@@ -236,9 +238,16 @@ document.addEventListener('keydown',e=>{if(e.key==='Escape'&&!$('#modal').hidden
 document.querySelector('#themeBtn').addEventListener('click',()=>{const n=isDark()?'light':'dark';document.documentElement.setAttribute('data-theme',n);try{localStorage.setItem(TEMA_KEY,n);}catch(e){}});
 try{matchMedia('(prefers-color-scheme: dark)').addEventListener('change',()=>{render();themeBtn();});new MutationObserver(()=>{render();themeBtn();}).observe(document.documentElement,{attributes:true,attributeFilter:['data-theme']});}catch(e){}
 
+function migrar(){
+  if(!st.v||st.v<2){ // sistemas novos entram no painel salvo
+    if(!st.tiles.some(t=>t.id==='t-pessoal')){const d=defaults().tiles.find(t=>t.id==='t-pessoal');st.tiles.splice(Math.min(1,st.tiles.length),0,d);}
+    st.v=2;persist();
+  }
+}
 (function init(){
   try{const s=localStorage.getItem(TEMA_KEY);document.documentElement.setAttribute('data-theme',s==='dark'?'dark':'light');}catch(e){document.documentElement.setAttribute('data-theme','light');}
   const l=load(); if(l) st=l;
+  migrar();
   // mantém o endereço do sistema de fluxogramas atualizado
   const fl=st.tiles.find(t=>t.id==='t-fluxos'); if(fl&&!fl.url) fl.url=FLOW_URL;
   $('#storeNote').textContent='As alterações deste painel ficam salvas neste navegador.';
@@ -250,7 +259,7 @@ try{matchMedia('(prefers-color-scheme: dark)').addEventListener('change',()=>{re
         if(dbh){
           $('#storeNote').textContent='As alterações deste painel ficam salvas no documento.';
           const s=await dbh.doc('painel/tiles').get();
-          if(s.exists){try{const d=JSON.parse(s.data().json);if(d&&Array.isArray(d.tiles)){st=d;render();}}catch(e){}}
+          if(s.exists){try{const d=JSON.parse(s.data().json);if(d&&Array.isArray(d.tiles)){st=d;migrar();render();}}catch(e){}}
         }
       }
     }catch(e){dbh=null;}

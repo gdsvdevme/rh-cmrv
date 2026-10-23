@@ -5,11 +5,13 @@ Variáveis de ambiente (nunca grave senhas no repositório):
   PB_URL             endereço do PocketBase (ex.: https://pb.devgabriel.app.br)
   PB_ADMIN_EMAIL     e-mail do superusuário
   PB_ADMIN_PASSWORD  senha do superusuário
-  PB_ALLOWED_EMAILS  e-mails (separados por vírgula) que podem usar o sistema; a conta
-                     precisa existir na coleção `users` do PocketBase
+  PB_APP_USER / PB_APP_USER_PASSWORD  login simples do sistema (ex.: rh), criado na coleção
+                     própria `rhcmrv_users`; a senha pode ser curta (mínimo 4 caracteres)
+  PB_ALLOWED_EMAILS  (opcional) e-mails da coleção `users` do PocketBase que também podem entrar
   PB_APP_EMAIL / PB_APP_PASSWORD  (opcional) cria essa conta em `users` se ainda não existir
 
-Coleções (acesso só para os e-mails permitidos; a coleção `users` não é alterada):
+Coleções (acesso só para as contas permitidas; a coleção `users` não é alterada):
+  rhcmrv_users    login simples do sistema (username + senha)
   rhcmrv_docs     key (único) + data (json)   -> painel, estado dos fluxogramas, hierarquia de pessoal
   rhcmrv_versoes  vid (único), at, label, json -> cópias de segurança dos fluxogramas
 O script é repetível: o que já existe é mantido.
@@ -49,9 +51,13 @@ token = r['token']
 print('Autenticado (%s).' % ('>=0.23' if new_api else '<0.23'))
 
 allowed = [e.strip() for e in (os.environ.get('PB_ALLOWED_EMAILS') or os.environ.get('PB_APP_EMAIL', '')).split(',') if e.strip()]
-if not allowed:
-    sys.exit('Defina PB_ALLOWED_EMAILS (ou PB_APP_EMAIL) com quem pode usar o sistema.')
-RULE = '@request.auth.collectionName = "users" && (' + ' || '.join('@request.auth.email = "%s"' % e.replace('"', '') for e in allowed) + ')'
+app_user, app_user_pass = os.environ.get('PB_APP_USER', ''), os.environ.get('PB_APP_USER_PASSWORD', '')
+if not allowed and not app_user:
+    sys.exit('Defina PB_APP_USER (login simples) e/ou PB_ALLOWED_EMAILS com quem pode usar o sistema.')
+parts = []
+if app_user or not allowed: parts.append('@request.auth.collectionName = "rhcmrv_users"')
+if allowed: parts.append('(@request.auth.collectionName = "users" && (' + ' || '.join('@request.auth.email = "%s"' % e.replace('"', '') for e in allowed) + '))')
+RULE = ' || '.join(parts)
 BIG = 20 * 1024 * 1024
 
 def fields(defs):
@@ -69,13 +75,35 @@ def old_schema(defs):
         out.append({'name': name, 'type': typ, 'required': name in ('key', 'vid'), 'options': o})
     return out
 
+if app_user:
+    if not new_api: sys.exit('O login simples exige PocketBase 0.23 ou mais novo.')
+    if call('GET', '/api/collections/rhcmrv_users', ok404=True):
+        print('Coleção rhcmrv_users já existe.')
+    else:
+        call('POST', '/api/collections', {'name': 'rhcmrv_users', 'type': 'auth', 'createRule': None,
+            'fields': [{'name': 'username', 'type': 'text', 'required': True},
+                       {'name': 'password', 'type': 'password', 'required': True, 'min': 4, 'system': True},
+                       {'name': 'email', 'type': 'email', 'required': False, 'system': True}],
+            'indexes': ['CREATE UNIQUE INDEX idx_rhcmrv_users_username ON rhcmrv_users (username)'],
+            'passwordAuth': {'enabled': True, 'identityFields': ['username']}})
+        print('Coleção rhcmrv_users criada.')
+    if app_user_pass:
+        f = call('GET', '/api/collections/rhcmrv_users/records?perPage=1&filter=' + urllib.request.quote('username="%s"' % app_user.replace('"', '')))
+        if f and f.get('items'):
+            call('PATCH', '/api/collections/rhcmrv_users/records/' + f['items'][0]['id'], {'password': app_user_pass, 'passwordConfirm': app_user_pass})
+            print('Login %s atualizado.' % app_user)
+        else:
+            call('POST', '/api/collections/rhcmrv_users/records', {'username': app_user, 'password': app_user_pass, 'passwordConfirm': app_user_pass})
+            print('Login %s criado.' % app_user)
+
 COLS = [
     ('rhcmrv_docs', [('key', 'text'), ('data', 'json')], 'key'),
     ('rhcmrv_versoes', [('vid', 'text'), ('at', 'text'), ('label', 'text'), ('json', 'json')], 'vid'),
 ]
 for name, defs, uniq in COLS:
     if call('GET', '/api/collections/' + name, ok404=True):
-        print('Coleção %s já existe.' % name); continue
+        call('PATCH', '/api/collections/' + name, {'listRule': RULE, 'viewRule': RULE, 'createRule': RULE, 'updateRule': RULE, 'deleteRule': RULE})
+        print('Coleção %s já existe (regras de acesso atualizadas).' % name); continue
     body = {'name': name, 'type': 'base',
             'listRule': RULE, 'viewRule': RULE, 'createRule': RULE, 'updateRule': RULE, 'deleteRule': RULE,
             'indexes': ['CREATE UNIQUE INDEX idx_%s_%s ON %s (%s)' % (name, uniq, name, uniq)]}

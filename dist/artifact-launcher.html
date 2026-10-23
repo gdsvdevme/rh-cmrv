@@ -112,11 +112,11 @@ footer{padding-block:0 28px;color:var(--muted);font-size:12.5px}
 const PB=(function(){
   const URL_BASE='https://pb.devgabriel.app.br'.replace(/\/+$/,'');
   const AUTH_KEY='rhcrv-pb-auth';
-  let token='',email='',loginP=null;
+  let token='',email='',col='users',loginP=null;
 
-  function readAuth(){try{const a=JSON.parse(localStorage.getItem(AUTH_KEY)||'null');if(a&&a.token){token=a.token;email=a.email||'';}}catch(e){}}
-  function saveAuth(){try{localStorage.setItem(AUTH_KEY,JSON.stringify({token,email}));}catch(e){}}
-  function clearAuth(){token='';email='';try{localStorage.removeItem(AUTH_KEY);}catch(e){}}
+  function readAuth(){try{const a=JSON.parse(localStorage.getItem(AUTH_KEY)||'null');if(a&&a.token){token=a.token;email=a.email||'';col=a.col||'users';}}catch(e){}}
+  function saveAuth(){try{localStorage.setItem(AUTH_KEY,JSON.stringify({token,email,col}));}catch(e){}}
+  function clearAuth(){token='';email='';col='users';try{localStorage.removeItem(AUTH_KEY);}catch(e){}}
 
   async function raw(method,path,body){
     const h={};
@@ -149,7 +149,7 @@ const PB=(function(){
         '<form style="width:100%;max-width:360px;background:var(--surface,#fff);color:var(--fg,#12281d);border:1px solid var(--line,#d1ddd6);border-radius:12px;padding:22px;box-shadow:0 10px 40px rgba(0,0,0,.3);font:15px/1.4 system-ui,sans-serif">'+
         '<h3 style="margin:0 0 4px;font-size:18px">Entrar no sistema</h3>'+
         '<p style="margin:0 0 14px;color:var(--muted,#4f665a);font-size:13px">Informe o acesso para carregar e salvar os dados no servidor.</p>'+
-        '<label style="display:block;font-size:13px;margin-bottom:10px">E-mail<input name="e" type="email" required autocomplete="username" style="display:block;width:100%;box-sizing:border-box;margin-top:4px;padding:9px;border:1px solid var(--line,#d1ddd6);border-radius:8px;background:transparent;color:inherit;font:inherit"></label>'+
+        '<label style="display:block;font-size:13px;margin-bottom:10px">Usuário ou e-mail<input name="e" type="text" required autocapitalize="none" spellcheck="false" autocomplete="username" style="display:block;width:100%;box-sizing:border-box;margin-top:4px;padding:9px;border:1px solid var(--line,#d1ddd6);border-radius:8px;background:transparent;color:inherit;font:inherit"></label>'+
         '<label style="display:block;font-size:13px;margin-bottom:10px">Senha<input name="p" type="password" required autocomplete="current-password" style="display:block;width:100%;box-sizing:border-box;margin-top:4px;padding:9px;border:1px solid var(--line,#d1ddd6);border-radius:8px;background:transparent;color:inherit;font:inherit"></label>'+
         '<div data-err style="min-height:18px;margin-bottom:8px;color:#c0392b;font-size:13px"></div>'+
         '<div style="display:flex;gap:8px;justify-content:flex-end;flex-wrap:wrap">'+
@@ -164,9 +164,10 @@ const PB=(function(){
       f.addEventListener('submit',async ev=>{
         ev.preventDefault(); err.textContent='Entrando…';
         try{
-          const r=await raw('POST','/api/collections/users/auth-with-password',{identity:f.e.value.trim(),password:f.p.value});
-          token=r.token; email=(r.record&&r.record.email)||f.e.value.trim(); saveAuth(); done(true);
-        }catch(e){err.textContent=e.status===400?'E-mail ou senha incorretos.':'Não foi possível entrar: '+e.message;}
+          const id=f.e.value.trim();col=id.includes('@')?'users':'rhcmrv_users';
+          const r=await raw('POST','/api/collections/'+col+'/auth-with-password',{identity:id,password:f.p.value});
+          token=r.token; email=(r.record&&(r.record.email||r.record.username))||id; saveAuth(); done(true);
+        }catch(e){err.textContent=e.status===400?'Usuário ou senha incorretos.':'Não foi possível entrar: '+e.message;}
       });
     });
     return loginP;
@@ -226,7 +227,7 @@ const PB=(function(){
       await fetch(URL_BASE+'/api/health',{cache:'no-store'}).then(r=>{if(!r.ok) throw new Error('offline');});
       let ok=false;
       if(token){
-        try{const r=await raw('POST','/api/collections/users/auth-refresh');token=r.token;email=(r.record&&r.record.email)||email;saveAuth();ok=true;}
+        try{const r=await raw('POST','/api/collections/'+col+'/auth-refresh');token=r.token;email=(r.record&&(r.record.email||r.record.username))||email;saveAuth();ok=true;}
         catch(e){if(e.status!==401&&e.status!==403&&e.status!==404) throw e; clearAuth();}
       }
       if(!ok&&!(await login())) return null;

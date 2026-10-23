@@ -30,7 +30,7 @@ Na página **Painel Inicial** ou **Manual de Procedimentos**, o botão **Gerar v
 - Matriz e indicadores: CSV, Excel e PDF. Manual: PDF e Markdown.
 
 ## Onde ficam os dados
-Os dados ficam no **PocketBase** (`https://pb.devgabriel.app.br`), nas coleções `rhcmrv_docs` (painel, fluxogramas e hierarquia de pessoal) e `rhcmrv_versoes` (cópias de segurança). Ao abrir o sistema, uma tela de login pede e-mail e senha de uma conta da coleção `users`; o navegador guarda apenas esse login (e o tema).
+Os dados ficam no **PocketBase** (`https://pb.devgabriel.app.br`), nas coleções `rhcmrv_docs` (painel, fluxogramas e hierarquia de pessoal) e `rhcmrv_versoes` (cópias de segurança). Ao abrir o sistema, uma tela de login pede usuário (ou e-mail) e senha. O login simples (ex.: `rh`) fica na coleção própria `rhcmrv_users`; e-mails da coleção `users` do PocketBase só entram se estiverem em `PB_ALLOWED_EMAILS`; o navegador guarda apenas esse login (e o tema).
 
 - **Migração automática:** se houver dados antigos no localStorage do navegador e o servidor ainda não os tiver, eles são enviados ao servidor na primeira abertura, conferidos e só então apagados do navegador. Abra uma vez cada sistema (painel, fluxogramas, pessoal) em cada computador que tenha dados locais.
 - **Sem conexão:** se o servidor não responder (ou você escolher "Usar só neste navegador"), o sistema volta a salvar localmente, como antes.
@@ -40,11 +40,14 @@ Os dados ficam no **PocketBase** (`https://pb.devgabriel.app.br`), nas coleçõe
 ```
 export PB_URL=https://pb.devgabriel.app.br
 export PB_ADMIN_EMAIL=...  PB_ADMIN_PASSWORD=...        # superusuário
-export PB_ALLOWED_EMAILS=a@x.com,b@y.com                # quem pode usar o sistema (contas da coleção users)
+export PB_APP_USER=rh PB_APP_USER_PASSWORD=...          # login simples do sistema (coleção rhcmrv_users; senha de 4+ caracteres)
+export PB_ALLOWED_EMAILS=a@x.com,b@y.com                # opcional: e-mails da coleção users que também entram
 export PB_APP_EMAIL=...    PB_APP_PASSWORD=...          # opcional: cria essa conta se ainda não existir
 python3 pocketbase/setup.py
 ```
-O script cria as coleções (acesso só para os e-mails permitidos) sem alterar a coleção `users`. Pode ser executado de novo sem duplicar nada. Nunca grave senhas no repositório.
+O script cria as coleções (acesso só para as contas permitidas) sem alterar a coleção `users`, e a cada execução atualiza as regras de acesso e a senha do login simples.
+
+**Atenção:** senhas curtas como `1234` podem ser adivinhadas por qualquer pessoa na internet em poucos minutos. Prefira uma senha longa e, se possível, ative o limite de tentativas do PocketBase (Configurações → Rate limiting). Pode ser executado de novo sem duplicar nada. Nunca grave senhas no repositório.
 
 ## Avisos
 Os indicadores iniciais são demonstrativos e fictícios. Os parâmetros de férias começam vazios, sem prazos ou direitos pré-definidos. O sistema não autoriza nomeações, exonerações, pagamentos ou concessões; a autoridade competente permanece responsável. Não cadastre dados pessoais reais.

@@ -1,8 +1,8 @@
 /* POST /api/centi  { path, body }   cabeçalhos: x-centi-user, x-centi-token, x-centi-refresh
    Repassa ao Centi uma consulta feita com o token da própria pessoa (o Centi aplica as permissões dela).
-   Só as rotas listadas em ROTAS e as consultas somente leitura "cubo-funcionario" (FP051) e "ficha-financeira" (FP024) são aceitos. O Centi renova o token sozinho; se renovar,
+   Só as rotas listadas em ROTAS e as consultas somente leitura "cubo-funcionario" (FP051), "ficha-financeira" (FP024) e "ferias" (FP051 + FP273) são aceitos. O Centi renova o token sozinho; se renovar,
    o novo vem nos cabeçalhos x-centi-token e x-centi-refresh da resposta. */
-const { BASE, centiPost, cuboPayload, cuboLinhas, fichaResumo, isAllowed, readBody, send } = require('./_centi');
+const { BASE, centiPost, cuboPayload, cuboLinhas, feriasPayload, feriasLinhas, fichaResumo, isAllowed, readBody, send } = require('./_centi');
 
 const ROTAS = /^restauth\/(searchentity)$/;
 
@@ -14,14 +14,29 @@ module.exports = async (req, res) => {
   if (!user || !token) return send(res, 401, { message: 'Sessão do Centi ausente. Entre novamente.' });
   if (!isAllowed(user)) return send(res, 403, { message: 'Usuário sem permissão neste sistema.' });
   const { path, body } = readBody(req);
-  const cubo = path === 'cubo-funcionario', ficha = path === 'ficha-financeira';
-  if (typeof path !== 'string' || (!cubo && !ficha && !ROTAS.test(path))) return send(res, 400, { message: 'Consulta não permitida.' });
+  const cubo = path === 'cubo-funcionario', ficha = path === 'ficha-financeira', ferias = path === 'ferias';
+  if (typeof path !== 'string' || (!cubo && !ficha && !ferias && !ROTAS.test(path))) return send(res, 400, { message: 'Consulta não permitida.' });
   const mes = Number(body && body.mes), ano = Number(body && body.ano), matricula = String((body && body.matricula) || '').trim();
-  if ((cubo || ficha) && !(mes >= 1 && mes <= 12 && ano >= 2000 && ano <= 2100)) return send(res, 400, { message: 'Referência inválida.' });
+  if ((cubo || ficha || ferias) && !(mes >= 1 && mes <= 12 && ano >= 2000 && ano <= 2100)) return send(res, 400, { message: 'Referência inválida.' });
   if (ficha && !/^\d{1,12}$/.test(matricula)) return send(res, 400, { message: 'Matrícula inválida.' });
   try {
     const h = { user, token, refreshtoken: refresh, Authorization: 'Bearer ' + token };
-    if (cubo || ficha) Object.assign(h, { company: process.env.CENTI_COMPANY || '1', year: String(ano), month: String(mes), 'x-ts-ajax-request': 'true' });
+    if (cubo || ficha || ferias) Object.assign(h, { company: process.env.CENTI_COMPANY || '1', year: String(ano), month: String(mes), 'x-ts-ajax-request': 'true' });
+    if (ferias) {
+      /* quadro de ativos (Cubo funcionário) + gozos de férias (Cubo movimentação férias); o direito é calculado na tela */
+      const f1 = await centiPost('restauth/operation', cuboPayload(mes, ano), h);
+      const t1 = f1.headers.get('token'), r1 = f1.headers.get('refreshtoken');
+      if (t1) res.setHeader('x-centi-token', t1);
+      if (r1) res.setHeader('x-centi-refresh', r1);
+      const c1 = f1.data && f1.data.Cube;
+      if (!c1) return send(res, f1.status === 401 ? 401 : 502, { message: (f1.data && f1.data.Message && f1.data.Message[0]) || 'O Centi não devolveu o cubo de funcionários.' });
+      const f2 = await centiPost('restauth/operation', feriasPayload(), h);
+      const c2 = f2.data && f2.data.Cube;
+      if (!c2) return send(res, f2.status === 401 ? 401 : 502, { message: (f2.data && f2.data.Message && f2.data.Message[0]) || 'O Centi não devolveu o cubo de férias.' });
+      const quadro = cuboLinhas(c1).map(p => ({ ID: p.ID, MATRICULA: p.MATRICULA, NOMEFUNC: p.NOMEFUNC, CARGO: p.CARGO, HIERARQUIA: p.HIERARQUIA,
+        TIPOADMISSAO: p.TIPOADMISSAO, DATAADMISSAO: p.DATAADMISSAO, TIPOAFASTAMENTO: p.TIPOAFASTAMENTO }));
+      return send(res, 200, { Pessoas: quadro, Gozos: feriasLinhas(c2) });
+    }
     if (ficha) {
       /* acha as fichas (uma por folha) da matrícula na referência e carrega cada uma */
       const busca = await centiPost('restauth/searchentity', { Depth: 50, Entity: 'SFichaFinanceiraPessoa', Start: 1,

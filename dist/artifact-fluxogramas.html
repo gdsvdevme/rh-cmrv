@@ -398,6 +398,8 @@ const PB=(function(){
     /* Cubo funcionário (FP051) do Centi na referência mes/ano -> {Data:[{MATRICULA,NOMEFUNC,CARGO,HIERARQUIA,...}],Total}; só ativos */
     /* Ficha financeira (FP024) da matrícula no mês/ano -> {Fichas:[{Folha,Mes,Ano,TotalProventos,TotalDescontos,LiquidoReceber,Eventos:[...]}]}; não é guardada */
     ficha(matricula,mes,ano){return centiCall('ficha-financeira',{matricula,mes,ano});},
+    /* Férias: ativos (FP051) + gozos de férias (FP273) -> {Pessoas:[...],Gozos:[{MATRICULA,DTAQUIINI,DTAQUIFIN,SALDO,GOZOINICIAL,GOZOFINAL,...}]} */
+    ferias(mes,ano){return centiCall('ferias',{mes,ano});},
     cubo(mes,ano){return centiCall('cubo-funcionario',{mes,ano});},
     search(entity,filters,start,depth){
       return centiCall('restauth/searchentity',{Depth:depth||50,Entity:entity,Start:start==null?1:start,

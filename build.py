@@ -5,6 +5,7 @@
   site/fluxogramas/index.html   sistema de fluxogramas e manual
   site/pessoal/index.html       hierarquia de pessoal (importa planilha CSV)
   site/ponto/index.html         ponto de servidores externos (simulação)
+  site/ferias/index.html        férias: quem está de férias e quem tem direito (período aquisitivo)
   dist/artifact-*.html          fragmentos para publicar como artefato
 
 Uso: python3 build.py [--flow-url URL] [--home-url URL]
@@ -15,6 +16,7 @@ Uso: python3 build.py [--flow-url URL] [--home-url URL]
                só é preciso informar em fragmentos de artefato, que ficam em outro endereço)
   --ponto-url  endereço do Ponto – Servidores Externos usado no painel (artefato)
   --pessoal-url  endereço da Hierarquia de Pessoal usado no painel (artefato)
+  --ferias-url  endereço do sistema de Férias usado no painel (artefato)
 """
 import glob, os, sys
 root = os.path.dirname(os.path.abspath(__file__))
@@ -34,6 +36,7 @@ flow = rd('src/index.template.html').replace('/*CSS*/', css).replace('/*PB_JS*/'
 launcher = rd('src/launcher.template.html').replace('/*PB_JS*/', pbjs)
 pessoal = rd('src/pessoal.template.html').replace('/*PB_JS*/', pbjs)
 ponto = rd('src/ponto.template.html')
+ferias = rd('src/ferias.template.html').replace('/*PB_JS*/', pbjs)
 
 head = ('<!doctype html>\n<html lang="pt-BR"><head><meta charset="utf-8">'
         '<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"></head>'
@@ -41,12 +44,14 @@ head = ('<!doctype html>\n<html lang="pt-BR"><head><meta charset="utf-8">'
 page = lambda frag: head + frag + '\n</body></html>\n'
 
 # site (hospedagem comum, ex.: Vercel)
-wr('site/index.html', page(launcher.replace('/*FLOW_URL*/', 'fluxogramas/').replace('/*PESSOAL_URL*/', 'pessoal/').replace('/*PONTO_URL*/', 'ponto/')))
+wr('site/index.html', page(launcher.replace('/*FLOW_URL*/', 'fluxogramas/').replace('/*PESSOAL_URL*/', 'pessoal/').replace('/*PONTO_URL*/', 'ponto/').replace('/*FERIAS_URL*/', 'ferias/')))
+wr('site/ferias/index.html', page(ferias.replace('/*HOME_URL*/', '../')))
 wr('site/ponto/index.html', page(ponto.replace('/*HOME_URL*/', '../')))
 wr('site/pessoal/index.html', page(pessoal.replace('/*HOME_URL*/', '../')))
 wr('site/fluxogramas/index.html', page(flow.replace('/*HOME_URL*/', '../')))
 # fragmentos de artefato
-wr('dist/artifact-launcher.html', launcher.replace('/*FLOW_URL*/', opt('--flow-url', 'fluxogramas/')).replace('/*PESSOAL_URL*/', opt('--pessoal-url', 'pessoal/')).replace('/*PONTO_URL*/', opt('--ponto-url', 'ponto/')))
+wr('dist/artifact-launcher.html', launcher.replace('/*FLOW_URL*/', opt('--flow-url', 'fluxogramas/')).replace('/*PESSOAL_URL*/', opt('--pessoal-url', 'pessoal/')).replace('/*PONTO_URL*/', opt('--ponto-url', 'ponto/')).replace('/*FERIAS_URL*/', opt('--ferias-url', 'ferias/')))
+wr('dist/artifact-ferias.html', ferias.replace('/*HOME_URL*/', opt('--home-url', '../')))
 wr('dist/artifact-ponto.html', ponto.replace('/*HOME_URL*/', opt('--home-url', '../')))
 wr('dist/artifact-pessoal.html', pessoal.replace('/*HOME_URL*/', opt('--home-url', '../')))
 wr('dist/artifact-fluxogramas.html', flow.replace('/*HOME_URL*/', opt('--home-url', '../')))

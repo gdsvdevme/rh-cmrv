@@ -34,6 +34,35 @@ async function pbSession(username) {
   return { token: a.data.token, record: { id: a.data.record.id, username } };
 }
 
+/* Coleção das tarefas do RH (checklist). Criada no primeiro login depois da atualização, se ainda não existir.
+   Regras: a tarefa compartilhada é de toda a equipe; a privada só aparece para o dono. O dono não pode ser trocado. */
+const AUTH = '@request.auth.collectionName = "rhcmrv_users"';
+const TAREFAS_REGRAS = {
+  listRule: AUTH + ' && (compartilhada = true || dono = @request.auth.id)',
+  viewRule: AUTH + ' && (compartilhada = true || dono = @request.auth.id)',
+  createRule: AUTH + ' && @request.body.dono = @request.auth.id',
+  updateRule: AUTH + ' && (compartilhada = true || dono = @request.auth.id) && @request.body.dono:isset = false && (@request.body.compartilhada:isset = false || dono = @request.auth.id)',
+  deleteRule: AUTH + ' && (compartilhada = true || dono = @request.auth.id)'
+};
+let tarefasOk = false;
+async function garantirTarefas(userToken) {
+  if (tarefasOk) return;
+  const t = await pb('GET', '/api/collections/rhcmrv_tarefas/records?perPage=1', undefined, userToken);
+  if (t.status !== 404) { tarefasOk = true; return; }
+  const adm = await pb('POST', '/api/collections/_superusers/auth-with-password',
+    { identity: process.env.PB_ADMIN_EMAIL || '', password: process.env.PB_ADMIN_PASSWORD || '' });
+  if (adm.status !== 200) return;                       // sem acesso administrativo: o setup.py cria depois
+  const txt = (name, extra) => Object.assign({ name, type: 'text', required: false }, extra || {});
+  const c = await pb('POST', '/api/collections', Object.assign({
+    name: 'rhcmrv_tarefas', type: 'base',
+    fields: [txt('titulo', { required: true, max: 200 }), txt('descricao', { max: 4000 }), txt('coluna', { max: 20 }),
+      { name: 'compartilhada', type: 'bool' }, txt('dono', { required: true, max: 40 }), txt('autor', { max: 120 }),
+      txt('prioridade', { max: 20 }), txt('prazo', { max: 10 }), txt('criada_em', { max: 40 }), txt('concluido_em', { max: 10 })],
+    indexes: ['CREATE INDEX idx_rhcmrv_tarefas_dono ON rhcmrv_tarefas (dono)']
+  }, TAREFAS_REGRAS), undefined, adm.data.token);
+  if (c.status === 200) tarefasOk = true;
+}
+
 module.exports = async (req, res) => {
   if (req.method !== 'POST') return send(res, 405, { message: 'Use POST.' });
   if (!process.env.APP_SECRET || !allowedUsers().length)
@@ -50,6 +79,7 @@ module.exports = async (req, res) => {
     if (!d.Success && !d.Token) return send(res, 401, { message: (d.Message && d.Message[0]) || 'Usuário ou senha do Centi incorretos.' });
     if (d.Tokenized || !d.Token) return send(res, 401, { message: 'Este usuário exige confirmação por PIN no Centi, o que o sistema ainda não suporta.' });
     const session = await pbSession(username);
+    try { await garantirTarefas(session.token); } catch (e) { /* não impede o login */ }
     return send(res, 200, {
       pb: session,
       centi: { user: username, nome: d.FullName || username, token: d.Token, refreshToken: d.RefreshToken }

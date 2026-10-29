@@ -224,6 +224,25 @@ const PB=(function(){
     return api_;
   }
 
+  /* ---------- tarefas (coleção rhcmrv_tarefas; as regras do servidor mostram só as compartilhadas e as do próprio dono) ---------- */
+  const TAREFAS='/api/collections/rhcmrv_tarefas/records';
+  const userId=()=>{try{const b=token.split('.')[1].replace(/-/g,'+').replace(/_/g,'/');return JSON.parse(decodeURIComponent(escape(atob(b+'='.repeat((4-b.length%4)%4))))).id||'';}catch(e){return '';}};
+  async function todas(filtro){
+    let page=1,out=[];
+    for(;;){
+      const r=await api('GET',TAREFAS+'?perPage=200&page='+page+'&sort=-criada_em'+(filtro?'&filter='+encodeURIComponent(filtro):''));
+      out=out.concat(r.items||[]);
+      if(!r.totalPages||page>=r.totalPages) return out;
+      page++;
+    }
+  }
+  const tarefas={
+    list:todas,
+    create:d=>api('POST',TAREFAS,Object.assign({dono:userId()},d)),
+    update:(id,d)=>api('PATCH',TAREFAS+'/'+id,d),
+    remove:id=>api('DELETE',TAREFAS+'/'+id)
+  };
+
   /* ---------- API do Centi (pelo servidor do sistema, com o acesso da própria pessoa) ---------- */
   async function centiCall(path,body){
     if(!cs) throw new Error('Sem sessão do Centi. Entre novamente.');
@@ -304,20 +323,21 @@ const PB=(function(){
           catch(e){if(e.status!==401&&e.status!==403&&e.status!==404) throw e; clearAuth();}
         }
         if(!ok&&!(await login())){markLocal();return null;}
-        return {doc,collection,centi};
+        return {doc,collection,centi,tarefas};
       }catch(e){
         if(await offlineDialog()) continue;
         markLocal();return null;
       }
     }
   }
-  return {connect,centi,logout(){clearAuth();location.reload();},get email(){return email;},get nome(){return centi.nome;},url:URL_BASE};
+  return {connect,centi,logout(){clearAuth();location.reload();},get email(){return email;},get nome(){return centi.nome;},get userId(){return userId();},url:URL_BASE};
 })();
 
 const FLOW_URL="fluxogramas/";
 const PESSOAL_URL="pessoal/";
 const PONTO_URL="ponto/";
 const FERIAS_URL="ferias/";
+const TAREFAS_URL="tarefas/";
 const LS='rhcrv-painel-v1';
 const ICONS={
   org:'<rect x="9" y="3" width="6" height="5" rx="1"/><rect x="3" y="16" width="6" height="5" rx="1"/><rect x="15" y="16" width="6" height="5" rx="1"/><path d="M12 8v4M6 16v-4h12v4"/>',
@@ -335,6 +355,7 @@ const ICONS={
   shield:'<path d="M12 3l8 3v6c0 5-3.5 8-8 9-4.5-1-8-4-8-9V6l8-3z"/><path d="M9 12l2 2 4-4"/>',
   mail:'<rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3 7l9 6 9-6"/>',
   pin:'<path d="M12 21s-7-6.2-7-11a7 7 0 0114 0c0 4.8-7 11-7 11z"/><circle cx="12" cy="10" r="2.5"/>',
+  tasks:'<rect x="3" y="4" width="18" height="16" rx="2"/><path d="M7.5 9l1.5 1.5L11.5 8M7.5 15l1.5 1.5L11.5 14M14 9.5h4M14 15.5h4"/>',
   grid:'<rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/>',
   gear:'<circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 00.3 1.8l.1.1a2 2 0 11-2.8 2.8l-.1-.1a1.7 1.7 0 00-1.8-.3 1.7 1.7 0 00-1 1.5V21a2 2 0 11-4 0v-.1a1.7 1.7 0 00-1.1-1.5 1.7 1.7 0 00-1.8.3l-.1.1a2 2 0 11-2.8-2.8l.1-.1a1.7 1.7 0 00.3-1.8 1.7 1.7 0 00-1.5-1H3a2 2 0 110-4h.1a1.7 1.7 0 001.5-1.1 1.7 1.7 0 00-.3-1.8l-.1-.1a2 2 0 112.8-2.8l.1.1a1.7 1.7 0 001.8.3H9a1.7 1.7 0 001-1.5V3a2 2 0 114 0v.1a1.7 1.7 0 001 1.5 1.7 1.7 0 001.8-.3l.1-.1a2 2 0 112.8 2.8l-.1.1a1.7 1.7 0 00-.3 1.8V9a1.7 1.7 0 001.5 1H21a2 2 0 110 4h-.1a1.7 1.7 0 00-1.5 1z"/>'
 };
@@ -352,11 +373,12 @@ const svg=(k,n)=>`<svg width="${n||28}" height="${n||28}" viewBox="0 0 24 24" fi
 const uid=()=>'t'+Math.random().toString(36).slice(2,9);
 
 function defaults(){
-  return {v:4,tiles:[
+  return {v:5,tiles:[
     {id:'t-fluxos',nome:'Fluxogramas e Manual do RH',desc:'Organograma, fluxogramas editáveis, competências, matriz de responsabilidades, manual de procedimentos e indicadores.',icone:'flow',hue:152,status:'ok',url:FLOW_URL},
     {id:'t-pessoal',nome:'Hierarquia de Pessoal',desc:'Quadro de pessoal organizado por hierarquia: setor administrativo e gabinetes dos vereadores.',icone:'org',hue:262,status:'ok',url:PESSOAL_URL},
     {id:'t-ponto',nome:'Ponto – Servidores Externos',desc:'Registro de ponto pelo celular com localização, assinatura digital e foto, e acompanhamento em tempo real pelo RH (simulação).',icone:'pin',hue:200,status:'ok',url:PONTO_URL},
     {id:'t-ferias',nome:'Férias',desc:'Quem está de férias, quem tem direito a gozar e quem está com férias vencidas, pelo período aquisitivo (dados do Centi).',icone:'calendar',hue:28,status:'ok',url:FERIAS_URL},
+    {id:'t-tarefas',nome:'Tarefas do RH',desc:'Checklist em quadro (a fazer, em andamento, concluído) com tarefas da equipe ou privadas. As concluídas saem do quadro na virada do mês.',icone:'tasks',hue:212,status:'ok',url:TAREFAS_URL},
     {id:'t-freq',nome:'Frequência',desc:'Registro e conferência de frequência.',icone:'clock',hue:48,status:'plan',url:''},
   ]};
 }
@@ -465,6 +487,10 @@ function migrar(){
     if(t) Object.assign(t,{nome:d.nome,desc:d.desc,status:'ok',url:FERIAS_URL});
     else{const i=st.tiles.findIndex(x=>x.id==='t-ponto');st.tiles.splice(i>=0?i+1:st.tiles.length,0,d);}
     st.v=4;persist();
+  }
+  if(st.v<5){ // Tarefas do RH entra depois de Férias
+    if(!st.tiles.some(x=>x.id==='t-tarefas')){const d=defaults().tiles.find(t=>t.id==='t-tarefas');const i=st.tiles.findIndex(x=>x.id==='t-ferias');st.tiles.splice(i>=0?i+1:st.tiles.length,0,d);}
+    st.v=5;persist();
   }
 }
 (function init(){

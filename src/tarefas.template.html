@@ -1,0 +1,331 @@
+<title>Tarefas do RH</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Libre+Franklin:wght@500;600;700&family=Public+Sans:wght@400;500;600&display=swap">
+<style>
+:root{
+  --bg:#eef4f0;--surface:#fff;--fg:#12281d;--muted:#4f665a;--line:#d1ddd6;--accent:#0a6b3d;--accent-fg:#fff;--soft:#e3efe8;
+  --hero-a:#063d27;--hero-b:#0b7a49;--gold:#d4aa4a;--shadow:0 1px 2px rgba(6,61,39,.09),0 6px 20px rgba(6,61,39,.07);
+  --warn:#8a5a00;--warn-bg:#fdf0d5;--danger:#b3261e;--danger-bg:#fbe3e0;--blue:#2f6fb5;--blue-bg:#e2edf9;--ok:#0a6b3d;--ok-bg:#dff3e7;--violet:#6f4aa8;--violet-bg:#eee6f8;
+  --col:#e6eee9;
+  --f-display:"Libre Franklin",system-ui,sans-serif;--f-body:"Public Sans",system-ui,sans-serif;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --bg:#08130e;--surface:#0f1e17;--fg:#e3f1ea;--muted:#90b0a0;--line:#234034;--accent:#52c98a;--accent-fg:#04210f;--soft:#15291f;
+  --hero-a:#04150d;--hero-b:#0b4d31;--gold:#d8b45e;--shadow:0 1px 2px rgba(0,0,0,.4),0 6px 20px rgba(0,0,0,.3);
+  --warn:#f0c26a;--warn-bg:#3a2d10;--danger:#ff8a80;--danger-bg:#3d1a17;--blue:#7fb2ee;--blue-bg:#14273d;--ok:#52c98a;--ok-bg:#12382a;--violet:#b99be8;--violet-bg:#2a1f3d;--col:#0c1913;color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#08130e;--surface:#0f1e17;--fg:#e3f1ea;--muted:#90b0a0;--line:#234034;--accent:#52c98a;--accent-fg:#04210f;--soft:#15291f;
+  --hero-a:#04150d;--hero-b:#0b4d31;--gold:#d8b45e;--shadow:0 1px 2px rgba(0,0,0,.4),0 6px 20px rgba(0,0,0,.3);
+  --warn:#f0c26a;--warn-bg:#3a2d10;--danger:#ff8a80;--danger-bg:#3d1a17;--blue:#7fb2ee;--blue-bg:#14273d;--ok:#52c98a;--ok-bg:#12382a;--violet:#b99be8;--violet-bg:#2a1f3d;--col:#0c1913;color-scheme:dark}
+[hidden]{display:none!important}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--fg);font-family:var(--f-body);font-size:15px;line-height:1.5}
+h1,h2,h3,h4{font-family:var(--f-display);margin:0;text-wrap:balance}
+button,input,select,textarea{font:inherit;color:inherit}
+.wrap{padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+.inner{max-width:1280px;margin:0 auto}
+.hero{background:linear-gradient(135deg,var(--hero-a),var(--hero-b));color:#fff;padding-block:22px 54px}
+.top{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:22px}
+.home{color:#fff;text-decoration:none;font-weight:600;font-size:13.5px;display:inline-flex;align-items:center;gap:8px;padding:8px 12px;border-radius:10px;background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.28)}
+.home:hover,.themebtn:hover{background:rgba(255,255,255,.22)}
+.themebtn{margin-left:auto;display:inline-flex;align-items:center;gap:8px;border:1px solid rgba(255,255,255,.35);background:rgba(255,255,255,.12);color:#fff;border-radius:10px;padding:8px 12px;font-weight:600;font-size:13.5px;cursor:pointer}
+.goldrule{width:56px;height:4px;background:var(--gold);border-radius:2px;margin:0 0 14px}
+.hero h1{font-size:clamp(1.6rem,4.4vw,2.4rem);line-height:1.12}
+.hero p{margin:8px 0 0;opacity:.85}
+main{padding-block:0 40px}
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,150px),1fr));gap:12px;margin-top:-30px}
+.stat{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:12px 16px;box-shadow:var(--shadow)}
+.stat b{font-family:var(--f-display);font-size:1.6rem;display:block;line-height:1.1;font-variant-numeric:tabular-nums}
+.stat span{color:var(--muted);font-size:13px}
+.stat.late b{color:var(--danger)}.stat.priv b{color:var(--violet)}.stat.done b{color:var(--ok)}
+.bar{display:flex;flex-wrap:wrap;gap:10px;align-items:center;margin-top:18px}
+.search{flex:1 1 220px;display:flex;align-items:center;gap:10px;background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:0 14px;box-shadow:var(--shadow);min-width:0}
+.search input{border:0;background:transparent;outline:0;padding:11px 0;flex:1;min-width:0}
+.search:focus-within{border-color:var(--accent)}
+.seg{display:inline-flex;background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:3px;box-shadow:var(--shadow)}
+.seg button{border:0;background:transparent;padding:7px 12px;border-radius:8px;font-weight:600;font-size:13.5px;cursor:pointer;color:var(--muted)}
+.seg button.on{background:var(--accent);color:var(--accent-fg)}
+.btn{border:1px solid var(--line);background:var(--surface);border-radius:10px;padding:10px 14px;cursor:pointer;font-weight:600;font-size:14px;display:inline-flex;align-items:center;gap:8px;box-shadow:var(--shadow)}
+.btn:hover{border-color:var(--accent)}.btn.primary{background:var(--accent);color:var(--accent-fg);border-color:var(--accent)}.btn.danger{color:var(--danger)}.btn.sm{padding:4px 9px;font-size:12.5px;box-shadow:none}.btn:disabled{opacity:.6;cursor:wait}
+.chk{display:inline-flex;align-items:center;gap:8px;font-size:13.5px;color:var(--muted);cursor:pointer}
+.board{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px;margin-top:16px;align-items:start}
+@media (max-width:900px){.board{grid-template-columns:minmax(0,1fr)}}
+.col{background:var(--col);border:1px solid var(--line);border-radius:16px;padding:12px;min-height:160px}
+.col.over{outline:2px dashed var(--accent);outline-offset:2px;background:var(--soft)}
+.col>h2{font-size:.98rem;display:flex;align-items:center;gap:8px;margin:2px 4px 10px}
+.col>h2 i{width:10px;height:10px;border-radius:50%;display:inline-block;background:var(--cc)}
+.col>h2 span.n{margin-left:auto;background:var(--surface);border:1px solid var(--line);border-radius:99px;padding:0 9px;font-size:12.5px;font-weight:700;color:var(--muted)}
+.col>h2 .add{border:0;background:transparent;color:var(--accent);font-weight:700;font-size:20px;line-height:1;cursor:pointer;padding:0 4px}
+.card{background:var(--surface);border:1px solid var(--line);border-left:4px solid var(--pc,var(--line));border-radius:12px;padding:10px 12px;box-shadow:var(--shadow);margin-bottom:9px}
+.card.dragging{opacity:.4}
+.card h3{font-size:.98rem;line-height:1.3;overflow-wrap:anywhere}
+.card.done h3{text-decoration:line-through;color:var(--muted)}
+.card p{margin:4px 0 0;color:var(--muted);font-size:13.5px;overflow-wrap:anywhere;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden;white-space:pre-line}
+.meta{display:flex;flex-wrap:wrap;gap:5px;margin-top:8px;align-items:center}
+.tag{display:inline-flex;align-items:center;gap:4px;font-size:11.5px;font-weight:700;padding:2px 8px;border-radius:99px;background:var(--soft);color:var(--muted);white-space:nowrap}
+.tag.eq{background:var(--blue-bg);color:var(--blue)}.tag.pv{background:var(--violet-bg);color:var(--violet)}.tag.late{background:var(--danger-bg);color:var(--danger)}.tag.ok{background:var(--ok-bg);color:var(--ok)}
+.tag.p-urgente{background:var(--danger-bg);color:var(--danger)}.tag.p-alta{background:var(--warn-bg);color:var(--warn)}
+.who{font-size:12px;color:var(--muted)}
+.acts{display:flex;gap:4px;margin-top:8px;flex-wrap:wrap;align-items:center}.acts .sp{flex:1}
+.vazio{color:var(--muted);font-size:13.5px;text-align:center;padding:16px 6px}
+.arq{margin-top:18px}
+.arq h2{font-size:1rem;margin-bottom:8px}.arq .mes{font-weight:700;color:var(--muted);margin:10px 2px 4px;font-size:13px}
+.banner{margin-top:14px;border-radius:12px;padding:12px 16px;font-size:13.5px;background:var(--warn-bg);color:var(--warn)}
+.banner.err{background:var(--danger-bg);color:var(--danger)}
+.note{margin-top:16px;font-size:12.8px;color:var(--muted)}
+dialog{border:1px solid var(--line);border-radius:16px;padding:0;background:var(--surface);color:var(--fg);width:min(540px,96vw);box-shadow:0 20px 60px rgba(0,0,0,.4)}
+dialog::backdrop{background:rgba(0,0,0,.5)}
+dialog form{padding:20px;display:flex;flex-direction:column;gap:12px;max-height:90vh;overflow:auto}
+dialog h3{font-size:1.15rem}dialog p{margin:0;font-size:14px}
+dialog label.f{display:flex;flex-direction:column;gap:4px;font-size:13px;color:var(--muted);font-weight:600}
+dialog input[type=text],dialog input[type=date],dialog select,dialog textarea{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:10px 12px;color:var(--fg);font-weight:400;width:100%}
+dialog textarea{min-height:84px;resize:vertical}
+dialog .row{display:flex;gap:8px;justify-content:flex-end;flex-wrap:wrap}
+dialog .two{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+fieldset.vis{border:1px solid var(--line);border-radius:12px;padding:10px 12px;margin:0}
+fieldset.vis legend{font-weight:700;font-size:13px;padding:0 6px;color:var(--fg)}
+.opt{display:flex;gap:10px;align-items:flex-start;padding:9px 10px;border:1px solid var(--line);border-radius:10px;margin:6px 0;cursor:pointer}
+.opt:has(input:checked){border-color:var(--accent);background:var(--soft)}
+.opt input{margin-top:4px}.opt b{display:block;font-size:14px}.opt span{font-size:12.8px;color:var(--muted)}
+.opt.lock{opacity:.6;cursor:not-allowed}
+.hint{font-size:12.8px;color:var(--muted)}
+#load{position:fixed;inset:0;z-index:9000;display:grid;place-items:center;padding:24px;background:radial-gradient(1200px 700px at 50% 30%,var(--hero-b),var(--hero-a)) var(--hero-a);color:#fff;text-align:center}
+#load .ld-box{display:flex;flex-direction:column;align-items:center;gap:10px;max-width:420px}
+#load .ld-spin{width:56px;height:56px;border-radius:50%;border:5px solid rgba(255,255,255,.22);border-top-color:var(--gold);animation:ld-rot .9s linear infinite;margin-bottom:6px}
+#load b{font-family:var(--f-display);font-size:1.35rem;line-height:1.2}
+#load span{opacity:.88;font-size:14.5px;min-height:22px}
+#load .ld-bar{width:min(260px,70vw);height:5px;border-radius:99px;background:rgba(255,255,255,.2);overflow:hidden;margin-top:8px}
+#load .ld-bar i{display:block;height:100%;width:40%;border-radius:99px;background:var(--gold);animation:ld-bar 1.4s ease-in-out infinite}
+@keyframes ld-rot{to{transform:rotate(360deg)}}@keyframes ld-bar{0%{margin-left:-40%}100%{margin-left:100%}}
+@media (prefers-reduced-motion:reduce){#load .ld-spin,#load .ld-bar i{animation-duration:3s}}
+body.carregando{overflow:hidden}
+#toast{position:fixed;left:50%;transform:translateX(-50%);bottom:max(18px,env(safe-area-inset-bottom,0px));background:var(--fg);color:var(--bg);padding:10px 16px;border-radius:10px;font-size:14px;z-index:60;max-width:90vw}
+@media (pointer:coarse){input,select,textarea{font-size:16px}.btn{min-height:42px}.btn.sm{min-height:38px}}
+</style>
+
+<header class="hero wrap"><div class="inner">
+  <div class="top"><a class="home" href="/*HOME_URL*/" target="_top"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 11l9-8 9 8M5 10v10h5v-6h4v6h5V10"/></svg>Sistema Interno do RH</a>
+  <button class="themebtn" id="themeBtn" type="button"></button></div>
+  <div class="goldrule"></div>
+  <h1>Tarefas do RH</h1>
+  <p>Checklist em quadro · as concluídas saem do quadro na virada do mês</p>
+</div></header>
+
+<main class="wrap"><div class="inner">
+  <div class="stats" id="stats"></div>
+  <div class="bar">
+    <label class="search"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></svg><input id="q" type="search" placeholder="Buscar tarefa" aria-label="Buscar" autocomplete="off"></label>
+    <div class="seg" id="seg" role="group" aria-label="Mostrar"><button type="button" data-v="" class="on">Todas</button><button type="button" data-v="eq">Da equipe</button><button type="button" data-v="pv">Só minhas (privadas)</button></div>
+    <button class="btn primary" id="novaBtn" type="button">+ Nova tarefa</button>
+    <button class="btn" id="refBtn" type="button">Atualizar</button>
+    <label class="chk"><input type="checkbox" id="arqChk"> Mostrar concluídas de meses anteriores</label>
+  </div>
+  <div id="notice"></div>
+  <div class="board" id="board"></div>
+  <div class="arq" id="arq" hidden></div>
+  <p class="note" id="foot"></p>
+</div></main>
+<dialog id="dlg"></dialog>
+<div id="load" role="status" aria-live="polite"><div class="ld-box"><div class="ld-spin" aria-hidden="true"></div><b>Carregando tarefas…</b><span id="ldS">Abrindo o sistema</span><div class="ld-bar" aria-hidden="true"><i></i></div></div></div>
+<div id="toast" hidden></div>
+
+<script>
+/*PB_JS*/
+const HOME_URL="/*HOME_URL*/";
+const TEMA_KEY='rhcrv-tema';
+const $=s=>document.querySelector(s);
+const esc=s=>String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const norm=s=>String(s||'').normalize('NFD').replace(/[̀-ͯ]/g,'').toLowerCase().trim();
+let dbh=null,lista=[],arquivo=[],vis='',erro='';
+
+const COLS=[{k:'fazer',nome:'A fazer',cor:'var(--blue)'},{k:'andamento',nome:'Em andamento',cor:'var(--gold)'},{k:'concluida',nome:'Concluído neste mês',cor:'var(--ok)'}];
+const PRI={urgente:['Urgente',4,'var(--danger)'],alta:['Alta',3,'var(--gold)'],normal:['Normal',2,'var(--line)'],baixa:['Baixa',1,'var(--line)']};
+
+/* ---------- tema ---------- */
+const ICO2={sun:'<circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/>',moon:'<path d="M21 12.8A9 9 0 1111.2 3a7 7 0 009.8 9.8z"/>'};
+function isDark(){const m=/rgba?\((\d+),\s*(\d+),\s*(\d+)/.exec(getComputedStyle(document.body).backgroundColor);return m?(0.2126*m[1]+0.7152*m[2]+0.0722*m[3])/255<0.4:false;}
+function themeBtn(){const d=isDark();$('#themeBtn').innerHTML=`<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${ICO2[d?'sun':'moon']}</svg>${d?'Modo claro':'Modo escuro'}`;}
+$('#themeBtn').addEventListener('click',()=>{const n=isDark()?'light':'dark';document.documentElement.setAttribute('data-theme',n);try{localStorage.setItem(TEMA_KEY,n);}catch(e){}themeBtn();});
+try{const s=localStorage.getItem(TEMA_KEY);document.documentElement.setAttribute('data-theme',s==='dark'?'dark':'light');}catch(e){document.documentElement.setAttribute('data-theme','light');}
+function toast(m){const t=$('#toast');t.textContent=m;t.hidden=false;clearTimeout(toast.t);toast.t=setTimeout(()=>t.hidden=true,4500);}
+function carga(on,msg){const l=$('#load');l.hidden=!on;document.body.classList.toggle('carregando',!!on);if(msg) $('#ldS').textContent=msg;}
+
+/* ---------- datas ---------- */
+const pad=n=>String(n).padStart(2,'0');
+const hojeIso=()=>{const d=new Date();return d.getFullYear()+'-'+pad(d.getMonth()+1)+'-'+pad(d.getDate());};
+const inicioMes=()=>hojeIso().slice(0,8)+'01';   // concluída antes disso já "virou o mês" e sai do quadro
+const dataBr=iso=>{const m=/^(\d{4})-(\d{2})-(\d{2})/.exec(iso||'');return m?m[3]+'/'+m[2]+'/'+m[1]:'';};
+const mesNome=iso=>{const m=/^(\d{4})-(\d{2})/.exec(iso||'');if(!m) return '';const t=new Date(+m[1],+m[2]-1,1).toLocaleDateString('pt-BR',{month:'long',year:'numeric'});return t.charAt(0).toUpperCase()+t.slice(1);};
+const euId=()=>PB.userId;
+const minha=t=>t.dono===euId();
+
+/* ---------- dados ---------- */
+async function carregar(silencioso){
+  const b=$('#refBtn');b.disabled=true;
+  if(!silencioso) carga(true,'Conectando ao servidor…');
+  try{
+    if(!dbh) dbh=await PB.connect();
+    if(!dbh||!dbh.tarefas){erro='sem-servidor';lista=[];return;}
+    if(!silencioso) carga(true,'Buscando as tarefas…');
+    lista=await dbh.tarefas.list('coluna != "concluida" || concluido_em >= "'+inicioMes()+'"');
+    erro='';
+    if($('#arqChk').checked) arquivo=await dbh.tarefas.list('coluna = "concluida" && concluido_em < "'+inicioMes()+'"');
+  }catch(e){
+    if(e.status===404) erro='sem-colecao'; else{erro='falha';if(!silencioso) toast('Não foi possível carregar: '+(e.message||e));}
+  }finally{b.disabled=false;carga(false);render();}
+}
+
+/* ---------- exibição ---------- */
+const visiveis=()=>{
+  const q=norm($('#q').value),im=inicioMes();
+  return lista.filter(t=>!(t.coluna==='concluida'&&(t.concluido_em||'')<im)&&(!vis||(vis==='eq'?t.compartilhada:!t.compartilhada))&&(!q||norm(t.titulo+' '+t.descricao+' '+t.autor).includes(q)));
+};
+const peso=t=>(PRI[t.prioridade]||PRI.normal)[1];
+function ordenar(a,col){
+  return a.slice().sort((x,y)=>col==='concluida'?(y.concluido_em||'').localeCompare(x.concluido_em||''):
+    peso(y)-peso(x)||(x.prazo||'9999').localeCompare(y.prazo||'9999')||(x.criada_em||'').localeCompare(y.criada_em||''));
+}
+function cartao(t){
+  const col=t.coluna,i=COLS.findIndex(c=>c.k===col),hoje=hojeIso();
+  const atras=t.prazo&&t.prazo<hoje&&col!=='concluida';
+  const pri=PRI[t.prioridade]||PRI.normal;
+  const pode=t.compartilhada||minha(t);
+  return `<article class="card${col==='concluida'?' done':''}" style="--pc:${pri[2]}" draggable="${pode}" data-id="${esc(t.id)}">
+    <h3>${esc(t.titulo)}</h3>${t.descricao?`<p>${esc(t.descricao)}</p>`:''}
+    <div class="meta">
+      ${t.compartilhada?'<span class="tag eq" title="Visível para toda a equipe do RH">👥 Equipe</span>':'<span class="tag pv" title="Só você vê esta tarefa">🔒 Privada</span>'}
+      ${t.prioridade&&t.prioridade!=='normal'?`<span class="tag p-${esc(t.prioridade)}">${esc(pri[0])}</span>`:''}
+      ${t.prazo?`<span class="tag${atras?' late':''}">${atras?'Atrasada · ':'Prazo '}${dataBr(t.prazo)}</span>`:''}
+      ${col==='concluida'&&t.concluido_em?`<span class="tag ok">Concluída em ${dataBr(t.concluido_em)}</span>`:''}
+      ${t.compartilhada&&t.autor?`<span class="who">por ${esc(minha(t)?'você':t.autor)}</span>`:''}
+    </div>
+    <div class="acts">
+      <button class="btn sm" type="button" data-mv="-1" ${i<=0?'disabled':''} title="Mover para ${i>0?esc(COLS[i-1].nome):''}" aria-label="Mover para trás">‹</button>
+      <button class="btn sm" type="button" data-mv="1" ${i>=COLS.length-1?'disabled':''} title="Mover para ${i<COLS.length-1?esc(COLS[i+1].nome):''}" aria-label="Mover para frente">›</button>
+      <span class="sp"></span>
+      <button class="btn sm" type="button" data-ed>Editar</button>
+      <button class="btn sm danger" type="button" data-rm>Excluir</button>
+    </div></article>`;
+}
+function render(){
+  const board=$('#board'),stats=$('#stats'),n=$('#notice');
+  if(erro==='sem-servidor'||erro==='sem-colecao'||erro==='falha'){
+    stats.innerHTML='';$('#arq').hidden=true;$('#foot').textContent='';$('#novaBtn').disabled=true;
+    const msg=erro==='sem-servidor'?'<b>Sem conexão com o servidor.</b> As tarefas ficam no servidor (e não neste navegador) para que as compartilhadas sejam da equipe e as privadas fiquem protegidas. Verifique a internet e tente de novo.'
+      :erro==='sem-colecao'?'<b>O quadro de tarefas ainda não foi criado no servidor.</b> Ele é criado automaticamente no próximo login: use <b>Sair e entrar de novo</b>. Se continuar assim, o administrador deve rodar <code>pocketbase/setup.py</code>.'
+      :'<b>Não foi possível carregar as tarefas.</b> Tente atualizar.';
+    n.innerHTML=`<div class="banner err">${msg}</div>`;board.innerHTML='';
+    if(erro==='sem-colecao'){const b=document.createElement('button');b.className='btn';b.type='button';b.textContent='Sair e entrar de novo';b.style.marginTop='10px';b.onclick=()=>PB.logout();n.firstChild.appendChild(document.createElement('br'));n.firstChild.appendChild(b);}
+    return;
+  }
+  $('#novaBtn').disabled=false;n.innerHTML='';
+  const v=visiveis(),hoje=hojeIso();
+  const abertas=v.filter(t=>t.coluna!=='concluida'),atras=abertas.filter(t=>t.prazo&&t.prazo<hoje).length;
+  stats.innerHTML=`<div class="stat"><b>${abertas.length}</b><span>Em aberto</span></div><div class="stat late"><b>${atras}</b><span>Atrasadas</span></div><div class="stat done"><b>${v.length-abertas.length}</b><span>Concluídas no mês</span></div><div class="stat priv"><b>${lista.filter(t=>!t.compartilhada&&t.coluna!=='concluida').length}</b><span>Minhas privadas abertas</span></div>`;
+  board.innerHTML=COLS.map(c=>{
+    const ts=ordenar(v.filter(t=>t.coluna===c.k),c.k);
+    return `<section class="col" data-col="${c.k}" style="--cc:${c.cor}"><h2><i></i>${esc(c.nome)}<span class="n">${ts.length}</span><button class="add" type="button" data-add="${c.k}" title="Nova tarefa em ${esc(c.nome)}" aria-label="Nova tarefa em ${esc(c.nome)}">+</button></h2>${ts.map(cartao).join('')||'<div class="vazio">Nenhuma tarefa.</div>'}</section>`;
+  }).join('');
+  const arq=$('#arq');arq.hidden=!$('#arqChk').checked;
+  if(!arq.hidden){
+    const porMes={};arquivo.forEach(t=>{const m=(t.concluido_em||'').slice(0,7);(porMes[m]=porMes[m]||[]).push(t);});
+    const meses=Object.keys(porMes).sort().reverse();
+    arq.innerHTML='<h2>Concluídas em meses anteriores</h2>'+(meses.map(m=>`<div class="mes">${esc(mesNome(m+'-01'))} · ${porMes[m].length}</div>${ordenar(porMes[m],'concluida').map(t=>`<article class="card done" style="--pc:var(--line)"><h3>${esc(t.titulo)}</h3><div class="meta">${t.compartilhada?'<span class="tag eq">👥 Equipe</span>':'<span class="tag pv">🔒 Privada</span>'}<span class="tag ok">Concluída em ${dataBr(t.concluido_em)}</span></div></article>`).join('')}`).join('')||'<div class="vazio">Nenhuma tarefa concluída em meses anteriores.</div>');
+  }
+  $('#foot').textContent='👥 Equipe: todos os usuários do RH veem, movem e editam. 🔒 Privada: só quem criou vê (a regra é aplicada no servidor). As concluídas somem do quadro quando o mês vira; ficam guardadas e podem ser vistas em "Mostrar concluídas de meses anteriores".';
+}
+
+/* ---------- ações ---------- */
+const porId=id=>lista.find(t=>t.id===id);
+async function salvar(id,dados,msg){
+  const t=porId(id),antes=Object.assign({},t);
+  Object.assign(t,dados);render();
+  try{const r=await dbh.tarefas.update(id,dados);Object.assign(t,r);render();if(msg) toast(msg);}
+  catch(e){Object.assign(t,antes);render();toast(e.status===404?'Esta tarefa não existe mais. Atualize o quadro.':e.status===403||e.status===400?'Sem permissão para alterar esta tarefa.':'Não foi possível salvar: '+(e.message||e));}
+}
+function mover(id,col){
+  const t=porId(id);if(!t||t.coluna===col) return;
+  const d={coluna:col,concluido_em:col==='concluida'?hojeIso():''};
+  salvar(id,d,col==='concluida'?'Tarefa concluída. Ela sai do quadro quando o mês virar.':'');
+}
+function fechar(){const d=$('#dlg');if(d.open) d.close();}
+function abrirDlg(html){
+  const d=$('#dlg');d.innerHTML='<form method="dialog" autocomplete="off">'+html+'</form>';
+  d.querySelectorAll('[data-x]').forEach(b=>b.addEventListener('click',fechar));
+  d.showModal();return d;
+}
+function dlgTarefa(id,col){
+  const t=id?porId(id):null,novo=!t,dono=novo||minha(t);
+  const cur=novo?'':(t.compartilhada?'eq':'pv');
+  const r=(v,tit,desc)=>`<label class="opt${dono?'':' lock'}"><input type="radio" name="vis" value="${v}" required ${cur===v?'checked':''} ${dono?'':'disabled'}><div><b>${tit}</b><span>${desc}</span></div></label>`;
+  const d=abrirDlg(`<h3>${novo?'Nova tarefa':'Editar tarefa'}</h3>
+    <label class="f">Título<input type="text" name="titulo" required maxlength="200" value="${esc(t?t.titulo:'')}"></label>
+    <label class="f">Detalhes (opcional)<textarea name="descricao" maxlength="4000">${esc(t?t.descricao:'')}</textarea></label>
+    <div class="two"><label class="f">Prioridade<select name="prioridade">${Object.keys(PRI).map(k=>`<option value="${k}"${(t?t.prioridade:'normal')===k?' selected':''}>${PRI[k][0]}</option>`).join('')}</select></label>
+    <label class="f">Prazo (opcional)<input type="date" name="prazo" value="${esc(t?t.prazo:'')}"></label></div>
+    <label class="f">Coluna<select name="coluna">${COLS.map(c=>`<option value="${c.k}"${(t?t.coluna:col||'fazer')===c.k?' selected':''}>${esc(c.nome)}</option>`).join('')}</select></label>
+    <fieldset class="vis"><legend>Quem vai ver esta tarefa? *</legend>
+      ${r('eq','👥 Toda a equipe do RH','Todos os usuários poderão ver, mover, editar e excluir.')}
+      ${r('pv','🔒 Somente eu (privada)','Só você vê. Ninguém mais, nem na lista.')}
+      <div class="hint" data-hint>${novo?'Escolha uma das opções para continuar.':dono?'Você pode mudar a visibilidade.':'Só quem criou pode mudar a visibilidade.'}</div></fieldset>
+    <div class="row"><button type="button" class="btn" data-x>Cancelar</button><button class="btn primary" type="submit">${novo?'Criar tarefa':'Salvar'}</button></div>`);
+  const f=d.querySelector('form'),hint=f.querySelector('[data-hint]');
+  f.addEventListener('change',e=>{if(e.target.name==='vis') hint.textContent=e.target.value==='eq'?'Confirmado: esta tarefa será visível para toda a equipe do RH.':'Confirmado: esta tarefa será privada, só você vai vê-la.';});
+  f.addEventListener('submit',async ev=>{
+    ev.preventDefault();
+    const g=n=>f.elements[n].value,visSel=(f.querySelector('input[name=vis]:checked')||{}).value;
+    if(!visSel&&dono){hint.textContent='Escolha quem vai ver esta tarefa.';return;}
+    const dados={titulo:g('titulo').trim(),descricao:g('descricao').trim(),prioridade:g('prioridade'),prazo:g('prazo'),coluna:g('coluna')};
+    if(!dados.titulo){return;}
+    if(dono) dados.compartilhada=visSel==='eq';
+    fechar();
+    if(novo){
+      dados.autor=PB.nome||PB.email||'';dados.criada_em=new Date().toISOString();dados.concluido_em=dados.coluna==='concluida'?hojeIso():'';
+      try{const c=await dbh.tarefas.create(dados);lista.unshift(c);render();toast(dados.compartilhada?'Tarefa criada para toda a equipe.':'Tarefa privada criada, só você a vê.');}
+      catch(e){toast('Não foi possível criar a tarefa: '+(e.message||e));}
+    }else{
+      if(dados.coluna!==t.coluna) dados.concluido_em=dados.coluna==='concluida'?hojeIso():'';
+      salvar(id,dados,'Tarefa atualizada.');
+    }
+  });
+}
+function dlgExcluir(id){
+  const t=porId(id);if(!t) return;
+  const d=abrirDlg(`<h3>Excluir tarefa?</h3><p><b>${esc(t.titulo)}</b></p><p>${t.compartilhada?'Esta tarefa é <b>da equipe</b>: será removida para todos.':'Esta tarefa é <b>privada</b>: será removida só para você.'} Não dá para desfazer.</p>
+    <div class="row"><button type="button" class="btn" data-x>Cancelar</button><button class="btn danger" type="submit">Excluir</button></div>`);
+  d.querySelector('form').addEventListener('submit',async ev=>{
+    ev.preventDefault();fechar();
+    try{await dbh.tarefas.remove(id);lista=lista.filter(x=>x.id!==id);render();toast('Tarefa excluída.');}
+    catch(e){toast('Não foi possível excluir: '+(e.message||e));}
+  });
+}
+
+/* ---------- eventos ---------- */
+$('#novaBtn').addEventListener('click',()=>dlgTarefa(null,'fazer'));
+$('#refBtn').addEventListener('click',()=>carregar(false));
+$('#q').addEventListener('input',render);
+$('#arqChk').addEventListener('change',()=>carregar(false));
+$('#seg').addEventListener('click',e=>{const b=e.target.closest('button');if(!b) return;vis=b.dataset.v;document.querySelectorAll('#seg button').forEach(x=>x.classList.toggle('on',x===b));render();});
+const bd=$('#board');
+bd.addEventListener('click',e=>{
+  const add=e.target.closest('[data-add]');if(add){dlgTarefa(null,add.dataset.add);return;}
+  const card=e.target.closest('.card');if(!card) return;const id=card.dataset.id;
+  const mv=e.target.closest('[data-mv]');
+  if(mv){const t=porId(id),i=COLS.findIndex(c=>c.k===t.coluna)+(+mv.dataset.mv);if(COLS[i]) mover(id,COLS[i].k);return;}
+  if(e.target.closest('[data-ed]')) dlgTarefa(id);
+  else if(e.target.closest('[data-rm]')) dlgExcluir(id);
+});
+bd.addEventListener('dragstart',e=>{const c=e.target.closest('.card');if(!c) return;e.dataTransfer.setData('text/plain',c.dataset.id);e.dataTransfer.effectAllowed='move';c.classList.add('dragging');});
+bd.addEventListener('dragend',()=>bd.querySelectorAll('.dragging,.over').forEach(x=>x.classList.remove('dragging','over')));
+bd.addEventListener('dragover',e=>{const c=e.target.closest('.col');if(!c) return;e.preventDefault();bd.querySelectorAll('.over').forEach(x=>{if(x!==c) x.classList.remove('over');});c.classList.add('over');});
+bd.addEventListener('drop',e=>{const c=e.target.closest('.col');if(!c) return;e.preventDefault();const id=e.dataTransfer.getData('text/plain');bd.querySelectorAll('.over,.dragging').forEach(x=>x.classList.remove('over','dragging'));if(id) mover(id,c.dataset.col);});
+try{matchMedia('(prefers-color-scheme: dark)').addEventListener('change',themeBtn);new MutationObserver(themeBtn).observe(document.documentElement,{attributes:true,attributeFilter:['data-theme']});}catch(e){}
+/* mantém o quadro em dia: colegas mexem nas tarefas da equipe, e a virada do mês tira as concluídas */
+setInterval(()=>{if(document.hidden||$('#dlg').open||!dbh) return;carregar(true);},45000);
+document.addEventListener('visibilitychange',()=>{if(!document.hidden&&dbh&&!$('#dlg').open) carregar(true);});
+
+(function init(){
+  themeBtn();render();carga(true,'Conectando ao servidor…');
+  carregar(false);
+})();
+</script>

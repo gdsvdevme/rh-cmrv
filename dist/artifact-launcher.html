@@ -242,6 +242,8 @@ const PB=(function(){
   const centi={
     get user(){return cs?cs.user:'';},
     get nome(){return cs?(cs.nome||cs.user):'';},
+    /* Cubo funcionário (FP051) do Centi na referência mes/ano -> {Data:[{MATRICULA,NOMEFUNC,CARGO,HIERARQUIA,...}],Total}; só ativos */
+    cubo(mes,ano){return centiCall('cubo-funcionario',{mes,ano});},
     search(entity,filters,start,depth){
       return centiCall('restauth/searchentity',{Depth:depth||50,Entity:entity,Start:start==null?1:start,
         Filters:(filters||[]).map(f=>Object.assign({List:false,TypeFilter:0,between:''},f))});

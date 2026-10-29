@@ -375,11 +375,14 @@ function periodos(p,gz,hoje){
   for(let i=0;prox!=null&&prox<=hoje&&i<80;i++){const ini=prox,fin=addMeses(ini,12)-DAY;L.push({ini,fin,gozos:[],saldos:[],centi:false});prox=fin+DAY;}
   L.forEach(per=>{
     per.gozos.sort((a,b)=>a.ini-b.ini);
+    const vis=new Set();   // o Centi às vezes guarda o mesmo gozo duas vezes: conta uma só
+    per.gozos=per.gozos.filter(g=>{const k=g.ini+'|'+g.fin;if(vis.has(k)){per.dup=true;return false;}vis.add(k);return true;});
     per.concluido=per.fin<hoje;
     per.limite=addMeses(per.fin+DAY,cfg.concessivo)-DAY;   // último dia para gozar sem vencer
     per.saldo=!per.concluido?0:per.centi?(per.saldos.length?per.saldos.sort((a,b)=>a.ini-b.ini)[per.saldos.length-1].saldo:0):cfg.dias;
     per.gozado=per.gozos.filter(g=>g.fin<=hoje).reduce((s,g)=>s+g.dias,0);
     per.programado=per.gozos.filter(g=>g.ini>hoje).reduce((s,g)=>s+g.dias,0);
+    per.abono=per.centi&&per.concluido?Math.max(0,cfg.dias-per.gozos.reduce((t,g)=>t+g.dias,0)-per.saldo):0;   // o cubo não traz o abono: é o que sobra do direito sem gozo e sem saldo
     per.status=!per.concluido?'aquis':per.saldo<=0?'gozada':hoje>per.limite?'venc':'dir';
   });
   return L.sort((a,b)=>b.ini-a.ini);
@@ -392,7 +395,7 @@ function analisar(p,gz,hoje){
   return Object.assign({},p,{
     per,agora,prox:futuras[0]||null,nprog:futuras.length,
     saldo:direito.reduce((s,x)=>s+x.saldo,0),saldoVenc:venc.reduce((s,x)=>s+x.saldo,0),nvenc:venc.length,
-    semDireito:!per.some(x=>x.concluido),semReg:!gz.length,
+    semDireito:!per.some(x=>x.concluido),semReg:!gz.length,dup:per.some(x=>x.dup),
     tags:{hoje:!!agora,prog:futuras.length>0,dir:direito.length>0,venc:venc.length>0,dia:direito.length===0&&per.some(x=>x.concluido),sem:!per.some(x=>x.concluido),semreg:!gz.length}
   });
 }
@@ -432,6 +435,7 @@ const tags=p=>{
   if(p.semDireito) t.push('<span class="tag sem">Sem direito ainda</span>');
   if(!p.semDireito&&!p.nvenc&&p.saldo<=0&&!p.agora&&!p.prox) t.push('<span class="tag dia">Em dia</span>');
   if(p.semReg&&!p.semDireito) t.push('<span class="tag sem" title="O Centi não tem nenhum período de férias lançado para esta pessoa; o direito foi calculado pela admissão">Sem registro</span>');
+  if(p.dup) t.push('<span class="tag sem" title="O Centi tem o mesmo gozo lançado duas vezes em um período; aqui ele é contado uma só vez">Revisar no Centi</span>');
   if(p.TIPOAFASTAMENTO) t.push('<span class="tag" title="Afastamento no Centi">'+esc(titulo(String(p.TIPOAFASTAMENTO).split('/')[0]))+'</span>');
   return t.join('');
 };
@@ -479,9 +483,10 @@ function dlgPessoa(i,todos){
   const hoje=hojeMs(),mostra=todos?p.per:p.per.slice(0,6);
   const rows=mostra.map(x=>{
     const st=STAT[x.status],cur=x.ini<=hoje&&hoje<=x.fin;
-    const gz=x.gozos.length?x.gozos.map(g=>`${fmtCurto(g.ini)} a ${fmtCurto(g.fin)}${g.fin<hoje?'':g.ini>hoje?' (programadas)':' (em gozo)'} · ${g.dias}d`).join('<br>'):'<small>'+(x.centi?'sem gozo lançado':x.concluido?'sem registro no Centi':'—')+'</small>';
+    const extra=(x.abono?`<small>Abono pecuniário*: ${x.abono}d</small>`:'')+(x.dup?'<small style="color:var(--warn)">Gozo repetido no Centi (contado uma vez)</small>':'');
+    const gz=(x.gozos.length?x.gozos.map(g=>`${fmtCurto(g.ini)} a ${fmtCurto(g.fin)}${g.fin<hoje?'':g.ini>hoje?' (programadas)':' (em gozo)'} · ${g.dias}d`).join('<br>'):'<small>'+(x.centi||!p.semReg?'sem gozo lançado':x.concluido?'sem registro no Centi':'—')+'</small>')+extra;
     const lim=x.concluido&&x.saldo>0?`<small>${x.status==='venc'?'venceu em ':'gozar até '}${fmt(x.limite)}</small>`:'';
-    return `<tr class="${cur?'cur':''}"><td>${fmt(x.ini)} a ${fmt(x.fin)}${x.centi?'':'<small>calculado pela admissão</small>'}</td><td><span class="tag ${st[1]}">${st[0]}</span>${lim}</td><td>${gz}</td><td class="num">${x.concluido?x.saldo+'d':'—'}</td></tr>`;
+    return `<tr class="${cur?'cur':''}"><td>${fmt(x.ini)} a ${fmt(x.fin)}${x.centi||!p.semReg?'':'<small>calculado pela admissão</small>'}</td><td><span class="tag ${st[1]}">${st[0]}</span>${lim}</td><td>${gz}</td><td class="num">${x.concluido?x.saldo+'d':'—'}</td></tr>`;
   }).join('');
   const L=[['Cargo',p.cargo],['Lotação',p.lot],['Matrícula',p.MATRICULA],['Admissão',fmt(p.adm)],['Afastamento',p.TIPOAFASTAMENTO?titulo(p.TIPOAFASTAMENTO):'']].filter(x=>x[1]);
   abrirDlg(`<h3>${esc(p.nome)}</h3><dl class="ficha">${L.map(x=>`<dt>${x[0]}</dt><dd>${esc(x[1])}</dd>`).join('')}</dl>
@@ -489,6 +494,7 @@ function dlgPessoa(i,todos){
     <div class="sum"><div class="dir"><small>A gozar</small><b>${p.saldo} dias</b></div><div class="venc"><small>Vencidas</small><b>${p.saldoVenc} dias</b></div><div><small>Programadas</small><b>${p.nprog}</b></div></div>
     <h4 style="margin-top:4px">Períodos aquisitivos</h4>
     <div class="pw"><table class="per"><thead><tr><th>Período aquisitivo</th><th>Situação</th><th>Férias</th><th style="text-align:right">Saldo</th></tr></thead><tbody>${rows}</tbody></table></div>
+    ${p.per.some(x=>x.abono)?'<p style="font-size:12px;color:var(--muted)">* Abono calculado: direito do período − dias gozados − saldo do Centi.</p>':''}
     ${p.per.length>6&&!todos?`<button type="button" class="btn" data-todos="${i}">Mostrar todos os ${p.per.length} períodos</button>`:''}
     <div class="row"><button type="button" class="btn" data-pdf>Emitir PDF</button><button type="button" class="btn primary" data-x>Fechar</button></div>`);
   const b=$('#dlg [data-todos]');if(b) b.addEventListener('click',()=>dlgPessoa(i,true));
@@ -538,9 +544,10 @@ function pdfCorpo(p){
   const sit=p.agora?`De férias até ${fmt(p.agora.fin)} (volta em ${fmt(p.agora.fin+DAY)})`:p.nvenc?`${p.nvenc} ${p.nvenc>1?'períodos vencidos':'período vencido'}`:p.saldo>0?'Com direito a gozar':p.semDireito?'Sem direito ainda (menos de 12 meses de exercício)':'Em dia';
   const linhas=p.per.map(x=>{
     const st=STAT[x.status][0];
-    const gz=x.gozos.length?x.gozos.map(g=>`${fmt(g.ini)} a ${fmt(g.fin)} · ${g.dias} dia${g.dias>1?'s':''}${g.ini>hoje?' (programadas)':g.fin>=hoje?' (em gozo)':''}`).join('<br>'):(x.centi?'Sem gozo lançado':x.concluido?'Sem registro no Centi':'—');
+    const gz=(x.gozos.length?x.gozos.map(g=>`${fmt(g.ini)} a ${fmt(g.fin)} · ${g.dias} dia${g.dias>1?'s':''}${g.ini>hoje?' (programadas)':g.fin>=hoje?' (em gozo)':''}`).join('<br>'):(x.centi||!p.semReg?'Sem gozo lançado':x.concluido?'Sem registro no Centi':'—'))
+      +(x.abono?`<small>Abono pecuniário*: ${x.abono} dia${x.abono>1?'s':''}</small>`:'')+(x.dup?'<small>Gozo repetido no Centi (contado uma vez)</small>':'');
     const prazo=x.concluido&&x.saldo>0?(x.status==='venc'?'Venceu em ':'Gozar até ')+fmt(x.limite):'';
-    return `<tr><td>${fmt(x.ini)} a ${fmt(x.fin)}${x.centi?'':'<small>calculado pela admissão</small>'}</td><td><b class="s-${x.status}">${st}</b>${prazo?`<small>${prazo}</small>`:''}</td><td>${gz}</td><td class="num">${x.concluido?x.saldo+' d':'—'}</td></tr>`;
+    return `<tr><td>${fmt(x.ini)} a ${fmt(x.fin)}${x.centi||!p.semReg?'':'<small>calculado pela admissão</small>'}</td><td><b class="s-${x.status}">${st}</b>${prazo?`<small>${prazo}</small>`:''}</td><td>${gz}</td><td class="num">${x.concluido?x.saldo+' d':'—'}</td></tr>`;
   }).join('');
   const dados=[['Matrícula',p.MATRICULA],['Cargo',p.cargo],['Lotação',p.lot],['Vínculo',titulo(p.TIPOADMISSAO)],['Admissão',fmt(p.adm)],['Afastamento',p.TIPOAFASTAMENTO?titulo(p.TIPOAFASTAMENTO):'']].filter(x=>x[1]);
   return `<div class="cab"><span class="em">Emitida em ${agora.toLocaleDateString('pt-BR')} às ${agora.toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'})}</span><small>Câmara Municipal de Rio Verde/GO · Recursos Humanos</small><h1>Ficha de férias</h1></div>
@@ -550,7 +557,7 @@ function pdfCorpo(p){
   <div class="sum"><div class="a"><small>Saldo total a gozar</small><b>${p.saldo}</b></div><div class="v"><small>Dos quais vencidos</small><b>${p.saldoVenc}</b></div><div class="p"><small>Gozos programados</small><b>${p.nprog}</b></div><div><small>Períodos aquisitivos</small><b>${p.per.length}</b></div></div>
   <h2>Períodos aquisitivos e gozo</h2>
   <table><thead><tr><th>Período aquisitivo</th><th>Situação</th><th>Férias</th><th class="num">Saldo</th></tr></thead><tbody>${linhas}</tbody></table>
-  <p class="nota">Regras usadas no cálculo: ${cfg.dias} dias de férias por período aquisitivo de 12 meses, a partir da admissão, e gozo em até ${cfg.concessivo} meses após o fim do período (depois disso, vencidas). As férias lançadas e o saldo vêm do Centi; períodos sem lançamento são calculados pela data de admissão. Este documento não substitui os atos administrativos nem a análise da legislação municipal aplicável.</p>
+  <p class="nota">Regras usadas no cálculo: ${cfg.dias} dias de férias por período aquisitivo de 12 meses, a partir da admissão, e gozo em até ${cfg.concessivo} meses após o fim do período (depois disso, vencidas). As férias lançadas e o saldo vêm do Centi; períodos sem lançamento são calculados pela data de admissão. *Abono calculado: direito do período − dias gozados − saldo. Este documento não substitui os atos administrativos nem a análise da legislação municipal aplicável.</p>
   <div class="ass"><div>Responsável pelo RH</div><div>Servidor(a)</div></div>`;
 }
 let tituloOriginal='';

@@ -51,7 +51,7 @@ async function garantirTarefas(userToken) {
   if (t.status !== 404) { tarefasOk = true; return; }
   const adm = await pb('POST', '/api/collections/_superusers/auth-with-password',
     { identity: process.env.PB_ADMIN_EMAIL || '', password: process.env.PB_ADMIN_PASSWORD || '' });
-  if (adm.status !== 200) return;                       // sem acesso administrativo: o setup.py cria depois
+  if (adm.status !== 200) { console.error('rhcmrv_tarefas: acesso administrativo ao PocketBase recusado (HTTP ' + adm.status + ')'); return; }   // o setup.py cria depois
   const txt = (name, extra) => Object.assign({ name, type: 'text', required: false }, extra || {});
   const c = await pb('POST', '/api/collections', Object.assign({
     name: 'rhcmrv_tarefas', type: 'base',
@@ -59,8 +59,9 @@ async function garantirTarefas(userToken) {
       { name: 'compartilhada', type: 'bool' }, txt('dono', { required: true, max: 40 }), txt('autor', { max: 120 }),
       txt('prioridade', { max: 20 }), txt('prazo', { max: 10 }), txt('criada_em', { max: 40 }), txt('concluido_em', { max: 10 })],
     indexes: ['CREATE INDEX idx_rhcmrv_tarefas_dono ON rhcmrv_tarefas (dono)']
-  }, TAREFAS_REGRAS), undefined, adm.data.token);
+  }, TAREFAS_REGRAS), adm.data.token);
   if (c.status === 200) tarefasOk = true;
+  else console.error('rhcmrv_tarefas: não foi possível criar a coleção (HTTP ' + c.status + '): ' + JSON.stringify(c.data).slice(0, 400));
 }
 
 module.exports = async (req, res) => {
@@ -88,3 +89,5 @@ module.exports = async (req, res) => {
     return send(res, 502, { message: e.message || 'Falha ao entrar.' });
   }
 };
+module.exports.garantirTarefas = garantirTarefas;   // exportada para teste
+module.exports._reset = () => { tarefasOk = false; };

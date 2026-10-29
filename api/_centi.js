@@ -60,19 +60,36 @@ const cuboPayload = (mes, ano) => ({
     { Key: 'Token', Value: '' }, { Key: 'GuidTransacao', Value: '' }, { Key: 'Captcha', Value: '' }, { Key: 'Background', Value: '0' }
   ]
 });
-/* resposta do Centi -> [{COLUNA: valor}] só dos ativos */
-function cuboLinhas(cube) {
+/* resposta do Centi -> [{COLUNA: valor}] só com as colunas pedidas; soAtivos mantém só SITUACAO = Ativo */
+function cuboColunas(cube, colunas, soAtivos) {
   const nomes = (cube.Columns || []).map(c => c.Name);
-  const ix = {}; CUBO_COLUNAS.forEach(n => { ix[n] = nomes.indexOf(n); });
+  const ix = {}; colunas.forEach(n => { ix[n] = nomes.indexOf(n); });
   const val = z => (z && typeof z === 'object' ? z.Value : z);
   const out = [];
   (cube.Rows || []).forEach(r => {
     const v = r.Values || [];
-    const o = {}; CUBO_COLUNAS.forEach(n => { const x = ix[n] < 0 ? '' : val(v[ix[n]]); o[n] = x == null ? '' : x; });
-    if (String(o.SITUACAO).trim().toLowerCase() === 'ativo') out.push(o);
+    const o = {}; colunas.forEach(n => { const x = ix[n] < 0 ? '' : val(v[ix[n]]); o[n] = x == null ? '' : x; });
+    if (!soAtivos || String(o.SITUACAO).trim().toLowerCase() === 'ativo') out.push(o);
   });
   return out;
 }
+const cuboLinhas = cube => cuboColunas(cube, CUBO_COLUNAS, true);
+
+/* Cubo movimentação férias (FP273): uma linha por gozo, com o período aquisitivo a que pertence (só ativos) */
+const FERIAS_MODULO = 120972;
+const FERIAS_COLUNAS = ['MATRICULA', 'DTAQUIINI', 'DTAQUIFIN', 'SALDO', 'REINICIADO', 'CANCELADO', 'GOZOINICIAL', 'GOZOFINAL'];
+const feriasPayload = () => ({
+  ModuleKey: FERIAS_MODULO, Guid: crypto.randomUUID(),
+  Params: [
+    { Key: 'Orgaos', Value: vazio() }, { Key: 'Funcionarios', Value: vazio() }, { Key: 'Lotacoes', Value: vazio() }, { Key: 'Cargos', Value: vazio() },
+    { Key: 'SomenteFeriasComReinicioDePeriodo', Value: '0' }, { Key: 'SomenteFeriasNaReferencia', Value: '0' },
+    { Key: 'Situacao', Value: '1' }, { Key: 'TipoCadastro', Value: '0' },
+    { Key: 'Cube', Value: '' }, { Key: 'CubeExcel', Value: '' }, { Key: 'QuebrarTexto', Value: '0' }, { Key: 'TipoCuboProcessamento', Value: '0' },
+    { Key: 'NumberOfDecimalPlaces', Value: '0' }, { Key: 'Name', Value: '' }, { Key: 'Description', Value: '' }, { Key: 'SysInternal', Value: '0' },
+    { Key: 'RestApp', Value: '0' }, { Key: 'Token', Value: '' }, { Key: 'GuidTransacao', Value: '' }, { Key: 'Captcha', Value: '' }, { Key: 'Background', Value: '0' }
+  ]
+});
+const feriasLinhas = cube => cuboColunas(cube, FERIAS_COLUNAS, false);
 
 /* Ficha financeira (FP024): uma ficha por folha (mensal, 13º…) do funcionário na referência. Só os dados que a tela mostra:
    sem CPF, sem apontamentos e sem o histórico de processamento. */
@@ -86,4 +103,4 @@ function fichaResumo(f) {
   };
 }
 
-module.exports = { BASE, centiPost, cuboPayload, cuboLinhas, fichaResumo, centiLogin, isAllowed, allowedUsers, pbPassword, readBody, send };
+module.exports = { BASE, centiPost, cuboPayload, cuboLinhas, feriasPayload, feriasLinhas, fichaResumo, centiLogin, isAllowed, allowedUsers, pbPassword, readBody, send };

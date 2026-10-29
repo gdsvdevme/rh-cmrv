@@ -1,0 +1,555 @@
+<title>Férias</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Libre+Franklin:wght@500;600;700&family=Public+Sans:wght@400;500;600&display=swap">
+<style>
+:root{
+  --bg:#eef4f0;--surface:#fff;--fg:#12281d;--muted:#4f665a;--line:#d1ddd6;--accent:#0a6b3d;--accent-fg:#fff;--soft:#e3efe8;
+  --hero-a:#063d27;--hero-b:#0b7a49;--gold:#d4aa4a;--shadow:0 1px 2px rgba(6,61,39,.09),0 6px 20px rgba(6,61,39,.07);
+  --warn:#8a5a00;--warn-bg:#fdf0d5;--danger:#b3261e;--danger-bg:#fbe3e0;--blue:#2f6fb5;--blue-bg:#e2edf9;--ok:#0a6b3d;--ok-bg:#dff3e7;--violet:#6f4aa8;--violet-bg:#eee6f8;
+  --f-display:"Libre Franklin",system-ui,sans-serif;--f-body:"Public Sans",system-ui,sans-serif;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --bg:#08130e;--surface:#0f1e17;--fg:#e3f1ea;--muted:#90b0a0;--line:#234034;--accent:#52c98a;--accent-fg:#04210f;--soft:#15291f;
+  --hero-a:#04150d;--hero-b:#0b4d31;--gold:#d8b45e;--shadow:0 1px 2px rgba(0,0,0,.4),0 6px 20px rgba(0,0,0,.3);
+  --warn:#f0c26a;--warn-bg:#3a2d10;--danger:#ff8a80;--danger-bg:#3d1a17;--blue:#7fb2ee;--blue-bg:#14273d;--ok:#52c98a;--ok-bg:#12382a;--violet:#b99be8;--violet-bg:#2a1f3d;color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#08130e;--surface:#0f1e17;--fg:#e3f1ea;--muted:#90b0a0;--line:#234034;--accent:#52c98a;--accent-fg:#04210f;--soft:#15291f;
+  --hero-a:#04150d;--hero-b:#0b4d31;--gold:#d8b45e;--shadow:0 1px 2px rgba(0,0,0,.4),0 6px 20px rgba(0,0,0,.3);
+  --warn:#f0c26a;--warn-bg:#3a2d10;--danger:#ff8a80;--danger-bg:#3d1a17;--blue:#7fb2ee;--blue-bg:#14273d;--ok:#52c98a;--ok-bg:#12382a;--violet:#b99be8;--violet-bg:#2a1f3d;color-scheme:dark}
+[hidden]{display:none!important}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--fg);font-family:var(--f-body);font-size:15px;line-height:1.5}
+h1,h2,h3,h4{font-family:var(--f-display);margin:0;text-wrap:balance}
+button,input,select{font:inherit;color:inherit}
+.wrap{padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+.inner{max-width:1180px;margin:0 auto}
+.hero{background:linear-gradient(135deg,var(--hero-a),var(--hero-b));color:#fff;padding-block:22px 54px}
+.top{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:22px}
+.home{color:#fff;text-decoration:none;font-weight:600;font-size:13.5px;display:inline-flex;align-items:center;gap:8px;padding:8px 12px;border-radius:10px;background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.28)}
+.home:hover,.themebtn:hover{background:rgba(255,255,255,.22)}
+.themebtn{margin-left:auto;display:inline-flex;align-items:center;gap:8px;border:1px solid rgba(255,255,255,.35);background:rgba(255,255,255,.12);color:#fff;border-radius:10px;padding:8px 12px;font-weight:600;font-size:13.5px;cursor:pointer}
+.goldrule{width:56px;height:4px;background:var(--gold);border-radius:2px;margin:0 0 14px}
+.hero h1{font-size:clamp(1.6rem,4.4vw,2.4rem);line-height:1.12}
+.hero p{margin:8px 0 0;opacity:.85}
+main{padding-block:0 40px}
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,160px),1fr));gap:12px;margin-top:-30px}
+.stat{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:14px 16px;box-shadow:var(--shadow);text-align:left;cursor:pointer;display:block;width:100%}
+.stat:hover{border-color:var(--accent)}.stat.on{outline:2px solid var(--accent);outline-offset:-1px}
+.stat b{font-family:var(--f-display);font-size:1.7rem;display:block;line-height:1.1;font-variant-numeric:tabular-nums}
+.stat span{color:var(--muted);font-size:13px}
+.stat.k-hoje b{color:var(--blue)}.stat.k-direito b{color:var(--ok)}.stat.k-venc b{color:var(--danger)}.stat.k-prog b{color:var(--violet)}.stat.k-sem b{color:var(--warn)}
+.bar{display:flex;flex-wrap:wrap;gap:10px;align-items:center;margin-top:18px}
+.search{flex:1 1 260px;display:flex;align-items:center;gap:10px;background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:0 14px;box-shadow:var(--shadow);min-width:0}
+.search input{border:0;background:transparent;outline:0;padding:12px 0;flex:1;min-width:0}
+.search:focus-within{border-color:var(--accent)}
+select{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:10px 12px;box-shadow:var(--shadow)}
+.btn{border:1px solid var(--line);background:var(--surface);border-radius:10px;padding:10px 14px;cursor:pointer;font-weight:600;font-size:14px;display:inline-flex;align-items:center;gap:8px;box-shadow:var(--shadow)}
+.btn:hover{border-color:var(--accent)}.btn.primary{background:var(--accent);color:var(--accent-fg);border-color:var(--accent)}.btn:disabled{opacity:.6;cursor:wait}
+.banner{margin-top:14px;border-radius:12px;padding:12px 16px;font-size:13.5px;background:var(--warn-bg);color:var(--warn)}
+.panels{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,420px),1fr));gap:14px;margin-top:16px}
+.panel{background:var(--surface);border:1px solid var(--line);border-radius:14px;box-shadow:var(--shadow);padding:14px 16px}
+.panel h2{font-size:1rem;display:flex;align-items:center;gap:8px;margin-bottom:8px}
+.panel h2 i{width:10px;height:10px;border-radius:50%;display:inline-block}
+.panel h2 span{margin-left:auto;font-family:var(--f-body);font-size:12.5px;color:var(--muted);font-weight:600}
+.mini{list-style:none;margin:0;padding:0;max-height:260px;overflow:auto}
+.mini li{display:flex;gap:10px;align-items:center;padding:7px 4px;border-top:1px solid var(--line);cursor:pointer;border-radius:8px}
+.mini li:first-child{border-top:0}.mini li:hover{background:var(--soft)}
+.mini .pn{flex:1;min-width:0}.mini .pn b{display:block;font-weight:600;line-height:1.25}.mini .pn span{color:var(--muted);font-size:12.5px}
+.mini .dt{font-size:12.5px;font-weight:700;white-space:nowrap;text-align:right}
+.none{color:var(--muted);font-size:14px;padding:8px 2px}
+.tblwrap{margin-top:16px;background:var(--surface);border:1px solid var(--line);border-radius:14px;box-shadow:var(--shadow);overflow:auto}
+table.lst{width:100%;border-collapse:collapse;font-size:14px;min-width:760px}
+.lst th{background:var(--soft);color:var(--muted);font-size:11.5px;letter-spacing:.05em;text-transform:uppercase;padding:10px 12px;text-align:left;white-space:nowrap;position:sticky;top:0}
+.lst td{padding:10px 12px;border-top:1px solid var(--line);vertical-align:middle}
+.lst tbody tr{cursor:pointer}.lst tbody tr:hover td{background:var(--soft)}
+.lst td.n b{display:block;font-weight:600;line-height:1.25}.lst td.n span{color:var(--muted);font-size:12.5px}
+.lst td.num{text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap}
+.tag{display:inline-block;font-size:11px;font-weight:700;padding:2px 8px;border-radius:99px;white-space:nowrap;background:var(--soft);color:var(--muted);margin:1px 3px 1px 0}
+.tag.hoje{background:var(--blue-bg);color:var(--blue)}.tag.dir{background:var(--ok-bg);color:var(--ok)}.tag.venc{background:var(--danger-bg);color:var(--danger)}
+.tag.prog{background:var(--violet-bg);color:var(--violet)}.tag.sem{background:var(--warn-bg);color:var(--warn)}.tag.dia{background:var(--soft);color:var(--muted)}
+.empty{margin-top:24px;text-align:center;padding:38px 20px;background:var(--surface);border:2px dashed var(--line);border-radius:16px;color:var(--muted)}
+.empty h2{color:var(--fg);margin-bottom:6px}
+.note{margin-top:18px;font-size:12.8px;color:var(--muted)}
+dialog{border:1px solid var(--line);border-radius:16px;padding:0;background:var(--surface);color:var(--fg);width:min(700px,96vw);box-shadow:0 20px 60px rgba(0,0,0,.4)}
+dialog::backdrop{background:rgba(0,0,0,.5)}
+dialog form{padding:20px;display:flex;flex-direction:column;gap:12px;max-height:88vh;overflow:auto}
+dialog h3{font-size:1.15rem}
+dialog label{display:flex;flex-direction:column;gap:4px;font-size:13px;color:var(--muted);font-weight:600}
+dialog input,dialog select{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:10px 12px;color:var(--fg);font-weight:400}
+dialog .row{display:flex;gap:8px;justify-content:flex-end;flex-wrap:wrap}
+dialog p{margin:0;font-size:14px}
+dl.ficha{margin:0;display:grid;grid-template-columns:max-content 1fr;gap:6px 14px;font-size:14px}
+dl.ficha dt{color:var(--muted);font-weight:600}dl.ficha dd{margin:0;overflow-wrap:anywhere}
+.sum{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.sum div{border-radius:12px;padding:9px 12px;background:var(--soft);border:1px solid var(--line)}
+.sum small{display:block;font-size:11.5px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:var(--muted)}
+.sum b{font-family:var(--f-display);font-size:1.25rem;font-variant-numeric:tabular-nums}
+.sum .dir b{color:var(--ok)}.sum .venc b{color:var(--danger)}
+.pw{overflow-x:auto;border:1px solid var(--line);border-radius:12px}
+table.per{width:100%;border-collapse:collapse;font-size:13.5px;min-width:560px}
+.per th{background:var(--soft);color:var(--muted);font-size:11.5px;letter-spacing:.05em;text-transform:uppercase;padding:8px 10px;text-align:left;white-space:nowrap}
+.per td{padding:8px 10px;border-top:1px solid var(--line);vertical-align:top}
+.per td.num{text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap}
+.per small{color:var(--muted);display:block}
+.per tr.cur td{background:color-mix(in srgb,var(--blue-bg) 55%,transparent)}
+#toast{position:fixed;left:50%;transform:translateX(-50%);bottom:max(18px,env(safe-area-inset-bottom,0px));background:var(--fg);color:var(--bg);padding:10px 16px;border-radius:10px;font-size:14px;z-index:60;max-width:90vw}
+@media (max-width:560px){.sum{grid-template-columns:1fr}}
+@media (pointer:coarse){input,select{font-size:16px}.btn{min-height:42px}}
+</style>
+
+<header class="hero wrap"><div class="inner">
+  <div class="top"><a class="home" href="../" target="_top"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 11l9-8 9 8M5 10v10h5v-6h4v6h5V10"/></svg>Sistema Interno do RH</a>
+  <button class="themebtn" id="themeBtn" type="button"></button></div>
+  <div class="goldrule"></div>
+  <h1>Férias</h1>
+  <p>Câmara Municipal de Rio Verde/GO · quem está de férias e quem tem direito, pelo período aquisitivo</p>
+</div></header>
+
+<main class="wrap"><div class="inner">
+  <div class="stats" id="stats"></div>
+  <div class="bar">
+    <label class="search"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></svg><input id="q" type="search" placeholder="Buscar por nome, matrícula, cargo ou gabinete" aria-label="Buscar" autocomplete="off"></label>
+    <select id="ft" aria-label="Filtrar"><option value="">Todos os servidores</option><option value="hoje">De férias hoje</option><option value="prog">Com férias programadas</option><option value="dir">Com direito a gozar</option><option value="venc">Com férias vencidas</option><option value="dia">Em dia</option><option value="sem">Sem direito ainda (menos de 12 meses)</option><option value="semreg">Sem nenhum registro no Centi</option></select>
+    <button class="btn primary" id="refBtn" type="button">Atualizar do Centi</button>
+    <button class="btn" id="cfgBtn" type="button">Regras</button>
+    <button class="btn" id="csvBtn" type="button">Exportar CSV</button>
+  </div>
+  <div id="notice"></div>
+  <div id="view"></div>
+  <p class="note" id="foot"></p>
+</div></main>
+<dialog id="dlg"></dialog>
+<div id="toast" hidden></div>
+
+<script>
+/* =====================================================================
+   PocketBase: armazenamento no servidor (substitui o localStorage)
+   Expõe PB.connect(), que devolve um objeto "dbh" com a mesma forma
+   usada pelo restante do sistema: dbh.doc('a/b').get/set/delete e
+   dbh.collection('versoes').orderBy('at','desc').limit(n).get()
+   ===================================================================== */
+const PB=(function(){
+  const URL_BASE='https://pb.devgabriel.app.br'.replace(/\/+$/,'');
+  const CENTI_BASE=''.replace(/\/+$/,'');   // vazio = mesmo endereço do site (funções em /api)
+  const AUTH_KEY='rhcrv-pb-auth';
+  let token='',email='',col='rhcmrv_users',loginP=null;
+  let cs=null;   // sessão do Centi: {user,nome,token,refreshToken}
+
+  /* só vale a sessão que tem o acesso do Centi junto; sessões antigas (login simples) pedem novo login */
+  function readAuth(){try{const a=JSON.parse(localStorage.getItem(AUTH_KEY)||'null');if(a&&a.token&&a.centi&&a.centi.token){token=a.token;email=a.email||'';col=a.col||'rhcmrv_users';cs=a.centi;}}catch(e){}}
+  function saveAuth(){try{localStorage.setItem(AUTH_KEY,JSON.stringify({token,email,col,centi:cs}));}catch(e){}}
+  function clearAuth(){token='';email='';col='rhcmrv_users';cs=null;try{localStorage.removeItem(AUTH_KEY);}catch(e){}}
+
+  async function raw(method,path,body){
+    const h={};
+    if(body!==undefined) h['Content-Type']='application/json';
+    if(token) h.Authorization=token;
+    const r=await fetch(URL_BASE+path,{method,headers:h,body:body===undefined?undefined:JSON.stringify(body)});
+    if(r.status===204) return null;
+    let j=null; try{j=await r.json();}catch(e){}
+    if(!r.ok){const err=new Error((j&&j.message)||('HTTP '+r.status));err.status=r.status;throw err;}
+    return j;
+  }
+  async function api(method,path,body){
+    try{return await raw(method,path,body);}
+    catch(e){
+      if(e.status===401||e.status===403){
+        clearAuth();
+        if(await login()) return raw(method,path,body);
+      }
+      throw e;
+    }
+  }
+
+  /* ---------- login ---------- */
+  function login(msg){
+    if(loginP) return loginP;
+    loginP=new Promise(resolve=>{
+      const wrap=document.createElement('div');
+      wrap.style.cssText='position:fixed;inset:0;z-index:99999;display:flex;align-items:center;justify-content:center;padding:16px;background:rgba(0,0,0,.45)';
+      wrap.innerHTML=
+        '<form style="width:100%;max-width:360px;background:var(--surface,#fff);color:var(--fg,#12281d);border:1px solid var(--line,#d1ddd6);border-radius:12px;padding:22px;box-shadow:0 10px 40px rgba(0,0,0,.3);font:15px/1.4 system-ui,sans-serif">'+
+        '<h3 style="margin:0 0 4px;font-size:18px">Entrar com o acesso do Centi</h3>'+
+        '<p style="margin:0 0 14px;color:var(--muted,#4f665a);font-size:13px">Use o mesmo usuário e senha do Centi. A senha é conferida no Centi e não fica guardada neste sistema.</p>'+
+        '<label style="display:block;font-size:13px;margin-bottom:10px">Usuário do Centi<input name="e" type="text" required autocapitalize="none" spellcheck="false" autocomplete="username" style="display:block;width:100%;box-sizing:border-box;margin-top:4px;padding:9px;border:1px solid var(--line,#d1ddd6);border-radius:8px;background:transparent;color:inherit;font:inherit"></label>'+
+        '<label style="display:block;font-size:13px;margin-bottom:10px">Senha<input name="p" type="password" required autocomplete="current-password" style="display:block;width:100%;box-sizing:border-box;margin-top:4px;padding:9px;border:1px solid var(--line,#d1ddd6);border-radius:8px;background:transparent;color:inherit;font:inherit"></label>'+
+        '<div data-err style="min-height:18px;margin-bottom:8px;color:#c0392b;font-size:13px"></div>'+
+        '<div style="display:flex;gap:8px;justify-content:flex-end;flex-wrap:wrap">'+
+        '<button type="submit" style="padding:9px 16px;border:0;border-radius:8px;background:var(--accent,#0a6b3d);color:var(--accent-fg,#fff);font:inherit;font-weight:600;cursor:pointer">Entrar</button></div></form>';
+      document.body.appendChild(wrap);
+      const f=wrap.querySelector('form'),err=wrap.querySelector('[data-err]');
+      if(msg) err.textContent=msg;
+      const done=ok=>{wrap.remove();loginP=null;resolve(ok);};
+      f.e.focus();
+      f.addEventListener('submit',async ev=>{
+        ev.preventDefault(); err.textContent='Entrando…';
+        try{
+          const r=await fetch(CENTI_BASE+'/api/centi-login',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({user:f.e.value.trim(),pass:f.p.value})});
+          let j=null; try{j=await r.json();}catch(e){}
+          if(!r.ok){err.textContent=(j&&j.message)||('Não foi possível entrar (HTTP '+r.status+').');return;}
+          token=j.pb.token; col='rhcmrv_users'; email=j.centi.user; cs=j.centi; saveAuth(); done(true);
+        }catch(e){err.textContent='Não foi possível entrar: '+e.message;}
+      });
+    });
+    return loginP;
+  }
+
+  /* ---------- documentos ---------- */
+  const ids={};   // cache de id de registro por caminho
+  const esc=s=>String(s).replace(/\\/g,'\\\\').replace(/"/g,'\\"');
+  const spec=path=>{
+    const i=path.indexOf('/'),col=path.slice(0,i),id=path.slice(i+1);
+    return col==='versoes'?{c:'rhcmrv_versoes',f:'vid',k:id}:{c:'rhcmrv_docs',f:'key',k:path};
+  };
+  async function find(path){
+    const s=spec(path);
+    const q='?perPage=1&filter='+encodeURIComponent(s.f+'="'+esc(s.k)+'"');
+    const r=await api('GET','/api/collections/'+s.c+'/records'+q);
+    const rec=r.items&&r.items[0];
+    if(rec) ids[path]=rec.id; else delete ids[path];
+    return rec||null;
+  }
+  const payload=(s,data)=>s.c==='rhcmrv_versoes'?Object.assign({vid:s.k},data):{key:s.k,data};
+  const unwrap=(s,rec)=>s.c==='rhcmrv_versoes'?{at:rec.at,label:rec.label,json:rec.json}:rec.data;
+
+  function doc(path){
+    const s=spec(path);
+    return {
+      async get(){const rec=await find(path);return {exists:!!rec,id:s.k,data:()=>rec?unwrap(s,rec):undefined};},
+      async set(data){
+        if(!ids[path]) await find(path);
+        if(ids[path]) await api('PATCH','/api/collections/'+s.c+'/records/'+ids[path],payload(s,data));
+        else{const r=await api('POST','/api/collections/'+s.c+'/records',payload(s,data));ids[path]=r.id;}
+      },
+      async delete(){
+        if(!ids[path]) await find(path);
+        if(ids[path]){await api('DELETE','/api/collections/'+s.c+'/records/'+ids[path]);delete ids[path];}
+      }
+    };
+  }
+  function collection(name){
+    const q={sort:'',n:30};
+    const api_={
+      orderBy(f,dir){q.sort=(dir==='desc'?'-':'')+f;return api_;},
+      limit(n){q.n=n;return api_;},
+      async get(){
+        const r=await api('GET','/api/collections/rhcmrv_'+name+'/records?perPage='+q.n+(q.sort?'&sort='+encodeURIComponent(q.sort):''));
+        return {docs:r.items.map(rec=>({id:rec.vid,data:()=>({at:rec.at,label:rec.label,json:rec.json})}))};
+      }
+    };
+    return api_;
+  }
+
+  /* ---------- API do Centi (pelo servidor do sistema, com o acesso da própria pessoa) ---------- */
+  async function centiCall(path,body){
+    if(!cs) throw new Error('Sem sessão do Centi. Entre novamente.');
+    const r=await fetch(CENTI_BASE+'/api/centi',{method:'POST',
+      headers:{'Content-Type':'application/json','x-centi-user':cs.user,'x-centi-token':cs.token,'x-centi-refresh':cs.refreshToken||''},
+      body:JSON.stringify({path,body})});
+    const nt=r.headers.get('x-centi-token'),nr=r.headers.get('x-centi-refresh');
+    if(nt){cs.token=nt;if(nr)cs.refreshToken=nr;saveAuth();}   // o Centi renova o token sozinho
+    let j=null; try{j=await r.json();}catch(e){}
+    if(!r.ok){
+      if(r.status===401){clearAuth();}
+      const err=new Error((j&&j.message)||('Centi: HTTP '+r.status));err.status=r.status;throw err;
+    }
+    return j;
+  }
+  /* PB.centi.search('SFuncionario',[{FieldName:'Nome',Operation:6,Value:'%ana%'}]) -> {Data:[...],Count}
+     (Operation 6 = contém; a tela de consulta do Centi exige ao menos um filtro com valor) */
+  const centi={
+    get user(){return cs?cs.user:'';},
+    get nome(){return cs?(cs.nome||cs.user):'';},
+    /* Cubo funcionário (FP051) do Centi na referência mes/ano -> {Data:[{MATRICULA,NOMEFUNC,CARGO,HIERARQUIA,...}],Total}; só ativos */
+    /* Ficha financeira (FP024) da matrícula no mês/ano -> {Fichas:[{Folha,Mes,Ano,TotalProventos,TotalDescontos,LiquidoReceber,Eventos:[...]}]}; não é guardada */
+    ficha(matricula,mes,ano){return centiCall('ficha-financeira',{matricula,mes,ano});},
+    /* Férias: ativos (FP051) + gozos de férias (FP273) -> {Pessoas:[...],Gozos:[{MATRICULA,DTAQUIINI,DTAQUIFIN,SALDO,GOZOINICIAL,GOZOFINAL,...}]} */
+    ferias(mes,ano){return centiCall('ferias',{mes,ano});},
+    cubo(mes,ano){return centiCall('cubo-funcionario',{mes,ano});},
+    search(entity,filters,start,depth){
+      return centiCall('restauth/searchentity',{Depth:depth||50,Entity:entity,Start:start==null?1:start,
+        Filters:(filters||[]).map(f=>Object.assign({List:false,TypeFilter:0,between:''},f))});
+    }
+  };
+
+  /* ---------- conexão ---------- */
+  const sleep=ms=>new Promise(r=>setTimeout(r,ms));
+  async function alive(){
+    for(let i=0;i<3;i++){
+      const ac=new AbortController(),t=setTimeout(()=>ac.abort(),6000);
+      try{const r=await fetch(URL_BASE+'/api/health',{cache:'no-store',signal:ac.signal});clearTimeout(t);if(r.ok) return true;}catch(e){clearTimeout(t);}
+      if(i<2) await sleep(1500);
+    }
+    return false;
+  }
+  const box='position:fixed;inset:0;z-index:99999;display:flex;align-items:center;justify-content:center;padding:16px;background:rgba(0,0,0,.5)';
+  const card='width:100%;max-width:380px;background:var(--surface,#fff);color:var(--fg,#12281d);border:1px solid var(--line,#d1ddd6);border-radius:12px;padding:22px;box-shadow:0 10px 40px rgba(0,0,0,.3);font:15px/1.45 system-ui,sans-serif';
+  const bt='padding:9px 14px;border-radius:8px;font:inherit;font-weight:600;cursor:pointer;';
+  /* servidor fora do ar: pergunta antes de seguir, para não trabalhar sem querer só neste navegador */
+  function offlineDialog(){
+    return new Promise(resolve=>{
+      const w=document.createElement('div');w.style.cssText=box;
+      w.innerHTML='<div role="alertdialog" aria-modal="true" style="'+card+'"><h3 style="margin:0 0 6px;font-size:18px">Sem conexão com o servidor</h3>'+
+        '<p style="margin:0 0 14px;color:var(--muted,#4f665a);font-size:13.5px">Não foi possível falar com o servidor dos dados. Verifique a internet e tente de novo. Se continuar só neste navegador, o que você fizer <b>não será salvo no servidor</b> e não aparecerá em outros computadores.</p>'+
+        '<div style="display:flex;gap:8px;justify-content:flex-end;flex-wrap:wrap"><button type="button" data-loc style="'+bt+'border:1px solid var(--line,#d1ddd6);background:transparent;color:inherit">Usar só neste navegador</button>'+
+        '<button type="button" data-retry style="'+bt+'border:0;background:var(--accent,#0a6b3d);color:var(--accent-fg,#fff)">Tentar novamente</button></div></div>';
+      document.body.appendChild(w);
+      const done=v=>{w.remove();resolve(v);};
+      w.querySelector('[data-retry]').addEventListener('click',()=>done(true));
+      w.querySelector('[data-loc]').addEventListener('click',()=>done(false));
+      w.querySelector('[data-retry]').focus();
+    });
+  }
+  function markLocal(){
+    if(document.getElementById('pb-local')) return;
+    const b=document.createElement('div');b.id='pb-local';
+    b.style.cssText='position:fixed;left:0;right:0;bottom:0;z-index:99998;background:#8a5a00;color:#fff;padding:8px 14px;font:13.5px/1.35 system-ui,sans-serif;display:flex;gap:10px;align-items:center;justify-content:center;flex-wrap:wrap;text-align:center';
+    b.innerHTML='<span>Modo local: os dados ficam só neste navegador e <b>não são salvos no servidor</b>.</span><button type="button" style="border:1px solid #fff;background:transparent;color:#fff;border-radius:7px;padding:3px 10px;font:inherit;font-weight:600;cursor:pointer">Reconectar</button>';
+    b.querySelector('button').addEventListener('click',()=>location.reload());
+    document.body.appendChild(b);
+  }
+  async function connect(){
+    if(!URL_BASE) return null;
+    readAuth();
+    for(;;){
+      if(!(await alive())){if(await offlineDialog()) continue;markLocal();return null;}
+      try{
+        let ok=false;
+        if(token){
+          try{const r=await raw('POST','/api/collections/'+col+'/auth-refresh');token=r.token;email=(r.record&&(r.record.email||r.record.username))||email;saveAuth();ok=true;}
+          catch(e){if(e.status!==401&&e.status!==403&&e.status!==404) throw e; clearAuth();}
+        }
+        if(!ok&&!(await login())){markLocal();return null;}
+        return {doc,collection,centi};
+      }catch(e){
+        if(await offlineDialog()) continue;
+        markLocal();return null;
+      }
+    }
+  }
+  return {connect,centi,logout(){clearAuth();location.reload();},get email(){return email;},get nome(){return centi.nome;},url:URL_BASE};
+})();
+
+const HOME_URL="../";
+const TEMA_KEY='rhcrv-tema',CFG_LS='rhcrv-ferias-cfg-v1';
+const $=s=>document.querySelector(s);
+const esc=s=>String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const norm=s=>String(s||'').normalize('NFD').replace(/[̀-ͯ]/g,'').toLowerCase().trim();
+let dbh=null,dados=null,pessoas=[],filtro='',cfg={dias:30,concessivo:12,aviso:60};
+
+/* ---------- tema ---------- */
+const ICO2={sun:'<circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/>',moon:'<path d="M21 12.8A9 9 0 1111.2 3a7 7 0 009.8 9.8z"/>'};
+function isDark(){const m=/rgba?\((\d+),\s*(\d+),\s*(\d+)/.exec(getComputedStyle(document.body).backgroundColor);return m?(0.2126*m[1]+0.7152*m[2]+0.0722*m[3])/255<0.4:false;}
+function themeBtn(){const d=isDark();$('#themeBtn').innerHTML=`<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${ICO2[d?'sun':'moon']}</svg>${d?'Modo claro':'Modo escuro'}`;}
+$('#themeBtn').addEventListener('click',()=>{const n=isDark()?'light':'dark';document.documentElement.setAttribute('data-theme',n);try{localStorage.setItem(TEMA_KEY,n);}catch(e){}themeBtn();});
+try{const s=localStorage.getItem(TEMA_KEY);document.documentElement.setAttribute('data-theme',s==='dark'?'dark':'light');}catch(e){document.documentElement.setAttribute('data-theme','light');}
+function toast(m){const t=$('#toast');t.textContent=m;t.hidden=false;clearTimeout(toast.t);toast.t=setTimeout(()=>t.hidden=true,4500);}
+
+/* ---------- datas (sempre em UTC, sem horário) ---------- */
+const DAY=864e5,MIN=new Set(['de','da','do','das','dos','e','a','o']);
+const D=s=>{const m=/^(\d{2})\/(\d{2})\/(\d{4})/.exec(String(s||'').trim());return m?Date.UTC(+m[3],+m[2]-1,+m[1]):null;};
+const hojeMs=()=>{const n=new Date();return Date.UTC(n.getFullYear(),n.getMonth(),n.getDate());};
+const fmt=ms=>{if(ms==null) return '';const d=new Date(ms);return String(d.getUTCDate()).padStart(2,'0')+'/'+String(d.getUTCMonth()+1).padStart(2,'0')+'/'+d.getUTCFullYear();};
+const fmtCurto=ms=>fmt(ms).slice(0,5);
+function addMeses(ms,n){const d=new Date(ms),y=d.getUTCFullYear(),m=d.getUTCMonth()+n,dia=d.getUTCDate();const r=new Date(Date.UTC(y,m,dia));return (r.getUTCMonth()!==((m%12)+12)%12)?Date.UTC(y,m+1,0):r.getTime();}   // 31/01 + 1 mês = 28/02
+const ROMAN=/^(i|ii|iii|iv|v|vi|vii|viii|ix|x)$/i;
+function titulo(s){return String(s||'').toLowerCase().replace(/\s+/g,' ').trim().split(' ').map((w,i)=>(i>0&&ROMAN.test(w))?w.toUpperCase():(i>0&&MIN.has(w))?w:w.replace(/(^|[-\/(])(\p{L})/gu,(m,a,b)=>a+b.toUpperCase())).join(' ');}
+const hierNome=h=>{const n=norm(h);if(n==='setor administrativo') return 'Setor Administrativo';const m=/^vereador(a)?\s+(.+)$/.exec(n);return m?'Gabinete '+(m[1]?'da Vereadora ':'do Vereador ')+titulo(String(h).replace(/^vereador(a)?\s+/i,'')):titulo(h);};
+
+/* ---------- cálculo dos períodos aquisitivos ---------- */
+/* Os períodos já lançados no Centi são os oficiais (com o saldo que o Centi calcula). Depois do último, e para quem nunca teve
+   registro, os períodos seguem de 12 em 12 meses a partir da admissão. */
+function periodos(p,gz,hoje){
+  const mapa=new Map();
+  gz.forEach(g=>{
+    const ini=D(g.DTAQUIINI),fin=D(g.DTAQUIFIN);if(ini==null||fin==null) return;
+    const k=ini+'|'+fin;if(!mapa.has(k)) mapa.set(k,{ini,fin,gozos:[],saldos:[],centi:true});
+    if(String(g.CANCELADO).trim().toLowerCase()==='sim') return;
+    const gi=D(g.GOZOINICIAL),gf=D(g.GOZOFINAL),per=mapa.get(k);
+    if(gi!=null&&gf!=null) per.gozos.push({ini:gi,fin:gf,dias:Math.round((gf-gi)/DAY)+1});
+    per.saldos.push({ini:gi||0,saldo:Number(String(g.SALDO).replace(',','.'))||0});
+  });
+  const L=[...mapa.values()].sort((a,b)=>a.ini-b.ini);
+  const adm=D(p.DATAADMISSAO);
+  let prox=L.length?L[L.length-1].fin+DAY:adm;
+  for(let i=0;prox!=null&&prox<=hoje&&i<80;i++){const ini=prox,fin=addMeses(ini,12)-DAY;L.push({ini,fin,gozos:[],saldos:[],centi:false});prox=fin+DAY;}
+  L.forEach(per=>{
+    per.gozos.sort((a,b)=>a.ini-b.ini);
+    per.concluido=per.fin<hoje;
+    per.limite=addMeses(per.fin+DAY,cfg.concessivo)-DAY;   // último dia para gozar sem vencer
+    per.saldo=!per.concluido?0:per.centi?(per.saldos.length?per.saldos.sort((a,b)=>a.ini-b.ini)[per.saldos.length-1].saldo:0):cfg.dias;
+    per.gozado=per.gozos.filter(g=>g.fin<=hoje).reduce((s,g)=>s+g.dias,0);
+    per.programado=per.gozos.filter(g=>g.ini>hoje).reduce((s,g)=>s+g.dias,0);
+    per.status=!per.concluido?'aquis':per.saldo<=0?'gozada':hoje>per.limite?'venc':'dir';
+  });
+  return L.sort((a,b)=>b.ini-a.ini);
+}
+function analisar(p,gz,hoje){
+  const per=periodos(p,gz,hoje),todos=per.flatMap(x=>x.gozos.map(g=>Object.assign({per:x},g)));
+  const agora=todos.find(g=>g.ini<=hoje&&hoje<=g.fin);
+  const futuras=todos.filter(g=>g.ini>hoje).sort((a,b)=>a.ini-b.ini);
+  const direito=per.filter(x=>x.status==='dir'||x.status==='venc'),venc=per.filter(x=>x.status==='venc');
+  return Object.assign({},p,{
+    per,agora,prox:futuras[0]||null,nprog:futuras.length,
+    saldo:direito.reduce((s,x)=>s+x.saldo,0),saldoVenc:venc.reduce((s,x)=>s+x.saldo,0),nvenc:venc.length,
+    semDireito:!per.some(x=>x.concluido),semReg:!gz.length,
+    tags:{hoje:!!agora,prog:futuras.length>0,dir:direito.length>0,venc:venc.length>0,dia:direito.length===0&&per.some(x=>x.concluido),sem:!per.some(x=>x.concluido),semreg:!gz.length}
+  });
+}
+
+/* ---------- carga ---------- */
+function montar(r){
+  const hoje=hojeMs(),gz=new Map();
+  (r.Gozos||[]).forEach(g=>{const k=String(g.MATRICULA);if(!gz.has(k)) gz.set(k,[]);gz.get(k).push(g);});
+  const base=(r.Pessoas||[]).filter(p=>p.HIERARQUIA&&!/pension/i.test(p.HIERARQUIA+' '+p.TIPOADMISSAO)&&D(p.DATAADMISSAO)!=null);
+  pessoas=base.map(p=>{const a=analisar(p,gz.get(String(p.MATRICULA))||[],hoje);a.nome=titulo(p.NOMEFUNC);a.cargo=titulo(p.CARGO);a.lot=hierNome(p.HIERARQUIA);a.adm=D(p.DATAADMISSAO);return a;});
+  pessoas.sort((a,b)=>a.nome.localeCompare(b.nome,'pt-BR'));
+  dados={em:new Date().toISOString(),ref:r.ref,excl:(r.Pessoas||[]).length-base.length};
+}
+async function garantirSessao(){
+  if(PB.centi.user) return true;
+  const h=await PB.connect();if(h&&!dbh) dbh=h;
+  return !!PB.centi.user;
+}
+async function carregar(){
+  const b=$('#refBtn');b.disabled=true;b.textContent='Buscando…';
+  try{
+    if(!(await garantirSessao())){toast('Entre com o acesso do Centi para buscar os dados.');return;}
+    const n=new Date(),r=await PB.centi.ferias(n.getMonth()+1,n.getFullYear());
+    r.ref=String(n.getMonth()+1).padStart(2,'0')+'/'+n.getFullYear();
+    bruto=r;montar(r);render();toast(pessoas.length+' servidores ativos analisados.');
+  }catch(e){toast(e.status===401?'A sessão do Centi expirou. Clique em Atualizar do Centi para entrar de novo.':'Não foi possível buscar no Centi: '+(e.message||e));}
+  finally{b.disabled=false;b.textContent='Atualizar do Centi';}
+}
+
+/* ---------- exibição ---------- */
+const tags=p=>{
+  const t=[];
+  if(p.agora) t.push('<span class="tag hoje">De férias até '+fmtCurto(p.agora.fin)+'</span>');
+  if(p.nvenc) t.push('<span class="tag venc">'+p.nvenc+(p.nvenc>1?' períodos vencidos':' período vencido')+'</span>');
+  else if(p.saldo>0) t.push('<span class="tag dir">Direito a gozar</span>');
+  if(p.prox) t.push('<span class="tag prog">Programadas'+(p.nprog>1?' ('+p.nprog+')':'')+'</span>');
+  if(p.semDireito) t.push('<span class="tag sem">Sem direito ainda</span>');
+  if(!p.semDireito&&!p.nvenc&&p.saldo<=0&&!p.agora&&!p.prox) t.push('<span class="tag dia">Em dia</span>');
+  if(p.semReg&&!p.semDireito) t.push('<span class="tag sem" title="O Centi não tem nenhum período de férias lançado para esta pessoa; o direito foi calculado pela admissão">Sem registro</span>');
+  if(p.TIPOAFASTAMENTO) t.push('<span class="tag" title="Afastamento no Centi">'+esc(titulo(String(p.TIPOAFASTAMENTO).split('/')[0]))+'</span>');
+  return t.join('');
+};
+const casa=(p,q,f)=>(!f||(f==='semreg'?p.tags.semreg&&!p.tags.sem:p.tags[f]))&&(!q||norm(p.nome+' '+p.MATRICULA+' '+p.cargo+' '+p.lot).includes(q));
+function render(){
+  const stats=$('#stats'),view=$('#view');
+  if(!pessoas.length){
+    stats.innerHTML='';$('#notice').innerHTML='';$('#foot').textContent='';
+    view.innerHTML=`<div class="empty"><h2>${dados?'Nenhum servidor encontrado':'Dados de férias ainda não carregados'}</h2><p>Busque no Centi os servidores ativos, os períodos aquisitivos e as férias lançadas.</p><button class="btn primary" type="button" data-ref>Atualizar do Centi</button></div>`;
+    return;
+  }
+  const c=k=>pessoas.filter(p=>p.tags[k]).length;
+  const cards=[['','Servidores ativos',pessoas.length,''],['hoje','De férias hoje',c('hoje'),'k-hoje'],['prog','Com férias programadas',c('prog'),'k-prog'],['dir','Com direito a gozar',c('dir'),'k-direito'],['venc','Com férias vencidas',c('venc'),'k-venc'],['sem','Sem direito ainda',c('sem'),'k-sem']];
+  stats.innerHTML=cards.map(s=>`<button type="button" class="stat ${s[3]}${filtro===s[0]?' on':''}" data-f="${s[0]}"><b>${s[2]}</b><span>${s[1]}</span></button>`).join('');
+  $('#ft').value=filtro;
+  const hoje=hojeMs(),lim=hoje+cfg.aviso*DAY;
+  const ag=pessoas.filter(p=>p.agora).sort((a,b)=>a.agora.fin-b.agora.fin);
+  const pr=pessoas.filter(p=>p.prox&&p.prox.ini<=lim).sort((a,b)=>a.prox.ini-b.prox.ini);
+  const li=(p,d)=>`<li data-i="${pessoas.indexOf(p)}"><div class="pn"><b>${esc(p.nome)}</b><span>${esc(p.cargo)} · ${esc(p.lot)}</span></div><div class="dt">${d}</div></li>`;
+  const painel=(tit,cor,arr,fn)=>`<section class="panel"><h2><i style="background:${cor}"></i>${tit}<span>${arr.length}</span></h2>${arr.length?`<ul class="mini">${arr.map(fn).join('')}</ul>`:'<div class="none">Ninguém no momento.</div>'}</section>`;
+  const q=norm($('#q').value),lista=pessoas.filter(p=>casa(p,q,filtro));
+  $('#notice').innerHTML=`<div class="banner"><b>Dados pessoais.</b> Esta tela mostra nomes e datas de servidores. Use somente em ambiente interno. O direito é calculado em períodos de 12 meses a partir da admissão (${cfg.dias} dias, gozo em até ${cfg.concessivo} meses após o fim do período); confira as regras em <b>Regras</b> e com a legislação municipal.</div>`;
+  const linhas=lista.map(p=>{
+    const gozo=p.agora?`Em gozo: ${fmtCurto(p.agora.ini)} a ${fmtCurto(p.agora.fin)}`:p.prox?`Próximas: ${fmtCurto(p.prox.ini)} a ${fmtCurto(p.prox.fin)}`:'';
+    return `<tr data-i="${pessoas.indexOf(p)}"><td class="n"><b>${esc(p.nome)}</b><span>${esc(p.cargo)} · ${esc(p.lot)}</span></td><td class="num">${fmt(p.adm)}</td><td>${tags(p)}</td><td class="num">${p.saldo>0?'<b>'+p.saldo+'</b> dias':'—'}</td><td class="num">${gozo}</td></tr>`;
+  }).join('');
+  view.innerHTML=`<div class="panels">${painel('De férias agora','var(--blue)',ag,p=>li(p,'até '+fmt(p.agora.fin)+'<br><span style="font-weight:500;color:var(--muted)">volta '+fmt(p.agora.fin+DAY)+'</span>'))}${painel('Próximas férias · '+cfg.aviso+' dias','var(--violet)',pr,p=>li(p,fmt(p.prox.ini)+'<br><span style="font-weight:500;color:var(--muted)">até '+fmt(p.prox.fin)+'</span>'))}</div>
+   <div class="tblwrap"><table class="lst"><thead><tr><th>Servidor</th><th style="text-align:right">Admissão</th><th>Situação</th><th style="text-align:right">A gozar</th><th style="text-align:right">Férias</th></tr></thead><tbody>${linhas||'<tr><td colspan="5" class="none" style="padding:18px">Nada encontrado para esta busca.</td></tr>'}</tbody></table></div>
+   <p class="note">${lista.length} de ${pessoas.length} servidores.</p>`;
+  $('#foot').textContent='Dados do Centi (Cubo funcionário e Cubo movimentação de férias) de '+new Date(dados.em).toLocaleString('pt-BR')+'. '+(dados.excl?dados.excl+' registro(s) sem hierarquia (agentes políticos) ou pensionistas ficaram de fora. ':'')+'As férias já lançadas e o saldo são os do Centi; períodos sem lançamento são calculados pela data de admissão. Nada é gravado no Centi.';
+}
+
+/* ---------- ficha ---------- */
+let abrirTodos=false;
+function fechar(){const d=$('#dlg');if(d.open) d.close();}
+function abrirDlg(html){
+  const d=$('#dlg');d.innerHTML='<form method="dialog" autocomplete="off">'+html+'</form>';
+  d.querySelector('form').addEventListener('submit',ev=>ev.preventDefault());
+  d.querySelectorAll('[data-x]').forEach(b=>b.addEventListener('click',fechar));
+  d.showModal();return d;
+}
+const STAT={aquis:['Em aquisição','sem'],gozada:['Gozada','dia'],dir:['A gozar','dir'],venc:['Vencida','venc']};
+function dlgPessoa(i,todos){
+  const p=pessoas[i];if(!p) return;
+  const hoje=hojeMs(),mostra=todos?p.per:p.per.slice(0,6);
+  const rows=mostra.map(x=>{
+    const st=STAT[x.status],cur=x.ini<=hoje&&hoje<=x.fin;
+    const gz=x.gozos.length?x.gozos.map(g=>`${fmtCurto(g.ini)} a ${fmtCurto(g.fin)}${g.fin<hoje?'':g.ini>hoje?' (programadas)':' (em gozo)'} · ${g.dias}d`).join('<br>'):'<small>'+(x.centi?'sem gozo lançado':x.concluido?'sem registro no Centi':'—')+'</small>';
+    const lim=x.concluido&&x.saldo>0?`<small>${x.status==='venc'?'venceu em ':'gozar até '}${fmt(x.limite)}</small>`:'';
+    return `<tr class="${cur?'cur':''}"><td>${fmt(x.ini)} a ${fmt(x.fin)}${x.centi?'':'<small>calculado pela admissão</small>'}</td><td><span class="tag ${st[1]}">${st[0]}</span>${lim}</td><td>${gz}</td><td class="num">${x.concluido?x.saldo+'d':'—'}</td></tr>`;
+  }).join('');
+  const L=[['Cargo',p.cargo],['Lotação',p.lot],['Matrícula',p.MATRICULA],['Admissão',fmt(p.adm)],['Afastamento',p.TIPOAFASTAMENTO?titulo(p.TIPOAFASTAMENTO):'']].filter(x=>x[1]);
+  abrirDlg(`<h3>${esc(p.nome)}</h3><dl class="ficha">${L.map(x=>`<dt>${x[0]}</dt><dd>${esc(x[1])}</dd>`).join('')}</dl>
+    <div>${tags(p)}</div>
+    <div class="sum"><div class="dir"><small>A gozar</small><b>${p.saldo} dias</b></div><div class="venc"><small>Vencidas</small><b>${p.saldoVenc} dias</b></div><div><small>Programadas</small><b>${p.nprog}</b></div></div>
+    <h4 style="margin-top:4px">Períodos aquisitivos</h4>
+    <div class="pw"><table class="per"><thead><tr><th>Período aquisitivo</th><th>Situação</th><th>Férias</th><th style="text-align:right">Saldo</th></tr></thead><tbody>${rows}</tbody></table></div>
+    ${p.per.length>6&&!todos?`<button type="button" class="btn" data-todos="${i}">Mostrar todos os ${p.per.length} períodos</button>`:''}
+    <div class="row"><button type="button" class="btn primary" data-x>Fechar</button></div>`);
+  const b=$('#dlg [data-todos]');if(b) b.addEventListener('click',()=>dlgPessoa(i,true));
+}
+
+/* ---------- regras ---------- */
+function salvarCfg(){
+  const json=JSON.stringify(cfg);
+  try{localStorage.setItem(CFG_LS,json);}catch(e){}
+  if(dbh) dbh.doc('ferias/config').set({json}).catch(()=>toast('Não foi possível salvar as regras no servidor.'));
+}
+function dlgRegras(){
+  const d=abrirDlg(`<h3>Regras de férias</h3><p>Usadas para calcular direito e vencimento. Não substituem a legislação municipal: confira os valores antes de usar.</p>
+    <label>Dias de férias por período aquisitivo<input name="dias" type="number" min="1" max="90" value="${cfg.dias}"></label>
+    <label>Prazo para gozar, em meses após o fim do período aquisitivo (depois disso, vencidas)<input name="conc" type="number" min="1" max="60" value="${cfg.concessivo}"></label>
+    <label>Mostrar próximas férias dos próximos (dias)<input name="aviso" type="number" min="7" max="365" value="${cfg.aviso}"></label>
+    <div class="row"><button type="button" class="btn" data-x>Cancelar</button><button class="btn primary" type="submit">Salvar</button></div>`);
+  d.querySelector('form').addEventListener('submit',()=>{
+    const f=d.querySelector('form').elements,n=(v,a,b,def)=>{v=Math.round(+v);return v>=a&&v<=b?v:def;};
+    cfg={dias:n(f.dias.value,1,90,30),concessivo:n(f.conc.value,1,60,12),aviso:n(f.aviso.value,7,365,60)};
+    salvarCfg();fechar();if(dados&&bruto){montar(bruto);}render();toast('Regras salvas.');
+  });
+}
+let bruto=null;
+
+/* ---------- exportar ---------- */
+function csv(){
+  const q=norm($('#q').value),lista=pessoas.filter(p=>casa(p,q,filtro));
+  if(!lista.length){toast('Nada para exportar.');return;}
+  const c=v=>'"'+String(v==null?'':v).replace(/"/g,'""')+'"';
+  const cab=['Nome','Matrícula','Cargo','Lotação','Admissão','De férias hoje','Dias a gozar','Dias vencidos','Períodos vencidos','Férias programadas','Próximas férias','Sem registro no Centi'];
+  const lin=lista.map(p=>[p.nome,p.MATRICULA,p.cargo,p.lot,fmt(p.adm),p.agora?'até '+fmt(p.agora.fin):'',p.saldo,p.saldoVenc,p.nvenc,p.nprog,p.prox?fmt(p.prox.ini)+' a '+fmt(p.prox.fin):'',p.semReg?'Sim':'Não'].map(c).join(';'));
+  const blob=new Blob(['﻿'+[cab.map(c).join(';')].concat(lin).join('\r\n')],{type:'text/csv;charset=utf-8'});
+  const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='ferias-'+new Date().toISOString().slice(0,10)+'.csv';document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(a.href),2000);
+}
+
+/* ---------- eventos ---------- */
+$('#refBtn').addEventListener('click',carregar);
+$('#cfgBtn').addEventListener('click',dlgRegras);
+$('#csvBtn').addEventListener('click',csv);
+$('#q').addEventListener('input',render);
+$('#ft').addEventListener('change',()=>{filtro=$('#ft').value;render();});
+document.addEventListener('click',e=>{
+  if(e.target.closest('[data-ref]')){carregar();return;}
+  const st=e.target.closest('.stat');if(st){filtro=filtro===st.dataset.f?'':st.dataset.f;render();return;}
+  const r=e.target.closest('#view [data-i]');if(r) dlgPessoa(+r.dataset.i);
+});
+try{matchMedia('(prefers-color-scheme: dark)').addEventListener('change',themeBtn);new MutationObserver(themeBtn).observe(document.documentElement,{attributes:true,attributeFilter:['data-theme']});}catch(e){}
+
+(function init(){
+  try{const c=JSON.parse(localStorage.getItem(CFG_LS)||'null');if(c&&c.dias) cfg=Object.assign(cfg,c);}catch(e){}
+  themeBtn();render();
+  (async()=>{
+    try{
+      if(window.claude&&window.claude.use) dbh=await window.claude.use('db');
+      if(!dbh) dbh=await PB.connect();
+      if(dbh){
+        try{const s=await dbh.doc('ferias/config').get();if(s.exists){const c=JSON.parse(s.data().json);if(c&&c.dias) cfg=Object.assign(cfg,c);}}catch(e){}
+        await carregar();
+      }
+    }catch(e){dbh=null;}
+  })();
+})();
+</script>

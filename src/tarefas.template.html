@@ -168,7 +168,7 @@ async function carregar(silencioso){
     if(!dbh||!dbh.tarefas){erro='sem-servidor';lista=[];return;}
     if(!silencioso) carga(true,'Buscando as tarefas…');
     lista=await dbh.tarefas.list('coluna != "concluida" || concluido_em >= "'+inicioMes()+'"');
-    erro='';
+    erro='';ligarTempoReal();
     if($('#arqChk').checked) arquivo=await dbh.tarefas.list('coluna = "concluida" && concluido_em < "'+inicioMes()+'"');
   }catch(e){
     if(e.status===404) erro='sem-colecao'; else{erro='falha';if(!silencioso) toast('Não foi possível carregar: '+(e.message||e));}
@@ -320,8 +320,19 @@ bd.addEventListener('dragend',()=>bd.querySelectorAll('.dragging,.over').forEach
 bd.addEventListener('dragover',e=>{const c=e.target.closest('.col');if(!c) return;e.preventDefault();bd.querySelectorAll('.over').forEach(x=>{if(x!==c) x.classList.remove('over');});c.classList.add('over');});
 bd.addEventListener('drop',e=>{const c=e.target.closest('.col');if(!c) return;e.preventDefault();const id=e.dataTransfer.getData('text/plain');bd.querySelectorAll('.over,.dragging').forEach(x=>x.classList.remove('over','dragging'));if(id) mover(id,c.dataset.col);});
 try{matchMedia('(prefers-color-scheme: dark)').addEventListener('change',themeBtn);new MutationObserver(themeBtn).observe(document.documentElement,{attributes:true,attributeFilter:['data-theme']});}catch(e){}
-/* mantém o quadro em dia: colegas mexem nas tarefas da equipe, e a virada do mês tira as concluídas */
-setInterval(()=>{if(document.hidden||$('#dlg').open||!dbh) return;carregar(true);},45000);
+/* mantém o quadro em dia: colegas mexem nas tarefas da equipe, e a virada do mês tira as concluídas.
+   Tempo real pelo servidor (aparece na hora) e, por garantia, uma conferência a cada 15 s (cobre queda de conexão e tarefa que virou privada). */
+let ouvindo=false;
+function aoVivo(ev){
+  const r=ev&&ev.record;if(!r||!r.id) return;
+  const i=lista.findIndex(t=>t.id===r.id);
+  if(ev.action==='delete'){if(i>=0) lista.splice(i,1);}
+  else if(i>=0) lista[i]=r;
+  else lista.unshift(r);
+  render();
+}
+function ligarTempoReal(){if(ouvindo||!dbh||!dbh.tarefas||!dbh.tarefas.listen) return;ouvindo=true;dbh.tarefas.listen(aoVivo);}
+setInterval(()=>{if(document.hidden||$('#dlg').open||!dbh) return;carregar(true);},15000);
 document.addEventListener('visibilitychange',()=>{if(!document.hidden&&dbh&&!$('#dlg').open) carregar(true);});
 
 (function init(){

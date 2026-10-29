@@ -74,4 +74,16 @@ function cuboLinhas(cube) {
   return out;
 }
 
-module.exports = { BASE, centiPost, cuboPayload, cuboLinhas, centiLogin, isAllowed, allowedUsers, pbPassword, readBody, send };
+/* Ficha financeira (FP024): uma ficha por folha (mensal, 13º…) do funcionário na referência. Só os dados que a tela mostra:
+   sem CPF, sem apontamentos e sem o histórico de processamento. */
+const num = x => (typeof x === 'number' ? x : Number(x) || 0);
+function fichaResumo(f) {
+  return {
+    Id: f.Id, Folha: f.Folha, Mes: f.Mes, Ano: f.Ano, DataPagamento: f.DataPagamento || '',
+    TotalProventos: num(f.TotalProventos), TotalDescontos: num(f.TotalDescontos), LiquidoReceber: num(f.LiquidoReceber),
+    Eventos: (f.Eventos || []).map(e => ({ Id: e.Id, Nome: e.Nome, BaseCalc: num(e.BaseCalc), Referencia: num(e.Referencia),
+      Provento: num(e.Provento), Desconto: num(e.Desconto), Tipo: e.TipoCalculo || '' }))
+  };
+}
+
+module.exports = { BASE, centiPost, cuboPayload, cuboLinhas, fichaResumo, centiLogin, isAllowed, allowedUsers, pbPassword, readBody, send };

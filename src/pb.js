@@ -136,8 +136,8 @@ const PB=(function(){
   const centi={
     get user(){return cs?cs.user:'';},
     get nome(){return cs?(cs.nome||cs.user):'';},
-    search(entity,filters,start){
-      return centiCall('restauth/searchentity',{Depth:50,Entity:entity,Start:start||1,
+    search(entity,filters,start,depth){
+      return centiCall('restauth/searchentity',{Depth:depth||50,Entity:entity,Start:start==null?1:start,
         Filters:(filters||[]).map(f=>Object.assign({List:false,TypeFilter:0,between:''},f))});
     }
   };

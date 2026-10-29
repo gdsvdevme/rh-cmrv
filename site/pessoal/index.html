@@ -275,8 +275,8 @@ const PB=(function(){
   const centi={
     get user(){return cs?cs.user:'';},
     get nome(){return cs?(cs.nome||cs.user):'';},
-    search(entity,filters,start){
-      return centiCall('restauth/searchentity',{Depth:50,Entity:entity,Start:start||1,
+    search(entity,filters,start,depth){
+      return centiCall('restauth/searchentity',{Depth:depth||50,Entity:entity,Start:start==null?1:start,
         Filters:(filters||[]).map(f=>Object.assign({List:false,TypeFilter:0,between:''},f))});
     }
   };
@@ -582,18 +582,35 @@ function converter(lista,mapa){
   return {pessoas:P,ign};
 }
 async function paginar(ent,filtro){
-  const out=[];let start=1,pg=1,porPagina=false,primeira='';
-  for(let i=0;i<300;i++){
-    const r=await PB.centi.search(ent,filtro,start),d=Array.isArray(r&&r.Data)?r.Data:[];
-    if(!d.length) break;
-    const k=JSON.stringify(d[0]);
-    if(out.length&&k===primeira){if(porPagina) break;porPagina=true;pg=2;start=2;continue;}   // Start era número da página, não do registro
-    if(!out.length) primeira=k;
-    out.push(...d);
+  /* o Centi limita cada consulta (50 registros); como o "Start" pode ser número do registro (1 ou 0) ou da página,
+     e o "Depth" pode ser o limite, testa as variações até aparecerem registros novos */
+  const out=[],vistos=new Set(),info=[];
+  const novos=d=>{let n=0;d.forEach(x=>{const k=JSON.stringify(x);if(!vistos.has(k)){vistos.add(k);out.push(x);n++;}});return n;};
+  const pedir=async(start,depth)=>{const r=await PB.centi.search(ent,filtro,start,depth);return {r,d:Array.isArray(r&&r.Data)?r.Data:[]};};
+  let depth=50,{r,d}=await pedir(1,depth);
+  if(!d.length) return out;
+  novos(d);
+  info.push('chaves da resposta: '+Object.keys(r).join(', ')+'; Count='+r.Count);
+  const total=Math.max(0,...Object.keys(r).filter(k=>k!=='Data'&&typeof r[k]==='number').map(k=>r[k]));
+  try{novos((await pedir(0,depth)).d);}catch(e){}   // se o Start começar em 0, a primeira consulta pulou o registro 0
+  /* 1) o limite pode ser o Depth */
+  const g=await pedir(1,1000);
+  if(g.d.length>d.length){depth=1000;d=g.d;novos(d);}
+  /* 2) as demais páginas: descobre qual forma de "Start" funciona */
+  const formas=[(pg,n)=>n+1,(pg,n)=>pg,(pg,n)=>n,(pg,n)=>pg-1];
+  let forma=-1;
+  for(let pg=2;pg<=400;pg++){
+    if(total&&total>d.length&&out.length>=total) break;
+    let ok=false;
+    for(const f of (forma>=0?[forma]:formas.keys())){
+      const x=await pedir(formas[f](pg,d.length*(pg-1)),depth);
+      if(x.d.length&&novos(x.d)){forma=f;ok=true;break;}
+    }
+    if(!ok) break;
     toast('Buscando no Centi… '+out.length+' registros');
-    if(r.Count>d.length&&out.length>=r.Count) break;
-    if(porPagina){pg++;start=pg;}else start=out.length+1;
   }
+  info.push('forma de paginação: '+(forma<0?'nenhuma funcionou':forma)+'; Depth='+depth+'; total informado='+total);
+  paginar.info=info.join(' | ');
   return out;
 }
 async function buscarCenti(ent){
@@ -619,13 +636,14 @@ async function sincronizar(ent){
     const mapa=Object.assign({},(dados&&dados.mapa)||autoMapa(achatar(bruto[0],'',{},0)),{ent});
     if(!mapa.campos.n){toast('Não identifiquei o campo do nome. Escolha os campos abaixo.');return dlgCampos(mapa);}
     aplicarCenti(mapa);
+    if(bruto.length%50===0&&paginar.info) console.warn('Centi:',paginar.info);
   }catch(e){toast(e.status===401?'A sessão do Centi expirou. Clique em Buscar do Centi para entrar de novo.':'Não foi possível buscar no Centi: '+(e.message||e));}
 }
 function aplicarCenti(mapa){
   const r=converter(bruto,mapa);
   if(!r.pessoas.length){toast('Nenhum servidor ativo encontrado com estes campos.');return dlgCampos(mapa);}
   dados={v:2,importado:new Date().toISOString(),fonte:'Centi',mapa,ignorados:r.ign,pessoas:r.pessoas};hist=[];
-  salvar();render();toast(r.pessoas.length+' servidores ativos carregados do Centi.');
+  salvar();render();toast(r.pessoas.length+' servidores ativos carregados do Centi.'+(bruto.length%50===0&&paginar.info?' Atenção: pode haver mais registros ('+paginar.info+').':''));
 }
 async function dlgCampos(mapa){
   try{

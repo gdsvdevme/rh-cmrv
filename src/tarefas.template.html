@@ -82,6 +82,9 @@ dialog input[type=text],dialog input[type=date],dialog select,dialog textarea{ba
 dialog textarea{min-height:84px;resize:vertical}
 dialog .row{display:flex;gap:8px;justify-content:flex-end;flex-wrap:wrap}
 dialog .two{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+fieldset.rec{border:1px solid var(--line);border-radius:12px;padding:10px 12px;margin:0}
+fieldset.rec legend{font-weight:700;font-size:13px;padding:0 6px;color:var(--fg)}
+.tag.rc{background:var(--soft);color:var(--accent)}
 fieldset.vis{border:1px solid var(--line);border-radius:12px;padding:10px 12px;margin:0}
 fieldset.vis legend{font-weight:700;font-size:13px;padding:0 6px;color:var(--fg)}
 .opt{display:flex;gap:10px;align-items:flex-start;padding:9px 10px;border:1px solid var(--line);border-radius:10px;margin:6px 0;cursor:pointer}
@@ -136,7 +139,7 @@ const TEMA_KEY='rhcrv-tema';
 const $=s=>document.querySelector(s);
 const esc=s=>String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const norm=s=>String(s||'').normalize('NFD').replace(/[̀-ͯ]/g,'').toLowerCase().trim();
-let dbh=null,lista=[],arquivo=[],vis='',erro='';
+let dbh=null,lista=[],modelos=[],arquivo=[],vis='',erro='',gerando=false;
 
 const COLS=[{k:'fazer',nome:'A fazer',cor:'var(--blue)'},{k:'andamento',nome:'Em andamento',cor:'var(--gold)'},{k:'concluida',nome:'Concluído neste mês',cor:'var(--ok)'}];
 const PRI={urgente:['Urgente',4,'var(--danger)'],alta:['Alta',3,'var(--gold)'],normal:['Normal',2,'var(--line)'],baixa:['Baixa',1,'var(--line)']};
@@ -159,6 +162,42 @@ const mesNome=iso=>{const m=/^(\d{4})-(\d{2})/.exec(iso||'');if(!m) return '';co
 const euId=()=>PB.userId;
 const minha=t=>t.dono===euId();
 
+/* ---------- recorrência mensal ----------
+   Uma tarefa recorrente tem um "modelo" (coluna "modelo", invisível) e uma ocorrência por mês (serie = id do modelo, ciclo = AAAA-MM).
+   O id da ocorrência é calculado a partir do modelo e do mês: se duas pessoas abrirem ao mesmo tempo, o servidor aceita só uma. */
+const cicloAtual=()=>hojeIso().slice(0,7);
+function idAleatorio(){const a=new Uint8Array(15);(crypto&&crypto.getRandomValues?crypto.getRandomValues(a):a.forEach((_,i)=>a[i]=Math.random()*256));return Array.from(a,x=>'abcdefghijklmnopqrstuvwxyz0123456789'[x%36]).join('');}
+function idCiclo(serie,ciclo){   // 15 caracteres a-z0-9, sempre o mesmo para o mesmo par
+  const t=serie+'|'+ciclo;let h1=0x811c9dc5,h2=0x9747b28c;
+  for(let i=0;i<t.length;i++){const c=t.charCodeAt(i);h1=Math.imul(h1^c,16777619)>>>0;h2=Math.imul(h2^c,0x5bd1e995)>>>0;h2^=h2>>>15;}
+  return (h1.toString(36)+h2.toString(36)+serie).replace(/[^a-z0-9]/g,'').slice(0,15).padEnd(15,'0');
+}
+function prazoDoCiclo(dia,ciclo){   // dia vazio = sem data específica; dia 31 em mês curto vira o último dia
+  const d=parseInt(dia,10);if(!d) return '';
+  const [a,m]=ciclo.split('-').map(Number),ult=new Date(a,m,0).getDate();
+  return ciclo+'-'+pad(Math.min(d,ult));
+}
+const novoModelo=(d,compartilhada,dia)=>{const id=idAleatorio();return {id,serie:id,titulo:d.titulo,descricao:d.descricao,coluna:'modelo',compartilhada,autor:PB.nome||PB.email||'',
+  prioridade:d.prioridade,prazo:'',criada_em:new Date().toISOString(),concluido_em:'',recorrencia:'mensal',dia_prazo:dia,ciclo:''};};
+const modeloDe=t=>t&&t.serie?modelos.find(m=>m.id===t.serie):null;
+async function criarOcorrencia(m,ciclo,coluna){
+  const dados={id:idCiclo(m.id,ciclo),titulo:m.titulo,descricao:m.descricao||'',coluna:coluna||'fazer',compartilhada:!!m.compartilhada,autor:m.autor||'',
+    prioridade:m.prioridade||'normal',prazo:prazoDoCiclo(m.dia_prazo,ciclo),criada_em:new Date().toISOString(),concluido_em:coluna==='concluida'?hojeIso():'',
+    recorrencia:'mensal',dia_prazo:m.dia_prazo||'',serie:m.id,ciclo};
+  const c=await dbh.tarefas.create(dados);lista.unshift(c);return c;
+}
+/* garante a ocorrência do mês de cada modelo ativo (quando o mês vira, a nova nasce em "A fazer") */
+async function gerarRecorrentes(){
+  if(gerando||!dbh) return;gerando=true;let novo=false;const ciclo=cicloAtual();
+  try{
+    for(const m of modelos.slice()){
+      if(m.recorrencia!=='mensal'||lista.some(t=>t.serie===m.id&&t.ciclo===ciclo)) continue;
+      try{await criarOcorrencia(m,ciclo);novo=true;}catch(e){/* id repetido: outra pessoa já criou; a próxima conferência traz */}
+    }
+  }finally{gerando=false;}
+  if(novo) render();
+}
+
 /* ---------- dados ---------- */
 async function carregar(silencioso){
   const b=$('#refBtn');b.disabled=true;
@@ -167,8 +206,11 @@ async function carregar(silencioso){
     if(!dbh) dbh=await PB.connect();
     if(!dbh||!dbh.tarefas){erro='sem-servidor';lista=[];return;}
     if(!silencioso) carga(true,'Buscando as tarefas…');
-    lista=await dbh.tarefas.list('coluna != "concluida" || concluido_em >= "'+inicioMes()+'"');
+    const im=inicioMes(),cic=cicloAtual();
+    const todas=await dbh.tarefas.list('(coluna != "concluida" && coluna != "dispensada") || (coluna = "concluida" && concluido_em >= "'+im+'") || (coluna = "dispensada" && ciclo >= "'+cic+'")');
+    modelos=todas.filter(t=>t.coluna==='modelo');lista=todas.filter(t=>t.coluna!=='modelo');
     erro='';ligarTempoReal();
+    await gerarRecorrentes();
     if($('#arqChk').checked) arquivo=await dbh.tarefas.list('coluna = "concluida" && concluido_em < "'+inicioMes()+'"');
   }catch(e){
     if(e.status===404) erro='sem-colecao'; else{erro='falha';if(!silencioso) toast('Não foi possível carregar: '+(e.message||e));}
@@ -178,7 +220,7 @@ async function carregar(silencioso){
 /* ---------- exibição ---------- */
 const visiveis=()=>{
   const q=norm($('#q').value),im=inicioMes();
-  return lista.filter(t=>!(t.coluna==='concluida'&&(t.concluido_em||'')<im)&&(!vis||(vis==='eq'?t.compartilhada:!t.compartilhada))&&(!q||norm(t.titulo+' '+t.descricao+' '+t.autor).includes(q)));
+  return lista.filter(t=>t.coluna!=='dispensada'&&!(t.coluna==='concluida'&&(t.concluido_em||'')<im)&&(!vis||(vis==='eq'?t.compartilhada:!t.compartilhada))&&(!q||norm(t.titulo+' '+t.descricao+' '+t.autor).includes(q)));
 };
 const peso=t=>(PRI[t.prioridade]||PRI.normal)[1];
 function ordenar(a,col){
@@ -194,6 +236,7 @@ function cartao(t){
     <h3>${esc(t.titulo)}</h3>${t.descricao?`<p>${esc(t.descricao)}</p>`:''}
     <div class="meta">
       ${t.compartilhada?'<span class="tag eq" title="Visível para toda a equipe do RH">👥 Equipe</span>':'<span class="tag pv" title="Só você vê esta tarefa">🔒 Privada</span>'}
+      ${t.serie?`<span class="tag rc" title="Tarefa recorrente: volta todo mês em A fazer">🔁 Mensal${t.dia_prazo?' · até dia '+esc(t.dia_prazo):' · sem data'}</span>`:''}
       ${t.prioridade&&t.prioridade!=='normal'?`<span class="tag p-${esc(t.prioridade)}">${esc(pri[0])}</span>`:''}
       ${t.prazo?`<span class="tag${atras?' late':''}">${atras?'Atrasada · ':'Prazo '}${dataBr(t.prazo)}</span>`:''}
       ${col==='concluida'&&t.concluido_em?`<span class="tag ok">Concluída em ${dataBr(t.concluido_em)}</span>`:''}
@@ -221,7 +264,7 @@ function render(){
   $('#novaBtn').disabled=false;n.innerHTML='';
   const v=visiveis(),hoje=hojeIso();
   const abertas=v.filter(t=>t.coluna!=='concluida'),atras=abertas.filter(t=>t.prazo&&t.prazo<hoje).length;
-  stats.innerHTML=`<div class="stat"><b>${abertas.length}</b><span>Em aberto</span></div><div class="stat late"><b>${atras}</b><span>Atrasadas</span></div><div class="stat done"><b>${v.length-abertas.length}</b><span>Concluídas no mês</span></div><div class="stat priv"><b>${lista.filter(t=>!t.compartilhada&&t.coluna!=='concluida').length}</b><span>Minhas privadas abertas</span></div>`;
+  stats.innerHTML=`<div class="stat"><b>${abertas.length}</b><span>Em aberto</span></div><div class="stat late"><b>${atras}</b><span>Atrasadas</span></div><div class="stat done"><b>${v.length-abertas.length}</b><span>Concluídas no mês</span></div><div class="stat priv"><b>${lista.filter(t=>!t.compartilhada&&t.coluna!=='concluida'&&t.coluna!=='dispensada').length}</b><span>Minhas privadas abertas</span></div>`;
   board.innerHTML=COLS.map(c=>{
     const ts=ordenar(v.filter(t=>t.coluna===c.k),c.k);
     return `<section class="col" data-col="${c.k}" style="--cc:${c.cor}"><h2><i></i>${esc(c.nome)}<span class="n">${ts.length}</span><button class="add" type="button" data-add="${c.k}" title="Nova tarefa em ${esc(c.nome)}" aria-label="Nova tarefa em ${esc(c.nome)}">+</button></h2>${ts.map(cartao).join('')||'<div class="vazio">Nenhuma tarefa.</div>'}</section>`;
@@ -255,42 +298,91 @@ function abrirDlg(html){
   d.showModal();return d;
 }
 function dlgTarefa(id,col){
-  const t=id?porId(id):null,novo=!t,dono=novo||minha(t);
+  const t=id?porId(id):null,novo=!t,m=modeloDe(t),recorrente=!!m;
+  const dono=(novo||minha(t))&&!recorrente;   // a visibilidade de uma tarefa recorrente não muda (o modelo e as ocorrências seguem juntos)
   const cur=novo?'':(t.compartilhada?'eq':'pv');
   const r=(v,tit,desc)=>`<label class="opt${dono?'':' lock'}"><input type="radio" name="vis" value="${v}" required ${cur===v?'checked':''} ${dono?'':'disabled'}><div><b>${tit}</b><span>${desc}</span></div></label>`;
+  const recAtual=recorrente&&m.recorrencia==='mensal'?'mensal':'',diaAtual=recorrente?(m.dia_prazo||''):'';
   const d=abrirDlg(`<h3>${novo?'Nova tarefa':'Editar tarefa'}</h3>
     <label class="f">Título<input type="text" name="titulo" required maxlength="200" value="${esc(t?t.titulo:'')}"></label>
     <label class="f">Detalhes (opcional)<textarea name="descricao" maxlength="4000">${esc(t?t.descricao:'')}</textarea></label>
     <div class="two"><label class="f">Prioridade<select name="prioridade">${Object.keys(PRI).map(k=>`<option value="${k}"${(t?t.prioridade:'normal')===k?' selected':''}>${PRI[k][0]}</option>`).join('')}</select></label>
-    <label class="f">Prazo (opcional)<input type="date" name="prazo" value="${esc(t?t.prazo:'')}"></label></div>
+    <label class="f" data-prazo>Prazo (opcional)<input type="date" name="prazo" value="${esc(t?t.prazo:'')}"></label></div>
     <label class="f">Coluna<select name="coluna">${COLS.map(c=>`<option value="${c.k}"${(t?t.coluna:col||'fazer')===c.k?' selected':''}>${esc(c.nome)}</option>`).join('')}</select></label>
+    <fieldset class="rec"><legend>Repetição</legend>
+      <div class="two"><label class="f">Repetir<select name="rec"><option value="">Não se repete</option><option value="mensal"${recAtual?' selected':''}>Todo mês</option></select></label>
+      <label class="f" data-dia hidden>Até o dia<select name="dia"><option value="">Sem data específica</option>${Array.from({length:31},(_,i)=>`<option value="${i+1}"${String(i+1)===diaAtual?' selected':''}>Dia ${i+1}</option>`).join('')}</select></label></div>
+      <div class="hint" data-rhint></div></fieldset>
     <fieldset class="vis"><legend>Quem vai ver esta tarefa? *</legend>
       ${r('eq','👥 Toda a equipe do RH','Todos os usuários poderão ver, mover, editar e excluir.')}
       ${r('pv','🔒 Somente eu (privada)','Só você vê. Ninguém mais, nem na lista.')}
-      <div class="hint" data-hint>${novo?'Escolha uma das opções para continuar.':dono?'Você pode mudar a visibilidade.':'Só quem criou pode mudar a visibilidade.'}</div></fieldset>
+      <div class="hint" data-hint>${novo?'Escolha uma das opções para continuar.':recorrente?'A visibilidade de uma tarefa recorrente não pode ser alterada.':dono?'Você pode mudar a visibilidade.':'Só quem criou pode mudar a visibilidade.'}</div></fieldset>
     <div class="row"><button type="button" class="btn" data-x>Cancelar</button><button class="btn primary" type="submit">${novo?'Criar tarefa':'Salvar'}</button></div>`);
-  const f=d.querySelector('form'),hint=f.querySelector('[data-hint]');
-  f.addEventListener('change',e=>{if(e.target.name==='vis') hint.textContent=e.target.value==='eq'?'Confirmado: esta tarefa será visível para toda a equipe do RH.':'Confirmado: esta tarefa será privada, só você vai vê-la.';});
+  const f=d.querySelector('form'),hint=f.querySelector('[data-hint]'),rh=f.querySelector('[data-rhint]');
+  const syncRec=()=>{
+    const on=f.elements.rec.value==='mensal';
+    f.querySelector('[data-dia]').hidden=!on;f.querySelector('[data-prazo]').hidden=on;
+    rh.textContent=on?(f.elements.dia.value?`Todo mês uma nova tarefa nasce em "A fazer", com prazo até o dia ${f.elements.dia.value}. A concluída sai do quadro na virada do mês.`:'Todo mês uma nova tarefa nasce em "A fazer", sem data específica. A concluída sai do quadro na virada do mês.'):(recorrente?'Ao escolher "Não se repete", a repetição para: não nascem novas tarefas nos próximos meses.':'');
+  };
+  f.addEventListener('change',e=>{
+    if(e.target.name==='vis') hint.textContent=e.target.value==='eq'?'Confirmado: esta tarefa será visível para toda a equipe do RH.':'Confirmado: esta tarefa será privada, só você vai vê-la.';
+    if(e.target.name==='rec'||e.target.name==='dia') syncRec();
+  });
+  syncRec();
   f.addEventListener('submit',async ev=>{
     ev.preventDefault();
     const g=n=>f.elements[n].value,visSel=(f.querySelector('input[name=vis]:checked')||{}).value;
     if(!visSel&&dono){hint.textContent='Escolha quem vai ver esta tarefa.';return;}
-    const dados={titulo:g('titulo').trim(),descricao:g('descricao').trim(),prioridade:g('prioridade'),prazo:g('prazo'),coluna:g('coluna')};
-    if(!dados.titulo){return;}
+    const rec=g('rec')==='mensal',dia=rec?g('dia'):'',ciclo=cicloAtual();
+    const dados={titulo:g('titulo').trim(),descricao:g('descricao').trim(),prioridade:g('prioridade'),prazo:rec?prazoDoCiclo(dia,ciclo):g('prazo'),coluna:g('coluna')};
+    if(!dados.titulo) return;
     if(dono) dados.compartilhada=visSel==='eq';
+    const compartilhada=dono?dados.compartilhada:(t?t.compartilhada:false);
     fechar();
-    if(novo){
-      dados.autor=PB.nome||PB.email||'';dados.criada_em=new Date().toISOString();dados.concluido_em=dados.coluna==='concluida'?hojeIso():'';
-      try{const c=await dbh.tarefas.create(dados);lista.unshift(c);render();toast(dados.compartilhada?'Tarefa criada para toda a equipe.':'Tarefa privada criada, só você a vê.');}
-      catch(e){toast('Não foi possível criar a tarefa: '+(e.message||e));}
-    }else{
-      if(dados.coluna!==t.coluna) dados.concluido_em=dados.coluna==='concluida'?hojeIso():'';
-      salvar(id,dados,'Tarefa atualizada.');
-    }
+    try{
+      if(novo&&!rec){
+        dados.autor=PB.nome||PB.email||'';dados.criada_em=new Date().toISOString();dados.concluido_em=dados.coluna==='concluida'?hojeIso():'';
+        const c=await dbh.tarefas.create(dados);lista.unshift(c);render();
+        toast(dados.compartilhada?'Tarefa criada para toda a equipe.':'Tarefa privada criada, só você a vê.');
+      }else if(novo&&rec){
+        const mod=await dbh.tarefas.create(novoModelo(dados,compartilhada,dia));modelos.push(mod);
+        await criarOcorrencia(mod,ciclo,dados.coluna);
+        render();toast('Tarefa recorrente criada. Todo mês ela volta para "A fazer"'+(dia?' com prazo até o dia '+dia:' sem data específica')+'.');
+      }else{
+        if(dados.coluna!==t.coluna) dados.concluido_em=dados.coluna==='concluida'?hojeIso():'';
+        if(recorrente&&rec){   // mantém a repetição: o modelo recebe as mudanças e vale a partir do próximo mês
+          dados.dia_prazo=dia;
+          const mu=await dbh.tarefas.update(m.id,{titulo:dados.titulo,descricao:dados.descricao,prioridade:dados.prioridade,dia_prazo:dia,recorrencia:'mensal'});Object.assign(m,mu);
+        }else if(recorrente&&!rec){   // para a repetição: apaga o modelo e solta esta tarefa dele
+          await dbh.tarefas.remove(m.id);modelos=modelos.filter(x=>x.id!==m.id);
+          Object.assign(dados,{serie:'',ciclo:'',recorrencia:'',dia_prazo:''});
+        }else if(!recorrente&&rec){   // tarefa comum que passa a repetir
+          const mod=await dbh.tarefas.create(novoModelo(dados,compartilhada,dia));modelos.push(mod);
+          Object.assign(dados,{serie:mod.id,ciclo,recorrencia:'mensal',dia_prazo:dia});
+        }
+        salvar(id,dados,rec&&!recorrente?'Tarefa atualizada. Ela passa a repetir todo mês.':!rec&&recorrente?'Repetição encerrada. Não nascem novas tarefas nos próximos meses.':'Tarefa atualizada.');
+      }
+    }catch(e){toast('Não foi possível salvar: '+(e.message||e));}
   });
 }
 function dlgExcluir(id){
   const t=porId(id);if(!t) return;
+  const m=modeloDe(t);
+  if(m){
+    const d=abrirDlg(`<h3>Excluir tarefa recorrente?</h3><p><b>${esc(t.titulo)}</b></p>
+      <p>Esta tarefa <b>se repete todo mês</b> (${t.compartilhada?'da equipe':'privada'}). O que você quer fazer?</p>
+      <div class="row" style="flex-direction:column;align-items:stretch">
+        <button class="btn" type="button" data-pular><b>Dispensar só este mês</b>&nbsp;· volta no próximo mês</button>
+        <button class="btn danger" type="button" data-parar><b>Excluir e parar a repetição</b>&nbsp;· não volta mais</button>
+        <button class="btn" type="button" data-x>Cancelar</button></div>`);
+    d.querySelector('[data-pular]').addEventListener('click',()=>{fechar();salvar(id,{coluna:'dispensada',concluido_em:''},'Dispensada neste mês. Ela volta no próximo mês.');});
+    d.querySelector('[data-parar]').addEventListener('click',async()=>{
+      fechar();
+      try{await dbh.tarefas.remove(m.id);modelos=modelos.filter(x=>x.id!==m.id);await dbh.tarefas.remove(id);lista=lista.filter(x=>x.id!==id);render();toast('Tarefa excluída e repetição encerrada.');}
+      catch(e){toast('Não foi possível excluir: '+(e.message||e));}
+    });
+    return;
+  }
   const d=abrirDlg(`<h3>Excluir tarefa?</h3><p><b>${esc(t.titulo)}</b></p><p>${t.compartilhada?'Esta tarefa é <b>da equipe</b>: será removida para todos.':'Esta tarefa é <b>privada</b>: será removida só para você.'} Não dá para desfazer.</p>
     <div class="row"><button type="button" class="btn" data-x>Cancelar</button><button class="btn danger" type="submit">Excluir</button></div>`);
   d.querySelector('form').addEventListener('submit',async ev=>{
@@ -325,10 +417,13 @@ try{matchMedia('(prefers-color-scheme: dark)').addEventListener('change',themeBt
 let ouvindo=false;
 function aoVivo(ev){
   const r=ev&&ev.record;if(!r||!r.id) return;
-  const i=lista.findIndex(t=>t.id===r.id);
-  if(ev.action==='delete'){if(i>=0) lista.splice(i,1);}
-  else if(i>=0) lista[i]=r;
-  else lista.unshift(r);
+  const arr=r.coluna==='modelo'?modelos:lista,outro=arr===lista?modelos:lista;
+  const k=outro.findIndex(t=>t.id===r.id);if(k>=0) outro.splice(k,1);   // (não deve acontecer; mantém as listas coerentes)
+  const i=arr.findIndex(t=>t.id===r.id);
+  if(ev.action==='delete'){if(i>=0) arr.splice(i,1);}
+  else if(i>=0) arr[i]=r;
+  else arr.unshift(r);
+  if(arr===modelos&&ev.action!=='delete') gerarRecorrentes();
   render();
 }
 function ligarTempoReal(){if(ouvindo||!dbh||!dbh.tarefas||!dbh.tarefas.listen) return;ouvindo=true;dbh.tarefas.listen(aoVivo);}

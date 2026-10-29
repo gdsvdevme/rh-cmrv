@@ -120,15 +120,21 @@ if new_api:
               'createRule': AUTH + ' && @request.body.dono = @request.auth.id',
               'updateRule': VER + ' && @request.body.dono:isset = false && (@request.body.compartilhada:isset = false || dono = @request.auth.id)',
               'deleteRule': VER}
-    if call('GET', '/api/collections/rhcmrv_tarefas', ok404=True):
-        call('PATCH', '/api/collections/rhcmrv_tarefas', regras)
-        print('Coleção rhcmrv_tarefas já existe (regras de acesso atualizadas).')
+    txt = lambda n, **k: dict({'name': n, 'type': 'text', 'required': False}, **k)
+    RECORRENCIA = [txt('recorrencia', max=10), txt('dia_prazo', max=2), txt('serie', max=40), txt('ciclo', max=7)]
+    col = call('GET', '/api/collections/rhcmrv_tarefas', ok404=True)
+    if col:
+        tem = set(f['name'] for f in col.get('fields', []))
+        faltam = [f for f in RECORRENCIA if f['name'] not in tem]
+        corpo = dict(regras)
+        if faltam: corpo['fields'] = col.get('fields', []) + faltam   # mantém os campos existentes (com id) e acrescenta os da recorrência
+        call('PATCH', '/api/collections/rhcmrv_tarefas', corpo)
+        print('Coleção rhcmrv_tarefas já existe (regras atualizadas%s).' % (', campos da recorrência acrescentados' if faltam else ''))
     else:
-        txt = lambda n, **k: dict({'name': n, 'type': 'text', 'required': False}, **k)
         call('POST', '/api/collections', dict({'name': 'rhcmrv_tarefas', 'type': 'base',
             'fields': [txt('titulo', required=True, max=200), txt('descricao', max=4000), txt('coluna', max=20),
                        {'name': 'compartilhada', 'type': 'bool'}, txt('dono', required=True, max=40), txt('autor', max=120),
-                       txt('prioridade', max=20), txt('prazo', max=10), txt('criada_em', max=40), txt('concluido_em', max=10)],
+                       txt('prioridade', max=20), txt('prazo', max=10), txt('criada_em', max=40), txt('concluido_em', max=10)] + RECORRENCIA,
             'indexes': ['CREATE INDEX idx_rhcmrv_tarefas_dono ON rhcmrv_tarefas (dono)']}, **regras))
         print('Coleção rhcmrv_tarefas criada.')
 

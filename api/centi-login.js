@@ -45,23 +45,44 @@ const TAREFAS_REGRAS = {
   deleteRule: AUTH + ' && (compartilhada = true || dono = @request.auth.id)'
 };
 let tarefasOk = false;
-async function garantirTarefas(userToken) {
-  if (tarefasOk) return;
-  const t = await pb('GET', '/api/collections/rhcmrv_tarefas/records?perPage=1', undefined, userToken);
-  if (t.status !== 404) { tarefasOk = true; return; }
+const campoTxt = (name, max, extra) => Object.assign({ name, type: 'text', required: false, max }, extra || {});
+const CAMPOS_BASE = [campoTxt('titulo', 200, { required: true }), campoTxt('descricao', 4000), campoTxt('coluna', 20),
+  { name: 'compartilhada', type: 'bool' }, campoTxt('dono', 40, { required: true }), campoTxt('autor', 120),
+  campoTxt('prioridade', 20), campoTxt('prazo', 10), campoTxt('criada_em', 40), campoTxt('concluido_em', 10)];
+/* recorrência mensal: modelo (coluna "modelo", nunca aparece no quadro) + uma ocorrência por mês (serie = id do modelo, ciclo = AAAA-MM) */
+const CAMPOS_RECORRENCIA = [campoTxt('recorrencia', 10), campoTxt('dia_prazo', 2), campoTxt('serie', 40), campoTxt('ciclo', 7)];
+
+async function tokenAdmin() {
   const adm = await pb('POST', '/api/collections/_superusers/auth-with-password',
     { identity: process.env.PB_ADMIN_EMAIL || '', password: process.env.PB_ADMIN_PASSWORD || '' });
-  if (adm.status !== 200) { console.error('rhcmrv_tarefas: acesso administrativo ao PocketBase recusado (HTTP ' + adm.status + ')'); return; }   // o setup.py cria depois
-  const txt = (name, extra) => Object.assign({ name, type: 'text', required: false }, extra || {});
-  const c = await pb('POST', '/api/collections', Object.assign({
-    name: 'rhcmrv_tarefas', type: 'base',
-    fields: [txt('titulo', { required: true, max: 200 }), txt('descricao', { max: 4000 }), txt('coluna', { max: 20 }),
-      { name: 'compartilhada', type: 'bool' }, txt('dono', { required: true, max: 40 }), txt('autor', { max: 120 }),
-      txt('prioridade', { max: 20 }), txt('prazo', { max: 10 }), txt('criada_em', { max: 40 }), txt('concluido_em', { max: 10 })],
-    indexes: ['CREATE INDEX idx_rhcmrv_tarefas_dono ON rhcmrv_tarefas (dono)']
-  }, TAREFAS_REGRAS), adm.data.token);
-  if (c.status === 200) tarefasOk = true;
-  else console.error('rhcmrv_tarefas: não foi possível criar a coleção (HTTP ' + c.status + '): ' + JSON.stringify(c.data).slice(0, 400));
+  if (adm.status !== 200) { console.error('rhcmrv_tarefas: acesso administrativo ao PocketBase recusado (HTTP ' + adm.status + ')'); return null; }
+  return adm.data.token;
+}
+async function garantirTarefas(userToken) {
+  if (tarefasOk) return;
+  /* o filtro por "serie" só é aceito se o campo existe: 404 = coleção não existe; 400 = coleção antiga, sem os campos da recorrência */
+  const t = await pb('GET', '/api/collections/rhcmrv_tarefas/records?perPage=1&filter=' + encodeURIComponent('serie = ""'), undefined, userToken);
+  if (t.status !== 404 && t.status !== 400) { tarefasOk = true; return; }
+  const adm = await tokenAdmin();
+  if (!adm) return;                                       // sem acesso administrativo: o setup.py cria/atualiza depois
+  if (t.status === 404) {
+    const c = await pb('POST', '/api/collections', Object.assign({
+      name: 'rhcmrv_tarefas', type: 'base', fields: CAMPOS_BASE.concat(CAMPOS_RECORRENCIA),
+      indexes: ['CREATE INDEX idx_rhcmrv_tarefas_dono ON rhcmrv_tarefas (dono)']
+    }, TAREFAS_REGRAS), adm);
+    if (c.status === 200) tarefasOk = true;
+    else console.error('rhcmrv_tarefas: não foi possível criar a coleção (HTTP ' + c.status + '): ' + JSON.stringify(c.data).slice(0, 400));
+    return;
+  }
+  /* coleção antiga: acrescenta só os campos que faltam, mantendo os existentes (com os ids) para não perder dados */
+  const col = await pb('GET', '/api/collections/rhcmrv_tarefas', undefined, adm);
+  if (col.status !== 200) { console.error('rhcmrv_tarefas: não foi possível ler a coleção (HTTP ' + col.status + ')'); return; }
+  const tem = new Set((col.data.fields || []).map(f => f.name));
+  const faltam = CAMPOS_RECORRENCIA.filter(f => !tem.has(f.name));
+  if (!faltam.length) { tarefasOk = true; return; }
+  const u = await pb('PATCH', '/api/collections/rhcmrv_tarefas', { fields: (col.data.fields || []).concat(faltam) }, adm);
+  if (u.status === 200) tarefasOk = true;
+  else console.error('rhcmrv_tarefas: não foi possível acrescentar os campos da recorrência (HTTP ' + u.status + '): ' + JSON.stringify(u.data).slice(0, 400));
 }
 
 module.exports = async (req, res) => {

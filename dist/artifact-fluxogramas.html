@@ -265,12 +265,15 @@ tr.selrow td{background:var(--accent-soft)}
    ===================================================================== */
 const PB=(function(){
   const URL_BASE='https://pb.devgabriel.app.br'.replace(/\/+$/,'');
+  const CENTI_BASE=''.replace(/\/+$/,'');   // vazio = mesmo endereço do site (funções em /api)
   const AUTH_KEY='rhcrv-pb-auth';
-  let token='',email='',col='users',loginP=null;
+  let token='',email='',col='rhcmrv_users',loginP=null;
+  let cs=null;   // sessão do Centi: {user,nome,token,refreshToken}
 
-  function readAuth(){try{const a=JSON.parse(localStorage.getItem(AUTH_KEY)||'null');if(a&&a.token){token=a.token;email=a.email||'';col=a.col||'users';}}catch(e){}}
-  function saveAuth(){try{localStorage.setItem(AUTH_KEY,JSON.stringify({token,email,col}));}catch(e){}}
-  function clearAuth(){token='';email='';col='users';try{localStorage.removeItem(AUTH_KEY);}catch(e){}}
+  /* só vale a sessão que tem o acesso do Centi junto; sessões antigas (login simples) pedem novo login */
+  function readAuth(){try{const a=JSON.parse(localStorage.getItem(AUTH_KEY)||'null');if(a&&a.token&&a.centi&&a.centi.token){token=a.token;email=a.email||'';col=a.col||'rhcmrv_users';cs=a.centi;}}catch(e){}}
+  function saveAuth(){try{localStorage.setItem(AUTH_KEY,JSON.stringify({token,email,col,centi:cs}));}catch(e){}}
+  function clearAuth(){token='';email='';col='rhcmrv_users';cs=null;try{localStorage.removeItem(AUTH_KEY);}catch(e){}}
 
   async function raw(method,path,body){
     const h={};
@@ -301,27 +304,26 @@ const PB=(function(){
       wrap.style.cssText='position:fixed;inset:0;z-index:99999;display:flex;align-items:center;justify-content:center;padding:16px;background:rgba(0,0,0,.45)';
       wrap.innerHTML=
         '<form style="width:100%;max-width:360px;background:var(--surface,#fff);color:var(--fg,#12281d);border:1px solid var(--line,#d1ddd6);border-radius:12px;padding:22px;box-shadow:0 10px 40px rgba(0,0,0,.3);font:15px/1.4 system-ui,sans-serif">'+
-        '<h3 style="margin:0 0 4px;font-size:18px">Entrar no sistema</h3>'+
-        '<p style="margin:0 0 14px;color:var(--muted,#4f665a);font-size:13px">Informe o acesso para carregar e salvar os dados no servidor.</p>'+
-        '<label style="display:block;font-size:13px;margin-bottom:10px">Usuário ou e-mail<input name="e" type="text" required autocapitalize="none" spellcheck="false" autocomplete="username" style="display:block;width:100%;box-sizing:border-box;margin-top:4px;padding:9px;border:1px solid var(--line,#d1ddd6);border-radius:8px;background:transparent;color:inherit;font:inherit"></label>'+
+        '<h3 style="margin:0 0 4px;font-size:18px">Entrar com o acesso do Centi</h3>'+
+        '<p style="margin:0 0 14px;color:var(--muted,#4f665a);font-size:13px">Use o mesmo usuário e senha do Centi. A senha é conferida no Centi e não fica guardada neste sistema.</p>'+
+        '<label style="display:block;font-size:13px;margin-bottom:10px">Usuário do Centi<input name="e" type="text" required autocapitalize="none" spellcheck="false" autocomplete="username" style="display:block;width:100%;box-sizing:border-box;margin-top:4px;padding:9px;border:1px solid var(--line,#d1ddd6);border-radius:8px;background:transparent;color:inherit;font:inherit"></label>'+
         '<label style="display:block;font-size:13px;margin-bottom:10px">Senha<input name="p" type="password" required autocomplete="current-password" style="display:block;width:100%;box-sizing:border-box;margin-top:4px;padding:9px;border:1px solid var(--line,#d1ddd6);border-radius:8px;background:transparent;color:inherit;font:inherit"></label>'+
         '<div data-err style="min-height:18px;margin-bottom:8px;color:#c0392b;font-size:13px"></div>'+
         '<div style="display:flex;gap:8px;justify-content:flex-end;flex-wrap:wrap">'+
-        '<button type="button" data-off style="padding:9px 12px;border:1px solid var(--line,#d1ddd6);border-radius:8px;background:transparent;color:inherit;font:inherit;cursor:pointer">Usar só neste navegador</button>'+
         '<button type="submit" style="padding:9px 16px;border:0;border-radius:8px;background:var(--accent,#0a6b3d);color:var(--accent-fg,#fff);font:inherit;font-weight:600;cursor:pointer">Entrar</button></div></form>';
       document.body.appendChild(wrap);
       const f=wrap.querySelector('form'),err=wrap.querySelector('[data-err]');
       if(msg) err.textContent=msg;
       const done=ok=>{wrap.remove();loginP=null;resolve(ok);};
       f.e.focus();
-      wrap.querySelector('[data-off]').addEventListener('click',()=>done(false));
       f.addEventListener('submit',async ev=>{
         ev.preventDefault(); err.textContent='Entrando…';
         try{
-          const id=f.e.value.trim();col=id.includes('@')?'users':'rhcmrv_users';
-          const r=await raw('POST','/api/collections/'+col+'/auth-with-password',{identity:id,password:f.p.value});
-          token=r.token; email=(r.record&&(r.record.email||r.record.username))||id; saveAuth(); done(true);
-        }catch(e){err.textContent=e.status===400?'Usuário ou senha incorretos.':'Não foi possível entrar: '+e.message;}
+          const r=await fetch(CENTI_BASE+'/api/centi-login',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({user:f.e.value.trim(),pass:f.p.value})});
+          let j=null; try{j=await r.json();}catch(e){}
+          if(!r.ok){err.textContent=(j&&j.message)||('Não foi possível entrar (HTTP '+r.status+').');return;}
+          token=j.pb.token; col='rhcmrv_users'; email=j.centi.user; cs=j.centi; saveAuth(); done(true);
+        }catch(e){err.textContent='Não foi possível entrar: '+e.message;}
       });
     });
     return loginP;
@@ -373,6 +375,32 @@ const PB=(function(){
     return api_;
   }
 
+  /* ---------- API do Centi (pelo servidor do sistema, com o acesso da própria pessoa) ---------- */
+  async function centiCall(path,body){
+    if(!cs) throw new Error('Sem sessão do Centi. Entre novamente.');
+    const r=await fetch(CENTI_BASE+'/api/centi',{method:'POST',
+      headers:{'Content-Type':'application/json','x-centi-user':cs.user,'x-centi-token':cs.token,'x-centi-refresh':cs.refreshToken||''},
+      body:JSON.stringify({path,body})});
+    const nt=r.headers.get('x-centi-token'),nr=r.headers.get('x-centi-refresh');
+    if(nt){cs.token=nt;if(nr)cs.refreshToken=nr;saveAuth();}   // o Centi renova o token sozinho
+    let j=null; try{j=await r.json();}catch(e){}
+    if(!r.ok){
+      if(r.status===401){clearAuth();}
+      const err=new Error((j&&j.message)||('Centi: HTTP '+r.status));err.status=r.status;throw err;
+    }
+    return j;
+  }
+  /* PB.centi.search('SFuncionario',[{FieldName:'Nome',Operation:6,Value:'%ana%'}]) -> {Data:[...],Count}
+     (Operation 6 = contém; a tela de consulta do Centi exige ao menos um filtro com valor) */
+  const centi={
+    get user(){return cs?cs.user:'';},
+    get nome(){return cs?(cs.nome||cs.user):'';},
+    search(entity,filters,start){
+      return centiCall('restauth/searchentity',{Depth:50,Entity:entity,Start:start||1,
+        Filters:(filters||[]).map(f=>Object.assign({List:false,TypeFilter:0,between:''},f))});
+    }
+  };
+
   /* ---------- conexão ---------- */
   const sleep=ms=>new Promise(r=>setTimeout(r,ms));
   async function alive(){
@@ -421,14 +449,14 @@ const PB=(function(){
           catch(e){if(e.status!==401&&e.status!==403&&e.status!==404) throw e; clearAuth();}
         }
         if(!ok&&!(await login())){markLocal();return null;}
-        return {doc,collection};
+        return {doc,collection,centi};
       }catch(e){
         if(await offlineDialog()) continue;
         markLocal();return null;
       }
     }
   }
-  return {connect,logout(){clearAuth();location.reload();},get email(){return email;},url:URL_BASE};
+  return {connect,centi,logout(){clearAuth();location.reload();},get email(){return email;},get nome(){return centi.nome;},url:URL_BASE};
 })();
 
 'use strict';

@@ -1,0 +1,7 @@
+{
+  "name": "rh-cmrv",
+  "private": true,
+  "description": "Funções da Vercel (api/) que ligam o sistema ao Centi e ao PocketBase",
+  "engines": { "node": ">=18" },
+  "dependencies": { "lz-string": "1.5.0" }
+}

@@ -11,6 +11,8 @@ Uso: python3 build.py [--flow-url URL] [--home-url URL]
   --flow-url  endereço do sistema de fluxogramas usado no painel (artefato)
   --home-url  endereço do painel usado no botão "Sistema Interno do RH" (artefato)
   --pb-url  endereço do PocketBase (padrão: https://pb.devgabriel.app.br)
+  --centi-url  endereço do site que hospeda as funções /api/centi-login e /api/centi (padrão: o próprio site;
+               só é preciso informar em fragmentos de artefato, que ficam em outro endereço)
   --ponto-url  endereço do Ponto – Servidores Externos usado no painel (artefato)
   --pessoal-url  endereço da Hierarquia de Pessoal usado no painel (artefato)
 """
@@ -26,7 +28,7 @@ def wr(p, s):
 css = rd('src/styles.css')
 js = '\n'.join(open(f, encoding='utf-8').read() for f in sorted(glob.glob(os.path.join(root, 'src/js/*.js'))))
 js = js.replace('/*VOLUME_CSS*/', rd('src/volume.css').replace('`', '\\`'))
-pbjs = rd('src/pb.js').replace('/*PB_URL*/', opt('--pb-url', 'https://pb.devgabriel.app.br'))
+pbjs = rd('src/pb.js').replace('/*PB_URL*/', opt('--pb-url', 'https://pb.devgabriel.app.br')).replace('/*CENTI_URL*/', opt('--centi-url', ''))
 js = js.replace('</script>', '<\\/script>')
 flow = rd('src/index.template.html').replace('/*CSS*/', css).replace('/*PB_JS*/', pbjs).replace('/*JS*/', js)
 launcher = rd('src/launcher.template.html').replace('/*PB_JS*/', pbjs)

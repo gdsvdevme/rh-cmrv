@@ -30,7 +30,7 @@ Na página **Painel Inicial** ou **Manual de Procedimentos**, o botão **Gerar v
 - Matriz e indicadores: CSV, Excel e PDF. Manual: PDF e Markdown.
 
 ## Onde ficam os dados
-Os dados ficam no **PocketBase** (`https://pb.devgabriel.app.br`), nas coleções `rhcmrv_docs` (painel, fluxogramas e hierarquia de pessoal) e `rhcmrv_versoes` (cópias de segurança). Ao abrir o sistema, uma tela de login pede usuário (ou e-mail) e senha. O login simples (ex.: `rh`) fica na coleção própria `rhcmrv_users`; e-mails da coleção `users` do PocketBase só entram se estiverem em `PB_ALLOWED_EMAILS`; o navegador guarda apenas esse login (e o tema).
+Os dados ficam no **PocketBase** (`https://pb.devgabriel.app.br`), nas coleções `rhcmrv_docs` (painel, fluxogramas e hierarquia de pessoal) e `rhcmrv_versoes` (cópias de segurança). Ao abrir o sistema, a tela de login pede o **usuário e a senha do Centi** (veja "Login com o Centi" abaixo). A conta de cada pessoa fica na coleção `rhcmrv_users`; o navegador guarda a sessão (tokens) e o tema, nunca a senha.
 
 - **Migração automática:** se houver dados antigos no localStorage do navegador e o servidor ainda não os tiver, eles são enviados ao servidor na primeira abertura, conferidos e só então apagados do navegador. Abra uma vez cada sistema (painel, fluxogramas, pessoal) em cada computador que tenha dados locais.
 - **Sem conexão:** se o servidor não responder (ou você escolher "Usar só neste navegador"), o sistema volta a salvar localmente, como antes.
@@ -48,6 +48,21 @@ python3 pocketbase/setup.py
 O script cria as coleções (acesso só para as contas permitidas) sem alterar a coleção `users`, e a cada execução atualiza as regras de acesso e a senha do login simples.
 
 **Atenção:** senhas curtas como `1234` podem ser adivinhadas por qualquer pessoa na internet em poucos minutos. Prefira uma senha longa e, se possível, ative o limite de tentativas do PocketBase (Configurações → Rate limiting). Pode ser executado de novo sem duplicar nada. Nunca grave senhas no repositório.
+
+## Login com o Centi
+O sistema entra com o mesmo usuário e senha do Centi (`go.centi.com.br/camararioverde`). Duas funções da Vercel (pasta `api/`) fazem a ponte, porque o Centi só reconhece a Câmara pelo cabeçalho `Referer`, que o navegador não consegue enviar:
+- `api/centi-login.js`: confere usuário e senha no Centi, verifica se a pessoa está em `CENTI_ALLOWED_USERS`, cria (uma vez) ou reaproveita a conta dela em `rhcmrv_users` e devolve a sessão do PocketBase e do Centi. A senha do Centi não é gravada.
+- `api/centi.js`: repassa consultas ao Centi com o token da própria pessoa (o Centi aplica as permissões dela). Só aceita `restauth/searchentity`; para liberar outras rotas, inclua-as em `ROTAS`.
+
+No código das páginas, depois do login: `PB.centi.user`, `PB.centi.nome` e `PB.centi.search('SFuncionario', [{FieldName:'Nome', Operation:6, Value:'%ana%'}])` (o Centi exige ao menos um filtro com valor; `Operation: 6` = contém).
+
+**Variáveis de ambiente na Vercel** (Settings → Environment Variables; nunca no repositório):
+- `CENTI_ALLOWED_USERS`: usuários do Centi que podem usar o sistema, separados por vírgula (ex.: `usuario1,usuario2`). Sem isso, ninguém entra.
+- `APP_SECRET`: texto longo e aleatório; deriva a senha interna de cada conta do PocketBase. Não pode mudar depois (mudar pede nova criação das contas).
+- `PB_ADMIN_EMAIL` e `PB_ADMIN_PASSWORD`: superusuário do PocketBase, usado só para criar a conta de quem entra pela primeira vez.
+- `PB_URL` (opcional, padrão `https://pb.devgabriel.app.br`).
+
+Antes de publicar, rode `pocketbase/setup.py` para garantir que a coleção `rhcmrv_users` existe. Para que **só** o Centi dê acesso, apague no PocketBase o login simples antigo (`rh`) e remova os e-mails de `PB_ALLOWED_EMAILS`. Usuários do Centi com PIN (dois fatores) ainda não são suportados. Em fragmentos de artefato (`dist/`), que ficam em outro endereço, gere com `python3 build.py --centi-url https://seu-site.vercel.app`.
 
 ## Avisos
 Os indicadores iniciais são demonstrativos e fictícios. Os parâmetros de férias começam vazios, sem prazos ou direitos pré-definidos. O sistema não autoriza nomeações, exonerações, pagamentos ou concessões; a autoridade competente permanece responsável. Não cadastre dados pessoais reais.

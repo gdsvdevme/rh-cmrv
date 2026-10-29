@@ -290,7 +290,26 @@ const PB=(function(){
       page++;
     }
   }
+  /* tempo real do PocketBase (SSE): cada evento só chega se as regras do servidor deixam esta conta ver a tarefa (privadas de outros não chegam) */
+  function ouvirTarefas(cb){
+    let es=null,parado=false;
+    const abrir=()=>{
+      if(parado||typeof EventSource==='undefined') return;
+      es=new EventSource(URL_BASE+'/api/realtime');
+      es.addEventListener('PB_CONNECT',async ev=>{
+        try{
+          const id=(JSON.parse(ev.data||'{}').clientId)||ev.lastEventId;
+          await fetch(URL_BASE+'/api/realtime',{method:'POST',headers:{'Content-Type':'application/json',Authorization:token},body:JSON.stringify({clientId:id,subscriptions:['rhcmrv_tarefas']})});
+        }catch(e){}
+      });
+      es.addEventListener('rhcmrv_tarefas',ev=>{try{cb(JSON.parse(ev.data));}catch(e){}});
+      es.onerror=()=>{};   // o navegador reconecta sozinho e o PB_CONNECT assina de novo
+    };
+    abrir();
+    return ()=>{parado=true;if(es) es.close();};
+  }
   const tarefas={
+    listen:ouvirTarefas,
     list:todas,
     create:d=>api('POST',TAREFAS,Object.assign({dono:userId()},d)),
     update:(id,d)=>api('PATCH',TAREFAS+'/'+id,d),

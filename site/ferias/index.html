@@ -94,6 +94,17 @@ table.per{width:100%;border-collapse:collapse;font-size:13.5px;min-width:560px}
 .per td.num{text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap}
 .per small{color:var(--muted);display:block}
 .per tr.cur td{background:color-mix(in srgb,var(--blue-bg) 55%,transparent)}
+#load{position:fixed;inset:0;z-index:9000;display:grid;place-items:center;padding:24px;background:radial-gradient(1200px 700px at 50% 30%,var(--hero-b),var(--hero-a)) var(--hero-a);color:#fff;text-align:center}
+#load .ld-box{display:flex;flex-direction:column;align-items:center;gap:10px;max-width:420px}
+#load .ld-spin{width:56px;height:56px;border-radius:50%;border:5px solid rgba(255,255,255,.22);border-top-color:var(--gold);animation:ld-rot .9s linear infinite;margin-bottom:6px}
+#load b{font-family:var(--f-display);font-size:1.35rem;line-height:1.2}
+#load span{opacity:.88;font-size:14.5px;min-height:22px}
+#load .ld-bar{width:min(260px,70vw);height:5px;border-radius:99px;background:rgba(255,255,255,.2);overflow:hidden;margin-top:8px}
+#load .ld-bar i{display:block;height:100%;width:40%;border-radius:99px;background:var(--gold);animation:ld-bar 1.4s ease-in-out infinite}
+@keyframes ld-rot{to{transform:rotate(360deg)}}
+@keyframes ld-bar{0%{margin-left:-40%}100%{margin-left:100%}}
+@media (prefers-reduced-motion:reduce){#load .ld-spin,#load .ld-bar i{animation-duration:3s}}
+body.carregando{overflow:hidden}
 #toast{position:fixed;left:50%;transform:translateX(-50%);bottom:max(18px,env(safe-area-inset-bottom,0px));background:var(--fg);color:var(--bg);padding:10px 16px;border-radius:10px;font-size:14px;z-index:60;max-width:90vw}
 @media (max-width:560px){.sum{grid-template-columns:1fr}}
 @media (pointer:coarse){input,select{font-size:16px}.btn{min-height:42px}}
@@ -121,6 +132,7 @@ table.per{width:100%;border-collapse:collapse;font-size:13.5px;min-width:560px}
   <p class="note" id="foot"></p>
 </div></main>
 <dialog id="dlg"></dialog>
+<div id="load" role="status" aria-live="polite"><div class="ld-box"><div class="ld-spin" aria-hidden="true"></div><b>Carregando férias…</b><span id="ldS">Abrindo o sistema</span><div class="ld-bar" aria-hidden="true"><i></i></div></div></div>
 <div id="toast" hidden></div>
 
 <script>
@@ -403,6 +415,12 @@ function analisar(p,gz,hoje){
 }
 
 /* ---------- carga ---------- */
+/* tela cheia de carregamento: fica até os dados chegarem (ou a busca falhar) */
+function carga(on,msg){
+  const l=$('#load');if(!l) return;
+  l.hidden=!on;document.body.classList.toggle('carregando',!!on);
+  if(msg) $('#ldS').textContent=msg;
+}
 function montar(r){
   const hoje=hojeMs(),gz=new Map();
   (r.Gozos||[]).forEach(g=>{const k=String(g.MATRICULA);if(!gz.has(k)) gz.set(k,[]);gz.get(k).push(g);});
@@ -418,13 +436,17 @@ async function garantirSessao(){
 }
 async function carregar(){
   const b=$('#refBtn');b.disabled=true;b.textContent='Buscando…';
+  carga(true,'Conectando ao Centi…');
   try{
     if(!(await garantirSessao())){toast('Entre com o acesso do Centi para buscar os dados.');return;}
+    carga(true,'Buscando servidores ativos e férias lançadas…');
     const n=new Date(),r=await PB.centi.ferias(n.getMonth()+1,n.getFullYear());
+    carga(true,'Calculando períodos aquisitivos…');
+    await new Promise(r=>setTimeout(r,30));   // deixa a mensagem aparecer antes do cálculo
     r.ref=String(n.getMonth()+1).padStart(2,'0')+'/'+n.getFullYear();
     bruto=r;montar(r);render();toast(pessoas.length+' servidores ativos analisados.');
   }catch(e){toast(e.status===401?'A sessão do Centi expirou. Clique em Atualizar do Centi para entrar de novo.':'Não foi possível buscar no Centi: '+(e.message||e));}
-  finally{b.disabled=false;b.textContent='Atualizar do Centi';}
+  finally{b.disabled=false;b.textContent='Atualizar do Centi';carga(false);}
 }
 
 /* ---------- exibição ---------- */
@@ -624,7 +646,7 @@ try{matchMedia('(prefers-color-scheme: dark)').addEventListener('change',themeBt
 
 (function init(){
   try{const c=JSON.parse(localStorage.getItem(CFG_LS)||'null');if(c&&c.dias) cfg=Object.assign(cfg,c);}catch(e){}
-  themeBtn();render();
+  themeBtn();render();carga(true,'Conectando ao servidor…');
   (async()=>{
     try{
       if(window.claude&&window.claude.use) dbh=await window.claude.use('db');
@@ -634,6 +656,7 @@ try{matchMedia('(prefers-color-scheme: dark)').addEventListener('change',themeBt
         await carregar();
       }
     }catch(e){dbh=null;}
+    finally{carga(false);}
   })();
 })();
 </script>

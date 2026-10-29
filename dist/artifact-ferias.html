@@ -253,6 +253,25 @@ const PB=(function(){
     return api_;
   }
 
+  /* ---------- tarefas (coleção rhcmrv_tarefas; as regras do servidor mostram só as compartilhadas e as do próprio dono) ---------- */
+  const TAREFAS='/api/collections/rhcmrv_tarefas/records';
+  const userId=()=>{try{const b=token.split('.')[1].replace(/-/g,'+').replace(/_/g,'/');return JSON.parse(decodeURIComponent(escape(atob(b+'='.repeat((4-b.length%4)%4))))).id||'';}catch(e){return '';}};
+  async function todas(filtro){
+    let page=1,out=[];
+    for(;;){
+      const r=await api('GET',TAREFAS+'?perPage=200&page='+page+'&sort=-criada_em'+(filtro?'&filter='+encodeURIComponent(filtro):''));
+      out=out.concat(r.items||[]);
+      if(!r.totalPages||page>=r.totalPages) return out;
+      page++;
+    }
+  }
+  const tarefas={
+    list:todas,
+    create:d=>api('POST',TAREFAS,Object.assign({dono:userId()},d)),
+    update:(id,d)=>api('PATCH',TAREFAS+'/'+id,d),
+    remove:id=>api('DELETE',TAREFAS+'/'+id)
+  };
+
   /* ---------- API do Centi (pelo servidor do sistema, com o acesso da própria pessoa) ---------- */
   async function centiCall(path,body){
     if(!cs) throw new Error('Sem sessão do Centi. Entre novamente.');
@@ -333,14 +352,14 @@ const PB=(function(){
           catch(e){if(e.status!==401&&e.status!==403&&e.status!==404) throw e; clearAuth();}
         }
         if(!ok&&!(await login())){markLocal();return null;}
-        return {doc,collection,centi};
+        return {doc,collection,centi,tarefas};
       }catch(e){
         if(await offlineDialog()) continue;
         markLocal();return null;
       }
     }
   }
-  return {connect,centi,logout(){clearAuth();location.reload();},get email(){return email;},get nome(){return centi.nome;},url:URL_BASE};
+  return {connect,centi,logout(){clearAuth();location.reload();},get email(){return email;},get nome(){return centi.nome;},get userId(){return userId();},url:URL_BASE};
 })();
 
 const HOME_URL="../";

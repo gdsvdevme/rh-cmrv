@@ -14,6 +14,7 @@ Coleções (acesso só para as contas permitidas; a coleção `users` não é al
   rhcmrv_users    login simples do sistema (username + senha)
   rhcmrv_docs     key (único) + data (json)   -> painel, estado dos fluxogramas, hierarquia de pessoal
   rhcmrv_versoes  vid (único), at, label, json -> cópias de segurança dos fluxogramas
+  rhcmrv_tarefas  checklist do RH: compartilhadas (toda a equipe) ou privadas (só o dono), com regras próprias
 O script é repetível: o que já existe é mantido.
 """
 import json, os, sys, urllib.request, urllib.error
@@ -110,6 +111,26 @@ for name, defs, uniq in COLS:
     body['fields' if new_api else 'schema'] = fields(defs) if new_api else old_schema(defs)
     call('POST', '/api/collections', body)
     print('Coleção %s criada.' % name)
+
+# tarefas do RH: a compartilhada é da equipe; a privada só aparece para o dono (regras de acesso no servidor)
+if new_api:
+    AUTH = '@request.auth.collectionName = "rhcmrv_users"'
+    VER = AUTH + ' && (compartilhada = true || dono = @request.auth.id)'
+    regras = {'listRule': VER, 'viewRule': VER,
+              'createRule': AUTH + ' && @request.body.dono = @request.auth.id',
+              'updateRule': VER + ' && @request.body.dono:isset = false && (@request.body.compartilhada:isset = false || dono = @request.auth.id)',
+              'deleteRule': VER}
+    if call('GET', '/api/collections/rhcmrv_tarefas', ok404=True):
+        call('PATCH', '/api/collections/rhcmrv_tarefas', regras)
+        print('Coleção rhcmrv_tarefas já existe (regras de acesso atualizadas).')
+    else:
+        txt = lambda n, **k: dict({'name': n, 'type': 'text', 'required': False}, **k)
+        call('POST', '/api/collections', dict({'name': 'rhcmrv_tarefas', 'type': 'base',
+            'fields': [txt('titulo', required=True, max=200), txt('descricao', max=4000), txt('coluna', max=20),
+                       {'name': 'compartilhada', 'type': 'bool'}, txt('dono', required=True, max=40), txt('autor', max=120),
+                       txt('prioridade', max=20), txt('prazo', max=10), txt('criada_em', max=40), txt('concluido_em', max=10)],
+            'indexes': ['CREATE INDEX idx_rhcmrv_tarefas_dono ON rhcmrv_tarefas (dono)']}, **regras))
+        print('Coleção rhcmrv_tarefas criada.')
 
 app_email, app_pass = os.environ.get('PB_APP_EMAIL', ''), os.environ.get('PB_APP_PASSWORD', '')
 if app_email and app_pass:

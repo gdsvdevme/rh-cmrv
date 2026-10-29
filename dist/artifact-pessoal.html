@@ -97,6 +97,13 @@ dialog .row{display:flex;gap:8px;justify-content:flex-end;flex-wrap:wrap}
 dialog p{margin:0;font-size:14px}
 dl.ficha{margin:0;display:grid;grid-template-columns:max-content 1fr;gap:6px 14px;font-size:14px}
 dl.ficha dt{color:var(--muted);font-weight:600}dl.ficha dd{margin:0;overflow-wrap:anywhere}
+.fin{width:100%;border-collapse:collapse;font-size:13px;margin-top:6px}
+.fin th,.fin td{padding:4px 6px;border-bottom:1px solid var(--line);text-align:right}
+.fin th:first-child,.fin td:first-child{text-align:left}
+.fin tfoot td{font-weight:700;border-top:2px solid var(--line)}
+.fin-box h4{margin:12px 0 0;font-size:.95rem;font-family:var(--f-display)}
+.fin-box small{color:var(--muted)}
+.fin-wrap{overflow-x:auto}
 .pm{display:block;color:var(--muted);font-size:12px}
 .pn[data-fi]{cursor:pointer}.pn[data-fi]:hover b{text-decoration:underline}
 @media (max-width:560px){.pact{width:100%;justify-content:flex-end}}
@@ -274,6 +281,8 @@ const PB=(function(){
     get user(){return cs?cs.user:'';},
     get nome(){return cs?(cs.nome||cs.user):'';},
     /* Cubo funcionário (FP051) do Centi na referência mes/ano -> {Data:[{MATRICULA,NOMEFUNC,CARGO,HIERARQUIA,...}],Total}; só ativos */
+    /* Ficha financeira (FP024) da matrícula no mês/ano -> {Fichas:[{Folha,Mes,Ano,TotalProventos,TotalDescontos,LiquidoReceber,Eventos:[...]}]}; não é guardada */
+    ficha(matricula,mes,ano){return centiCall('ficha-financeira',{matricula,mes,ano});},
     cubo(mes,ano){return centiCall('cubo-funcionario',{mes,ano});},
     search(entity,filters,start,depth){
       return centiCall('restauth/searchentity',{Depth:depth||50,Entity:entity,Start:start==null?1:start,
@@ -365,6 +374,7 @@ function titulo(s){
 }
 function vinculo(t){
   const n=norm(t);
+  if(/nao comission/.test(n)||n.includes('admissao anterior')||n.includes('admissao entre')) return 'ant';   // "(NÃO COMISSIONADO)" não é comissionado
   if(n.includes('comission')) return 'com';
   if(n.includes('efetivo')) return 'efe';
   if(n.includes('disposi')) return 'ced';
@@ -445,7 +455,7 @@ function agrupar(){
 }
 function fechar(){const d=$('#dlg');if(d.open) d.close();}
 function abrirDlg(html,onSubmit){
-  const d=$('#dlg');d.innerHTML='<form method="dialog" autocomplete="off">'+html+'</form>';
+  const d=$('#dlg');d.style.width='';d.innerHTML='<form method="dialog" autocomplete="off">'+html+'</form>';
   const f=d.querySelector('form');
   f.addEventListener('submit',ev=>{ev.preventDefault();if(onSubmit(f)!==false) fechar();});
   d.querySelector('[data-x]').addEventListener('click',fechar);
@@ -668,7 +678,30 @@ function metaPessoa(p){const a=[p.m?'Mat. '+p.m:'',p.a?'Admissão '+dataBr(p.a):
 function dlgFicha(i){
   const p=dados.pessoas[i];if(!p) return;
   const L=[['Cargo',p.c],['Vínculo',VINC[p.t]],['Lotação',grupoInfo(p.g).nome],['Matrícula',p.m],['Admissão',dataBr(p.a)],['Situação',p.s],['E-mail',p.e],['Telefone',p.f]].filter(x=>x[1]);
-  abrirDlg(`<h3>${esc(p.n)}</h3><dl class="ficha">${L.map(x=>`<dt>${x[0]}</dt><dd>${esc(x[1])}</dd>`).join('')}</dl><div class="row"><button type="button" class="btn primary" data-x>Fechar</button></div>`,()=>{});
+  const ref=(dados.mapa&&dados.mapa.ref&&/^(\d{2})\/(\d{4})$/.exec(dados.mapa.ref))||/^(\d{2})\/(\d{4})$/.exec(refAtual());
+  const fin=p.m?`<div class="fin-box"><h4>Ficha financeira</h4><div style="display:flex;gap:8px;align-items:end;flex-wrap:wrap"><label>Mês de referência<input type="month" name="mes" value="${ref[2]}-${ref[1]}"></label><button type="button" class="btn" data-fin>Ver ficha financeira</button></div><div data-finbox style="margin-top:6px"><small>Dados sensíveis: ficam só nesta tela e não são guardados.</small></div></div>`:'';
+  abrirDlg(`<h3>${esc(p.n)}</h3><dl class="ficha">${L.map(x=>`<dt>${x[0]}</dt><dd>${esc(x[1])}</dd>`).join('')}</dl>${fin}<div class="row"><button type="button" class="btn primary" data-x>Fechar</button></div>`,()=>{});
+  const d=$('#dlg');d.style.width='min(660px,96vw)';
+  const b=d.querySelector('[data-fin]');if(b) b.addEventListener('click',()=>carregarFicha(p,d.querySelector('[name=mes]').value));
+}
+const brl=n=>Number(n||0).toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2});
+function fichaHtml(f){
+  const ev=f.Eventos.map(e=>`<tr><td>${esc(e.Nome)}</td><td>${e.Referencia?brl(e.Referencia):''}</td><td>${e.Provento?brl(e.Provento):''}</td><td>${e.Desconto?brl(e.Desconto):''}</td></tr>`).join('');
+  return `<h4>Folha ${esc(titulo(f.Folha))} · ${String(f.Mes).padStart(2,'0')}/${f.Ano} <small>${f.DataPagamento?'· pagamento '+dataBr(f.DataPagamento):''}</small></h4>
+    <div class="fin-wrap"><table class="fin"><thead><tr><th>Evento</th><th>Ref.</th><th>Provento</th><th>Desconto</th></tr></thead><tbody>${ev}</tbody>
+    <tfoot><tr><td>Totais</td><td></td><td>${brl(f.TotalProventos)}</td><td>${brl(f.TotalDescontos)}</td></tr><tr><td>Líquido a receber</td><td></td><td colspan="2">${brl(f.LiquidoReceber)}</td></tr></tfoot></table></div>`;
+}
+async function carregarFicha(p,ym){
+  const box=$('#dlg [data-finbox]'),m=/^(\d{4})-(\d{2})$/.exec(ym||'');
+  if(!box) return;
+  if(!m){box.textContent='Escolha o mês de referência.';return;}
+  box.textContent='Buscando no Centi…';
+  try{
+    if(!(await garantirSessao())){box.textContent='Entre com o acesso do Centi para ver a ficha.';return;}
+    const r=await PB.centi.ficha(p.m,+m[2],+m[1]);
+    if($('#dlg [data-finbox]')!==box) return;   // a ficha foi fechada ou trocada enquanto buscava
+    box.innerHTML=(r.Fichas&&r.Fichas.length)?r.Fichas.map(fichaHtml).join(''):'<small>Nenhuma ficha financeira calculada nesta referência.</small>';
+  }catch(e){box.textContent=e.status===401?'A sessão do Centi expirou. Feche e entre de novo (Atualizar do Centi).':'Não foi possível buscar a ficha: '+(e.message||e);}
 }
 function pessoaHtml(p){
   const i=dados.pessoas.indexOf(p);

@@ -243,6 +243,8 @@ const PB=(function(){
     get user(){return cs?cs.user:'';},
     get nome(){return cs?(cs.nome||cs.user):'';},
     /* Cubo funcionário (FP051) do Centi na referência mes/ano -> {Data:[{MATRICULA,NOMEFUNC,CARGO,HIERARQUIA,...}],Total}; só ativos */
+    /* Ficha financeira (FP024) da matrícula no mês/ano -> {Fichas:[{Folha,Mes,Ano,TotalProventos,TotalDescontos,LiquidoReceber,Eventos:[...]}]}; não é guardada */
+    ficha(matricula,mes,ano){return centiCall('ficha-financeira',{matricula,mes,ano});},
     cubo(mes,ano){return centiCall('cubo-funcionario',{mes,ano});},
     search(entity,filters,start,depth){
       return centiCall('restauth/searchentity',{Depth:depth||50,Entity:entity,Start:start==null?1:start,

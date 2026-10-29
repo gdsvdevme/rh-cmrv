@@ -41,4 +41,37 @@ function send(res, status, obj) {
   res.end(JSON.stringify(obj));
 }
 
-module.exports = { BASE, centiPost, centiLogin, isAllowed, allowedUsers, pbPassword, readBody, send };
+/* Cubo funcionário (FP051): é o que o Centi usa na tela de mesmo nome. Devolve só os ativos da referência pedida e só
+   as colunas que o sistema usa (sem CPF, endereço, dados bancários etc.). */
+const CUBO_MODULO = 120965;
+const CUBO_COLUNAS = ['ID', 'MATRICULA', 'NOMEFUNC', 'CARGO', 'CLASSENIVEL', 'FUNCAO', 'HIERARQUIA', 'LOTACAO', 'TIPOADMISSAO',
+  'SITUACAO', 'TIPOAFASTAMENTO', 'DATAADMISSAO', 'EMAIL', 'TELEFONES', 'SALARIO'];
+const vazio = () => ({ Params: [{ Key: 'Tag', Value: '0' }, { Key: 'Array', Value: [] }] });
+const cuboPayload = (mes, ano) => ({
+  ModuleKey: CUBO_MODULO, Guid: crypto.randomUUID(),
+  Params: [
+    { Key: 'Orgaos', Value: vazio() }, { Key: 'Funcionario', Value: vazio() }, { Key: 'FiltroFuncionarios', Value: '0' },
+    { Key: 'Cargos', Value: vazio() }, { Key: 'ClassesNeiveis', Value: vazio() }, { Key: 'Funcao', Value: vazio() },
+    { Key: 'IdLotacao', Value: vazio() }, { Key: 'DataRef', Value: '01/' + String(mes).padStart(2, '0') + '/' + ano },
+    { Key: 'TiposAdmissao', Value: vazio() }, { Key: 'IdHierarquia', Value: vazio() }, { Key: 'Situacao', Value: '0' },
+    { Key: 'Biometria', Value: '0' }, { Key: 'TagFuncionario', Value: '' }, { Key: 'Cube', Value: '' }, { Key: 'CubeExcel', Value: '' },
+    { Key: 'QuebrarTexto', Value: '0' }, { Key: 'TipoCuboProcessamento', Value: '0' }, { Key: 'NumberOfDecimalPlaces', Value: '0' },
+    { Key: 'Name', Value: '' }, { Key: 'Description', Value: '' }, { Key: 'SysInternal', Value: '0' }, { Key: 'RestApp', Value: '0' },
+    { Key: 'Token', Value: '' }, { Key: 'GuidTransacao', Value: '' }, { Key: 'Captcha', Value: '' }, { Key: 'Background', Value: '0' }
+  ]
+});
+/* resposta do Centi -> [{COLUNA: valor}] só dos ativos */
+function cuboLinhas(cube) {
+  const nomes = (cube.Columns || []).map(c => c.Name);
+  const ix = {}; CUBO_COLUNAS.forEach(n => { ix[n] = nomes.indexOf(n); });
+  const val = z => (z && typeof z === 'object' ? z.Value : z);
+  const out = [];
+  (cube.Rows || []).forEach(r => {
+    const v = r.Values || [];
+    const o = {}; CUBO_COLUNAS.forEach(n => { const x = ix[n] < 0 ? '' : val(v[ix[n]]); o[n] = x == null ? '' : x; });
+    if (String(o.SITUACAO).trim().toLowerCase() === 'ativo') out.push(o);
+  });
+  return out;
+}
+
+module.exports = { BASE, centiPost, cuboPayload, cuboLinhas, centiLogin, isAllowed, allowedUsers, pbPassword, readBody, send };

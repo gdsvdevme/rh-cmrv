@@ -193,6 +193,8 @@ function periodos(p,gz,hoje){
   });
   return L.sort((a,b)=>b.ini-a.ini);
 }
+/* parte gozada + parte vendida (abono pecuniário) = período usado por inteiro */
+const abonoTxt=x=>{const g=x.gozos.reduce((t,z)=>t+z.dias,0);return x.saldo>0?`Abono pecuniário*: ${x.abono} dias`:`Gozou ${g} + abono* ${x.abono} = ${g+x.abono} de ${cfg.dias} dias`;};
 /* gozo parcial: o que sobra do período segue pendente e vence junto com ele */
 const parcial=x=>{const g=x.gozos.reduce((t,z)=>t+z.dias,0);return x.concluido&&x.centi&&x.saldo>0&&g>0?{gozou:g,restam:x.saldo}:null;};
 function analisar(p,gz,hoje){
@@ -301,7 +303,7 @@ function dlgPessoa(i,todos){
   const rows=mostra.map(x=>{
     const st=STAT[x.status],cur=x.ini<=hoje&&hoje<=x.fin;
     const pa=parcial(x);
-    const extra=(pa?`<small class="o-part">Gozou ${pa.gozou} de ${cfg.dias} dias · restam ${pa.restam} ${x.status==='venc'?'(vencidos)':'(a gozar)'}</small>`:'')+(x.abono?`<small class="o-ab">Abono pecuniário*: ${x.abono}d</small>`:'');
+    const extra=(pa?`<small class="o-part">Gozou ${pa.gozou} de ${cfg.dias} dias · restam ${pa.restam} ${x.status==='venc'?'(vencidos)':'(a gozar)'}</small>`:'')+(x.abono?`<small class="o-ab">${abonoTxt(x)}</small>`:'');
     const gz=(x.gozos.length?x.gozos.map(g=>`${fmtCurto(g.ini)} a ${fmtCurto(g.fin)}${g.fin<hoje?'':g.ini>hoje?' (programadas)':' (em gozo)'} · ${g.dias}d`).join('<br>'):'<small>'+(x.centi||!p.semReg?'sem gozo lançado':x.concluido?'sem registro no Centi':'—')+'</small>')+extra;
     const lim=x.concluido&&x.saldo>0?`<small class="o-${x.status==='venc'?'venc':'dir'}">${x.status==='venc'?'venceu em ':'gozar até '}${fmt(x.limite)}</small>`:'';
     return `<tr class="${cur?'cur':''}"><td>${fmt(x.ini)} a ${fmt(x.fin)}${x.centi||!p.semReg?'':'<small class="o-calc">calculado pela admissão</small>'}</td><td><span class="tag ${st[1]}">${st[0]}</span>${lim}</td><td>${gz}</td><td class="num">${x.concluido?x.saldo+'d':'—'}</td></tr>`;
@@ -312,7 +314,7 @@ function dlgPessoa(i,todos){
     <div class="sum"><div class="dir"><small>A gozar</small><b>${p.saldo} dias</b></div><div class="venc"><small>Vencidas</small><b>${p.saldoVenc} dias</b></div><div><small>Programadas</small><b>${p.nprog}</b></div></div>
     <h4 style="margin-top:4px">Períodos aquisitivos</h4>
     <div class="pw"><table class="per"><thead><tr><th>Período aquisitivo</th><th>Situação</th><th>Férias</th><th style="text-align:right">Saldo</th></tr></thead><tbody>${rows}</tbody></table></div>
-    ${p.per.some(x=>x.abono)?'<p style="font-size:12px;color:var(--muted)">* Abono calculado: direito do período − dias gozados − saldo do Centi.</p>':''}
+    ${p.per.some(x=>x.abono)?'<p style="font-size:12px;color:var(--muted)">* Abono (venda de parte das férias) calculado: direito do período − dias gozados − saldo do Centi. Gozo + abono contam como o período usado.</p>':''}
     ${p.per.length>6&&!todos?`<button type="button" class="btn" data-todos="${i}">Mostrar todos os ${p.per.length} períodos</button>`:''}
     <div class="row"><button type="button" class="btn" data-pdf>Emitir PDF</button><button type="button" class="btn primary" data-x>Fechar</button></div>`);
   const b=$('#dlg [data-todos]');if(b) b.addEventListener('click',()=>dlgPessoa(i,true));
@@ -365,7 +367,7 @@ function pdfCorpo(p){
     const st=STAT[x.status][0];
     const pa=parcial(x);
     const gz=(x.gozos.length?x.gozos.map(g=>`${fmt(g.ini)} a ${fmt(g.fin)} · ${g.dias} dia${g.dias>1?'s':''}${g.ini>hoje?' (programadas)':g.fin>=hoje?' (em gozo)':''}`).join('<br>'):(x.centi||!p.semReg?'Sem gozo lançado':x.concluido?'Sem registro no Centi':'—'))
-      +(pa?`<small class="o-part">Gozou ${pa.gozou} de ${cfg.dias} dias · restam ${pa.restam} ${x.status==='venc'?'(vencidos)':'(a gozar)'}</small>`:'')+(x.abono?`<small class="o-ab">Abono pecuniário*: ${x.abono} dia${x.abono>1?'s':''}</small>`:'');
+      +(pa?`<small class="o-part">Gozou ${pa.gozou} de ${cfg.dias} dias · restam ${pa.restam} ${x.status==='venc'?'(vencidos)':'(a gozar)'}</small>`:'')+(x.abono?`<small class="o-ab">${abonoTxt(x)}</small>`:'');
     const prazo=x.concluido&&x.saldo>0?(x.status==='venc'?'Venceu em ':'Gozar até ')+fmt(x.limite):'';
     return `<tr><td>${fmt(x.ini)} a ${fmt(x.fin)}${x.centi||!p.semReg?'':'<small class="o-calc">calculado pela admissão</small>'}</td><td><b class="s-${x.status}">${st}</b>${prazo?`<small class="o-${x.status==='venc'?'venc':'dir'}">${prazo}</small>`:''}</td><td>${gz}</td><td class="num">${x.concluido?x.saldo+' d':'—'}</td></tr>`;
   }).join('');
@@ -377,7 +379,7 @@ function pdfCorpo(p){
   <div class="sum"><div class="a"><small>Saldo total a gozar</small><b>${p.saldo}</b></div><div class="v"><small>Dos quais vencidos</small><b>${p.saldoVenc}</b></div><div class="p"><small>Gozos programados</small><b>${p.nprog}</b></div><div><small>Períodos aquisitivos</small><b>${p.per.length}</b></div></div>
   <h2>Períodos aquisitivos e gozo</h2>
   <table><thead><tr><th>Período aquisitivo</th><th>Situação</th><th>Férias</th><th class="num">Saldo</th></tr></thead><tbody>${linhas}</tbody></table>
-  <p class="nota">Regras usadas no cálculo: ${cfg.dias} dias de férias por período aquisitivo de 12 meses, a partir da admissão, e gozo em até ${cfg.concessivo} meses após o fim do período (depois disso, vencidas). As férias lançadas e o saldo vêm do Centi; períodos sem lançamento são calculados pela data de admissão. *Abono calculado: direito do período − dias gozados − saldo. Este documento não substitui os atos administrativos nem a análise da legislação municipal aplicável.</p>
+  <p class="nota">Regras usadas no cálculo: ${cfg.dias} dias de férias por período aquisitivo de 12 meses, a partir da admissão, e gozo em até ${cfg.concessivo} meses após o fim do período (depois disso, vencidas). As férias lançadas e o saldo vêm do Centi; períodos sem lançamento são calculados pela data de admissão. *Abono (venda de parte das férias) calculado: direito do período − dias gozados − saldo; gozo + abono contam como o período usado. Este documento não substitui os atos administrativos nem a análise da legislação municipal aplicável.</p>
   <div class="ass"><div>Responsável pelo RH</div><div>Servidor(a)</div></div>`;
 }
 let tituloOriginal='';

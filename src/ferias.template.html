@@ -289,8 +289,44 @@ function dlgPessoa(i,todos){
 }
 
 /* ---------- PDF detalhado ---------- */
-/* monta uma página A4 própria e abre a impressão do navegador ("Salvar como PDF"); sem popup, para não ser bloqueada */
-function pdfHtml(p){
+/* A ficha é montada numa área escondida da própria página e o CSS de impressão mostra só ela; assim o "Salvar como PDF" do navegador
+   funciona sem janela popup e sem quadro oculto (que sai em branco). */
+const PDF_CSS=(()=>{
+  const A='#pdfarea',r=(sel,body)=>sel.split(',').map(x=>A+' '+x.trim()).join(',')+'{'+body+'}';
+  return `@page{size:A4;margin:16mm 14mm}
+  ${A}{display:none}
+  @media print{
+    body>*:not(${A}):not(#pdfstyle){display:none!important}
+    dialog,#toast{display:none!important}
+    html,body{background:#fff!important}
+    ${A}{display:block;font:12px/1.45 "Public Sans",Arial,sans-serif;color:#12281d;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+    ${r('*','box-sizing:border-box')}
+    ${r('.cab','border-bottom:3px solid #0a6b3d;padding-bottom:8px;margin-bottom:12px;overflow:hidden')}
+    ${r('.cab small','display:block;letter-spacing:.12em;text-transform:uppercase;color:#4f665a;font-size:10px')}
+    ${r('.cab h1','margin:2px 0 0;font:700 19px "Libre Franklin",Arial,sans-serif;color:#063d27')}
+    ${r('.cab .em','float:right;color:#4f665a;font-size:10.5px')}
+    ${r('h2','font:700 13px "Libre Franklin",Arial,sans-serif;margin:14px 0 6px;color:#063d27')}
+    ${r('.id','display:grid;grid-template-columns:1fr 1fr;gap:3px 18px;border:1px solid #d1ddd6;border-radius:6px;padding:8px 10px')}
+    ${r('.id div','display:flex;gap:6px')}${r('.id b','color:#4f665a;min-width:74px;font-weight:600')}
+    ${r('.nome','font:700 15px "Libre Franklin",Arial,sans-serif;margin:0 0 6px')}
+    ${r('.sit','margin:8px 0;padding:7px 10px;border-radius:6px;background:#e3efe8;font-weight:600')}
+    ${r('.sum','display:grid;grid-template-columns:repeat(4,1fr);gap:8px')}
+    ${r('.sum div','border:1px solid #d1ddd6;border-radius:6px;padding:6px 9px')}
+    ${r('.sum small','display:block;font-size:9.5px;letter-spacing:.05em;text-transform:uppercase;color:#4f665a')}
+    ${r('.sum b','font:700 15px "Libre Franklin",Arial,sans-serif')}
+    ${r('.sum .a b','color:#0a6b3d')}${r('.sum .v b','color:#b3261e')}${r('.sum .p b','color:#6f4aa8')}
+    ${r('table','width:100%;border-collapse:collapse;margin-top:4px')}
+    ${r('th','background:#e3efe8;color:#4f665a;font-size:9.5px;letter-spacing:.05em;text-transform:uppercase;text-align:left;padding:6px 8px')}
+    ${r('td','padding:6px 8px;border-top:1px solid #d1ddd6;vertical-align:top')}
+    ${r('td.num,th.num','text-align:right;white-space:nowrap')}${r('tr','break-inside:avoid')}${r('thead','display:table-header-group')}
+    ${r('td small','display:block;color:#4f665a;font-size:10px')}
+    ${r('.s-venc','color:#b3261e')}${r('.s-dir','color:#0a6b3d')}${r('.s-aquis','color:#8a5a00')}${r('.s-gozada','color:#4f665a')}
+    ${r('.nota','margin-top:12px;color:#4f665a;font-size:10px')}
+    ${r('.ass','display:grid;grid-template-columns:1fr 1fr;gap:40px;margin-top:38px')}
+    ${r('.ass div','border-top:1px solid #12281d;padding-top:4px;text-align:center;font-size:10.5px;color:#4f665a')}
+  }`;
+})();
+function pdfCorpo(p){
   const hoje=hojeMs(),agora=new Date();
   const sit=p.agora?`De férias até ${fmt(p.agora.fin)} (volta em ${fmt(p.agora.fin+DAY)})`:p.nvenc?`${p.nvenc} ${p.nvenc>1?'períodos vencidos':'período vencido'}`:p.saldo>0?'Com direito a gozar':p.semDireito?'Sem direito ainda (menos de 12 meses de exercício)':'Em dia';
   const linhas=p.per.map(x=>{
@@ -300,25 +336,7 @@ function pdfHtml(p){
     return `<tr><td>${fmt(x.ini)} a ${fmt(x.fin)}${x.centi?'':'<small>calculado pela admissão</small>'}</td><td><b class="s-${x.status}">${st}</b>${prazo?`<small>${prazo}</small>`:''}</td><td>${gz}</td><td class="num">${x.concluido?x.saldo+' d':'—'}</td></tr>`;
   }).join('');
   const dados=[['Matrícula',p.MATRICULA],['Cargo',p.cargo],['Lotação',p.lot],['Vínculo',titulo(p.TIPOADMISSAO)],['Admissão',fmt(p.adm)],['Afastamento',p.TIPOAFASTAMENTO?titulo(p.TIPOAFASTAMENTO):'']].filter(x=>x[1]);
-  return `<!doctype html><html lang="pt-BR"><head><meta charset="utf-8"><title>Ficha de férias - ${esc(p.nome)}</title><style>
-  @page{size:A4;margin:16mm 14mm}
-  *{box-sizing:border-box}body{margin:0;font:12px/1.45 "Public Sans",Arial,sans-serif;color:#12281d;-webkit-print-color-adjust:exact;print-color-adjust:exact}
-  .cab{border-bottom:3px solid #0a6b3d;padding-bottom:8px;margin-bottom:12px}.cab small{display:block;letter-spacing:.12em;text-transform:uppercase;color:#4f665a;font-size:10px}
-  .cab h1{margin:2px 0 0;font:700 19px "Libre Franklin",Arial,sans-serif;color:#063d27}.cab .em{float:right;color:#4f665a;font-size:10.5px;margin-top:-30px}
-  h2{font:700 13px "Libre Franklin",Arial,sans-serif;margin:14px 0 6px;color:#063d27}
-  .id{display:grid;grid-template-columns:1fr 1fr;gap:3px 18px;border:1px solid #d1ddd6;border-radius:6px;padding:8px 10px}.id div{display:flex;gap:6px}.id b{color:#4f665a;min-width:74px;font-weight:600}
-  .nome{font:700 15px "Libre Franklin",Arial,sans-serif;margin:0 0 6px}
-  .sit{margin:8px 0;padding:7px 10px;border-radius:6px;background:#e3efe8;font-weight:600}
-  .sum{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}.sum div{border:1px solid #d1ddd6;border-radius:6px;padding:6px 9px}.sum small{display:block;font-size:9.5px;letter-spacing:.05em;text-transform:uppercase;color:#4f665a}.sum b{font:700 15px "Libre Franklin",Arial,sans-serif}
-  .sum .a b{color:#0a6b3d}.sum .v b{color:#b3261e}.sum .p b{color:#6f4aa8}
-  table{width:100%;border-collapse:collapse;margin-top:4px}th{background:#e3efe8;color:#4f665a;font-size:9.5px;letter-spacing:.05em;text-transform:uppercase;text-align:left;padding:6px 8px}
-  td{padding:6px 8px;border-top:1px solid #d1ddd6;vertical-align:top}td.num,th.num{text-align:right;white-space:nowrap}tr{break-inside:avoid}thead{display:table-header-group}
-  td small{display:block;color:#4f665a;font-size:10px}
-  .s-venc{color:#b3261e}.s-dir{color:#0a6b3d}.s-aquis{color:#8a5a00}.s-gozada{color:#4f665a}
-  .nota{margin-top:12px;color:#4f665a;font-size:10px}
-  .ass{display:grid;grid-template-columns:1fr 1fr;gap:40px;margin-top:38px}.ass div{border-top:1px solid #12281d;padding-top:4px;text-align:center;font-size:10.5px;color:#4f665a}
-  </style></head><body>
-  <div class="cab"><small>Câmara Municipal de Rio Verde/GO · Recursos Humanos</small><h1>Ficha de férias</h1><span class="em">Emitida em ${agora.toLocaleDateString('pt-BR')} às ${agora.toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'})}</span></div>
+  return `<div class="cab"><span class="em">Emitida em ${agora.toLocaleDateString('pt-BR')} às ${agora.toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'})}</span><small>Câmara Municipal de Rio Verde/GO · Recursos Humanos</small><h1>Ficha de férias</h1></div>
   <p class="nome">${esc(p.nome)}</p>
   <div class="id">${dados.map(x=>`<div><b>${x[0]}</b><span>${esc(x[1])}</span></div>`).join('')}</div>
   <div class="sit">Situação em ${fmt(hoje)}: ${esc(sit)}</div>
@@ -326,21 +344,22 @@ function pdfHtml(p){
   <h2>Períodos aquisitivos e gozo</h2>
   <table><thead><tr><th>Período aquisitivo</th><th>Situação</th><th>Férias</th><th class="num">Saldo</th></tr></thead><tbody>${linhas}</tbody></table>
   <p class="nota">Regras usadas no cálculo: ${cfg.dias} dias de férias por período aquisitivo de 12 meses, a partir da admissão, e gozo em até ${cfg.concessivo} meses após o fim do período (depois disso, vencidas). As férias lançadas e o saldo vêm do Centi; períodos sem lançamento são calculados pela data de admissão. Este documento não substitui os atos administrativos nem a análise da legislação municipal aplicável.</p>
-  <div class="ass"><div>Responsável pelo RH</div><div>Servidor(a)</div></div>
-  </body></html>`;
+  <div class="ass"><div>Responsável pelo RH</div><div>Servidor(a)</div></div>`;
+}
+let tituloOriginal='';
+function limparPdf(){
+  ['#pdfarea','#pdfstyle'].forEach(s=>{const e=$(s);if(e) e.remove();});
+  if(tituloOriginal){document.title=tituloOriginal;tituloOriginal='';}
 }
 function emitirPdf(p){
-  const html=pdfHtml(p);
-  const f=document.createElement('iframe');f.setAttribute('aria-hidden','true');
-  f.style.cssText='position:fixed;right:0;bottom:0;width:0;height:0;border:0;visibility:hidden';
-  const limpar=()=>setTimeout(()=>f.remove(),1500);
-  f.onload=()=>{
-    try{f.contentWindow.focus();f.contentWindow.print();limpar();}
-    catch(e){   // sem impressão disponível: baixa a ficha em HTML para abrir no navegador
-      const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([html],{type:'text/html;charset=utf-8'}));a.download='ficha-ferias-'+p.MATRICULA+'.html';document.body.appendChild(a);a.click();a.remove();f.remove();
-    }
-  };
-  document.body.appendChild(f);f.srcdoc=html;
+  limparPdf();
+  const st=document.createElement('style');st.id='pdfstyle';st.textContent=PDF_CSS;
+  const area=document.createElement('div');area.id='pdfarea';area.innerHTML=pdfCorpo(p);
+  document.body.append(st,area);
+  tituloOriginal=document.title;document.title='Ficha de férias - '+p.nome;   // vira o nome sugerido do arquivo PDF
+  const fim=()=>{window.removeEventListener('afterprint',fim);limparPdf();};
+  window.addEventListener('afterprint',fim);
+  setTimeout(()=>window.print(),60);
 }
 
 /* ---------- regras ---------- */

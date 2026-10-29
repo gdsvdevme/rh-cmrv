@@ -89,12 +89,16 @@ details.grp.over{outline:2px dashed var(--accent);outline-offset:2px;background:
 .undo{margin-left:12px;border:1px solid currentColor;background:transparent;color:inherit;border-radius:8px;padding:3px 10px;cursor:pointer;font-weight:600}
 dialog{border:1px solid var(--line);border-radius:16px;padding:0;background:var(--surface);color:var(--fg);width:min(460px,94vw);box-shadow:0 20px 60px rgba(0,0,0,.4)}
 dialog::backdrop{background:rgba(0,0,0,.5)}
-dialog form{padding:20px;display:flex;flex-direction:column;gap:12px}
+dialog form{padding:20px;display:flex;flex-direction:column;gap:12px;max-height:88vh;overflow:auto}
 dialog h3{font-size:1.1rem}
 dialog label{display:flex;flex-direction:column;gap:4px;font-size:13px;color:var(--muted);font-weight:600}
 dialog input,dialog select{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:10px 12px;color:var(--fg);font-weight:400}
 dialog .row{display:flex;gap:8px;justify-content:flex-end;flex-wrap:wrap}
 dialog p{margin:0;font-size:14px}
+dl.ficha{margin:0;display:grid;grid-template-columns:max-content 1fr;gap:6px 14px;font-size:14px}
+dl.ficha dt{color:var(--muted);font-weight:600}dl.ficha dd{margin:0;overflow-wrap:anywhere}
+.pm{display:block;color:var(--muted);font-size:12px}
+.pn[data-fi]{cursor:pointer}.pn[data-fi]:hover b{text-decoration:underline}
 @media (max-width:560px){.pact{width:100%;justify-content:flex-end}}
 #toast{position:fixed;left:50%;transform:translateX(-50%);bottom:max(18px,env(safe-area-inset-bottom,0px));background:var(--fg);color:var(--bg);padding:10px 16px;border-radius:10px;font-size:14px;z-index:60;max-width:90vw}
 @media (pointer:coarse){input,select,textarea{font-size:16px}.btn{min-height:42px}.btn.sm{min-height:38px}}
@@ -117,7 +121,9 @@ dialog p{margin:0;font-size:14px}
     <button class="btn" id="edtBtn" type="button">Editar hierarquia</button>
     <button class="btn" id="addBtn" type="button" hidden>+ Pessoa</button>
     <button class="btn" id="undoBtn" type="button" hidden>Desfazer</button>
-    <button class="btn primary" id="impBtn" type="button">Importar planilha (CSV)</button>
+    <button class="btn primary" id="cenBtn" type="button">Buscar do Centi</button>
+    <button class="btn" id="camBtn" type="button" title="Escolher quais campos do Centi alimentam cada informação">Campos do Centi</button>
+    <button class="btn" id="impBtn" type="button">Importar planilha (CSV)</button>
     <button class="btn danger" id="clrBtn" type="button">Remover dados</button>
     <input type="file" id="file" accept=".csv,text/csv" hidden>
   </div>
@@ -378,7 +384,7 @@ function grupoInfo(h){
   if(n==='setor administrativo') return {k:'setor',nome:'Setor Administrativo',ramo:0,sort:'0'};
   const m=/^vereador(a)?\s+(.+)$/.exec(n);
   if(m){const nm=titulo(String(h).replace(/^vereador(a)?\s+/i,''));return {k:'g:'+n,nome:'Gabinete '+(m[1]?'da Vereadora ':'do Vereador ')+nm,curto:nm,ramo:1,sort:norm(nm)};}
-  return {k:'o:'+n,nome:titulo(h),ramo:2,sort:norm(h)};
+  return {k:'o:'+n,nome:titulo(h),ramo:0,sort:'1'+norm(h)};
 }
 function decodificar(buf){
   try{return new TextDecoder('utf-8',{fatal:true}).decode(buf);}catch(e){return new TextDecoder('windows-1252').decode(buf);}
@@ -427,7 +433,7 @@ function agrupar(){
   const grupos=new Map();
   dados.pessoas.forEach(p=>{
     const g=grupoInfo(p.g);
-    if(!grupos.has(g.k)) grupos.set(g.k,Object.assign({pessoas:[],raw:g.ramo===0?'Setor Administrativo':String(p.g).trim()},g));
+    if(!grupos.has(g.k)) grupos.set(g.k,Object.assign({pessoas:[],raw:g.k==='setor'?'Setor Administrativo':String(p.g).trim()},g));
     grupos.get(g.k).pessoas.push(p);
   });
   const lista=[...grupos.values()];
@@ -512,19 +518,154 @@ function confirmar(msg,ok){
   abrirDlg(`<h3>Confirmar</h3><p>${esc(msg)}</p><div class="row"><button type="button" class="btn" data-x>Cancelar</button><button class="btn primary" type="submit">Continuar</button></div>`,()=>{ok();});
 }
 
+/* ---------- Centi ---------- */
+const CENTI_ENT='SFuncionario';
+const CAMPOS={
+  n:['Nome',['nome','nomefuncionario','nomeservidor','nomecompleto','funcionario','servidor']],
+  c:['Cargo',['cargo','nomecargo','descricaocargo','funcao']],
+  t:['Vínculo (comissionado, efetivo…)',['tipoadmissao','vinculo','tipovinculo','regime','categoria','tipofuncionario','tipo']],
+  g:['Lotação / gabinete',['hierarquia','lotacao','departamento','setor','unidade','localtrabalho','secretaria','centrocusto']],
+  m:['Matrícula',['matricula','registro','codigo']],
+  a:['Data de admissão',['dataadmissao','admissao','datainicio']],
+  s:['Situação (ativo, demitido…)',['situacao','situacaofuncional','status','ativo']],
+  d:['Data de demissão',['datademissao','datarescisao','datadesligamento','datasaida']],
+  e:['E-mail',['email','emailcorporativo','emailpessoal']],
+  f:['Telefone',['celular','telefone','fone']],
+  r:['Salário (só para ordenar a hierarquia; não é guardado)',['salario','salariobase','vencimento','remuneracao']]
+};
+let bruto=null;
+function achatar(o,pre,out,d){
+  Object.keys(o||{}).forEach(k=>{const v=o[k],p=pre?pre+'.'+k:k;
+    if(v&&typeof v==='object'){if(!Array.isArray(v)&&d<3) achatar(v,p,out,d+1);}else out[p]=v;});
+  return out;
+}
+const nk=k=>norm(k).replace(/[^a-z0-9.]/g,'');
+function autoMapa(f){
+  const ks=Object.keys(f),campos={};
+  Object.keys(CAMPOS).forEach(c=>{
+    for(const cand of CAMPOS[c][1]){
+      const hit=ks.find(k=>nk(k)===cand||nk(k).split('.').pop()===cand)||ks.find(k=>nk(k).startsWith(cand+'.')&&/(^|\.)(nome|descricao|name)$/.test(nk(k)));
+      if(hit){campos[c]=hit;break;}
+    }
+  });
+  return {ent:CENTI_ENT,campos};
+}
+function dataIso(v){
+  if(v==null||v==='') return '';
+  const s=String(v).trim();let m;
+  if((m=/\/Date\((-?\d+)/.exec(s))) return new Date(+m[1]).toISOString().slice(0,10);
+  if((m=/^(\d{4})-(\d{2})-(\d{2})/.exec(s))) return m[0];
+  if((m=/^(\d{2})\/(\d{2})\/(\d{4})/.exec(s))) return m[3]+'-'+m[2]+'-'+m[1];
+  return '';
+}
+const INATIVO=/demit|deslig|rescis|exonera|inativ|aposent|falec|encerr/;
+function converter(lista,mapa){
+  const hoje=new Date().toISOString().slice(0,10),P=[];let ign=0;
+  lista.forEach(rec=>{
+    const f=achatar(rec,'',{},0),v=k=>{const c=mapa.campos[k];const x=c?f[c]:'';return x==null?'':String(x).trim();};
+    const nome=v('n');
+    const sit=mapa.campos.s?f[mapa.campos.s]:null,dem=dataIso(v('d'));
+    const inativo=(sit===false||/^(0|false|nao|n)$/i.test(String(sit==null?'':sit).trim())||INATIVO.test(norm(sit)))||(dem&&dem<=hoje);
+    if(!nome||inativo){ign++;return;}
+    const sal=parseFloat(String(v('r')).replace(/\./g,'').replace(',','.'));
+    const lot=v('g').replace(/^gabinete\s+(d[oa]s?\s+)?/i,'')||'Sem lotação';
+    const p={n:titulo(nome),c:titulo(v('c')),t:vinculo(v('t')),g:lot,_s:isNaN(sal)?0:sal};
+    const m=v('m'),a=dataIso(v('a')),e=v('e'),tel=v('f');
+    if(m) p.m=m;if(a) p.a=a;if(e) p.e=e.toLowerCase();if(tel) p.f=tel;
+    if(mapa.campos.s&&typeof sit!=='boolean'&&v('s')) p.s=titulo(v('s'));
+    P.push(p);
+  });
+  P.sort((a,b)=>b._s-a._s||a.n.localeCompare(b.n,'pt-BR'));
+  P.forEach((p,i)=>{p.o=i;delete p._s;});
+  return {pessoas:P,ign};
+}
+async function paginar(ent,filtro){
+  const out=[];let start=1,pg=1,porPagina=false,primeira='';
+  for(let i=0;i<300;i++){
+    const r=await PB.centi.search(ent,filtro,start),d=Array.isArray(r&&r.Data)?r.Data:[];
+    if(!d.length) break;
+    const k=JSON.stringify(d[0]);
+    if(out.length&&k===primeira){if(porPagina) break;porPagina=true;pg=2;start=2;continue;}   // Start era número da página, não do registro
+    if(!out.length) primeira=k;
+    out.push(...d);
+    toast('Buscando no Centi… '+out.length+' registros');
+    if(r.Count>d.length&&out.length>=r.Count) break;
+    if(porPagina){pg++;start=pg;}else start=out.length+1;
+  }
+  return out;
+}
+async function buscarCenti(ent){
+  /* a consulta do Centi exige um filtro com valor: "contém %" traz todos; se não trouxer, junta as buscas por vogal */
+  let r=await paginar(ent,[{FieldName:'Nome',Operation:6,Value:'%'}]);
+  if(!r.length){
+    const vistos=new Set();
+    for(const vg of ['a','e','i','o','u']) (await paginar(ent,[{FieldName:'Nome',Operation:6,Value:'%'+vg+'%'}])).forEach(x=>{const k=JSON.stringify(x);if(!vistos.has(k)){vistos.add(k);r.push(x);}});
+  }
+  return r;
+}
+async function garantirSessao(){
+  if(PB.centi.user) return true;
+  const h=await PB.connect();if(h&&!dbh) dbh=h;
+  return !!PB.centi.user;
+}
+async function sincronizar(ent){
+  try{
+    if(!(await garantirSessao())){toast('Entre com o acesso do Centi para buscar os dados.');return;}
+    ent=ent||(dados&&dados.mapa&&dados.mapa.ent)||CENTI_ENT;
+    bruto=await buscarCenti(ent);
+    if(!bruto.length){toast('O Centi não devolveu registros de "'+ent+'". Confira o nome da entidade em Campos do Centi.');return dlgCampos();}
+    const mapa=Object.assign({},(dados&&dados.mapa)||autoMapa(achatar(bruto[0],'',{},0)),{ent});
+    if(!mapa.campos.n){toast('Não identifiquei o campo do nome. Escolha os campos abaixo.');return dlgCampos(mapa);}
+    aplicarCenti(mapa);
+  }catch(e){toast(e.status===401?'A sessão do Centi expirou. Clique em Buscar do Centi para entrar de novo.':'Não foi possível buscar no Centi: '+(e.message||e));}
+}
+function aplicarCenti(mapa){
+  const r=converter(bruto,mapa);
+  if(!r.pessoas.length){toast('Nenhum servidor ativo encontrado com estes campos.');return dlgCampos(mapa);}
+  dados={v:2,importado:new Date().toISOString(),fonte:'Centi',mapa,ignorados:r.ign,pessoas:r.pessoas};hist=[];
+  salvar();render();toast(r.pessoas.length+' servidores ativos carregados do Centi.');
+}
+async function dlgCampos(mapa){
+  try{
+    if(!bruto){if(!(await garantirSessao())){toast('Entre com o acesso do Centi primeiro.');return;}bruto=await buscarCenti((dados&&dados.mapa&&dados.mapa.ent)||CENTI_ENT);}
+  }catch(e){toast('Não foi possível buscar no Centi: '+(e.message||e));return;}
+  if(!bruto.length){toast('Nenhum registro para mostrar os campos.');return;}
+  const f=achatar(bruto[0],'',{},0),ks=Object.keys(f);
+  const m=mapa||(dados&&dados.mapa)||autoMapa(f);
+  const sel=k=>`<label>${CAMPOS[k][0]}<select name="${k}"><option value="">— não usar —</option>${ks.map(x=>`<option value="${esc(x)}"${m.campos[k]===x?' selected':''}>${esc(x)}${f[x]!==''&&f[x]!=null?' — '+esc(String(f[x]).slice(0,40)):''}</option>`).join('')}</select></label>`;
+  abrirDlg(`<h3>Campos do Centi</h3><p>Escolha qual campo do Centi alimenta cada informação. Os exemplos vêm do primeiro registro. ${dados&&dados.editado?'<b>Aplicar recria a hierarquia e descarta as edições manuais.</b>':''}</p>
+    <label>Entidade do Centi<input name="ent" required value="${esc(m.ent||CENTI_ENT)}"></label>
+    ${Object.keys(CAMPOS).map(sel).join('')}
+    <div class="row"><button type="button" class="btn" data-x>Cancelar</button><button class="btn primary" type="submit">Aplicar</button></div>`,
+  fm=>{
+    const campos={};Object.keys(CAMPOS).forEach(k=>{if(fm.elements[k].value) campos[k]=fm.elements[k].value;});
+    if(!campos.n){toast('Escolha o campo do nome.');return false;}
+    const ent=fm.elements.ent.value.trim()||CENTI_ENT;
+    if(ent!==(m.ent||CENTI_ENT)){bruto=null;setTimeout(()=>sincronizar(ent),0);return;}
+    aplicarCenti({ent,campos});
+  });
+}
+
 /* ---------- exibição ---------- */
 function montar(filtroTexto,filtroVinc){
   const q=norm(filtroTexto);
   return agrupar().map(g=>{
-    const ok=p=>(!filtroVinc||p.t===filtroVinc)&&(!q||norm(p.n+' '+p.c+' '+g.nome).includes(q));
+    const ok=p=>(!filtroVinc||p.t===filtroVinc)&&(!q||norm(p.n+' '+p.c+' '+g.nome+' '+(p.m||'')).includes(q));
     return Object.assign({},g,{visiveis:g.pessoas.filter(ok)});
   }).filter(g=>g.visiveis.length);
 }
 function iniciais(n){const p=n.split(' ').filter(w=>!MIN.has(w.toLowerCase()));return ((p[0]||'')[0]||'')+((p.length>1?p[p.length-1][0]:'')||'');}
+function dataBr(iso){const m=/^(\d{4})-(\d{2})-(\d{2})/.exec(iso||'');return m?m[3]+'/'+m[2]+'/'+m[1]:'';}
+function metaPessoa(p){const a=[p.m?'Mat. '+p.m:'',p.a?'Admissão '+dataBr(p.a):''].filter(Boolean);return a.length?`<small class="pm">${esc(a.join(' · '))}</small>`:'';}
+function dlgFicha(i){
+  const p=dados.pessoas[i];if(!p) return;
+  const L=[['Cargo',p.c],['Vínculo',VINC[p.t]],['Lotação',grupoInfo(p.g).nome],['Matrícula',p.m],['Admissão',dataBr(p.a)],['Situação',p.s],['E-mail',p.e],['Telefone',p.f]].filter(x=>x[1]);
+  abrirDlg(`<h3>${esc(p.n)}</h3><dl class="ficha">${L.map(x=>`<dt>${x[0]}</dt><dd>${esc(x[1])}</dd>`).join('')}</dl><div class="row"><button type="button" class="btn primary" data-x>Fechar</button></div>`,()=>{});
+}
 function pessoaHtml(p){
   const i=dados.pessoas.indexOf(p);
   const acoes=edit?`<span class="pact"><button class="btn sm" type="button" data-mv="${i}" title="Mover para outro grupo">Mover</button><button class="btn sm" type="button" data-ed="${i}" title="Editar">Editar</button><button class="btn sm danger" type="button" data-rm="${i}" title="Excluir" aria-label="Excluir ${esc(p.n)}">Excluir</button></span>`:'';
-  return `<li class="person"${edit?` draggable="true" data-i="${i}"`:''}><span class="av" aria-hidden="true">${esc(iniciais(p.n))}</span><div class="pn"><b>${esc(p.n)}</b><span>${esc(p.c)}</span></div><span class="tag ${p.t}">${VINC[p.t]}</span>${acoes}</li>`;
+  return `<li class="person"${edit?` draggable="true" data-i="${i}"`:''}><span class="av" aria-hidden="true">${esc(iniciais(p.n))}</span><div class="pn"${edit?'':` data-fi="${i}" tabindex="0" role="button" title="Ver ficha"`}><b>${esc(p.n)}</b><span>${esc(p.c)}</span>${metaPessoa(p)}</div><span class="tag ${p.t}">${VINC[p.t]}</span>${acoes}</li>`;
 }
 function grupoHtml(g,abrir,cor){
   let corpo='';
@@ -535,7 +676,7 @@ function grupoHtml(g,abrir,cor){
     });
   }else corpo=`<ul class="people">${g.visiveis.map(pessoaHtml).join('')}</ul>`;
   const total=g.pessoas.length,vis=g.visiveis.length;
-  const gact=edit?`<span class="gact"><button class="btn sm" type="button" data-gadd="${esc(g.raw)}">+ Pessoa</button>${g.ramo===0?'':`<button class="btn sm" type="button" data-gren="${esc(g.raw)}">Renomear</button>`}</span>`:'';
+  const gact=edit?`<span class="gact"><button class="btn sm" type="button" data-gadd="${esc(g.raw)}">+ Pessoa</button>${g.k==='setor'?'':`<button class="btn sm" type="button" data-gren="${esc(g.raw)}">Renomear</button>`}</span>`:'';
   return `<details class="grp" data-k="${esc(g.k)}" data-raw="${esc(g.raw)}" style="--bc:${cor}"${abrir||abertos.has(g.k)?' open':''}><summary><span class="gname">${esc(g.nome)}</span><span class="cnt">${vis===total?total:vis+' de '+total}</span>${gact}</summary>${corpo}</details>`;
 }
 function render(){
@@ -545,10 +686,10 @@ function render(){
   document.body.classList.toggle('editando',edit);
   $('#edtBtn').textContent=edit?'Concluir edição':'Editar hierarquia';$('#edtBtn').classList.toggle('primary',edit);
   $('#addBtn').hidden=!(has&&edit);$('#undoBtn').hidden=!(has&&edit);$('#undoBtn').disabled=!hist.length;
-  $('#impBtn').textContent=has?'Atualizar planilha (CSV)':'Importar planilha (CSV)';
+  $('#cenBtn').textContent=has?'Atualizar do Centi':'Buscar do Centi';
   if(!has){
     stats.innerHTML='';$('#notice').innerHTML='';$('#foot').textContent='';
-    view.innerHTML=`<div class="empty"><h2>Nenhuma planilha importada</h2><p>Importe o arquivo CSV de pessoal (colunas Nome, Cargo, Tipo de admissão e Hierarquia). Os dados ficam salvos no servidor (ou neste navegador, se você não entrar) e não vão para o código do sistema.</p><button class="btn primary" type="button" data-imp>Importar planilha (CSV)</button></div>`;
+    view.innerHTML=`<div class="empty"><h2>Nenhum dado de pessoal ainda</h2><p>Busque os servidores ativos direto do Centi. Se preferir, importe uma planilha CSV (colunas Nome, Cargo, Tipo de admissão e Hierarquia). Os dados ficam salvos no servidor e não vão para o código do sistema.</p><button class="btn primary" type="button" data-cen>Buscar do Centi</button> <button class="btn" type="button" data-imp>Importar planilha (CSV)</button></div>`;
     return;
   }
   const P=dados.pessoas,cont=k=>P.filter(p=>p.t===k).length;
@@ -563,9 +704,9 @@ function render(){
   const r0=por(0),r1=por(1),r2=por(2);
   const n=a=>a.reduce((s,g)=>s+g.visiveis.length,0);
   view.innerHTML=`<div class="root"><div class="rootbox"><small>Câmara Municipal</small><b>Rio Verde/GO</b></div></div>
-   <div class="branches">${ramo('Setor Administrativo','var(--c1)',r0,n(r0)+' pessoas')}${ramo('Gabinetes dos Vereadores','var(--c2)',r1,r1.length+' gabinetes · '+n(r1)+' pessoas')}${ramo('Outros vínculos','var(--c4)',r2,n(r2)+' pessoas')}</div>
+   <div class="branches">${ramo('Setor Administrativo','var(--c1)',r0,n(r0)+' pessoas')}${ramo('Gabinetes dos Vereadores','var(--c2)',r1,r1.length+' gabinetes · '+n(r1)+' pessoas')}${ramo('Outras lotações','var(--c4)',r2,n(r2)+' pessoas')}</div>
    ${gs.length?'':'<div class="empty">Nada encontrado para esta busca.</div>'}`;
-  $('#foot').textContent='Planilha importada em '+new Date(dados.importado).toLocaleString('pt-BR')+(dados.fonte?' ('+dados.fonte+')':'')+(dados.editado?'. Última edição manual em '+new Date(dados.editado).toLocaleString('pt-BR'):'')+'. Dentro de cada grupo, a ordem segue a hierarquia dos cargos, do mais alto para o mais baixo. Salário e matrícula não são guardados.';
+  $('#foot').textContent=(dados.fonte==='Centi'?'Dados do Centi atualizados em ':'Planilha importada em ')+new Date(dados.importado).toLocaleString('pt-BR')+(dados.fonte&&dados.fonte!=='Centi'?' ('+dados.fonte+')':'')+(dados.ignorados?'. '+dados.ignorados+' registro(s) inativo(s) ou sem nome foram ignorados':'')+(dados.editado?'. Última edição manual em '+new Date(dados.editado).toLocaleString('pt-BR'):'')+'. Dentro de cada grupo, a ordem segue a hierarquia dos cargos, do mais alto para o mais baixo. O salário (usado só para ordenar), o CPF e os demais campos do Centi não são guardados.';
 }
 
 /* ---------- eventos ---------- */
@@ -574,7 +715,13 @@ function importar(){
   else $('#file').click();
 }
 $('#impBtn').addEventListener('click',importar);
-document.addEventListener('click',e=>{if(e.target.closest('[data-imp]')) importar();});
+function atualizarCenti(){
+  if(dados&&dados.editado) confirmar('Buscar do Centi substitui todas as alterações feitas manualmente na hierarquia (movimentações, edições e exclusões). Deseja continuar?',()=>sincronizar());
+  else sincronizar();
+}
+$('#cenBtn').addEventListener('click',atualizarCenti);
+$('#camBtn').addEventListener('click',()=>dlgCampos());
+document.addEventListener('click',e=>{if(e.target.closest('[data-imp]')) importar();if(e.target.closest('[data-cen]')) atualizarCenti();});
 $('#file').addEventListener('change',async ev=>{
   const f=ev.target.files&&ev.target.files[0];if(!f) return;
   try{
@@ -594,7 +741,9 @@ $('#addBtn').addEventListener('click',()=>dlgPessoa(null));
 $('#undoBtn').addEventListener('click',desfazer);
 document.addEventListener('keydown',e=>{if(edit&&(e.ctrlKey||e.metaKey)&&e.key.toLowerCase()==='z'&&!/^(INPUT|TEXTAREA|SELECT)$/.test(e.target.tagName)&&!$('#dlg').open){e.preventDefault();desfazer();}});
 const dv=$('#view');
+dv.addEventListener('keydown',e=>{const fi=e.target.closest&&e.target.closest('.pn[data-fi]');if(fi&&(e.key==='Enter'||e.key===' ')){e.preventDefault();dlgFicha(+fi.dataset.fi);}});
 dv.addEventListener('click',e=>{
+  const fi=e.target.closest('.pn[data-fi]');if(fi&&dv.contains(fi)){dlgFicha(+fi.dataset.fi);return;}
   const b=e.target.closest('button');if(!b||!dv.contains(b)) return;
   if(b.closest('summary')) e.preventDefault();
   if(b.dataset.mv!=null) dlgMover(+b.dataset.mv);

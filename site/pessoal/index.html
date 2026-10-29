@@ -525,7 +525,7 @@ const CENTI_ENT='SFuncionario';
 const CAMPOS={
   n:['Nome',['nome','nomefuncionario','nomeservidor','nomecompleto','funcionario','servidor']],
   c:['Cargo',['cargo','nomecargo','descricaocargo','funcao']],
-  t:['Vínculo (comissionado, efetivo…)',['tipoadmissao','vinculo','tipovinculo','regime','categoria','tipofuncionario','tipo']],
+  t:['Vínculo (comissionado, efetivo…)',['tipoadm','tipoadmissao','vinculo','tipovinculo','regime','categoria','tipofuncionario','tipo']],
   g:['Lotação / gabinete',['hierarquia','lotacao','departamento','setor','unidade','localtrabalho','secretaria','centrocusto']],
   m:['Matrícula',['matricula','registro','codigo']],
   a:['Data de admissão',['dataadmissao','admissao','datainicio']],
@@ -533,9 +533,10 @@ const CAMPOS={
   d:['Data de demissão',['datademissao','datarescisao','datadesligamento','datasaida']],
   e:['E-mail',['email','emailcorporativo','emailpessoal']],
   f:['Telefone',['celular','telefone','fone']],
+  x:['Referência (mês/ano da folha)',['referencia','competencia','mesreferencia','mesano','anomes','anomesreferencia','ref']],
   r:['Salário (só para ordenar a hierarquia; não é guardado)',['salario','salariobase','vencimento','remuneracao']]
 };
-let bruto=null;
+let bruto=null,mapaAtual=null;
 function achatar(o,pre,out,d){
   Object.keys(o||{}).forEach(k=>{const v=o[k],p=pre?pre+'.'+k:k;
     if(v&&typeof v==='object'){if(!Array.isArray(v)&&d<3) achatar(v,p,out,d+1);}else out[p]=v;});
@@ -560,14 +561,33 @@ function dataIso(v){
   if((m=/^(\d{2})\/(\d{2})\/(\d{4})/.exec(s))) return m[3]+'-'+m[2]+'-'+m[1];
   return '';
 }
+function refNum(v){   /* "10/2026", "2026-10", "10-2026", "202610", "/Date()/"... -> 202610 */
+  if(v==null||v==='') return 0;const s=String(v).trim();let m;
+  if((m=/^(\d{1,2})[\/-](\d{4})/.exec(s))) return +m[2]*100+ +m[1];
+  if((m=/^(\d{4})[\/-](\d{1,2})/.exec(s))) return +m[1]*100+ +m[2];
+  if((m=/^(\d{4})(\d{2})$/.exec(s))) return +m[1]*100+ +m[2];
+  const d=dataIso(s);return d?+d.slice(0,4)*100+ +d.slice(5,7):0;
+}
+const refAtual=()=>{const d=new Date();return String(d.getMonth()+1).padStart(2,'0')+'/'+d.getFullYear();};
 const INATIVO=/demit|deslig|rescis|exonera|inativ|aposent|falec|encerr/;
 function converter(lista,mapa){
   const hoje=new Date().toISOString().slice(0,10),P=[];let ign=0;
+  /* o Centi guarda uma linha por servidor em cada referência: fica só a da referência pedida e, se ainda sobrar mais de uma
+     por pessoa, a mais recente (maior referência, depois maior Id) */
+  const alvo=refNum(mapa.ref||refAtual()),melhor=new Map();let semRef=0;
   lista.forEach(rec=>{
+    const f=achatar(rec,'',{},0),c=mapa.campos,x=c.x?refNum(f[c.x]):0;
+    if(c.x&&alvo&&x&&x!==alvo){semRef++;return;}
+    const k=String((c.m&&f[c.m])||f[c.n]||'').trim().toLowerCase()+'|'+String(f[c.n]||'').trim().toLowerCase();
+    const id=+(f.Id||f.id||0),ant=melhor.get(k);
+    if(!ant||x>ant.x||(x===ant.x&&id>ant.id)) melhor.set(k,{rec,x,id});
+  });
+  const unicos=[...melhor.values()].map(e=>e.rec);ign+=semRef;
+  unicos.forEach(rec=>{
     const f=achatar(rec,'',{},0),v=k=>{const c=mapa.campos[k];const x=c?f[c]:'';return x==null?'':String(x).trim();};
     const nome=v('n');
     const sit=mapa.campos.s?f[mapa.campos.s]:null,dem=dataIso(v('d'));
-    const inativo=(sit===false||/^(0|false|nao|n)$/i.test(String(sit==null?'':sit).trim())||INATIVO.test(norm(sit)))||(dem&&dem<=hoje);
+    const inativo=(sit===false||(typeof sit==='string'&&sit.trim()&&!/^ativ/.test(norm(sit)))||/^(0|false|nao|n)$/i.test(String(sit==null?'':sit).trim())||INATIVO.test(norm(sit)))||(dem&&dem<=hoje);
     if(!nome||inativo){ign++;return;}
     const sal=parseFloat(String(v('r')).replace(/\./g,'').replace(',','.'));
     const lot=v('g').replace(/^gabinete\s+(d[oa]s?\s+)?/i,'')||'Sem lotação';
@@ -579,7 +599,7 @@ function converter(lista,mapa){
   });
   P.sort((a,b)=>b._s-a._s||a.n.localeCompare(b.n,'pt-BR'));
   P.forEach((p,i)=>{p.o=i;delete p._s;});
-  return {pessoas:P,ign};
+  return {pessoas:P,ign,total:lista.length,duplicados:lista.length-semRef-unicos.length};
 }
 async function paginar(ent,filtro){
   /* o Centi limita cada consulta (50 registros); como o "Start" pode ser número do registro (1 ou 0) ou da página,
@@ -615,7 +635,10 @@ async function paginar(ent,filtro){
 }
 async function buscarCenti(ent){
   /* a consulta do Centi exige um filtro com valor: "contém %" traz todos; se não trouxer, junta as buscas por vogal */
-  let r=await paginar(ent,[{FieldName:'Nome',Operation:6,Value:'%'}]);
+  const fs=mapaAtual&&mapaAtual.campos&&mapaAtual.campos.s;
+  let r=[];
+  if(fs) r=await paginar(ent,[{FieldName:fs,Operation:6,Value:'%Ativo%'}]);   // só os ativos: a consulta traz no máximo 1000 linhas
+  if(!r.length) r=await paginar(ent,[{FieldName:'Nome',Operation:6,Value:'%'}]);
   if(!r.length){
     const vistos=new Set();
     for(const vg of ['a','e','i','o','u']) (await paginar(ent,[{FieldName:'Nome',Operation:6,Value:'%'+vg+'%'}])).forEach(x=>{const k=JSON.stringify(x);if(!vistos.has(k)){vistos.add(k);r.push(x);}});
@@ -631,9 +654,11 @@ async function sincronizar(ent){
   try{
     if(!(await garantirSessao())){toast('Entre com o acesso do Centi para buscar os dados.');return;}
     ent=ent||(dados&&dados.mapa&&dados.mapa.ent)||CENTI_ENT;
+    const salvo=dados&&dados.mapa&&dados.mapa.v===2?dados.mapa:null;   // mapeamentos antigos (sem v:2) são refeitos
+    mapaAtual=salvo||{campos:{s:'Situacao'}};
     bruto=await buscarCenti(ent);
     if(!bruto.length){toast('O Centi não devolveu registros de "'+ent+'". Confira o nome da entidade em Campos do Centi.');return dlgCampos();}
-    const mapa=Object.assign({},(dados&&dados.mapa)||autoMapa(achatar(bruto[0],'',{},0)),{ent});
+    const mapa=Object.assign({},salvo||autoMapa(achatar(bruto[0],'',{},0)),{ent,v:2});
     if(!mapa.campos.n){toast('Não identifiquei o campo do nome. Escolha os campos abaixo.');return dlgCampos(mapa);}
     aplicarCenti(mapa);
     if(bruto.length%50===0&&paginar.info) console.warn('Centi:',paginar.info);
@@ -642,8 +667,8 @@ async function sincronizar(ent){
 function aplicarCenti(mapa){
   const r=converter(bruto,mapa);
   if(!r.pessoas.length){toast('Nenhum servidor ativo encontrado com estes campos.');return dlgCampos(mapa);}
-  dados={v:2,importado:new Date().toISOString(),fonte:'Centi',mapa,ignorados:r.ign,pessoas:r.pessoas};hist=[];
-  salvar();render();toast(r.pessoas.length+' servidores ativos carregados do Centi.'+(bruto.length%50===0&&paginar.info?' Atenção: pode haver mais registros ('+paginar.info+').':''));
+  dados={v:2,importado:new Date().toISOString(),fonte:'Centi',mapa:Object.assign({v:2},mapa),ignorados:r.ign,pessoas:r.pessoas};hist=[];
+  salvar();render();toast(r.pessoas.length+' servidores ativos da referência '+(mapa.ref||refAtual())+' (de '+r.total+' linhas do Centi, '+r.duplicados+' repetidas).'+(bruto.length>=1000||bruto.length%50===0&&paginar.info?' Atenção: pode haver mais registros ('+paginar.info+').':''));
 }
 async function dlgCampos(mapa){
   try{
@@ -651,10 +676,11 @@ async function dlgCampos(mapa){
   }catch(e){toast('Não foi possível buscar no Centi: '+(e.message||e));return;}
   if(!bruto.length){toast('Nenhum registro para mostrar os campos.');return;}
   const f=achatar(bruto[0],'',{},0),ks=Object.keys(f);
-  const m=mapa||(dados&&dados.mapa)||autoMapa(f);
+  const m=mapa||(dados&&dados.mapa&&dados.mapa.v===2?dados.mapa:null)||autoMapa(f);
   const sel=k=>`<label>${CAMPOS[k][0]}<select name="${k}"><option value="">— não usar —</option>${ks.map(x=>`<option value="${esc(x)}"${m.campos[k]===x?' selected':''}>${esc(x)}${f[x]!==''&&f[x]!=null?' — '+esc(String(f[x]).slice(0,40)):''}</option>`).join('')}</select></label>`;
   abrirDlg(`<h3>Campos do Centi</h3><p>Escolha qual campo do Centi alimenta cada informação. Os exemplos vêm do primeiro registro. ${dados&&dados.editado?'<b>Aplicar recria a hierarquia e descarta as edições manuais.</b>':''}</p>
     <label>Entidade do Centi<input name="ent" required value="${esc(m.ent||CENTI_ENT)}"></label>
+    <label>Referência (mês/ano)<input name="ref" required pattern="\\d{2}/\\d{4}" value="${esc(m.ref||refAtual())}"></label>
     ${Object.keys(CAMPOS).map(sel).join('')}
     <div class="row"><button type="button" class="btn" data-x>Cancelar</button><button class="btn primary" type="submit">Aplicar</button></div>`,
   fm=>{
@@ -662,7 +688,7 @@ async function dlgCampos(mapa){
     if(!campos.n){toast('Escolha o campo do nome.');return false;}
     const ent=fm.elements.ent.value.trim()||CENTI_ENT;
     if(ent!==(m.ent||CENTI_ENT)){bruto=null;setTimeout(()=>sincronizar(ent),0);return;}
-    aplicarCenti({ent,campos});
+    aplicarCenti({ent,campos,ref:fm.elements.ref.value.trim()});
   });
 }
 

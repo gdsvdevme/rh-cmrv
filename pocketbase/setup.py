@@ -84,7 +84,8 @@ if app_user:
         call('POST', '/api/collections', {'name': 'rhcmrv_users', 'type': 'auth', 'createRule': None,
             'fields': [{'name': 'username', 'type': 'text', 'required': True},
                        {'name': 'password', 'type': 'password', 'required': True, 'min': 4, 'system': True},
-                       {'name': 'email', 'type': 'email', 'required': False, 'system': True}],
+                       {'name': 'email', 'type': 'email', 'required': False, 'system': True},
+                       {'name': 'admin', 'type': 'bool'}],
             'indexes': ['CREATE UNIQUE INDEX idx_rhcmrv_users_username ON rhcmrv_users (username)'],
             'passwordAuth': {'enabled': True, 'identityFields': ['username']}})
         print('Coleção rhcmrv_users criada.')
@@ -97,16 +98,32 @@ if app_user:
             call('POST', '/api/collections/rhcmrv_users/records', {'username': app_user, 'password': app_user_pass, 'passwordConfirm': app_user_pass})
             print('Login %s criado.' % app_user)
 
+# administradores: campo bool "admin" em rhcmrv_users (só o superusuário altera; a função /api/centi-login o preenche a partir
+# de CENTI_ADMIN_USERS) e, em rhcmrv_docs, só admin escreve no documento do painel dos mini sistemas (painel/tiles)
+ADM = '(@request.auth.collectionName = "rhcmrv_users" && @request.auth.admin = true)'
+PAINEL = 'painel/tiles'
+if new_api:
+    ucol = call('GET', '/api/collections/rhcmrv_users', ok404=True)
+    if ucol and not any(f.get('name') == 'admin' for f in ucol.get('fields', [])):
+        call('PATCH', '/api/collections/rhcmrv_users', {'fields': ucol['fields'] + [{'name': 'admin', 'type': 'bool'}]})
+        print('Campo admin criado em rhcmrv_users.')
+def regras(name):
+    r = {'listRule': RULE, 'viewRule': RULE, 'createRule': RULE, 'updateRule': RULE, 'deleteRule': RULE}
+    if name == 'rhcmrv_docs' and new_api:
+        k = '(@request.body.key != "%s" || %s)' % (PAINEL, ADM)
+        kk = '(key != "%s" || %s)' % (PAINEL, ADM)
+        r.update({'createRule': '(%s) && %s' % (RULE, k), 'updateRule': '(%s) && %s && %s' % (RULE, kk, k), 'deleteRule': '(%s) && %s' % (RULE, kk)})
+    return r
+
 COLS = [
     ('rhcmrv_docs', [('key', 'text'), ('data', 'json')], 'key'),
     ('rhcmrv_versoes', [('vid', 'text'), ('at', 'text'), ('label', 'text'), ('json', 'json')], 'vid'),
 ]
 for name, defs, uniq in COLS:
     if call('GET', '/api/collections/' + name, ok404=True):
-        call('PATCH', '/api/collections/' + name, {'listRule': RULE, 'viewRule': RULE, 'createRule': RULE, 'updateRule': RULE, 'deleteRule': RULE})
+        call('PATCH', '/api/collections/' + name, regras(name))
         print('Coleção %s já existe (regras de acesso atualizadas).' % name); continue
-    body = {'name': name, 'type': 'base',
-            'listRule': RULE, 'viewRule': RULE, 'createRule': RULE, 'updateRule': RULE, 'deleteRule': RULE,
+    body = {'name': name, 'type': 'base', **regras(name),
             'indexes': ['CREATE UNIQUE INDEX idx_%s_%s ON %s (%s)' % (name, uniq, name, uniq)]}
     body['fields' if new_api else 'schema'] = fields(defs) if new_api else old_schema(defs)
     call('POST', '/api/collections', body)

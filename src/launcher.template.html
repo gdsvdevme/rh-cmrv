@@ -50,6 +50,9 @@ main{padding-block:0 40px}
 .tile{position:relative;background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:20px;display:flex;flex-direction:column;gap:12px;min-width:0;box-shadow:var(--shadow);text-decoration:none;color:inherit;transition:transform .15s,border-color .15s}
 a.tile:hover{transform:translateY(-3px);border-color:var(--accent)}
 a.tile:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
+.tile[draggable=true]{cursor:grab}.tile.dragging{opacity:.45}.tile.over{outline:2px dashed var(--accent);outline-offset:2px}
+.tile.skel{pointer-events:none;gap:12px}.tile.skel i{display:block;border-radius:8px;background:linear-gradient(90deg,var(--line) 0%,color-mix(in srgb,var(--line) 40%,transparent) 50%,var(--line) 100%);background-size:220% 100%;animation:sk 1.3s ease-in-out infinite}
+@keyframes sk{0%{background-position:100% 0}100%{background-position:-100% 0}}@media (prefers-reduced-motion:reduce){.tile.skel i{animation:none}}
 .tile.off{background:color-mix(in srgb,var(--surface) 70%,var(--bg))}
 .ico{width:56px;height:56px;border-radius:15px;display:grid;place-items:center;background:var(--tint);color:var(--ink);flex:none}
 .tile h3{font-size:1.05rem;line-height:1.25}
@@ -112,6 +115,7 @@ const FERIAS_URL="/*FERIAS_URL*/";
 const TAREFAS_URL="/*TAREFAS_URL*/";
 const CARIMBOS_URL="/*CARIMBOS_URL*/";
 const LS='rhcrv-painel-v1';
+const CACHE='rhcrv-painel-servidor';      // última cópia do painel vinda do servidor (evita mostrar nomes antigos enquanto o servidor responde)
 const ICONS={
   org:'<rect x="9" y="3" width="6" height="5" rx="1"/><rect x="3" y="16" width="6" height="5" rx="1"/><rect x="15" y="16" width="6" height="5" rx="1"/><path d="M12 8v4M6 16v-4h12v4"/>',
   flow:'<rect x="3" y="3" width="7" height="6" rx="1"/><rect x="14" y="15" width="7" height="6" rx="1"/><path d="M6.5 9v4a2 2 0 002 2H14"/>',
@@ -156,36 +160,52 @@ function defaults(){
     {id:'t-freq',nome:'Frequência',desc:'Registro e conferência de frequência.',icone:'clock',hue:48,status:'plan',url:''},
   ]};
 }
-let st=defaults(),edit=false,dbh=null,filter='',saveT=null;
+let st=defaults(),edit=false,dbh=null,filter='',saveT=null,carregando=false;
 
 function load(){
   try{const d=JSON.parse(localStorage.getItem(LS)||'null');if(d&&Array.isArray(d.tiles)) return d;}catch(e){}
   return null;
 }
+/* só quem entrou como administrador edita o painel; sem sessão (modo local ou artefato) o painel é só de leitura */
+const podeEditar=()=>PB.centi.admin;
+function lerCache(){
+  try{const d=JSON.parse(localStorage.getItem(CACHE)||'null');if(d&&Array.isArray(d.tiles)&&d.tiles.length) return d;}catch(e){}
+  return null;
+}
+function guardarCache(){try{localStorage.setItem(CACHE,JSON.stringify(st));}catch(e){}}
 function persist(){
   clearTimeout(saveT);
   saveT=setTimeout(async()=>{
+    if(!podeEditar()) return;     // só administrador grava o painel (o PocketBase também barra)
     const json=JSON.stringify(st);
     if(!dbh){try{localStorage.setItem(LS,json);}catch(e){}}
-    if(dbh){try{await dbh.doc('painel/tiles').set({json});}catch(e){toast('Não foi possível salvar no servidor. Verifique a conexão.');}}
+    if(dbh){try{await dbh.doc('painel/tiles').set({json});guardarCache();}catch(e){toast('Não foi possível salvar no servidor. Verifique a conexão.');}}
   },300);
 }
 function toast(m){const t=$('#toast');t.textContent=m;t.hidden=false;clearTimeout(toast.t);toast.t=setTimeout(()=>t.hidden=true,3500);}
 
 function render(){
+  if(carregando){
+    $('#count').textContent='';$('#editBtn').hidden=true;$('#editInfo').innerHTML='';
+    $('#grid').innerHTML=Array.from({length:6},()=>'<div class="tile skel" aria-hidden="true"><i style="width:44px;height:44px;border-radius:12px"></i><i style="width:70%;height:18px"></i><i style="height:12px"></i><i style="width:85%;height:12px"></i></div>').join('');
+    $('#grid').setAttribute('aria-busy','true');return;
+  }
+  $('#grid').removeAttribute('aria-busy');
   const q=filter.trim().toLowerCase();
   const tiles=st.tiles.filter(t=>!q||(t.nome+' '+t.desc).toLowerCase().includes(q));
   $('#count').textContent=st.tiles.length+(st.tiles.length===1?' sistema':' sistemas');
+  if(edit&&!podeEditar()) edit=false;
+  $('#editBtn').hidden=!podeEditar();
   $('#editBtn').innerHTML=edit?'Concluir edição':'Editar painel';
   $('#editBtn').className='btn'+(edit?' primary':'');
-  $('#editInfo').innerHTML=edit?'<div class="edit-banner">Modo de edição: altere, reordene, exclua ou adicione sistemas. Para abrir um sistema, conclua a edição.</div>':'';
+  $('#editInfo').innerHTML=edit?'<div class="edit-banner">Modo de edição: arraste os cartões para reordenar (ou use as setas), altere nome e descrição, exclua ou adicione sistemas. Para abrir um sistema, conclua a edição.</div>':'';
   const cards=tiles.map(t=>{
     const i=st.tiles.indexOf(t);
     const on=t.status==='ok'&&t.url;
     const style=`--tint:hsl(${t.hue} 70% ${document.documentElement.dataset.theme==='dark'?'22%':'93%'});--ink:hsl(${t.hue} 60% 38%)`;
     const pill=`<span class="pill ${t.status==='ok'?'ok':t.status==='dev'?'warn':''}">${STATUS[t.status]||''}</span>`;
     const inner=`<div class="ico">${svg(t.icone)}</div><h3>${esc(t.nome)}</h3><p>${esc(t.desc)}</p>`;
-    if(edit) return `<div class="tile" style="${style}">${inner}<div class="foot">${pill}</div>
+    if(edit) return `<div class="tile" data-id="${t.id}" draggable="true" style="${style}">${inner}<div class="foot">${pill}</div>
       <div class="tools"><button class="btn sm" data-a="edit" data-id="${t.id}">Editar</button><button class="btn sm" data-a="up" data-id="${t.id}"${i===0?' disabled':''} aria-label="Mover para antes">↑</button><button class="btn sm" data-a="down" data-id="${t.id}"${i===st.tiles.length-1?' disabled':''} aria-label="Mover para depois">↓</button><button class="btn sm danger" data-a="del" data-id="${t.id}">Excluir</button></div></div>`;
     const foot=`<div class="foot">${pill}${on?'<span class="open">Abrir ›</span>':''}</div>`;
     return on?`<a class="tile" style="${style}" href="${esc(t.url)}" target="_top">${inner}${foot}</a>`
@@ -241,7 +261,21 @@ document.addEventListener('click',ev=>{
       break;
   }
 });
-$('#editBtn').addEventListener('click',()=>{edit=!edit;render();});
+$('#editBtn').addEventListener('click',()=>{if(!podeEditar()) return;edit=!edit;render();});
+/* arrastar e soltar para reordenar (no celular, as setas) */
+let dragId=null;
+function mover(de,para){
+  const i=st.tiles.findIndex(x=>x.id===de),j=st.tiles.findIndex(x=>x.id===para);
+  if(i<0||j<0||i===j) return;
+  const [t]=st.tiles.splice(i,1);st.tiles.splice(j,0,t);persist();render();
+}
+(function arrastar(){
+  const g=$('#grid');
+  g.addEventListener('dragstart',ev=>{const t=ev.target.closest&&ev.target.closest('.tile[data-id]');if(!edit||!t||ev.target.closest('button')) return;dragId=t.dataset.id;ev.dataTransfer.effectAllowed='move';try{ev.dataTransfer.setData('text/plain',dragId);}catch(e){}t.classList.add('dragging');});
+  g.addEventListener('dragover',ev=>{if(!edit||!dragId) return;const t=ev.target.closest('.tile[data-id]');if(!t) return;ev.preventDefault();g.querySelectorAll('.over').forEach(x=>{if(x!==t) x.classList.remove('over');});if(t.dataset.id!==dragId) t.classList.add('over');});
+  g.addEventListener('drop',ev=>{if(!edit||!dragId) return;const t=ev.target.closest('.tile[data-id]');if(!t) return;ev.preventDefault();const de=dragId;dragId=null;mover(de,t.dataset.id);});
+  g.addEventListener('dragend',()=>{dragId=null;render();});
+})();
 $('#q').addEventListener('input',e=>{filter=e.target.value;render();});
 document.addEventListener('keydown',e=>{if(e.key==='Escape'&&!$('#modal').hidden) closeModal();});
 document.querySelector('#themeBtn').addEventListener('click',()=>{const n=isDark()?'light':'dark';document.documentElement.setAttribute('data-theme',n);try{localStorage.setItem(TEMA_KEY,n);}catch(e){}});
@@ -273,27 +307,32 @@ function migrar(){
 }
 (function init(){
   try{const s=localStorage.getItem(TEMA_KEY);document.documentElement.setAttribute('data-theme',s==='dark'?'dark':'light');}catch(e){document.documentElement.setAttribute('data-theme','light');}
-  const l=load(); if(l) st=l;
-  migrar();
+  const l=load(),c=lerCache();
+  if(l) st=l;                        // modo local: dados deste navegador
+  else if(c) st=c;                   // última cópia do servidor: aparece na hora, sem piscar os nomes originais
+  else if(PB.url) carregando=true;   // sem cópia: espera o servidor em vez de mostrar os nomes originais do código
+  if(!carregando) migrar();
   // mantém o endereço do sistema de fluxogramas atualizado
   const fl=st.tiles.find(t=>t.id==='t-fluxos'); if(fl&&!fl.url) fl.url=FLOW_URL;
-  $('#storeNote').textContent='As alterações deste painel ficam salvas neste navegador.';
+  $('#storeNote').textContent=PB.url?'':'As alterações deste painel ficam salvas neste navegador.';
   render();themeBtn();
   (async()=>{
     try{
       if(window.claude&&window.claude.use) dbh=await window.claude.use('db');
       if(!dbh) dbh=await PB.connect();
       if(dbh){
-        $('#storeNote').textContent='As alterações deste painel ficam salvas no servidor.';
+        $('#storeNote').textContent=podeEditar()?'As alterações deste painel ficam salvas no servidor.':'O painel é editado pelos administradores.';
+        render();
         const s=await dbh.doc('painel/tiles').get();
-        if(s.exists){try{const d=JSON.parse(s.data().json);if(d&&Array.isArray(d.tiles)){st=d;migrar();render();}}catch(e){}}
-        else if(load()){
+        if(s.exists){try{const d=JSON.parse(s.data().json);if(d&&Array.isArray(d.tiles)){st=d;carregando=false;migrar();guardarCache();render();}}catch(e){}}
+        else if(load()&&podeEditar()){
           await dbh.doc('painel/tiles').set({json:JSON.stringify(st)});
           const v=await dbh.doc('painel/tiles').get();
           if(v.exists){try{localStorage.removeItem(LS);}catch(e){}toast('Dados deste navegador enviados ao servidor.');}
         }
       }
     }catch(e){dbh=null;}
+    if(carregando){carregando=false;migrar();render();}      // servidor sem resposta ou sem painel salvo: mostra o que há
   })();
 })();
 </script>

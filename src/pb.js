@@ -11,8 +11,8 @@ const PB=(function(){
   let token='',email='',col='rhcmrv_users',loginP=null;
   let cs=null;   // sessão do Centi: {user,nome,token,refreshToken}
 
-  /* só vale a sessão que tem o acesso do Centi junto; sessões antigas (login simples) pedem novo login */
-  function readAuth(){try{const a=JSON.parse(localStorage.getItem(AUTH_KEY)||'null');if(a&&a.token&&a.centi&&a.centi.token){token=a.token;email=a.email||'';col=a.col||'rhcmrv_users';cs=a.centi;}}catch(e){}}
+  /* só vale a sessão que tem o acesso do Centi junto e a marca de admin; sessões antigas (login simples ou sem a marca) pedem novo login */
+  function readAuth(){try{const a=JSON.parse(localStorage.getItem(AUTH_KEY)||'null');if(a&&a.token&&a.centi&&a.centi.token&&typeof a.centi.admin==='boolean'){token=a.token;email=a.email||'';col=a.col||'rhcmrv_users';cs=a.centi;}}catch(e){}}
   function saveAuth(){try{localStorage.setItem(AUTH_KEY,JSON.stringify({token,email,col,centi:cs}));}catch(e){}}
   function clearAuth(){token='';email='';col='rhcmrv_users';cs=null;try{localStorage.removeItem(AUTH_KEY);}catch(e){}}
 
@@ -38,36 +38,99 @@ const PB=(function(){
   }
 
   /* ---------- login ---------- */
+  const IC={
+    user:'<path d="M20 21a8 8 0 10-16 0"/><circle cx="12" cy="8" r="4"/>',
+    lock:'<rect x="4" y="10" width="16" height="11" rx="2.5"/><path d="M8 10V7a4 4 0 018 0v3"/>',
+    eye:'<path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/>',
+    eyeoff:'<path d="M3 3l18 18M10.6 5.1A10.7 10.7 0 0112 5c6.4 0 10 7 10 7a17 17 0 01-3.2 4.2M6.6 6.6A17 17 0 002 12s3.6 7 10 7a10.4 10.4 0 004.4-1M9.9 9.9a3 3 0 004.2 4.2"/>',
+    alert:'<circle cx="12" cy="12" r="9"/><path d="M12 8v5M12 16.5h.01"/>',
+    out:'<path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4M16 17l5-5-5-5M21 12H9"/>',
+    bank:'<path d="M3 10l9-6 9 6M5 10v8M9.5 10v8M14.5 10v8M19 10v8M3 20h18"/>'
+  };
+  const ico=(k,n)=>'<svg width="'+(n||18)+'" height="'+(n||18)+'" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">'+IC[k]+'</svg>';
+  const LOGIN_CSS=
+    '.pbl{position:fixed;inset:0;z-index:99999;display:flex;align-items:center;justify-content:center;padding:20px;overflow:auto;'+
+      'background:radial-gradient(1100px 600px at 50% -10%,#118a50 0%,rgba(17,138,80,0) 60%),linear-gradient(160deg,#0b5f38 0%,#073d25 60%,#052a1a 100%);font-family:var(--f-body,"Public Sans",system-ui,sans-serif)}'+
+    '.pbl::before{content:"";position:absolute;inset:0;background:repeating-linear-gradient(115deg,rgba(255,255,255,.035) 0 2px,transparent 2px 26px);pointer-events:none}'+
+    '.pbl-card{position:relative;width:100%;max-width:410px;background:#fff;color:#12281d;border-radius:22px;padding:38px 32px 26px;box-shadow:0 34px 90px rgba(0,0,0,.4),0 0 0 1px rgba(255,255,255,.08);animation:pblin .35s ease-out both}'+
+    '@keyframes pblin{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:none}}@media (prefers-reduced-motion:reduce){.pbl-card{animation:none}}'+
+    '.pbl-card::before{content:"";position:absolute;left:32px;top:0;width:58px;height:5px;background:#e3a93a;border-radius:0 0 5px 5px}'+
+    '.pbl-logo{width:56px;height:56px;border-radius:16px;background:linear-gradient(145deg,#0f7a47,#0a5a35);color:#fff;display:flex;align-items:center;justify-content:center;box-shadow:0 10px 24px rgba(10,107,61,.35);margin-bottom:18px}'+
+    '.pbl-org{margin:0 0 4px;font-size:11.5px;font-weight:700;letter-spacing:.09em;text-transform:uppercase;color:#4f665a}'+
+    '.pbl-card h2{margin:0 0 6px;font-family:var(--f-display,"Libre Franklin",system-ui,sans-serif);font-size:1.55rem;line-height:1.15;color:#0b2a1b}'+
+    '.pbl-sub{margin:0 0 22px;color:#4f665a;font-size:14px;line-height:1.45}'+
+    '.pbl-f{display:block;margin-bottom:14px}.pbl-f>span{display:block;font-size:12.5px;font-weight:700;color:#2c4a3b;margin-bottom:6px}'+
+    '.pbl-in{position:relative;display:flex;align-items:center}.pbl-in>svg{position:absolute;left:14px;color:#6c8578;pointer-events:none}'+
+    '.pbl-in input{width:100%;box-sizing:border-box;height:48px;padding:0 44px 0 42px;border:1.5px solid #cbd9d0;border-radius:12px;background:#f8fbf9;color:#12281d;font:inherit;font-size:16px;outline:none;transition:border-color .15s,box-shadow .15s,background .15s}'+
+    '.pbl-in input::placeholder{color:#9bb0a4}.pbl-in input:hover{border-color:#a9c0b2}'+
+    '.pbl-in input:focus{border-color:#0a6b3d;background:#fff;box-shadow:0 0 0 4px rgba(10,107,61,.16)}'+
+    '.pbl-eye{position:absolute;right:6px;width:36px;height:36px;border:0;border-radius:9px;background:transparent;color:#6c8578;cursor:pointer;display:flex;align-items:center;justify-content:center}'+
+    '.pbl-eye:hover{background:#e8f1ec;color:#0a6b3d}.pbl-eye:focus-visible{outline:2px solid #0a6b3d}'+
+    '.pbl-err{display:flex;gap:8px;align-items:flex-start;margin:2px 0 14px;padding:10px 12px;border-radius:10px;background:#fdecea;border:1px solid #f3c1bb;color:#9b2c1f;font-size:13.5px;line-height:1.35}'+
+    '.pbl-err:empty{display:none}.pbl-err svg{flex:none;margin-top:1px}.pbl-err.info{background:#eef6f1;border-color:#cfe3d7;color:#2c4a3b}'+
+    '.pbl-go{width:100%;height:50px;border:0;border-radius:13px;background:linear-gradient(180deg,#0f7a47,#0a6b3d);color:#fff;font:inherit;font-size:16px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:10px;box-shadow:0 10px 22px rgba(10,107,61,.32);transition:transform .1s,box-shadow .15s,filter .15s}'+
+    '.pbl-go:hover{filter:brightness(1.06)}.pbl-go:active{transform:translateY(1px);box-shadow:0 6px 14px rgba(10,107,61,.3)}.pbl-go:focus-visible{outline:3px solid #e3a93a;outline-offset:2px}'+
+    '.pbl-go[disabled]{opacity:.8;cursor:progress}.pbl-sp{width:18px;height:18px;border:2.5px solid rgba(255,255,255,.4);border-top-color:#fff;border-radius:50%;animation:pblsp .7s linear infinite}@keyframes pblsp{to{transform:rotate(360deg)}}'+
+    '.pbl-foot{margin:18px 0 0;display:flex;gap:7px;align-items:flex-start;color:#6c8578;font-size:12.3px;line-height:1.4}.pbl-foot svg{flex:none;margin-top:1px}'+
+    '@media (max-width:440px){.pbl{padding:14px;align-items:flex-start}.pbl-card{padding:32px 22px 22px;margin-top:6vh}.pbl-card::before{left:22px}}';
+  function loginCss(){
+    if(document.getElementById('pbl-css')) return;
+    const st=document.createElement('style');st.id='pbl-css';st.textContent=LOGIN_CSS;document.head.appendChild(st);
+  }
   function login(msg){
     if(loginP) return loginP;
     loginP=new Promise(resolve=>{
-      const wrap=document.createElement('div');
-      wrap.style.cssText='position:fixed;inset:0;z-index:99999;display:flex;align-items:center;justify-content:center;padding:16px;background:rgba(0,0,0,.45)';
+      loginCss();
+      const wrap=document.createElement('div');wrap.className='pbl';
       wrap.innerHTML=
-        '<form style="width:100%;max-width:360px;background:var(--surface,#fff);color:var(--fg,#12281d);border:1px solid var(--line,#d1ddd6);border-radius:12px;padding:22px;box-shadow:0 10px 40px rgba(0,0,0,.3);font:15px/1.4 system-ui,sans-serif">'+
-        '<h3 style="margin:0 0 4px;font-size:18px">Entrar com o acesso do Centi</h3>'+
-        '<p style="margin:0 0 14px;color:var(--muted,#4f665a);font-size:13px">Use o mesmo usuário e senha do Centi. A senha é conferida no Centi e não fica guardada neste sistema.</p>'+
-        '<label style="display:block;font-size:13px;margin-bottom:10px">Usuário do Centi<input name="e" type="text" required autocapitalize="none" spellcheck="false" autocomplete="username" style="display:block;width:100%;box-sizing:border-box;margin-top:4px;padding:9px;border:1px solid var(--line,#d1ddd6);border-radius:8px;background:transparent;color:inherit;font:inherit"></label>'+
-        '<label style="display:block;font-size:13px;margin-bottom:10px">Senha<input name="p" type="password" required autocomplete="current-password" style="display:block;width:100%;box-sizing:border-box;margin-top:4px;padding:9px;border:1px solid var(--line,#d1ddd6);border-radius:8px;background:transparent;color:inherit;font:inherit"></label>'+
-        '<div data-err style="min-height:18px;margin-bottom:8px;color:#c0392b;font-size:13px"></div>'+
-        '<div style="display:flex;gap:8px;justify-content:flex-end;flex-wrap:wrap">'+
-        '<button type="submit" style="padding:9px 16px;border:0;border-radius:8px;background:var(--accent,#0a6b3d);color:var(--accent-fg,#fff);font:inherit;font-weight:600;cursor:pointer">Entrar</button></div></form>';
+        '<form class="pbl-card" autocomplete="on" novalidate>'+
+        '<div class="pbl-logo">'+ico('bank',28)+'</div>'+
+        '<p class="pbl-org">Câmara Municipal de Rio Verde/GO</p>'+
+        '<h2>Sistema Interno do RH</h2>'+
+        '<p class="pbl-sub">Entre com o mesmo usuário e senha que você usa no Centi.</p>'+
+        '<label class="pbl-f"><span>Usuário</span><div class="pbl-in">'+ico('user')+'<input name="e" type="text" required autocapitalize="none" autocorrect="off" spellcheck="false" autocomplete="username" placeholder="ex.: nome.sobrenome"></div></label>'+
+        '<label class="pbl-f"><span>Senha</span><div class="pbl-in">'+ico('lock')+'<input name="p" type="password" required autocomplete="current-password" placeholder="Sua senha do Centi"><button type="button" class="pbl-eye" data-eye aria-label="Mostrar a senha" aria-pressed="false">'+ico('eye')+'</button></div></label>'+
+        '<div class="pbl-err" data-err role="alert" aria-live="polite"></div>'+
+        '<button type="submit" class="pbl-go"><span>Entrar</span></button>'+
+        '<p class="pbl-foot">'+ico('lock',14)+'<span>A senha é conferida no Centi e não fica guardada neste sistema.</span></p></form>';
       document.body.appendChild(wrap);
-      const f=wrap.querySelector('form'),err=wrap.querySelector('[data-err]');
-      if(msg) err.textContent=msg;
+      const f=wrap.querySelector('form'),err=wrap.querySelector('[data-err]'),go=wrap.querySelector('.pbl-go'),eye=wrap.querySelector('[data-eye]');
+      const erro=(t,info)=>{err.className='pbl-err'+(info?' info':'');err.innerHTML=t?ico('alert',16)+'<span></span>':'';if(t) err.lastChild.textContent=t;};
+      const ocupado=on=>{go.disabled=on;go.innerHTML=on?'<i class="pbl-sp"></i><span>Entrando…</span>':'<span>Entrar</span>';};
+      if(msg) erro(msg);
       const done=ok=>{wrap.remove();loginP=null;resolve(ok);};
       f.e.focus();
+      eye.addEventListener('click',()=>{const ver=f.p.type==='password';f.p.type=ver?'text':'password';eye.setAttribute('aria-pressed',ver);eye.setAttribute('aria-label',ver?'Ocultar a senha':'Mostrar a senha');eye.innerHTML=ico(ver?'eyeoff':'eye');f.p.focus();});
       f.addEventListener('submit',async ev=>{
-        ev.preventDefault(); err.textContent='Entrando…';
+        ev.preventDefault();
+        if(!f.e.value.trim()||!f.p.value){erro('Informe o usuário e a senha do Centi.');(f.e.value.trim()?f.p:f.e).focus();return;}
+        erro('');ocupado(true);
         try{
           const r=await fetch(CENTI_BASE+'/api/centi-login',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({user:f.e.value.trim(),pass:f.p.value})});
           let j=null; try{j=await r.json();}catch(e){}
-          if(!r.ok){err.textContent=(j&&j.message)||('Não foi possível entrar (HTTP '+r.status+').');return;}
+          if(!r.ok){erro((j&&j.message)||('Não foi possível entrar (HTTP '+r.status+').'));ocupado(false);f.p.select();return;}
           token=j.pb.token; col='rhcmrv_users'; email=j.centi.user; cs=j.centi; saveAuth(); done(true);
-        }catch(e){err.textContent='Não foi possível entrar: '+e.message;}
+        }catch(e){erro('Não foi possível entrar: '+e.message);ocupado(false);}
       });
     });
     return loginP;
+  }
+
+  /* ---------- sair ---------- */
+  /* botão "Sair" ao lado do botão de tema (ou no rodapé do menu dos Fluxogramas); só existe com sessão do Centi aberta */
+  function logout(){clearAuth();location.reload();}
+  function mountLogout(){
+    if(!cs||!document.body||document.getElementById('pb-logout')) return;
+    const nome=(cs.nome||cs.user||'').split(' ')[0];
+    const mk=(cls,html)=>{const b=document.createElement('button');b.type='button';b.id='pb-logout';b.className=cls;b.title='Sair ('+cs.user+')';b.setAttribute('aria-label','Sair do sistema ('+cs.user+')');b.innerHTML=html;b.addEventListener('click',logout);return b;};
+    const t=document.getElementById('themeBtn'),h=document.querySelector('.side-foot .homelink');
+    if(t&&t.parentNode){const b=mk(t.className,ico('out',16)+'Sair');b.style.marginLeft='0';t.insertAdjacentElement('afterend',b);t.style.marginLeft='auto';}
+    else if(h&&h.parentNode){const b=mk(h.className,ico('out',14)+'Sair'+(nome?' ('+nome.charAt(0).toUpperCase()+nome.slice(1).toLowerCase()+')':''));b.style.cssText='border:0;cursor:pointer;font:inherit;font-weight:600;font-size:13px;width:calc(100% + 20px);text-align:left;color:inherit';h.insertAdjacentElement('afterend',b);}
+  }
+  /* as páginas montam o cabeçalho em momentos diferentes: tenta de novo quando o DOM muda */
+  function vigiarLogout(){
+    mountLogout();
+    try{const ob=new MutationObserver(()=>{if(!cs){ob.disconnect();return;}if(!document.getElementById('pb-logout')) mountLogout();});ob.observe(document.body,{childList:true,subtree:true});}catch(e){}
   }
 
   /* ---------- documentos ---------- */
@@ -174,6 +237,7 @@ const PB=(function(){
   const centi={
     get user(){return cs?cs.user:'';},
     get nome(){return cs?(cs.nome||cs.user):'';},
+    get admin(){return !!(cs&&cs.admin);},   // administrador do sistema (edita o painel dos mini sistemas)
     /* Cubo funcionário (FP051) do Centi na referência mes/ano -> {Data:[{MATRICULA,NOMEFUNC,CARGO,HIERARQUIA,...}],Total}; só ativos */
     /* Ficha financeira (FP024) da matrícula no mês/ano -> {Fichas:[{Folha,Mes,Ano,TotalProventos,TotalDescontos,LiquidoReceber,Eventos:[...]}]}; não é guardada */
     ficha(matricula,mes,ano){return centiCall('ficha-financeira',{matricula,mes,ano});},
@@ -250,12 +314,12 @@ const PB=(function(){
           catch(e){if(e.status!==401&&e.status!==403&&e.status!==404) throw e; clearAuth();}
         }
         if(!ok&&!(await login())){markLocal();return null;}
-        return {doc,collection,centi,tarefas};
+        vigiarLogout();return {doc,collection,centi,tarefas};
       }catch(e){
         if(await offlineDialog()) continue;
         markLocal();return null;
       }
     }
   }
-  return {connect,centi,logout(){clearAuth();location.reload();},get email(){return email;},get nome(){return centi.nome;},get userId(){return userId();},url:URL_BASE};
+  return {connect,centi,logout,get email(){return email;},get nome(){return centi.nome;},get admin(){return centi.admin;},get userId(){return userId();},url:URL_BASE};
 })();

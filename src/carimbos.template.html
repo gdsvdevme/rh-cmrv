@@ -1,0 +1,598 @@
+<title>Carimbos em PDF</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Libre+Franklin:wght@500;600;700&family=Public+Sans:wght@400;500;600&display=swap">
+<style>
+:root{
+  --bg:#eef4f0;--surface:#fff;--fg:#12281d;--muted:#4f665a;--line:#d1ddd6;--accent:#0a6b3d;--accent-fg:#fff;--soft:#e3efe8;
+  --hero-a:#063d27;--hero-b:#0b7a49;--gold:#d4aa4a;--shadow:0 1px 2px rgba(6,61,39,.09),0 6px 20px rgba(6,61,39,.07);
+  --warn:#8a5a00;--warn-bg:#fdf0d5;--danger:#b3261e;--danger-bg:#fbe3e0;--blue:#2f6fb5;--blue-bg:#e2edf9;--ok:#0a6b3d;--ok-bg:#dff3e7;--violet:#6f4aa8;--violet-bg:#eee6f8;--canvas:#cfd8d2;
+  --f-display:"Libre Franklin",system-ui,sans-serif;--f-body:"Public Sans",system-ui,sans-serif;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --bg:#08130e;--surface:#0f1e17;--fg:#e3f1ea;--muted:#90b0a0;--line:#234034;--accent:#52c98a;--accent-fg:#04210f;--soft:#15291f;
+  --hero-a:#04150d;--hero-b:#0b4d31;--gold:#d8b45e;--shadow:0 1px 2px rgba(0,0,0,.4),0 6px 20px rgba(0,0,0,.3);--canvas:#1a2b22;
+  --warn:#f0c26a;--warn-bg:#3a2d10;--danger:#ff8a80;--danger-bg:#3d1a17;--blue:#7fb2ee;--blue-bg:#14273d;--ok:#52c98a;--ok-bg:#12382a;--violet:#b99be8;--violet-bg:#2a1f3d;color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#08130e;--surface:#0f1e17;--fg:#e3f1ea;--muted:#90b0a0;--line:#234034;--accent:#52c98a;--accent-fg:#04210f;--soft:#15291f;
+  --hero-a:#04150d;--hero-b:#0b4d31;--gold:#d8b45e;--shadow:0 1px 2px rgba(0,0,0,.4),0 6px 20px rgba(0,0,0,.3);--canvas:#1a2b22;
+  --warn:#f0c26a;--warn-bg:#3a2d10;--danger:#ff8a80;--danger-bg:#3d1a17;--blue:#7fb2ee;--blue-bg:#14273d;--ok:#52c98a;--ok-bg:#12382a;--violet:#b99be8;--violet-bg:#2a1f3d;color-scheme:dark}
+[hidden]{display:none!important}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--fg);font-family:var(--f-body);font-size:15px;line-height:1.5}
+h1,h2,h3,h4{font-family:var(--f-display);margin:0;text-wrap:balance}
+button,input,select{font:inherit;color:inherit}
+.wrap{padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+.inner{max-width:1360px;margin:0 auto}
+.hero{background:linear-gradient(135deg,var(--hero-a),var(--hero-b));color:#fff;padding-block:22px 40px}
+.top{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:22px}
+.home{color:#fff;text-decoration:none;font-weight:600;font-size:13.5px;display:inline-flex;align-items:center;gap:8px;padding:8px 12px;border-radius:10px;background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.28)}
+.home:hover,.themebtn:hover{background:rgba(255,255,255,.22)}
+.themebtn{margin-left:auto;display:inline-flex;align-items:center;gap:8px;border:1px solid rgba(255,255,255,.35);background:rgba(255,255,255,.12);color:#fff;border-radius:10px;padding:8px 12px;font-weight:600;font-size:13.5px;cursor:pointer}
+.goldrule{width:56px;height:4px;background:var(--gold);border-radius:2px;margin:0 0 14px}
+.hero h1{font-size:clamp(1.6rem,4.4vw,2.4rem);line-height:1.12}
+.hero p{margin:8px 0 0;opacity:.85}
+main{padding-block:0 40px}
+.grid{display:grid;grid-template-columns:minmax(300px,380px) minmax(0,1fr);gap:16px;margin-top:-20px;align-items:start}
+@media (max-width:920px){.grid{grid-template-columns:1fr}}
+@media (min-width:921px){.col:last-child>.panel{position:sticky;top:10px}}
+.col{display:flex;flex-direction:column;gap:14px;min-width:0}
+.panel{background:var(--surface);border:1px solid var(--line);border-radius:14px;box-shadow:var(--shadow);padding:14px 16px;min-width:0}
+.panel>h2{font-size:1rem;display:flex;align-items:center;gap:10px;margin-bottom:10px}
+.panel>h2 .n{width:24px;height:24px;border-radius:50%;background:var(--accent);color:var(--accent-fg);display:inline-grid;place-items:center;font-size:13px;flex:none}
+.btn{border:1px solid var(--line);background:var(--surface);border-radius:10px;padding:9px 13px;cursor:pointer;font-weight:600;font-size:14px;display:inline-flex;align-items:center;justify-content:center;gap:8px}
+.btn:hover{border-color:var(--accent)}.btn.primary{background:var(--accent);color:var(--accent-fg);border-color:var(--accent)}.btn:disabled{opacity:.55;cursor:not-allowed}
+.btn.sm{padding:5px 9px;font-size:12.5px;border-radius:8px}
+.btn.danger{color:var(--danger)}
+.row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.muted{color:var(--muted);font-size:13px}
+.drop{display:block;border:2px dashed var(--line);border-radius:12px;padding:18px 12px;text-align:center;color:var(--muted);cursor:pointer;background:var(--soft)}
+.drop:hover,.drop.over{border-color:var(--accent);color:var(--fg)}
+.drop b{display:block;color:var(--fg);font-family:var(--f-display)}
+.drop span{display:block;overflow-wrap:anywhere;font-size:13px}
+.sum{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:10px}
+.sum div{border-radius:10px;padding:7px 10px;background:var(--soft);border:1px solid var(--line)}
+.sum small{display:block;font-size:11px;font-weight:700;letter-spacing:.04em;text-transform:uppercase;color:var(--muted)}
+.sum b{font-family:var(--f-display);font-size:1.15rem;font-variant-numeric:tabular-nums}
+.sum .w b{color:var(--warn)}
+.banner{border-radius:10px;padding:9px 12px;font-size:13px;background:var(--warn-bg);color:var(--warn);margin-top:10px}
+.banner.ok{background:var(--ok-bg);color:var(--ok)}
+.stamps{display:grid;grid-template-columns:repeat(auto-fill,minmax(120px,1fr));gap:8px}
+.stamp{border:2px solid var(--line);border-radius:10px;padding:6px;background:#fff;cursor:pointer;position:relative;display:flex;flex-direction:column;gap:4px;text-align:center}
+.stamp img{width:100%;height:64px;object-fit:contain}
+.stamp span{font-size:11.5px;color:#4f665a;line-height:1.2;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.stamp.on{border-color:var(--accent);box-shadow:0 0 0 2px var(--accent)}
+.stamp .x{position:absolute;top:2px;right:2px;border:0;background:rgba(0,0,0,.55);color:#fff;border-radius:50%;width:20px;height:20px;line-height:18px;font-size:13px;cursor:pointer;padding:0}
+label.f{display:flex;flex-direction:column;gap:4px;font-size:13px;color:var(--muted);font-weight:600;margin-top:10px}
+label.f input[type=range]{width:100%}
+label.ck{display:flex;gap:8px;align-items:flex-start;font-size:13.5px;margin-top:8px;cursor:pointer}
+select,input[type=text],input[type=search],input[type=number]{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:8px 10px;color:var(--fg);min-width:0}
+.tree{max-height:min(60vh,560px);overflow:auto;margin-top:8px;border:1px solid var(--line);border-radius:10px}
+.g-h{display:flex;align-items:center;gap:8px;padding:8px 10px;background:var(--soft);cursor:pointer;position:sticky;top:0;border-top:1px solid var(--line);z-index:1}
+.g-h:first-child{border-top:0}
+.g-h b{flex:1;min-width:0;font-family:var(--f-display);font-size:13.5px;line-height:1.25}
+.g-h .c{font-size:12px;color:var(--muted);font-weight:700;white-space:nowrap}
+.g-h .arr{transition:transform .15s;display:inline-block;color:var(--muted)}.g-h.open .arr{transform:rotate(90deg)}
+.g-l{list-style:none;margin:0;padding:0}
+.g-l li{display:flex;gap:8px;align-items:center;padding:6px 10px 6px 24px;border-top:1px solid var(--line);cursor:pointer;font-size:13.5px}
+.g-l li:hover{background:var(--soft)}.g-l li.cur{background:var(--blue-bg)}
+.g-l li .nm{flex:1;min-width:0;line-height:1.25}.g-l li .nm span{display:block;color:var(--muted);font-size:12px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.g-l li .pg{font-size:12px;color:var(--muted);font-variant-numeric:tabular-nums;white-space:nowrap}
+.tag{display:inline-block;font-size:10.5px;font-weight:700;padding:1px 7px;border-radius:99px;background:var(--violet-bg);color:var(--violet);margin-left:4px}
+.tag.skip{background:var(--danger-bg);color:var(--danger)}.tag.nao{background:var(--warn-bg);color:var(--warn)}
+.view{display:flex;flex-direction:column;gap:10px}
+.bar{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.bar .grow{flex:1}
+.bar input[type=number]{width:78px}
+.stagewrap{background:var(--canvas);border:1px solid var(--line);border-radius:12px;padding:12px;min-height:240px}
+#stage{position:relative;line-height:0;max-width:1100px;margin:0 auto;background:#fff;box-shadow:0 2px 14px rgba(0,0,0,.25);user-select:none;-webkit-user-select:none}
+#cv{width:100%;height:auto;display:block}
+#st{position:absolute;touch-action:none;cursor:grab;outline:2px dashed var(--blue);outline-offset:0;background:rgba(255,255,255,0)}
+#st:active{cursor:grabbing}
+#st.fundo{background:#fff}
+#st img{display:block;width:100%;height:auto;pointer-events:none;-webkit-user-drag:none}
+#st i{position:absolute;right:-7px;bottom:-7px;width:16px;height:16px;border-radius:4px;background:var(--blue);border:2px solid #fff;cursor:nwse-resize;touch-action:none}
+.empty{text-align:center;padding:60px 20px;color:var(--muted)}
+.empty h2{color:var(--fg);margin-bottom:6px}
+.hint{font-size:13px;color:var(--muted)}
+.hint b{color:var(--fg)}
+#load{position:fixed;inset:0;z-index:9000;display:grid;place-items:center;padding:24px;background:radial-gradient(1200px 700px at 50% 30%,var(--hero-b),var(--hero-a)) var(--hero-a);color:#fff;text-align:center}
+#load .ld-box{display:flex;flex-direction:column;align-items:center;gap:10px;max-width:420px}
+#load .ld-spin{width:56px;height:56px;border-radius:50%;border:5px solid rgba(255,255,255,.22);border-top-color:var(--gold);animation:ld-rot .9s linear infinite;margin-bottom:6px}
+#load b{font-family:var(--f-display);font-size:1.35rem;line-height:1.2}
+#load span{opacity:.88;font-size:14.5px;min-height:22px}
+#load .ld-bar{width:min(280px,70vw);height:6px;border-radius:99px;background:rgba(255,255,255,.2);overflow:hidden;margin-top:8px}
+#load .ld-bar i{display:block;height:100%;width:0;border-radius:99px;background:var(--gold);transition:width .15s}
+@keyframes ld-rot{to{transform:rotate(360deg)}}
+@media (prefers-reduced-motion:reduce){#load .ld-spin{animation-duration:3s}}
+body.carregando{overflow:hidden}
+dialog{border:1px solid var(--line);border-radius:16px;padding:0;background:var(--surface);color:var(--fg);width:min(620px,96vw);box-shadow:0 20px 60px rgba(0,0,0,.4)}
+dialog::backdrop{background:rgba(0,0,0,.5)}
+dialog form{padding:20px;display:flex;flex-direction:column;gap:12px;max-height:88vh;overflow:auto}
+dialog ul{margin:0;padding-left:18px;font-size:14px}
+dialog .row{justify-content:flex-end}
+#toast{position:fixed;left:50%;transform:translateX(-50%);bottom:max(18px,env(safe-area-inset-bottom,0px));background:var(--fg);color:var(--bg);padding:10px 16px;border-radius:10px;font-size:14px;z-index:9500;max-width:90vw}
+@media (pointer:coarse){input,select{font-size:16px}.btn{min-height:42px}}
+</style>
+
+<header class="hero wrap"><div class="inner">
+  <div class="top"><a class="home" href="/*HOME_URL*/" target="_top"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 11l9-8 9 8M5 10v10h5v-6h4v6h5V10"/></svg>Sistema Interno do RH</a>
+  <button class="themebtn" id="themeBtn" type="button"></button></div>
+  <div class="goldrule"></div>
+  <h1>Carimbos em PDF</h1>
+  <p>Câmara Municipal de Rio Verde/GO · carimbe centenas de espelhos de ponto de uma vez, organizados pela hierarquia</p>
+</div></header>
+
+<main class="wrap"><div class="inner"><div class="grid">
+  <div class="col">
+    <section class="panel">
+      <h2><span class="n">1</span>Anexar o PDF</h2>
+      <label class="drop" id="drop" for="file"><b>Escolher ou arrastar o PDF</b><span id="dropS">O PDF com todos os espelhos (uma página por servidor)</span></label>
+      <input id="file" type="file" accept="application/pdf,.pdf" hidden>
+      <div id="resumo"></div>
+    </section>
+    <section class="panel">
+      <h2><span class="n">2</span>Escolher o carimbo</h2>
+      <div class="stamps" id="stamps"></div>
+      <div class="row" style="margin-top:10px"><button class="btn sm" id="addStamp" type="button">+ Adicionar carimbo</button></div>
+      <input id="stampFile" type="file" accept="image/png,image/jpeg,image/webp" hidden>
+      <label class="ck"><input type="checkbox" id="semFundo" checked><span>Tornar o fundo branco transparente ao adicionar (recomendado para fotos ou digitalizações)</span></label>
+    </section>
+    <section class="panel">
+      <h2><span class="n">3</span>Salvar o PDF carimbado</h2>
+      <label class="ck"><input type="checkbox" id="optCapas" checked><span>Incluir uma <b>capa</b> antes de cada hierarquia (gabinete ou setor), com a lista dos servidores</span></label>
+      <label class="ck"><input type="checkbox" id="optFundo" checked><span>Fundo <b>branco</b> atrás do carimbo (esconde as linhas da tabela e deixa o texto legível)</span></label>
+      <label class="f">Em quais páginas do servidor carimbar
+        <select id="optQuais"><option value="todas">Em todas as páginas</option><option value="ultima">Só na última página de cada servidor</option></select></label>
+      <div class="row" style="margin-top:12px"><button class="btn primary" id="saveAll" type="button" disabled>Salvar PDF carimbado</button></div>
+      <p class="muted" style="margin:8px 0 0">Também dá para baixar só uma hierarquia, pelo botão <b>Baixar</b> ao lado do nome dela na lista abaixo. Tudo é feito no seu navegador: o PDF não é enviado a nenhum servidor.</p>
+    </section>
+    <section class="panel" id="treePanel" hidden>
+      <h2>Hierarquia</h2>
+      <input id="q" type="search" placeholder="Buscar servidor ou matrícula" aria-label="Buscar" autocomplete="off" style="width:100%">
+      <div class="tree" id="tree"></div>
+    </section>
+  </div>
+  <div class="col">
+    <section class="panel view" id="viewPanel">
+      <div class="empty" id="vazio"><h2>Anexe o PDF para começar</h2><p>A página de cada servidor é reconhecida pela matrícula e pelo nome no topo do espelho.<br>Depois é só arrastar o carimbo até a posição certa.</p></div>
+      <div id="viewBox" hidden>
+        <div class="bar">
+          <button class="btn sm" id="prev" type="button" aria-label="Página anterior">◀</button>
+          <input type="number" id="pgNum" min="1" value="1" aria-label="Página">
+          <span class="muted" id="pgTot"></span>
+          <button class="btn sm" id="next" type="button" aria-label="Próxima página">▶</button>
+          <span class="grow"></span>
+          <label class="muted" style="display:flex;align-items:center;gap:6px">Hierarquia desta página <select id="selGrupo" style="max-width:240px"></select></label>
+        </div>
+        <div class="hint" id="info" style="margin-top:8px"></div>
+        <div class="stagewrap" style="margin-top:8px"><div id="stage"><canvas id="cv"></canvas><div id="st" hidden><img id="stImg" alt="Carimbo"><i id="stHandle" title="Arraste para mudar o tamanho"></i></div></div></div>
+        <div class="bar" style="margin-top:8px">
+          <label class="muted" style="display:flex;align-items:center;gap:8px;flex:1 1 220px">Tamanho <input type="range" id="tam" min="8" max="90" step="1" style="flex:1"></label>
+          <button class="btn sm" id="soEsta" type="button"></button>
+          <button class="btn sm" id="semCar" type="button"></button>
+        </div>
+        <div class="hint" id="posHint" style="margin-top:6px"></div>
+      </div>
+    </section>
+  </div>
+</div></div></main>
+<dialog id="dlg"></dialog>
+<div id="load" role="status" aria-live="polite" hidden><div class="ld-box"><div class="ld-spin" aria-hidden="true"></div><b id="ldT">Carregando…</b><span id="ldS"></span><div class="ld-bar" aria-hidden="true"><i id="ldB"></i></div></div></div>
+<div id="toast" hidden></div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf-lib/1.17.1/pdf-lib.min.js"></script>
+<script>
+/*PB_JS*/
+const HOME_URL="/*HOME_URL*/";
+const TEMA_KEY='rhcrv-tema',LS='rhcrv-carimbos-v1';
+const WORKER_URL='https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+const PADRAO={id:'padrao',nome:'Atesto jornada 40h (padrão)',src:'data:image/png;base64,/*STAMP_B64*/',padrao:true};
+const $=s=>document.querySelector(s);
+const esc=s=>String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const norm=s=>String(s||'').normalize('NFD').replace(/[̀-ͯ]/g,'').toLowerCase().replace(/\s+/g,' ').trim();
+const digs=s=>String(s||'').replace(/\D/g,'').replace(/^0+/,'');
+const MIN=new Set(['de','da','do','das','dos','e','a','o']),ROMAN=/^(i|ii|iii|iv|v|vi|vii|viii|ix|x)$/i;
+function titulo(s){return String(s||'').toLowerCase().replace(/\s+/g,' ').trim().split(' ').map((w,i)=>(i>0&&ROMAN.test(w))?w.toUpperCase():(i>0&&MIN.has(w))?w:w.replace(/(^|[-\/(])(\p{L})/gu,(m,a,b)=>a+b.toUpperCase())).join(' ');}
+/* mesma regra de grupos da Hierarquia de Pessoal */
+function grupoInfo(h){
+  const n=norm(h);
+  if(n==='setor administrativo') return {k:'setor',nome:'Setor Administrativo',ramo:0,sort:'0'};
+  const m=/^vereador(a)?\s+(.+)$/.exec(n);
+  if(m){const nm=titulo(String(h).replace(/^vereador(a)?\s+/i,''));return {k:'g:'+n,nome:'Gabinete '+(m[1]?'da Vereadora ':'do Vereador ')+nm,ramo:1,sort:norm(nm)};}
+  return {k:'o:'+n,nome:titulo(h),ramo:0,sort:'1'+norm(h)};
+}
+const NAO={k:'nao',nome:'Não identificados na hierarquia',ramo:9,sort:'z'};
+
+/* ---------- tema ---------- */
+const ICO2={sun:'<circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/>',moon:'<path d="M21 12.8A9 9 0 1111.2 3a7 7 0 009.8 9.8z"/>'};
+function isDark(){const m=/rgba?\((\d+),\s*(\d+),\s*(\d+)/.exec(getComputedStyle(document.body).backgroundColor);return m?(0.2126*m[1]+0.7152*m[2]+0.0722*m[3])/255<0.4:false;}
+function themeBtn(){const d=isDark();$('#themeBtn').innerHTML=`<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${ICO2[d?'sun':'moon']}</svg>${d?'Modo claro':'Modo escuro'}`;}
+$('#themeBtn').addEventListener('click',()=>{const n=isDark()?'light':'dark';document.documentElement.setAttribute('data-theme',n);try{localStorage.setItem(TEMA_KEY,n);}catch(e){}themeBtn();});
+try{const s=localStorage.getItem(TEMA_KEY);document.documentElement.setAttribute('data-theme',s==='dark'?'dark':'light');}catch(e){document.documentElement.setAttribute('data-theme','light');}
+function toast(m){const t=$('#toast');t.textContent=m;t.hidden=false;clearTimeout(toast.t);toast.t=setTimeout(()=>t.hidden=true,5000);}
+function carga(on,t,s,p){
+  $('#load').hidden=!on;document.body.classList.toggle('carregando',!!on);
+  if(t) $('#ldT').textContent=t;if(s!=null) $('#ldS').textContent=s;if(p!=null) $('#ldB').style.width=Math.round(p*100)+'%';
+}
+const pausa=()=>new Promise(r=>setTimeout(r,0));
+
+/* ---------- estado ---------- */
+let dbh=null,pessoal=null;                 // pessoal: dados da Hierarquia de Pessoal (servidor)
+let bytes=null,pdfDoc=null,nomeArq='',N=0;
+let entradas=[];                            // uma por servidor: {nome,mat,cargo,pag:[índices],pessoa,manual,periodo}
+let porPag=[];                              // índice da página -> entrada
+let GH=new Map();                           // grupos da hierarquia (k -> info)
+let idxMat=new Map(),idxNome=new Map();
+let custom=[],sel='padrao',pos={x:.66,y:.55,w:.30};
+const over=new Map();                       // índice da página -> {x,y,w} | 'skip'
+let cur=0,aberto=new Set(['__todos']),filtro='';
+const stampImgs={};                          // id -> HTMLImageElement
+const stampsTodos=()=>[PADRAO].concat(custom);
+const stampAtual=()=>stampsTodos().find(s=>s.id===sel)||PADRAO;
+
+/* ---------- configuração guardada (carimbos adicionados, escolhido e posição) ---------- */
+let saveT=null;
+function guardar(){
+  clearTimeout(saveT);
+  saveT=setTimeout(async()=>{
+    const json=JSON.stringify({custom,sel,pos,quais:$('#optQuais').value,fundo:$('#optFundo').checked,capas:$('#optCapas').checked});
+    if(dbh){try{await dbh.doc('carimbos/config').set({json});return;}catch(e){toast('Não foi possível salvar as preferências no servidor.');}}
+    try{localStorage.setItem(LS,json);}catch(e){}
+  },400);
+}
+function aplicarConfig(c){
+  if(!c) return;
+  if(Array.isArray(c.custom)) custom=c.custom.filter(s=>s&&s.id&&s.src);
+  if(c.sel&&stampsTodos().some(s=>s.id===c.sel)) sel=c.sel;
+  if(c.pos&&c.pos.w>0) pos=c.pos;
+  if(c.quais) $('#optQuais').value=c.quais;
+  if(typeof c.fundo==='boolean') $('#optFundo').checked=c.fundo;
+  if(typeof c.capas==='boolean') $('#optCapas').checked=c.capas;
+}
+
+/* ---------- hierarquia (a mesma da Hierarquia de Pessoal) ---------- */
+function montarHierarquia(){
+  GH=new Map();idxMat=new Map();idxNome=new Map();
+  ((pessoal&&pessoal.pessoas)||[]).forEach(p=>{
+    const g=grupoInfo(p.g);if(!GH.has(g.k)) GH.set(g.k,g);
+    p._k=g.k;
+    if(p.m&&digs(p.m)&&!idxMat.has(digs(p.m))) idxMat.set(digs(p.m),p);
+    const nn=norm(p.n);if(!idxNome.has(nn)) idxNome.set(nn,p);
+  });
+}
+function vincular(){
+  entradas.forEach(e=>{e.pessoa=idxMat.get(digs(e.mat))||idxNome.get(norm(e.nome))||null;});
+}
+const gkDe=e=>e.manual||(e.pessoa?e.pessoa._k:'nao');
+const infoGrupo=k=>k==='nao'?(pessoal?NAO:Object.assign({},NAO,{nome:'Sem hierarquia (a hierarquia de pessoal não foi carregada)'})):(GH.get(k)||NAO);
+function grupos(){
+  const m=new Map();
+  entradas.forEach(e=>{const k=gkDe(e);if(!m.has(k)) m.set(k,Object.assign({},infoGrupo(k),{k,entradas:[]}));m.get(k).entradas.push(e);});
+  const L=[...m.values()];
+  const ord=e=>(e.pessoa&&!e.manual&&e.pessoa.o!=null)?e.pessoa.o:1e6+e.pag[0];
+  L.forEach(g=>g.entradas.sort((a,b)=>ord(a)-ord(b)||a.pag[0]-b.pag[0]));
+  L.sort((a,b)=>a.ramo-b.ramo||a.sort.localeCompare(b.sort));
+  return L;
+}
+
+/* ---------- leitura do PDF ---------- */
+async function iniciarPdfjs(){
+  if(iniciarPdfjs.ok) return;
+  try{const r=await fetch(WORKER_URL);if(!r.ok) throw 0;pdfjsLib.GlobalWorkerOptions.workerSrc=URL.createObjectURL(new Blob([await r.text()],{type:'text/javascript'}));}
+  catch(e){pdfjsLib.GlobalWorkerOptions.workerSrc=WORKER_URL;}
+  iniciarPdfjs.ok=true;
+}
+function lerCabecalho(txt){
+  const m=/\b(\d{4,})\s+-\s+(.+?)\s+CPF:/.exec(txt);if(!m) return null;
+  const cargo=/Cargo:\s*(.+?)(?:\s+(?:Órgão|Lotação|Horário|Período|Dossiê):|$)/.exec(txt),per=/Período:\s*(\d{2}\/\d{2}\/\d{4})\s+a\s+(\d{2}\/\d{2}\/\d{4})/.exec(txt);
+  return {mat:m[1],nome:titulo(m[2]),cargo:cargo?titulo(cargo[1]):'',periodo:per?per[1]+' a '+per[2]:''};
+}
+async function abrirPdf(file){
+  if(!file) return;
+  if(!/pdf$/i.test(file.name)&&file.type!=='application/pdf'){toast('Escolha um arquivo PDF.');return;}
+  carga(true,'Lendo o PDF…','Abrindo '+file.name,0);
+  try{
+    await iniciarPdfjs();
+    bytes=new Uint8Array(await file.arrayBuffer());
+    pdfDoc=await pdfjsLib.getDocument({data:bytes.slice()}).promise;
+    N=pdfDoc.numPages;nomeArq=file.name.replace(/\.pdf$/i,'');
+    entradas=[];porPag=[];over.clear();
+    let ult=null;
+    for(let i=1;i<=N;i++){
+      const pg=await pdfDoc.getPage(i),tc=await pg.getTextContent();
+      const h=lerCabecalho(tc.items.map(x=>x.str).join(' ').replace(/\s+/g,' '));
+      let e;
+      if(h){e=Object.assign({pag:[i-1],pessoa:null,manual:null},h);entradas.push(e);ult=e;}
+      else if(ult){ult.pag.push(i-1);e=ult;}                          // página de continuação do mesmo servidor
+      else{e={nome:'Página '+i+' (sem cabeçalho)',mat:'',cargo:'',periodo:'',pag:[i-1],pessoa:null,manual:null};entradas.push(e);ult=e;}
+      porPag[i-1]=e;
+      if(i%8===0||i===N){carga(true,null,'Identificando servidores: página '+i+' de '+N,i/N);await pausa();}
+    }
+    vincular();cur=0;
+    $('#dropS').textContent=file.name;
+    $('#saveAll').disabled=false;
+    $('#vazio').hidden=true;$('#viewBox').hidden=false;$('#treePanel').hidden=false;
+    $('#pgNum').max=N;$('#pgTot').textContent='de '+N;
+    resumo();arvore();opcoesGrupo();
+    carga(false);
+    await mostrar(0);
+    const nao=entradas.filter(e=>!e.pessoa&&!e.manual).length;
+    toast(entradas.length+' servidores em '+N+' páginas.'+(nao?' '+nao+' não foram encontrados na hierarquia.':''));
+  }catch(e){
+    carga(false);console.error(e);
+    toast('Não foi possível ler este PDF: '+(e&&e.message||e));
+  }
+}
+
+function resumo(){
+  const nao=entradas.filter(e=>gkDe(e)==='nao').length,g=grupos().length;
+  const usados=new Set(entradas.map(e=>e.pessoa).filter(Boolean));
+  const semEsp=pessoal?pessoal.pessoas.filter(p=>!usados.has(p)):[];
+  $('#resumo').innerHTML=`<div class="sum"><div><small>Páginas</small><b>${N}</b></div><div><small>Servidores</small><b>${entradas.length}</b></div><div><small>Hierarquias</small><b>${g}</b></div></div>`+
+   (!pessoal?`<div class="banner">A hierarquia de pessoal não foi carregada, então todos ficam em um só grupo. Abra a <b>Hierarquia de Pessoal</b>, clique em <b>Atualizar do Centi</b> e volte aqui.</div>`:
+    nao?`<div class="banner"><b>${nao}</b> página(s) com servidor que não está na hierarquia. Elas ficam no grupo <b>Não identificados</b>; use <b>Hierarquia desta página</b> para colocá-las no lugar certo.</div>`:
+    `<div class="banner ok">Todos os servidores do PDF foram encontrados na hierarquia.</div>`)+
+   (semEsp.length?`<div class="row" style="margin-top:8px"><button class="btn sm" id="semEsp" type="button">${semEsp.length} servidor(es) da hierarquia sem espelho no PDF</button></div>`:'');
+  const b=$('#semEsp');if(b) b.addEventListener('click',()=>dlgSemEspelho(semEsp));
+}
+function dlgSemEspelho(L){
+  const d=$('#dlg');
+  d.innerHTML=`<form method="dialog"><h3>Na hierarquia, mas sem espelho no PDF</h3><p class="muted" style="margin:0">Podem ser servidores sem ponto no período, ou com a matrícula diferente no relatório.</p><ul>${L.map(p=>`<li>${esc(p.n)}${p.m?' · mat. '+esc(p.m):''} <span class="muted">· ${esc(grupoInfo(p.g).nome)}</span></li>`).join('')}</ul><div class="row"><button class="btn primary" value="x">Fechar</button></div></form>`;
+  d.showModal();
+}
+
+/* ---------- lista por hierarquia ---------- */
+function paginaTxt(e){return e.pag.length>1?'págs. '+(e.pag[0]+1)+'–'+(e.pag[e.pag.length-1]+1):'pág. '+(e.pag[0]+1);}
+function tagsDe(e){
+  let t='';
+  if(gkDe(e)==='nao') t+='<span class="tag nao">fora da hierarquia</span>';
+  if(e.pag.some(p=>over.get(p)==='skip')) t+='<span class="tag skip">sem carimbo</span>';
+  else if(e.pag.some(p=>over.has(p))) t+='<span class="tag">posição própria</span>';
+  return t;
+}
+function arvore(){
+  const q=norm(filtro),L=grupos();let h='';
+  L.forEach(g=>{
+    const es=g.entradas.filter(e=>!q||norm(e.nome+' '+e.mat+' '+e.cargo).includes(q));
+    if(!es.length) return;
+    const open=!!q||aberto.has(g.k)||aberto.has('__todos');
+    h+=`<div class="g-h${open?' open':''}" data-g="${esc(g.k)}"><span class="arr">▶</span><b>${esc(g.nome)}</b><span class="c">${g.entradas.length}</span><button class="btn sm" type="button" data-dl="${esc(g.k)}" title="Baixar só esta hierarquia, já carimbada">Baixar</button></div>`;
+    if(open) h+=`<ul class="g-l">${es.map(e=>`<li data-p="${e.pag[0]}" class="${e.pag.includes(cur)?'cur':''}"><div class="nm">${esc(e.nome)}${tagsDe(e)}<span>${esc(e.cargo)}${e.mat?' · mat. '+esc(e.mat):''}</span></div><span class="pg">${paginaTxt(e)}</span></li>`).join('')}</ul>`;
+  });
+  $('#tree').innerHTML=h||'<div class="empty" style="padding:20px">Nenhum servidor encontrado.</div>';
+}
+$('#tree').addEventListener('click',ev=>{
+  const dl=ev.target.closest('[data-dl]');
+  if(dl){ev.stopPropagation();baixar(dl.dataset.dl);return;}
+  const gh=ev.target.closest('.g-h');
+  if(gh){const k=gh.dataset.g;
+    if(aberto.has('__todos')){aberto.delete('__todos');grupos().forEach(g=>{if(g.k!==k) aberto.add(g.k);});}
+    else aberto.has(k)?aberto.delete(k):aberto.add(k);
+    arvore();return;}
+  const li=ev.target.closest('li[data-p]');if(li) mostrar(+li.dataset.p);
+});
+$('#q').addEventListener('input',ev=>{filtro=ev.target.value;arvore();});
+function opcoesGrupo(){
+  const e=porPag[cur],ks=new Map();
+  GH.forEach((g,k)=>ks.set(k,g.nome));ks.set('nao',NAO.nome);
+  const sorted=[...ks.entries()].sort((a,b)=>a[1].localeCompare(b[1],'pt-BR'));
+  $('#selGrupo').innerHTML=sorted.map(([k,n])=>`<option value="${esc(k)}">${esc(n)}</option>`).join('');
+  if(e) $('#selGrupo').value=gkDe(e);
+}
+$('#selGrupo').addEventListener('change',ev=>{
+  const e=porPag[cur];if(!e) return;
+  e.manual=ev.target.value;resumo();arvore();opcoesGrupo();
+});
+
+/* ---------- pré-visualização e posição do carimbo ---------- */
+let renderTask=null,tok=0;
+async function mostrar(i){
+  if(!pdfDoc) return;
+  cur=Math.max(0,Math.min(N-1,i));const t=++tok;
+  $('#pgNum').value=cur+1;
+  const pg=await pdfDoc.getPage(cur+1),v1=pg.getViewport({scale:1});
+  $('#stage').style.maxWidth=Math.round(Math.min(1100,Math.max(420,(window.innerHeight-300)*v1.width/v1.height)))+'px';
+  const cw=$('#stage').clientWidth||800,vp=pg.getViewport({scale:cw/v1.width*Math.min(window.devicePixelRatio||1,2)});
+  const cv=$('#cv');cv.width=vp.width;cv.height=vp.height;
+  if(renderTask){try{renderTask.cancel();}catch(e){}}
+  renderTask=pg.render({canvasContext:cv.getContext('2d'),viewport:vp});
+  try{await renderTask.promise;}catch(e){if(e&&e.name==='RenderingCancelledException') return;}
+  if(t!==tok) return;
+  info();stampUi();opcoesGrupo();
+  document.querySelectorAll('#tree li').forEach(li=>li.classList.toggle('cur',porPag[cur]&&porPag[cur].pag.includes(+li.dataset.p)));
+}
+function info(){
+  const e=porPag[cur];if(!e) return;
+  $('#info').innerHTML=`<b>${esc(e.nome)}</b>${e.mat?' · mat. '+esc(e.mat):''}${e.cargo?' · '+esc(e.cargo):''}${e.periodo?' · '+esc(e.periodo):''}<br>${esc(infoGrupo(gkDe(e)).nome)}`;
+}
+const posDe=p=>over.get(p);
+function stampUi(){
+  const st=$('#st'),o=posDe(cur),skip=o==='skip',pp=(o&&o!=='skip')?o:pos;
+  st.hidden=skip;st.classList.toggle('fundo',$('#optFundo').checked);
+  $('#stImg').src=stampAtual().src;
+  st.style.left=(pp.x*100)+'%';st.style.top=(pp.y*100)+'%';st.style.width=(pp.w*100)+'%';
+  $('#tam').value=Math.round(pp.w*100);
+  $('#soEsta').textContent=o&&o!=='skip'?'Voltar à posição geral':'Posição só para esta página';
+  $('#semCar').textContent=skip?'Voltar a carimbar esta página':'Não carimbar esta página';
+  $('#posHint').innerHTML=skip?'Esta página <b>não será carimbada</b>.':(o?'Arrastar muda <b>só esta página</b>.':'Arraste o carimbo para posicionar e o canto azul para mudar o tamanho. A mudança vale para <b>todas as páginas</b>.');
+}
+function pontoAtual(){const o=posDe(cur);return(o&&o!=='skip')?o:pos;}
+function mudou(){stampUi();arvore();guardar();}
+(function arrastar(){
+  const st=$('#st'),h=$('#stHandle');let modo=null,dx=0,dy=0;
+  const rect=()=>$('#stage').getBoundingClientRect();
+  const lim=(v,a,b)=>Math.max(a,Math.min(b,v));
+  st.addEventListener('pointerdown',ev=>{
+    const r=rect(),p=pontoAtual();modo=ev.target===h?'tam':'mov';
+    dx=(ev.clientX-r.left)/r.width-p.x;dy=(ev.clientY-r.top)/r.height-p.y;
+    st.setPointerCapture(ev.pointerId);ev.preventDefault();
+  });
+  st.addEventListener('pointermove',ev=>{
+    if(!modo) return;const r=rect(),p=pontoAtual();
+    if(modo==='mov'){p.x=lim((ev.clientX-r.left)/r.width-dx,-.05,.98);p.y=lim((ev.clientY-r.top)/r.height-dy,-.05,.98);}
+    else p.w=lim((ev.clientX-r.left)/r.width-p.x,.06,.95);
+    st.style.left=(p.x*100)+'%';st.style.top=(p.y*100)+'%';st.style.width=(p.w*100)+'%';$('#tam').value=Math.round(p.w*100);
+  });
+  const fim=()=>{if(modo){modo=null;mudou();}};
+  st.addEventListener('pointerup',fim);st.addEventListener('pointercancel',fim);
+})();
+$('#tam').addEventListener('input',ev=>{pontoAtual().w=+ev.target.value/100;$('#st').style.width=ev.target.value+'%';});
+$('#tam').addEventListener('change',mudou);
+$('#soEsta').addEventListener('click',()=>{
+  const o=posDe(cur);
+  if(o&&o!=='skip') over.delete(cur);else over.set(cur,Object.assign({},pos));
+  mudou();
+});
+$('#semCar').addEventListener('click',()=>{if(posDe(cur)==='skip') over.delete(cur);else over.set(cur,'skip');mudou();});
+$('#prev').addEventListener('click',()=>mostrar(cur-1));
+$('#next').addEventListener('click',()=>mostrar(cur+1));
+$('#pgNum').addEventListener('change',ev=>mostrar((+ev.target.value||1)-1));
+document.addEventListener('keydown',ev=>{
+  if(!pdfDoc||/INPUT|SELECT|TEXTAREA/.test((ev.target||{}).tagName||'')) return;
+  if(ev.key==='ArrowLeft'){mostrar(cur-1);ev.preventDefault();}
+  else if(ev.key==='ArrowRight'){mostrar(cur+1);ev.preventDefault();}
+  else if(ev.key.startsWith('Arrow')){const p=pontoAtual(),s=ev.shiftKey?.01:.002;
+    if(ev.key==='ArrowUp') p.y-=s;else if(ev.key==='ArrowDown') p.y+=s;
+    mudou();ev.preventDefault();}
+});
+let rz=null;window.addEventListener('resize',()=>{clearTimeout(rz);rz=setTimeout(()=>pdfDoc&&mostrar(cur),250);});
+
+/* ---------- carimbos ---------- */
+function stampsUi(){
+  $('#stamps').innerHTML=stampsTodos().map(s=>`<div class="stamp${s.id===sel?' on':''}" data-s="${esc(s.id)}" role="button" tabindex="0" aria-label="${esc(s.nome)}"><img src="${s.src}" alt=""><span>${esc(s.nome)}</span>${s.padrao?'':`<button class="x" type="button" data-rm="${esc(s.id)}" aria-label="Remover carimbo">×</button>`}</div>`).join('');
+}
+function escolher(id){sel=id;stampsUi();if(pdfDoc) stampUi();guardar();}
+$('#stamps').addEventListener('click',ev=>{
+  const rm=ev.target.closest('[data-rm]');
+  if(rm){ev.stopPropagation();const id=rm.dataset.rm;if(!confirm('Remover este carimbo da lista?')) return;custom=custom.filter(s=>s.id!==id);if(sel===id) sel='padrao';stampsUi();if(pdfDoc) stampUi();guardar();return;}
+  const s=ev.target.closest('[data-s]');if(s) escolher(s.dataset.s);
+});
+$('#stamps').addEventListener('keydown',ev=>{if((ev.key==='Enter'||ev.key===' ')&&ev.target.dataset&&ev.target.dataset.s){ev.preventDefault();escolher(ev.target.dataset.s);}});
+$('#addStamp').addEventListener('click',()=>$('#stampFile').click());
+$('#stampFile').addEventListener('change',async ev=>{
+  const f=ev.target.files[0];ev.target.value='';if(!f) return;
+  try{
+    const url=URL.createObjectURL(f),img=new Image();
+    await new Promise((ok,er)=>{img.onload=ok;img.onerror=()=>er(new Error('Imagem inválida'));img.src=url;});
+    const k=Math.min(1,1100/Math.max(img.naturalWidth,img.naturalHeight)),w=Math.round(img.naturalWidth*k),h=Math.round(img.naturalHeight*k);
+    const c=document.createElement('canvas');c.width=w;c.height=h;const x=c.getContext('2d');x.drawImage(img,0,0,w,h);URL.revokeObjectURL(url);
+    if($('#semFundo').checked){   // branco (e quase branco) vira transparente, com borda suave
+      const d=x.getImageData(0,0,w,h),a=d.data;
+      for(let i=0;i<a.length;i+=4){const m=Math.min(a[i],a[i+1],a[i+2]);if(m>=235) a[i+3]=0;else if(m>190) a[i+3]=Math.round(a[i+3]*(235-m)/45);}
+      x.putImageData(d,0,0);
+    }
+    const id='c'+Date.now().toString(36);
+    custom.push({id,nome:f.name.replace(/\.[^.]+$/,'').slice(0,40),src:c.toDataURL('image/png')});
+    escolher(id);toast('Carimbo adicionado.');
+  }catch(e){toast('Não foi possível usar esta imagem: '+(e.message||e));}
+});
+
+/* ---------- PDF de saída ---------- */
+const wa=s=>String(s==null?'':s).replace(/[^\x20-\x7E\u00A0-\u00FF]/g,'?');
+function ordemPaginas(g){return g.entradas.flatMap(e=>e.pag);}
+async function gerar(lista,ctx){
+  const {PDFDocument,StandardFonts,rgb}=PDFLib;
+  const src=await PDFDocument.load(bytes,{ignoreEncryption:true,updateMetadata:false});
+  const out=await PDFDocument.create();
+  const fn=await out.embedFont(StandardFonts.Helvetica),fb=await out.embedFont(StandardFonts.HelveticaBold);
+  const sl=stampAtual(),emb=sl.src.startsWith('data:image/jpeg')?await out.embedJpg(sl.src):await out.embedPng(sl.src);
+  const ratio=emb.height/emb.width,fundo=$('#optFundo').checked,capas=$('#optCapas').checked,quais=$('#optQuais').value;
+  const total=lista.reduce((s,g)=>s+g.entradas.reduce((t,e)=>t+e.pag.length,0),0);let feitas=0;
+  for(const g of lista){
+    const idx=ordemPaginas(g),base=src.getPage(idx[0]).getSize();
+    /* capa(s): lista dos servidores e a página de cada um no PDF de saída */
+    let capaPags=0;const LIN=22,COL=3,PORPAG=LIN*COL;
+    if(capas) capaPags=Math.max(1,Math.ceil(g.entradas.length/PORPAG));
+    const primeira=out.getPageCount()+capaPags+1;   // número (1ª página do grupo) dentro do PDF de saída
+    if(capas){
+      let n=primeira;const nums=g.entradas.map(e=>{const r=n;n+=e.pag.length;return r;});
+      for(let c=0;c<capaPags;c++){
+        const W=base.width,H=base.height,pg=out.addPage([W,H]),m=36;
+        pg.drawRectangle({x:0,y:H-14,width:W,height:14,color:rgb(.04,.42,.24)});
+        pg.drawText('CÂMARA MUNICIPAL DE RIO VERDE/GO · RECURSOS HUMANOS',{x:m,y:H-42,size:9.5,font:fb,color:rgb(.3,.4,.35)});
+        pg.drawText(wa('CAPA'+(capaPags>1?' ('+(c+1)+'/'+capaPags+')':'')),{x:m,y:H-66,size:11,font:fb,color:rgb(.04,.42,.24)});
+        let fs=26,tx=wa(g.nome);while(fb.widthOfTextAtSize(tx,fs)>W-2*m&&fs>12) fs--;
+        pg.drawText(tx,{x:m,y:H-98,size:fs,font:fb,color:rgb(.07,.16,.11)});
+        const per=g.entradas.find(e=>e.periodo);
+        pg.drawText(wa('Espelho de ponto'+(per?' · período '+per.periodo:'')+' · '+g.entradas.length+' servidor'+(g.entradas.length>1?'es':'')),{x:m,y:H-120,size:11,font:fn,color:rgb(.3,.4,.35)});
+        pg.drawLine({start:{x:m,y:H-132},end:{x:W-m,y:H-132},thickness:1,color:rgb(.83,.67,.29)});
+        const cw=(W-2*m)/COL,y0=H-154,lh=Math.min(17,(y0-m)/LIN);
+        g.entradas.slice(c*PORPAG,(c+1)*PORPAG).forEach((e,k)=>{
+          const col=Math.floor(k/LIN),row=k%LIN,x=m+col*cw,y=y0-row*lh,num='pág. '+nums[c*PORPAG+k];
+          let nm=wa(e.nome);const mx=cw-12-fn.widthOfTextAtSize(num,8.5)-8;
+          while(fn.widthOfTextAtSize(nm,9)>mx&&nm.length>4) nm=nm.slice(0,-2);
+          if(nm!==wa(e.nome)) nm=nm.trimEnd()+'...';
+          pg.drawText(nm,{x,y,size:9,font:fn,color:rgb(.07,.16,.11)});
+          pg.drawText(num,{x:x+cw-12-fn.widthOfTextAtSize(num,8.5),y,size:8.5,font:fn,color:rgb(.3,.4,.35)});
+        });
+      }
+    }
+    for(let a=0;a<idx.length;a+=40){
+      const lote=idx.slice(a,a+40),cps=await out.copyPages(src,lote);
+      cps.forEach((pg,k)=>{
+        const pi=lote[k],o=over.get(pi);out.addPage(pg);
+        const e=porPag[pi];
+        if(o==='skip') return;
+        if(!o&&quais==='ultima'&&e.pag[e.pag.length-1]!==pi) return;
+        const p=o||pos,{width:W,height:H}=pg.getSize(),w=p.w*W,h=w*ratio;
+        if(fundo) pg.drawRectangle({x:p.x*W,y:H-p.y*H-h,width:w,height:h,color:rgb(1,1,1)});
+        pg.drawImage(emb,{x:p.x*W,y:H-p.y*H-h,width:w,height:h});
+      });
+      feitas+=lote.length;
+      ctx.p(feitas/total);await pausa();
+    }
+  }
+  out.setTitle(nomeArq+' (carimbado)');out.setProducer('RH Câmara Rio Verde');
+  return out.save();
+}
+function baixarBlob(by,nome){
+  const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([by],{type:'application/pdf'}));a.download=nome;
+  document.body.appendChild(a);a.click();setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove();},4000);
+}
+const nomeSeguro=s=>norm(s).replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,'').slice(0,60)||'grupo';
+async function baixar(k){
+  if(!pdfDoc) return;
+  const todos=grupos(),lista=k?todos.filter(g=>g.k===k):todos;
+  if(!lista.length) return;
+  carga(true,'Carimbando…','Montando o PDF',0);
+  try{
+    const by=await gerar(lista,{p:v=>carga(true,null,'Carimbando e organizando páginas… '+Math.round(v*100)+'%',v)});
+    carga(true,null,'Salvando…',1);
+    baixarBlob(by,k?nomeSeguro(nomeArq)+'-'+nomeSeguro(lista[0].nome)+'.pdf':nomeSeguro(nomeArq)+'-carimbado.pdf');
+    carga(false);toast('PDF pronto: '+lista.reduce((s,g)=>s+ordemPaginas(g).length,0)+' páginas carimbadas.');
+  }catch(e){carga(false);console.error(e);toast('Não foi possível gerar o PDF: '+(e&&e.message||e));}
+}
+$('#saveAll').addEventListener('click',()=>baixar(null));
+$('#optFundo').addEventListener('change',()=>{if(pdfDoc) stampUi();guardar();});
+$('#optQuais').addEventListener('change',guardar);$('#optCapas').addEventListener('change',guardar);
+
+/* ---------- anexar ---------- */
+const drop=$('#drop');
+$('#file').addEventListener('change',ev=>{const f=ev.target.files[0];ev.target.value='';abrirPdf(f);});
+['dragenter','dragover'].forEach(t=>drop.addEventListener(t,ev=>{ev.preventDefault();drop.classList.add('over');}));
+['dragleave','drop'].forEach(t=>drop.addEventListener(t,ev=>{ev.preventDefault();drop.classList.remove('over');}));
+drop.addEventListener('drop',ev=>{const f=ev.dataTransfer.files[0];if(f) abrirPdf(f);});
+try{matchMedia('(prefers-color-scheme: dark)').addEventListener('change',themeBtn);new MutationObserver(themeBtn).observe(document.documentElement,{attributes:true,attributeFilter:['data-theme']});}catch(e){}
+
+/* ---------- início ---------- */
+(async function init(){
+  themeBtn();stampsUi();
+  try{aplicarConfig(JSON.parse(localStorage.getItem(LS)||'null'));}catch(e){}
+  stampsUi();
+  carga(true,'Carregando…','Conectando ao servidor',null);$('#ldB').style.width='30%';
+  try{
+    if(window.claude&&window.claude.use) dbh=await window.claude.use('db');
+    if(!dbh) dbh=await PB.connect();
+    if(dbh){
+      const c=await dbh.doc('carimbos/config').get();
+      if(c.exists){try{aplicarConfig(JSON.parse(c.data().json));}catch(e){}}
+      const s=await dbh.doc('pessoal/dados').get();
+      if(s.exists){try{const d=JSON.parse(s.data().json);if(d&&Array.isArray(d.pessoas)) pessoal=d;}catch(e){}}
+    }
+  }catch(e){dbh=null;}
+  montarHierarquia();stampsUi();
+  carga(false);
+  if(!pessoal) toast('A hierarquia de pessoal ainda não está salva no servidor. Abra a Hierarquia de Pessoal e clique em Atualizar do Centi.');
+})();
+</script>

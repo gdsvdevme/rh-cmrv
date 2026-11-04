@@ -117,15 +117,17 @@ const quadroLinhas = cube => cuboColunas(cube, QUADRO_COLUNAS, true);
 /* Relação de afastamentos (FP071): o Centi só entrega em PDF. De 01/01/1990 até o fim do mês da referência, do órgão inteiro ou só de um servidor (Id do cadastro).
    O PDF vai como veio (gzip) e o navegador o lê com pdf.js. */
 const AFASTAMENTOS_MODULO = 121058;
-const afastamentosPayload = (mes, ano, funcionario) => {
-  const fim = new Date(Date.UTC(ano, mes, 0)).getUTCDate();   // último dia do mês da referência
+const afastamentosPayload = (mes, ano, funcionario, ref) => {
+  /* o período vai até o fim do mês pedido; ref é o mês de referência da folha (mais antigo quando a folha do mês pedido ainda não foi processada) */
+  const fim = new Date(Date.UTC(ano, mes, 0)).getUTCDate();   // último dia do mês pedido
   const mm = String(mes).padStart(2, '0');
+  const rm = String((ref && ref.mes) || mes).padStart(2, '0'), ra = (ref && ref.ano) || ano;
   return {
     ModuleKey: AFASTAMENTOS_MODULO, Guid: crypto.randomUUID(),
     Params: [
       { Key: 'Orgaos', Value: vazio() }, { Key: 'Funcionarios', Value: funcionario ? { Params: [{ Key: 'Tag', Value: '0' }, { Key: 'Array', Value: [String(funcionario)] }] } : vazio() }, { Key: 'Lotacoes', Value: vazio() }, { Key: 'Cargos', Value: vazio() },
       { Key: 'TipoAfastamentos', Value: vazio() }, { Key: 'TipoAdmissao', Value: vazio() }, { Key: 'IdHierarquia', Value: vazio() },
-      { Key: 'DataFin', Value: '01/' + mm + '/' + ano }, { Key: 'DataIn', Value: '01/01/1990:' + fim + '/' + mm + '/' + ano },
+      { Key: 'DataFin', Value: '01/' + rm + '/' + ra }, { Key: 'DataIn', Value: '01/01/1990:' + fim + '/' + mm + '/' + ano },
       { Key: 'BeneficiarioRPPS', Value: '0' }, { Key: 'Ordenacao', Value: '0' },
       { Key: 'EmbeddedFonts', Value: '0' }, { Key: 'ImprimirQrCodeGenerico', Value: '0' }, { Key: 'ChaveEletronica', Value: '' },
       { Key: 'TextoCentralizado', Value: '' }, { Key: 'MarcaDagua', Value: '0' }, { Key: 'ApenasPrimeiraPagina', Value: '0' },

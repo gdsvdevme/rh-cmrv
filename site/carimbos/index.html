@@ -141,7 +141,7 @@ dialog .row{justify-content:flex-end}
     </section>
     <section class="panel">
       <h2><span class="n">3</span>Salvar o PDF carimbado</h2>
-      <label class="ck"><input type="checkbox" id="optCapas" checked><span>Incluir uma <b>capa</b> antes de cada hierarquia (gabinete ou setor), com a lista dos servidores</span></label>
+      <label class="ck"><input type="checkbox" id="optCapas" checked><span>Incluir uma <b>capa</b> antes de cada hierarquia: página em branco só com o nome (ex.: Gabinete do Vereador Fulano)</span></label>
       <label class="ck"><input type="checkbox" id="optFundo" checked><span>Fundo <b>branco</b> atrás do carimbo (esconde as linhas da tabela e deixa o texto legível)</span></label>
       <label class="f">Em quais páginas do servidor carimbar
         <select id="optQuais"><option value="todas">Em todas as páginas</option><option value="ultima">Só na última página de cada servidor</option></select></label>
@@ -748,32 +748,17 @@ async function gerar(lista,ctx){
   const total=lista.reduce((s,g)=>s+g.entradas.reduce((t,e)=>t+e.pag.length,0),0);let feitas=0;
   for(const g of lista){
     const idx=ordemPaginas(g),base=src.getPage(idx[0]).getSize();
-    /* capa(s): lista dos servidores e a página de cada um no PDF de saída */
-    let capaPags=0;const LIN=22,COL=3,PORPAG=LIN*COL;
-    if(capas) capaPags=Math.max(1,Math.ceil(g.entradas.length/PORPAG));
-    const primeira=out.getPageCount()+capaPags+1;   // número (1ª página do grupo) dentro do PDF de saída
+    /* capa: página em branco só com o nome da hierarquia, centralizado */
     if(capas){
-      let n=primeira;const nums=g.entradas.map(e=>{const r=n;n+=e.pag.length;return r;});
-      for(let c=0;c<capaPags;c++){
-        const W=base.width,H=base.height,pg=out.addPage([W,H]),m=36;
-        pg.drawRectangle({x:0,y:H-14,width:W,height:14,color:rgb(.04,.42,.24)});
-        pg.drawText('CÂMARA MUNICIPAL DE RIO VERDE/GO · RECURSOS HUMANOS',{x:m,y:H-42,size:9.5,font:fb,color:rgb(.3,.4,.35)});
-        pg.drawText(wa('CAPA'+(capaPags>1?' ('+(c+1)+'/'+capaPags+')':'')),{x:m,y:H-66,size:11,font:fb,color:rgb(.04,.42,.24)});
-        let fs=26,tx=wa(g.nome);while(fb.widthOfTextAtSize(tx,fs)>W-2*m&&fs>12) fs--;
-        pg.drawText(tx,{x:m,y:H-98,size:fs,font:fb,color:rgb(.07,.16,.11)});
-        const per=g.entradas.find(e=>e.periodo);
-        pg.drawText(wa('Espelho de ponto'+(per?' · período '+per.periodo:'')+' · '+g.entradas.length+' servidor'+(g.entradas.length>1?'es':'')),{x:m,y:H-120,size:11,font:fn,color:rgb(.3,.4,.35)});
-        pg.drawLine({start:{x:m,y:H-132},end:{x:W-m,y:H-132},thickness:1,color:rgb(.83,.67,.29)});
-        const cw=(W-2*m)/COL,y0=H-154,lh=Math.min(17,(y0-m)/LIN);
-        g.entradas.slice(c*PORPAG,(c+1)*PORPAG).forEach((e,k)=>{
-          const col=Math.floor(k/LIN),row=k%LIN,x=m+col*cw,y=y0-row*lh,num='pág. '+nums[c*PORPAG+k];
-          let nm=wa(e.nome);const mx=cw-12-fn.widthOfTextAtSize(num,8.5)-8;
-          while(fn.widthOfTextAtSize(nm,9)>mx&&nm.length>4) nm=nm.slice(0,-2);
-          if(nm!==wa(e.nome)) nm=nm.trimEnd()+'...';
-          pg.drawText(nm,{x,y,size:9,font:fn,color:rgb(.07,.16,.11)});
-          pg.drawText(num,{x:x+cw-12-fn.widthOfTextAtSize(num,8.5),y,size:8.5,font:fn,color:rgb(.3,.4,.35)});
-        });
-      }
+      const W=base.width,H=base.height,pg=out.addPage([W,H]),mx=60;
+      let fs=30,linhas;
+      const quebrar=sz=>{const ps=wa(g.nome).split(' '),L=[];let l='';
+        ps.forEach(w=>{const t=l?l+' '+w:w;if(fb.widthOfTextAtSize(t,sz)>W-2*mx&&l){L.push(l);l=w;}else l=t;});
+        if(l) L.push(l);return L;};
+      linhas=quebrar(fs);
+      while(linhas.some(l=>fb.widthOfTextAtSize(l,fs)>W-2*mx)&&fs>14){fs--;linhas=quebrar(fs);}
+      const lh=fs*1.3,y0=H/2+(linhas.length*lh)/2-fs*.85;
+      linhas.forEach((l,k)=>pg.drawText(l,{x:(W-fb.widthOfTextAtSize(l,fs))/2,y:y0-k*lh,size:fs,font:fb,color:rgb(0,0,0)}));
     }
     for(let a=0;a<idx.length;a+=40){
       const lote=idx.slice(a,a+40),cps=await out.copyPages(src,lote);

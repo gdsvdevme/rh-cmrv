@@ -31,20 +31,22 @@ def wr(p, s):
     p = os.path.join(root, p); os.makedirs(os.path.dirname(p), exist_ok=True)
     open(p, 'w', encoding='utf-8').write(s)
 
+hello = rd('src/hello.js'); mcss = rd('src/modern.css'); mflow = rd('src/modern-flow.css')
+mod = lambda t: t.replace('/*MODERN_CSS*/', mcss).replace('/*MODERN_FLOW_CSS*/', mflow).replace('/*HELLO_JS*/', hello)
 css = rd('src/styles.css')
 js = '\n'.join(open(f, encoding='utf-8').read() for f in sorted(glob.glob(os.path.join(root, 'src/js/*.js'))))
 js = js.replace('/*VOLUME_CSS*/', rd('src/volume.css').replace('`', '\\`'))
 pbjs = rd('src/pb.js').replace('/*PB_URL*/', opt('--pb-url', 'https://pb.devgabriel.app.br')).replace('/*CENTI_URL*/', opt('--centi-url', ''))
 js = js.replace('</script>', '<\\/script>')
-flow = rd('src/index.template.html').replace('/*CSS*/', css).replace('/*PB_JS*/', pbjs).replace('/*JS*/', js)
+flow = mod(rd('src/index.template.html')).replace('/*CSS*/', css).replace('/*PB_JS*/', pbjs).replace('/*JS*/', js)
 launcher = rd('src/launcher.template.html').replace('/*PB_JS*/', pbjs)
-pessoal = rd('src/pessoal.template.html').replace('/*PB_JS*/', pbjs)
-ponto = rd('src/ponto.template.html')
-ferias = rd('src/ferias.template.html').replace('/*PB_JS*/', pbjs)
-tarefas = rd('src/tarefas.template.html').replace('/*PB_JS*/', pbjs)
+pessoal = mod(rd('src/pessoal.template.html')).replace('/*PB_JS*/', pbjs)
+ponto = mod(rd('src/ponto.template.html'))
+ferias = mod(rd('src/ferias.template.html')).replace('/*PB_JS*/', pbjs)
+tarefas = mod(rd('src/tarefas.template.html')).replace('/*PB_JS*/', pbjs)
 import base64
 stamp = base64.b64encode(open(os.path.join(root, 'src/carimbo-padrao.png'), 'rb').read()).decode()
-carimbos = rd('src/carimbos.template.html').replace('/*PB_JS*/', pbjs).replace('/*STAMP_B64*/', stamp)
+carimbos = mod(rd('src/carimbos.template.html')).replace('/*PB_JS*/', pbjs).replace('/*STAMP_B64*/', stamp)
 
 head = ('<!doctype html>\n<html lang="pt-BR"><head><meta charset="utf-8">'
         '<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"></head>'

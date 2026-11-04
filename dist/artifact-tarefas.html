@@ -104,6 +104,32 @@ fieldset.vis legend{font-weight:700;font-size:13px;padding:0 6px;color:var(--fg)
 body.carregando{overflow:hidden}
 #toast{position:fixed;left:50%;transform:translateX(-50%);bottom:max(18px,env(safe-area-inset-bottom,0px));background:var(--fg);color:var(--bg);padding:10px 16px;border-radius:10px;font-size:14px;z-index:60;max-width:90vw}
 @media (pointer:coarse){input,select,textarea{font-size:16px}.btn{min-height:42px}.btn.sm{min-height:38px}}
+/* ===== visual moderno (compartilhado) ===== */
+body{background:radial-gradient(1100px 520px at 85% -120px,color-mix(in srgb,var(--accent) 12%,transparent),transparent 70%),var(--bg);background-attachment:fixed}
+.hero{border-radius:0 0 32px 32px;padding-bottom:clamp(48px,7vw,72px)!important;background:radial-gradient(600px 300px at 12% 0,rgba(255,255,255,.12),transparent 70%),linear-gradient(135deg,var(--hero-a),var(--hero-b));position:relative;overflow:hidden}
+.hero::before{content:"";position:absolute;left:-80px;bottom:-120px;width:300px;height:300px;border-radius:50%;background:radial-gradient(circle,rgba(212,170,74,.28),transparent 70%);pointer-events:none}
+.hero>.inner{position:relative;z-index:1}
+.themebtn{backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);border-radius:99px!important;padding:8px 14px!important;transition:background .15s,transform .15s}
+.themebtn:hover{transform:translateY(-1px)}
+.hero .home{border-radius:99px!important;backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px)}
+.hello{margin:0 0 6px;font-family:var(--f-display);font-weight:600;font-size:clamp(1rem,2.4vw,1.2rem);display:inline-flex;align-items:center;gap:8px;padding:6px 14px 6px 10px;border-radius:99px;background:rgba(255,255,255,.14);border:1px solid rgba(255,255,255,.22);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);color:#fff;opacity:1!important;animation:rise .5s both}
+.hello .wave{display:inline-block;transform-origin:70% 70%;animation:wave 2.2s .6s 1}
+.hero h1{letter-spacing:-.02em;font-weight:700}
+.btn{border-radius:99px!important;transition:transform .15s,border-color .15s,box-shadow .15s}
+.btn:hover{transform:translateY(-1px)}
+.btn.sm{border-radius:99px!important}
+.card,.panel{border-radius:20px!important;transition:box-shadow .2s,border-color .2s}
+.card:hover,.panel:hover{box-shadow:0 14px 34px rgba(6,61,39,.12)}
+input,select,textarea{border-radius:12px}
+.pill,.chip,.tag{border-radius:99px}
+.modal{border-radius:22px!important}
+@keyframes rise{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
+@keyframes wave{0%,60%,100%{transform:rotate(0)}10%,30%{transform:rotate(16deg)}20%,40%{transform:rotate(-10deg)}50%{transform:rotate(8deg)}}
+@media (prefers-reduced-motion:reduce){.hello,.hello .wave{animation:none}.btn:hover,.themebtn:hover{transform:none}}
+@media print{.hello{display:none}}
+/* o conteúdo que sobe sobre o cabeçalho precisa ficar acima dele */
+.hero~main,.hero~.wrap,.stats,.layout,.grid{position:relative;z-index:2}
+
 </style>
 
 <header class="hero wrap"><div class="inner">
@@ -767,4 +793,31 @@ document.addEventListener('visibilitychange',()=>{if(!document.hidden&&dbh&&!$('
   themeBtn();render();carga(true,'Conectando ao servidor…');
   carregar(false);
 })();
+</script>
+<script>
+/* "Olá, Primeiro nome" — lê o nome do Centi guardado na sessão deste navegador */
+(function(){
+  function nome(){
+    try{const a=JSON.parse(localStorage.getItem('rhcrv-pb-auth')||'null');const n=a&&a.centi&&(a.centi.nome||a.centi.user);
+      if(!n) return '';const p=String(n).trim().split(/\s+/)[0];
+      if(!p||/\d/.test(p)||/^[a-z]+\.[a-z]/i.test(p)) return '';
+      return p.charAt(0).toLocaleUpperCase('pt-BR')+p.slice(1).toLocaleLowerCase('pt-BR');}catch(e){return '';}
+  }
+  function aplicar(){
+    const n=nome();let el=document.getElementById('helloMod');
+    if(!n){if(el) el.remove();return;}
+    if(!el){
+      const hero=document.querySelector('.hero h1'),top=document.querySelector('.side .brand');
+      el=document.createElement(hero?'p':'div');el.id='helloMod';el.className='hello';
+      el.innerHTML='<span class="wave" aria-hidden="true">👋</span><span></span>';
+      if(hero) hero.parentNode.insertBefore(el,hero);
+      else if(top) top.insertAdjacentElement('afterend',el);
+      else return;
+    }
+    el.lastChild.textContent='Olá, '+n;
+  }
+  let i=0;aplicar();const t=setInterval(()=>{aplicar();if(++i>40)clearInterval(t);},500);
+  window.addEventListener('storage',aplicar);
+})();
+
 </script>

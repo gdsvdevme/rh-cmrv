@@ -252,6 +252,19 @@ tr.selrow td{background:var(--accent-soft)}
 .themebtn:hover{border-color:var(--accent)}
 @media (max-width:760px){.hide-sm{display:none!important}}
 
+/* ===== visual moderno: fluxogramas ===== */
+body{background:radial-gradient(1100px 520px at 85% -120px,color-mix(in srgb,var(--accent) 10%,transparent),transparent 70%),var(--bg);background-attachment:fixed}
+.card{border-radius:18px;transition:box-shadow .2s,border-color .2s}
+.card:hover{box-shadow:0 12px 30px rgba(6,61,39,.10)}
+.btn{border-radius:99px;padding-inline:14px;transition:transform .15s,border-color .15s}
+.btn:hover{transform:translateY(-1px)}
+.topbar{backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px)}
+.nav button{border-radius:12px}
+input,select,textarea{border-radius:10px}
+.hello{margin:12px 10px 4px;width:fit-content;display:flex;align-items:center;gap:6px;font-family:var(--f-display);font-weight:600;font-size:13.5px;padding:5px 12px;border-radius:99px;background:rgba(255,255,255,.16);color:#fff;white-space:nowrap}
+@media (prefers-reduced-motion:reduce){.btn:hover{transform:none}}
+@media print{.hello{display:none}}
+
 </style>
 <div id="app"></div>
 <div id="modal" hidden></div>
@@ -2965,6 +2978,33 @@ async function gerarVolume(){
   if(!w){await saveFile(nome,html,'text/html');toast('Arquivo salvo. Abra-o no navegador e use "Imprimir / Salvar como PDF".');}
   else setTimeout(()=>URL.revokeObjectURL(url),120000);
 }
+
+</script>
+<script>
+/* "Olá, Primeiro nome" — lê o nome do Centi guardado na sessão deste navegador */
+(function(){
+  function nome(){
+    try{const a=JSON.parse(localStorage.getItem('rhcrv-pb-auth')||'null');const n=a&&a.centi&&(a.centi.nome||a.centi.user);
+      if(!n) return '';const p=String(n).trim().split(/\s+/)[0];
+      if(!p||/\d/.test(p)||/^[a-z]+\.[a-z]/i.test(p)) return '';
+      return p.charAt(0).toLocaleUpperCase('pt-BR')+p.slice(1).toLocaleLowerCase('pt-BR');}catch(e){return '';}
+  }
+  function aplicar(){
+    const n=nome();let el=document.getElementById('helloMod');
+    if(!n){if(el) el.remove();return;}
+    if(!el){
+      const hero=document.querySelector('.hero h1'),top=document.querySelector('.side .brand');
+      el=document.createElement(hero?'p':'div');el.id='helloMod';el.className='hello';
+      el.innerHTML='<span class="wave" aria-hidden="true">👋</span><span></span>';
+      if(hero) hero.parentNode.insertBefore(el,hero);
+      else if(top) top.insertAdjacentElement('afterend',el);
+      else return;
+    }
+    el.lastChild.textContent='Olá, '+n;
+  }
+  let i=0;aplicar();const t=setInterval(()=>{aplicar();if(++i>40)clearInterval(t);},500);
+  window.addEventListener('storage',aplicar);
+})();
 
 </script>
 

@@ -110,6 +110,7 @@ const PESSOAL_URL="/*PESSOAL_URL*/";
 const PONTO_URL="/*PONTO_URL*/";
 const FERIAS_URL="/*FERIAS_URL*/";
 const TAREFAS_URL="/*TAREFAS_URL*/";
+const CARIMBOS_URL="/*CARIMBOS_URL*/";
 const LS='rhcrv-painel-v1';
 const ICONS={
   org:'<rect x="9" y="3" width="6" height="5" rx="1"/><rect x="3" y="16" width="6" height="5" rx="1"/><rect x="15" y="16" width="6" height="5" rx="1"/><path d="M12 8v4M6 16v-4h12v4"/>',
@@ -145,12 +146,13 @@ const svg=(k,n)=>`<svg width="${n||28}" height="${n||28}" viewBox="0 0 24 24" fi
 const uid=()=>'t'+Math.random().toString(36).slice(2,9);
 
 function defaults(){
-  return {v:5,tiles:[
+  return {v:6,tiles:[
     {id:'t-fluxos',nome:'Fluxogramas e Manual do RH',desc:'Organograma, fluxogramas editáveis, competências, matriz de responsabilidades, manual de procedimentos e indicadores.',icone:'flow',hue:152,status:'ok',url:FLOW_URL},
     {id:'t-pessoal',nome:'Hierarquia de Pessoal',desc:'Quadro de pessoal organizado por hierarquia: setor administrativo e gabinetes dos vereadores.',icone:'org',hue:262,status:'ok',url:PESSOAL_URL},
     {id:'t-ponto',nome:'Ponto – Servidores Externos',desc:'Registro de ponto pelo celular com localização, assinatura digital e foto, e acompanhamento em tempo real pelo RH (simulação).',icone:'pin',hue:200,status:'ok',url:PONTO_URL},
     {id:'t-ferias',nome:'Férias',desc:'Quem está de férias, quem tem direito a gozar e quem está com férias vencidas, pelo período aquisitivo (dados do Centi).',icone:'calendar',hue:28,status:'ok',url:FERIAS_URL},
     {id:'t-tarefas',nome:'Tarefas do RH',desc:'Checklist em quadro (a fazer, em andamento, concluído) com tarefas da equipe ou privadas. As concluídas saem do quadro na virada do mês.',icone:'tasks',hue:212,status:'ok',url:TAREFAS_URL},
+    {id:'t-carimbos',nome:'Carimbos em PDF',desc:'Anexe o PDF com os espelhos de ponto, escolha o carimbo, posicione e salve o PDF carimbado e organizado pela hierarquia (capa de cada gabinete ou setor).',icone:'file',hue:340,status:'ok',url:CARIMBOS_URL},
     {id:'t-freq',nome:'Frequência',desc:'Registro e conferência de frequência.',icone:'clock',hue:48,status:'plan',url:''},
   ]};
 }
@@ -263,6 +265,10 @@ function migrar(){
   if(st.v<5){ // Tarefas do RH entra depois de Férias
     if(!st.tiles.some(x=>x.id==='t-tarefas')){const d=defaults().tiles.find(t=>t.id==='t-tarefas');const i=st.tiles.findIndex(x=>x.id==='t-ferias');st.tiles.splice(i>=0?i+1:st.tiles.length,0,d);}
     st.v=5;persist();
+  }
+  if(st.v<6){ // Carimbos em PDF entra depois de Tarefas
+    if(!st.tiles.some(x=>x.id==='t-carimbos')){const d=defaults().tiles.find(t=>t.id==='t-carimbos');const i=st.tiles.findIndex(x=>x.id==='t-tarefas');st.tiles.splice(i>=0?i+1:st.tiles.length,0,d);}
+    st.v=6;persist();
   }
 }
 (function init(){

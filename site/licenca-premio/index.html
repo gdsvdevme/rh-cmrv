@@ -674,8 +674,16 @@ function calcular(s,hoje,cfg){
   evs.filter(e=>e.efeito==='licenca-premio').forEach(e=>gozos.push({origem:'centi',tipo:'gozo',ini:e.ini,fim:e.fim,dias:dias(e.ini,e.fim),rotulo:e.tipo}));
   (reg.gozos||[]).forEach(g=>{
     const ini=isoMs(g.ini),fim=isoMs(g.fim||g.ini);if(ini==null||fim==null||fim<ini) return;
-    if(gozos.some(x=>x.origem==='centi'&&x.ini===ini&&x.fim===fim)) return;   // já veio do Centi
+    const dup=gozos.find(x=>x.origem==='centi'&&x.ini===ini&&x.fim===fim);
+    if(dup){if(g.obs&&!dup.obs) dup.obs=g.obs;return;}   // já veio do Centi: não conta de novo, só acrescenta a observação (ex.: nº da portaria)
     gozos.push({origem:'manual',id:g.id,tipo:g.tipo==='indenizacao'?'indenizacao':'gozo',ini,fim,dias:g.dias>0?+g.dias:dias(ini,fim),obs:g.obs,rotulo:g.tipo==='indenizacao'?'Indenização':'Gozo'});
+  });
+  /* marcas do RH por período (chave = número do período): quitada, indenizada ou requerida, com portaria, valor e data */
+  const conf=!!reg.conferido,marcas=reg.periodos||{};
+  completos.forEach(p=>{
+    const m=marcas[p.n]||{};
+    p.acao=m.acao||'';p.acaoData=m.data?isoMs(m.data):null;p.acaoObs=m.obs||'';p.acaoPortaria=m.portaria||'';
+    const v=m.valor==null||m.valor===''?null:Number(m.valor);p.acaoValor=isFinite(v)?v:null;
   });
   gozos.sort((a,b)=>a.ini-b.ini);
   gozos.forEach(g=>{
@@ -683,6 +691,7 @@ function calcular(s,hoje,cfg){
     let usou=false;
     for(const p of completos){
       if(resto<=0) break;
+      if(p.acao==='quitada'||p.acao==='indenizada') continue;   // já resolvido pelo RH: o gozo do Centi vai para o próximo período em aberto
       const falta=REGRA.DIAS-p.cred;if(falta<=0) continue;
       const uso=Math.min(falta,resto);
       p.cred+=uso;resto-=uso;usou=true;
@@ -693,11 +702,8 @@ function calcular(s,hoje,cfg){
   });
 
   /* situação de cada período completo */
-  const conf=!!reg.conferido,marcas=reg.periodos||{};
   Object.keys(marcas).forEach(k=>{const p=validos.find(x=>String(x.n)===String(k));if(!p||!p.completo) alertas.push({nivel:'aviso',msg:'Existe uma marca do RH no período '+k+', que não existe (ou ainda não foi concluído) pelo cálculo atual. Revise os lançamentos.'});});
   completos.forEach(p=>{
-    const m=marcas[p.n]||{};
-    p.acao=m.acao||'';p.acaoData=m.data?isoMs(m.data):null;p.acaoObs=m.obs||'';
     p.saldo=Math.max(0,REGRA.DIAS-p.cred);
     const quitado=p.saldo===0||p.acao==='quitada'||p.acao==='indenizada';
     if(quitado){p.status=p.acao==='indenizada'||(p.gozos.length&&p.gozos.every(g=>g.tipo==='indenizacao'))?'indenizada':'gozada';p.saldo=0;return;}
@@ -806,6 +812,7 @@ const uid=()=>'x'+Math.random().toString(36).slice(2,9);
 const DAY=864e5,MIN=new Set(['de','da','do','das','dos','e','a','o']),ROMAN=/^(i|ii|iii|iv|v|vi|vii|viii|ix|x)$/i;
 const hojeMs=()=>{const n=new Date();return Date.UTC(n.getFullYear(),n.getMonth(),n.getDate());};
 const fmtCurto=ms=>fmt(ms).slice(0,5);
+const brl=n=>'R$ '+Number(n).toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2});
 function titulo(s){return String(s||'').toLowerCase().replace(/\s+/g,' ').trim().split(' ').map((w,i)=>(i>0&&ROMAN.test(w))?w.toUpperCase():(i>0&&MIN.has(w))?w:w.replace(/(^|[-\/(])(\p{L})/gu,(m,a,b)=>a+b.toUpperCase())).join(' ').replace(/\b(Rpps|Inss|Pad|Cid)\b/g,m=>m.toUpperCase());}
 let dbh=null;
 let cfg={avisoDias:180,vinculos:{},mapa:{}};   // vinculos: {vínculo normalizado: true/false}; mapa: {tipo de afastamento normalizado: efeito}
@@ -1040,10 +1047,12 @@ function dlgPessoa(p){
       if(x.status==='conferir') prazo+='<small class="o-calc">sem gozo lançado e prazo já passou: confira no arquivo</small>';
       if(x.vencendo&&(x.status==='disponivel'||x.status==='parcial')) prazo+='<small class="o-calc">prazo vencendo</small>';
     }else prazo=`<small>completa em ${fmt(x.fim)}${x.susp?` (inclui ${x.susp} dias suspensos)`:''}</small>`;
-    const gz=x.gozos&&x.gozos.length?x.gozos.map(g=>`${fmtCurto(g.ini)} a ${fmtCurto(g.fim)} · ${g.usados} d${g.tipo==='indenizacao'?' (indenização)':''}${g.origem==='centi'?' · Centi':''}`).join('<br>'):'<small>—</small>';
-    const marca=x.acao?(OPC_ACAO.find(o=>o[0]===x.acao)||[,''])[1].toLowerCase():'';
-    const act=x.completo&&!(x.cred>=REGRA.DIAS&&!x.acao)?`<div class="inl"><select data-acao="${x.n}">${OPC_ACAO.map(o=>`<option value="${o[0]}"${o[0]===x.acao?' selected':''}>${esc(o[1])}</option>`).join('')}</select>${x.acao==='requerida'?`<input type="date" data-acaodata="${x.n}" value="${toIso(x.acaoData)}" aria-label="Data do requerimento">`:''}</div>`:'';
-    return `<tr><td>${fmt(x.ini)} a ${fmt(x.fim)}<small>período ${x.n}</small></td><td><span class="tag ${st[1]}">${st[0]}</span>${marca?'<small>'+esc(marca)+'</small>':''}${prazo}</td><td>${gz}</td><td class="num">${x.completo?x.saldo+' d':'—'}</td><td class="act">${act}</td></tr>`;
+    const gz=x.gozos&&x.gozos.length?x.gozos.map(g=>`${fmtCurto(g.ini)} a ${fmtCurto(g.fim)} · ${g.usados} d${g.tipo==='indenizacao'?' (indenização)':''}${g.origem==='centi'?' · Centi':''}${g.obs?' · '+esc(g.obs):''}`).join('<br>'):'<small>—</small>';
+    /* resumo da marca do RH: portaria, data e valor (e a observação), para ler a situação sem abrir os campos */
+    const marca=x.acao?[(OPC_ACAO.find(o=>o[0]===x.acao)||[,''])[1].toLowerCase()].join(''):'';
+    const detalhe=x.acao&&x.acao!=='requerida'?[x.acaoPortaria?'Portaria nº '+x.acaoPortaria:'',x.acaoData!=null?(x.acao==='indenizada'?'paga em ':'em ')+fmt(x.acaoData):'',x.acaoValor!=null?brl(x.acaoValor):'',x.acaoObs||''].filter(Boolean).join(' · '):'';
+    const act=x.completo&&!(x.cred>=REGRA.DIAS&&!x.acao)?`<div class="inl"><select data-acao="${x.n}">${OPC_ACAO.map(o=>`<option value="${o[0]}"${o[0]===x.acao?' selected':''}>${esc(o[1])}</option>`).join('')}</select>${x.acao==='requerida'?`<input type="date" data-acaodata="${x.n}" value="${toIso(x.acaoData)}" aria-label="Data do requerimento">`:''}${x.acao==='quitada'||x.acao==='indenizada'?`<input data-acaoport="${x.n}" value="${esc(x.acaoPortaria)}" placeholder="Portaria (ex.: 101/2022)" aria-label="Número da portaria"><input type="date" data-acaodata="${x.n}" value="${toIso(x.acaoData)}" aria-label="${x.acao==='indenizada'?'Data do pagamento':'Data do gozo'}"><input data-acaovalor="${x.n}" value="${x.acaoValor==null?'':brl(x.acaoValor).replace('R$ ','')}" placeholder="Valor (R$)" aria-label="Valor"><input data-acaoobs="${x.n}" value="${esc(x.acaoObs)}" placeholder="Observação" aria-label="Observação">`:''}</div>`:'';
+    return `<tr><td>${fmt(x.ini)} a ${fmt(x.fim)}<small>período ${x.n}</small></td><td><span class="tag ${st[1]}">${st[0]}</span>${marca?'<small>'+esc(marca)+'</small>':''}${detalhe?'<small class="o-calc" style="color:var(--fg)">'+esc(detalhe)+'</small>':''}${prazo}</td><td>${gz}</td><td class="num">${x.completo?x.saldo+' d':'—'}</td><td class="act">${act}</td></tr>`;
   }).join('');
   const intr=r.interrompidos.length?`<h4 class="sec">Contagens interrompidas</h4><div class="alertas">${r.interrompidos.map(x=>`<div class="al">${fmt(x.ini)} a ${fmt(x.fim)}: ${esc(x.motivo)}. A contagem recomeçou em ${fmt(x.fim+DAY)}.</div>`).join('')}</div>`:'';
   const evT=p.eventos.slice().sort((a,b)=>a.ini-b.ini).map(e=>{const c=classificarTipo(e.tipo,cfg.mapa);return `<tr><td>${esc(titulo(e.tipo))}</td><td class="num">${fmt(e.ini)} a ${e.fim>=Date.UTC(2090,0,1)?'sem fim':fmt(e.fim)}</td><td>${esc(EFEITOS[e.efeito])}${c.origem==='RH'?' <small>(regra do RH)</small>':''}</td></tr>`;}).join('');
@@ -1084,10 +1093,21 @@ function acaoDlg(e){
   const t=e.target;
   if(t.matches('[data-acao]')){
     const n=t.dataset.acao,reg=regDe(p);reg.periodos=reg.periodos||{};
-    if(!t.value) delete reg.periodos[n];else reg.periodos[n]=Object.assign({},reg.periodos[n],{acao:t.value,data:t.value==='requerida'?(reg.periodos[n]&&reg.periodos[n].data)||toIso(hojeMs()):''});
+    if(!t.value) delete reg.periodos[n];else reg.periodos[n]=Object.assign({},reg.periodos[n],{acao:t.value,data:t.value==='requerida'?(reg.periodos[n]&&reg.periodos[n].data)||toIso(hojeMs()):((reg.periodos[n]&&reg.periodos[n].data)||'')});
     aposEdicao(p);return;
   }
-  if(t.matches('[data-acaodata]')){const reg=regDe(p),m=reg.periodos&&reg.periodos[t.dataset.acaodata];if(m&&t.value){m.data=t.value;aposEdicao(p);}return;}
+  const marcaDe=n=>{const reg=regDe(p);return reg.periodos&&reg.periodos[n];};
+  if(t.matches('[data-acaodata]')){const m=marcaDe(t.dataset.acaodata);if(m){if(t.value) m.data=t.value;else if(m.acao!=='requerida') m.data='';aposEdicao(p);}return;}
+  if(t.matches('[data-acaoport]')){const m=marcaDe(t.dataset.acaoport);if(m){const v=t.value.trim();if(v) m.portaria=v;else delete m.portaria;aposEdicao(p);}return;}
+  if(t.matches('[data-acaoobs]')){const m=marcaDe(t.dataset.acaoobs);if(m){const v=t.value.trim();if(v) m.obs=v;else delete m.obs;aposEdicao(p);}return;}
+  if(t.matches('[data-acaovalor]')){
+    const m=marcaDe(t.dataset.acaovalor);if(!m) return;
+    const bruto=t.value.trim().replace(/^R\$\s*/i,'').replace(/\./g,'').replace(',','.'),v=bruto===''?NaN:Number(bruto);
+    if(isFinite(v)&&v>=0) m.valor=Math.round(v*100)/100;
+    else if(bruto==='') delete m.valor;
+    else{toast('Valor inválido. Digite assim: 20.512,37');}
+    aposEdicao(p);return;
+  }
 }
 function cliqueDlg(e){
   const p=pAberta;if(!p) return;

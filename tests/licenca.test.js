@@ -244,3 +244,48 @@ test('leitor do PDF: registro sem datas é descartado e avisado',()=>{
   assert.equal(rows.length,0);
   assert.deepEqual(ruins,['99000001']);
 });
+
+test('período já resolvido pelo RH não recebe o gozo do Centi: ele vai para o próximo em aberto',()=>{
+  const r=calc('01/03/2012',[ev('LICENÇA PRÊMIO','01/10/2019','29/12/2019')],'04/11/2026',{conferido:true,periodos:{1:{acao:'quitada'}}});
+  assert.equal(per(r,1).status,'gozada');
+  assert.equal(per(r,1).cred,0);   // quitado à mão, sem gozo creditado
+  assert.equal(per(r,2).cred,90);  // o gozo de 2019 foi para o 2º
+  assert.equal(per(r,2).gozos[0].origem,'centi');
+});
+
+test('caso real: início em 06/10/1988, períodos 1 e 2 gozados, 3 pelo Centi, 4 a 6 indenizados, 7 em aberto e 8 em formação',()=>{
+  const reg={conferido:true,inicio:'1988-10-06',periodos:{
+    1:{acao:'quitada',obs:'Consta como gozada no Memorial'},2:{acao:'quitada',obs:'Consta como gozada no Memorial'},
+    4:{acao:'indenizada',portaria:'101/2022',valor:17524.22,data:'2022-08-31'},
+    5:{acao:'indenizada',portaria:'165/2022',valor:20512.37,data:'2022-12-27'},
+    6:{acao:'indenizada',portaria:'159/2022',valor:20512.37,data:'2022-12-23'}}};
+  const r=L.calcular({adm:d('01/02/1981'),eventos:[ev('LICENÇA PRÊMIO','01/10/2019','29/12/2019')],registro:reg},d('04/11/2026'),{});
+  assert.equal(r.per.length,8);   // acabam os 10 períodos que saíam da admissão em 1981
+  assert.equal(f(per(r,1).ini),'06/10/1988');
+  assert.deepEqual(r.per.slice().reverse().map(p=>p.status),['gozada','gozada','gozada','indenizada','indenizada','indenizada','disponivel','formacao']);
+  assert.equal(per(r,3).gozos[0].origem,'centi');
+  assert.equal(f(per(r,3).gozos[0].ini),'01/10/2019');
+  assert.deepEqual([4,5,6].map(n=>per(r,n).acaoPortaria),['101/2022','165/2022','159/2022']);
+  assert.deepEqual([4,5,6].map(n=>per(r,n).acaoValor),[17524.22,20512.37,20512.37]);
+  assert.equal(per(r,7).saldo,90);
+  assert.equal(f(per(r,7).janelaFim),'05/10/2028');
+  assert.equal(r.saldo,90);
+  assert.equal(r.situacao.codigo,'disp');
+  assert.equal(r.alertas.length,0);
+});
+
+test('valor da marca aceita número ou texto numérico e ignora lixo',()=>{
+  const r=calc('01/03/2002',[],'04/11/2026',{conferido:true,periodos:{1:{acao:'indenizada',valor:'1500.5'},2:{acao:'indenizada',valor:'abc'},3:{acao:'indenizada'}}});
+  assert.equal(per(r,1).acaoValor,1500.5);
+  assert.equal(per(r,2).acaoValor,null);
+  assert.equal(per(r,3).acaoValor,null);
+});
+
+test('gozo lançado à mão igual ao do Centi não conta em dobro, mas leva a observação (nº da portaria)',()=>{
+  const r=calc('01/03/2012',[ev('LICENÇA PRÊMIO','01/06/2017','29/08/2017')],'04/11/2026',{conferido:true,gozos:[{id:'g',tipo:'gozo',ini:'2017-06-01',fim:'2017-08-29',obs:'Portaria nº 230/2019'}]});
+  assert.equal(per(r,1).cred,90);
+  assert.equal(per(r,2).cred,0);
+  assert.equal(per(r,1).gozos.length,1);
+  assert.equal(per(r,1).gozos[0].obs,'Portaria nº 230/2019');
+  assert.equal(per(r,1).gozos[0].origem,'centi');
+});

@@ -137,8 +137,16 @@ function calcular(s,hoje,cfg){
   evs.filter(e=>e.efeito==='licenca-premio').forEach(e=>gozos.push({origem:'centi',tipo:'gozo',ini:e.ini,fim:e.fim,dias:dias(e.ini,e.fim),rotulo:e.tipo}));
   (reg.gozos||[]).forEach(g=>{
     const ini=isoMs(g.ini),fim=isoMs(g.fim||g.ini);if(ini==null||fim==null||fim<ini) return;
-    if(gozos.some(x=>x.origem==='centi'&&x.ini===ini&&x.fim===fim)) return;   // já veio do Centi
+    const dup=gozos.find(x=>x.origem==='centi'&&x.ini===ini&&x.fim===fim);
+    if(dup){if(g.obs&&!dup.obs) dup.obs=g.obs;return;}   // já veio do Centi: não conta de novo, só acrescenta a observação (ex.: nº da portaria)
     gozos.push({origem:'manual',id:g.id,tipo:g.tipo==='indenizacao'?'indenizacao':'gozo',ini,fim,dias:g.dias>0?+g.dias:dias(ini,fim),obs:g.obs,rotulo:g.tipo==='indenizacao'?'Indenização':'Gozo'});
+  });
+  /* marcas do RH por período (chave = número do período): quitada, indenizada ou requerida, com portaria, valor e data */
+  const conf=!!reg.conferido,marcas=reg.periodos||{};
+  completos.forEach(p=>{
+    const m=marcas[p.n]||{};
+    p.acao=m.acao||'';p.acaoData=m.data?isoMs(m.data):null;p.acaoObs=m.obs||'';p.acaoPortaria=m.portaria||'';
+    const v=m.valor==null||m.valor===''?null:Number(m.valor);p.acaoValor=isFinite(v)?v:null;
   });
   gozos.sort((a,b)=>a.ini-b.ini);
   gozos.forEach(g=>{
@@ -146,6 +154,7 @@ function calcular(s,hoje,cfg){
     let usou=false;
     for(const p of completos){
       if(resto<=0) break;
+      if(p.acao==='quitada'||p.acao==='indenizada') continue;   // já resolvido pelo RH: o gozo do Centi vai para o próximo período em aberto
       const falta=REGRA.DIAS-p.cred;if(falta<=0) continue;
       const uso=Math.min(falta,resto);
       p.cred+=uso;resto-=uso;usou=true;
@@ -156,11 +165,8 @@ function calcular(s,hoje,cfg){
   });
 
   /* situação de cada período completo */
-  const conf=!!reg.conferido,marcas=reg.periodos||{};
   Object.keys(marcas).forEach(k=>{const p=validos.find(x=>String(x.n)===String(k));if(!p||!p.completo) alertas.push({nivel:'aviso',msg:'Existe uma marca do RH no período '+k+', que não existe (ou ainda não foi concluído) pelo cálculo atual. Revise os lançamentos.'});});
   completos.forEach(p=>{
-    const m=marcas[p.n]||{};
-    p.acao=m.acao||'';p.acaoData=m.data?isoMs(m.data):null;p.acaoObs=m.obs||'';
     p.saldo=Math.max(0,REGRA.DIAS-p.cred);
     const quitado=p.saldo===0||p.acao==='quitada'||p.acao==='indenizada';
     if(quitado){p.status=p.acao==='indenizada'||(p.gozos.length&&p.gozos.every(g=>g.tipo==='indenizacao'))?'indenizada':'gozada';p.saldo=0;return;}

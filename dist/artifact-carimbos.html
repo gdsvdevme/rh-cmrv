@@ -148,8 +148,6 @@ dialog .row{justify-content:flex-end}
       <h2><span class="n">3</span>Salvar o PDF carimbado</h2>
       <label class="ck"><input type="checkbox" id="optCapas" checked><span>Incluir uma <b>capa</b> antes de cada hierarquia: página em branco só com o nome (ex.: Gabinete do Vereador Fulano)</span></label>
       <label class="ck"><input type="checkbox" id="optFundo" checked><span>Fundo <b>branco</b> atrás do carimbo (esconde as linhas da tabela e deixa o texto legível)</span></label>
-      <label class="f">Em quais páginas do servidor carimbar
-        <select id="optQuais"><option value="todas">Em todas as páginas</option><option value="ultima">Só na última página de cada servidor</option></select></label>
       <div class="row" style="margin-top:12px"><button class="btn primary" id="saveAll" type="button" disabled>Salvar PDF carimbado</button></div>
       <p class="muted" style="margin:8px 0 0">Também dá para baixar só uma hierarquia, pelo botão <b>Baixar</b> ao lado do nome dela na lista abaixo. Tudo é feito no seu navegador: o PDF não é enviado a nenhum servidor.</p>
     </section>
@@ -505,7 +503,7 @@ let saveT=null;
 function guardar(){
   clearTimeout(saveT);
   saveT=setTimeout(async()=>{
-    const json=JSON.stringify({custom,sel,pos,quais:$('#optQuais').value,fundo:$('#optFundo').checked,capas:$('#optCapas').checked});
+    const json=JSON.stringify({custom,sel,pos,fundo:$('#optFundo').checked,capas:$('#optCapas').checked});
     if(dbh){try{await dbh.doc('carimbos/config').set({json});return;}catch(e){toast('Não foi possível salvar as preferências no servidor.');}}
     try{localStorage.setItem(LS,json);}catch(e){}
   },400);
@@ -515,7 +513,6 @@ function aplicarConfig(c){
   if(Array.isArray(c.custom)) custom=c.custom.filter(s=>s&&s.id&&s.src);
   if(c.sel&&stampsTodos().some(s=>s.id===c.sel)) sel=c.sel;
   if(c.pos&&c.pos.w>0) pos=c.pos;
-  if(c.quais) $('#optQuais').value=c.quais;
   if(typeof c.fundo==='boolean') $('#optFundo').checked=c.fundo;
   if(typeof c.capas==='boolean') $('#optCapas').checked=c.capas;
 }
@@ -573,7 +570,13 @@ async function gerarDoCenti(){
   $('#cGerar').disabled=true;
   carga(true,'Gerando no Centi…','Espelho de ponto de '+MESES[mes-1]+'/'+ano+' (FP170). Leva cerca de 1 minuto.',0.15);
   try{
-    const pdf=await PB.centi.espelho(mes,ano);
+    let pdf;
+    try{pdf=await PB.centi.espelho(mes,ano);}
+    catch(e){
+      if(e.status!==502&&e.status!==504) throw e;                       // falha momentânea do servidor ou do Centi: tenta mais uma vez
+      carga(true,'Gerando no Centi…','O servidor não respondeu; tentando de novo. Leva cerca de 1 minuto.',0.15);
+      pdf=await PB.centi.espelho(mes,ano);
+    }
     const nome='Espelho-de-ponto-'+String(mes).padStart(2,'0')+'-'+ano+'.pdf';
     await iniciarPdfjs();
     const doc=await pdfjsLib.getDocument({data:pdf.slice()}).promise;
@@ -794,7 +797,7 @@ async function gerar(lista,ctx){
   const out=await PDFDocument.create();
   const fn=await out.embedFont(StandardFonts.Helvetica),fb=await out.embedFont(StandardFonts.HelveticaBold);
   const sl=stampAtual(),emb=sl.src.startsWith('data:image/jpeg')?await out.embedJpg(sl.src):await out.embedPng(sl.src);
-  const ratio=emb.height/emb.width,fundo=$('#optFundo').checked,capas=$('#optCapas').checked,quais=$('#optQuais').value;
+  const ratio=emb.height/emb.width,fundo=$('#optFundo').checked,capas=$('#optCapas').checked;
   const total=lista.reduce((s,g)=>s+g.entradas.reduce((t,e)=>t+e.pag.length,0),0);let feitas=0;
   for(const g of lista){
     const idx=ordemPaginas(g),base=src.getPage(idx[0]).getSize();
@@ -816,7 +819,6 @@ async function gerar(lista,ctx){
         const pi=lote[k],o=over.get(pi);out.addPage(pg);
         const e=porPag[pi];
         if(o==='skip') return;
-        if(!o&&quais==='ultima'&&e.pag[e.pag.length-1]!==pi) return;
         const p=o||pos,{width:W,height:H}=pg.getSize(),w=p.w*W,h=w*ratio;
         if(fundo) pg.drawRectangle({x:p.x*W,y:H-p.y*H-h,width:w,height:h,color:rgb(1,1,1)});
         pg.drawImage(emb,{x:p.x*W,y:H-p.y*H-h,width:w,height:h});
@@ -847,7 +849,7 @@ async function baixar(k){
 }
 $('#saveAll').addEventListener('click',()=>baixar(null));
 $('#optFundo').addEventListener('change',()=>{if(pdfDoc) stampUi();guardar();});
-$('#optQuais').addEventListener('change',guardar);$('#optCapas').addEventListener('change',guardar);
+$('#optCapas').addEventListener('change',guardar);
 
 /* ---------- anexar ---------- */
 const drop=$('#drop');

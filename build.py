@@ -6,6 +6,7 @@
   site/pessoal/index.html       hierarquia de pessoal (importa planilha CSV)
   site/ponto/index.html         ponto de servidores externos (simulação)
   site/ferias/index.html        férias: quem está de férias e quem tem direito (período aquisitivo)
+  site/licenca-premio/index.html licença-prêmio: períodos aquisitivos, prazos de gozo e controle dos efetivos (Estatuto, arts. 194 a 197)
   site/tarefas/index.html       tarefas do RH: checklist em quadro (kanban), equipe ou privadas
   site/carimbos/index.html      carimbos em PDF: posiciona o carimbo nas páginas e organiza por hierarquia
   dist/artifact-*.html          fragmentos para publicar como artefato
@@ -19,6 +20,7 @@ Uso: python3 build.py [--flow-url URL] [--home-url URL]
   --ponto-url  endereço do Ponto – Servidores Externos usado no painel (artefato)
   --pessoal-url  endereço da Hierarquia de Pessoal usado no painel (artefato)
   --ferias-url  endereço do sistema de Férias usado no painel (artefato)
+  --licenca-url  endereço do sistema de Licença-prêmio usado no painel (artefato)
   --tarefas-url  endereço do sistema de Tarefas usado no painel (artefato)
   --carimbos-url  endereço do sistema de Carimbos usado no painel (artefato)
 """
@@ -42,6 +44,7 @@ pessoal = rd('src/pessoal.template.html').replace('/*PB_JS*/', pbjs)
 ponto = rd('src/ponto.template.html')
 ferias = rd('src/ferias.template.html').replace('/*PB_JS*/', pbjs)
 tarefas = rd('src/tarefas.template.html').replace('/*PB_JS*/', pbjs)
+licenca = rd('src/licenca.template.html').replace('/*PB_JS*/', pbjs).replace('/*ENGINE_JS*/', rd('src/licenca-engine.js').replace('</script>', '<\\/script>'))
 import base64
 stamp = base64.b64encode(open(os.path.join(root, 'src/carimbo-padrao.png'), 'rb').read()).decode()
 carimbos = rd('src/carimbos.template.html').replace('/*PB_JS*/', pbjs).replace('/*STAMP_B64*/', stamp)
@@ -52,17 +55,19 @@ head = ('<!doctype html>\n<html lang="pt-BR"><head><meta charset="utf-8">'
 page = lambda frag: head + frag + '\n</body></html>\n'
 
 # site (hospedagem comum, ex.: Vercel)
-wr('site/index.html', page(launcher.replace('/*FLOW_URL*/', 'fluxogramas/').replace('/*PESSOAL_URL*/', 'pessoal/').replace('/*PONTO_URL*/', 'ponto/').replace('/*FERIAS_URL*/', 'ferias/').replace('/*TAREFAS_URL*/', 'tarefas/').replace('/*CARIMBOS_URL*/', 'carimbos/')))
+wr('site/index.html', page(launcher.replace('/*FLOW_URL*/', 'fluxogramas/').replace('/*PESSOAL_URL*/', 'pessoal/').replace('/*PONTO_URL*/', 'ponto/').replace('/*FERIAS_URL*/', 'ferias/').replace('/*LICENCA_URL*/', 'licenca-premio/').replace('/*TAREFAS_URL*/', 'tarefas/').replace('/*CARIMBOS_URL*/', 'carimbos/')))
 wr('site/carimbos/index.html', page(carimbos.replace('/*HOME_URL*/', '../')))
 wr('site/ferias/index.html', page(ferias.replace('/*HOME_URL*/', '../')))
+wr('site/licenca-premio/index.html', page(licenca.replace('/*HOME_URL*/', '../')))
 wr('site/tarefas/index.html', page(tarefas.replace('/*HOME_URL*/', '../')))
 wr('site/ponto/index.html', page(ponto.replace('/*HOME_URL*/', '../')))
 wr('site/pessoal/index.html', page(pessoal.replace('/*HOME_URL*/', '../')))
 wr('site/fluxogramas/index.html', page(flow.replace('/*HOME_URL*/', '../')))
 # fragmentos de artefato
-wr('dist/artifact-launcher.html', launcher.replace('/*FLOW_URL*/', opt('--flow-url', 'fluxogramas/')).replace('/*PESSOAL_URL*/', opt('--pessoal-url', 'pessoal/')).replace('/*PONTO_URL*/', opt('--ponto-url', 'ponto/')).replace('/*FERIAS_URL*/', opt('--ferias-url', 'ferias/')).replace('/*TAREFAS_URL*/', opt('--tarefas-url', 'tarefas/')).replace('/*CARIMBOS_URL*/', opt('--carimbos-url', 'carimbos/')))
+wr('dist/artifact-launcher.html', launcher.replace('/*FLOW_URL*/', opt('--flow-url', 'fluxogramas/')).replace('/*PESSOAL_URL*/', opt('--pessoal-url', 'pessoal/')).replace('/*PONTO_URL*/', opt('--ponto-url', 'ponto/')).replace('/*FERIAS_URL*/', opt('--ferias-url', 'ferias/')).replace('/*LICENCA_URL*/', opt('--licenca-url', 'licenca-premio/')).replace('/*TAREFAS_URL*/', opt('--tarefas-url', 'tarefas/')).replace('/*CARIMBOS_URL*/', opt('--carimbos-url', 'carimbos/')))
 wr('dist/artifact-carimbos.html', carimbos.replace('/*HOME_URL*/', opt('--home-url', '../')))
 wr('dist/artifact-tarefas.html', tarefas.replace('/*HOME_URL*/', opt('--home-url', '../')))
+wr('dist/artifact-licenca.html', licenca.replace('/*HOME_URL*/', opt('--home-url', '../')))
 wr('dist/artifact-ferias.html', ferias.replace('/*HOME_URL*/', opt('--home-url', '../')))
 wr('dist/artifact-ponto.html', ponto.replace('/*HOME_URL*/', opt('--home-url', '../')))
 wr('dist/artifact-pessoal.html', pessoal.replace('/*HOME_URL*/', opt('--home-url', '../')))

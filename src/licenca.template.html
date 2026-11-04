@@ -1,0 +1,563 @@
+<title>Licença-prêmio</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Libre+Franklin:wght@500;600;700&family=Public+Sans:wght@400;500;600&display=swap">
+<style>
+:root{
+  --bg:#eef4f0;--surface:#fff;--fg:#12281d;--muted:#4f665a;--line:#d1ddd6;--accent:#0a6b3d;--accent-fg:#fff;--soft:#e3efe8;
+  --hero-a:#063d27;--hero-b:#0b7a49;--gold:#d4aa4a;--shadow:0 1px 2px rgba(6,61,39,.09),0 6px 20px rgba(6,61,39,.07);
+  --warn:#8a5a00;--warn-bg:#fdf0d5;--danger:#b3261e;--danger-bg:#fbe3e0;--blue:#2f6fb5;--blue-bg:#e2edf9;--ok:#0a6b3d;--ok-bg:#dff3e7;--violet:#6f4aa8;--violet-bg:#eee6f8;
+  --f-display:"Libre Franklin",system-ui,sans-serif;--f-body:"Public Sans",system-ui,sans-serif;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --bg:#08130e;--surface:#0f1e17;--fg:#e3f1ea;--muted:#90b0a0;--line:#234034;--accent:#52c98a;--accent-fg:#04210f;--soft:#15291f;
+  --hero-a:#04150d;--hero-b:#0b4d31;--gold:#d8b45e;--shadow:0 1px 2px rgba(0,0,0,.4),0 6px 20px rgba(0,0,0,.3);
+  --warn:#f0c26a;--warn-bg:#3a2d10;--danger:#ff8a80;--danger-bg:#3d1a17;--blue:#7fb2ee;--blue-bg:#14273d;--ok:#52c98a;--ok-bg:#12382a;--violet:#b99be8;--violet-bg:#2a1f3d;color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#08130e;--surface:#0f1e17;--fg:#e3f1ea;--muted:#90b0a0;--line:#234034;--accent:#52c98a;--accent-fg:#04210f;--soft:#15291f;
+  --hero-a:#04150d;--hero-b:#0b4d31;--gold:#d8b45e;--shadow:0 1px 2px rgba(0,0,0,.4),0 6px 20px rgba(0,0,0,.3);
+  --warn:#f0c26a;--warn-bg:#3a2d10;--danger:#ff8a80;--danger-bg:#3d1a17;--blue:#7fb2ee;--blue-bg:#14273d;--ok:#52c98a;--ok-bg:#12382a;--violet:#b99be8;--violet-bg:#2a1f3d;color-scheme:dark}
+[hidden]{display:none!important}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--fg);font-family:var(--f-body);font-size:15px;line-height:1.5}
+h1,h2,h3,h4{font-family:var(--f-display);margin:0;text-wrap:balance}
+button,input,select{font:inherit;color:inherit}
+.wrap{padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+.inner{max-width:1180px;margin:0 auto}
+.hero{background:linear-gradient(135deg,var(--hero-a),var(--hero-b));color:#fff;padding-block:22px 54px}
+.top{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:22px}
+.home{color:#fff;text-decoration:none;font-weight:600;font-size:13.5px;display:inline-flex;align-items:center;gap:8px;padding:8px 12px;border-radius:10px;background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.28)}
+.home:hover,.themebtn:hover{background:rgba(255,255,255,.22)}
+.themebtn{margin-left:auto;display:inline-flex;align-items:center;gap:8px;border:1px solid rgba(255,255,255,.35);background:rgba(255,255,255,.12);color:#fff;border-radius:10px;padding:8px 12px;font-weight:600;font-size:13.5px;cursor:pointer}
+.goldrule{width:56px;height:4px;background:var(--gold);border-radius:2px;margin:0 0 14px}
+.hero h1{font-size:clamp(1.6rem,4.4vw,2.4rem);line-height:1.12}
+.hero p{margin:8px 0 0;opacity:.85}
+main{padding-block:0 40px}
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,160px),1fr));gap:12px;margin-top:-30px}
+.stat{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:14px 16px;box-shadow:var(--shadow);text-align:left;cursor:pointer;display:block;width:100%}
+.stat:hover{border-color:var(--accent)}.stat.on{outline:2px solid var(--accent);outline-offset:-1px}
+.stat b{font-family:var(--f-display);font-size:1.7rem;display:block;line-height:1.1;font-variant-numeric:tabular-nums}
+.stat span{color:var(--muted);font-size:13px}
+.stat.k-hoje b{color:var(--blue)}.stat.k-direito b{color:var(--ok)}.stat.k-venc b{color:var(--danger)}.stat.k-prog b{color:var(--violet)}.stat.k-sem b{color:var(--warn)}
+.bar{display:flex;flex-wrap:wrap;gap:10px;align-items:center;margin-top:18px}
+.search{flex:1 1 260px;display:flex;align-items:center;gap:10px;background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:0 14px;box-shadow:var(--shadow);min-width:0}
+.search input{border:0;background:transparent;outline:0;padding:12px 0;flex:1;min-width:0}
+.search:focus-within{border-color:var(--accent)}
+select{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:10px 12px;box-shadow:var(--shadow)}
+.btn{border:1px solid var(--line);background:var(--surface);border-radius:10px;padding:10px 14px;cursor:pointer;font-weight:600;font-size:14px;display:inline-flex;align-items:center;gap:8px;box-shadow:var(--shadow)}
+.btn:hover{border-color:var(--accent)}.btn.primary{background:var(--accent);color:var(--accent-fg);border-color:var(--accent)}.btn:disabled{opacity:.6;cursor:wait}
+.banner{margin-top:14px;border-radius:12px;padding:12px 16px;font-size:13.5px;background:var(--warn-bg);color:var(--warn)}
+.panels{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,420px),1fr));gap:14px;margin-top:16px}
+.panel{background:var(--surface);border:1px solid var(--line);border-radius:14px;box-shadow:var(--shadow);padding:14px 16px}
+.panel h2{font-size:1rem;display:flex;align-items:center;gap:8px;margin-bottom:8px}
+.panel h2 i{width:10px;height:10px;border-radius:50%;display:inline-block}
+.panel h2 span{margin-left:auto;font-family:var(--f-body);font-size:12.5px;color:var(--muted);font-weight:600}
+.mini{list-style:none;margin:0;padding:0;max-height:260px;overflow:auto}
+.mini li{display:flex;gap:10px;align-items:center;padding:7px 4px;border-top:1px solid var(--line);cursor:pointer;border-radius:8px}
+.mini li:first-child{border-top:0}.mini li:hover{background:var(--soft)}
+.mini .pn{flex:1;min-width:0}.mini .pn b{display:block;font-weight:600;line-height:1.25}.mini .pn span{color:var(--muted);font-size:12.5px}
+.mini .dt{font-size:12.5px;font-weight:700;white-space:nowrap;text-align:right}
+.none{color:var(--muted);font-size:14px;padding:8px 2px}
+.tblwrap{margin-top:16px;background:var(--surface);border:1px solid var(--line);border-radius:14px;box-shadow:var(--shadow);overflow:auto}
+table.lst{width:100%;border-collapse:collapse;font-size:14px;min-width:760px}
+.lst th{background:var(--soft);color:var(--muted);font-size:11.5px;letter-spacing:.05em;text-transform:uppercase;padding:10px 12px;text-align:left;white-space:nowrap;position:sticky;top:0}
+.lst td{padding:10px 12px;border-top:1px solid var(--line);vertical-align:middle}
+.lst tbody tr{cursor:pointer}.lst tbody tr:hover td{background:var(--soft)}
+.lst td.n b{display:block;font-weight:600;line-height:1.25}.lst td.n span{color:var(--muted);font-size:12.5px}
+.lst td.num{text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap}
+.tag{display:inline-block;font-size:11px;font-weight:700;padding:2px 8px;border-radius:99px;white-space:nowrap;background:var(--soft);color:var(--muted);margin:1px 3px 1px 0}
+.tag.hoje{background:var(--blue-bg);color:var(--blue)}.tag.dir{background:var(--ok-bg);color:var(--ok)}.tag.venc{background:var(--danger-bg);color:var(--danger)}
+.tag.prog{background:var(--violet-bg);color:var(--violet)}.tag.sem{background:var(--warn-bg);color:var(--warn)}.tag.dia{background:var(--soft);color:var(--muted)}
+.empty{margin-top:24px;text-align:center;padding:38px 20px;background:var(--surface);border:2px dashed var(--line);border-radius:16px;color:var(--muted)}
+.empty h2{color:var(--fg);margin-bottom:6px}
+.note{margin-top:18px;font-size:12.8px;color:var(--muted)}
+dialog{border:1px solid var(--line);border-radius:16px;padding:0;background:var(--surface);color:var(--fg);width:min(700px,96vw);box-shadow:0 20px 60px rgba(0,0,0,.4)}
+dialog::backdrop{background:rgba(0,0,0,.5)}
+dialog form{padding:20px;display:flex;flex-direction:column;gap:12px;max-height:88vh;overflow:auto}
+dialog h3{font-size:1.15rem}
+dialog label{display:flex;flex-direction:column;gap:4px;font-size:13px;color:var(--muted);font-weight:600}
+dialog input,dialog select{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:10px 12px;color:var(--fg);font-weight:400}
+dialog .row{display:flex;gap:8px;justify-content:flex-end;flex-wrap:wrap}
+dialog p{margin:0;font-size:14px}
+dl.ficha{margin:0;display:grid;grid-template-columns:max-content 1fr;gap:6px 14px;font-size:14px}
+dl.ficha dt{color:var(--muted);font-weight:600}dl.ficha dd{margin:0;overflow-wrap:anywhere}
+.sum{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.sum div{border-radius:12px;padding:9px 12px;background:var(--soft);border:1px solid var(--line)}
+.sum small{display:block;font-size:11.5px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:var(--muted)}
+.sum b{font-family:var(--f-display);font-size:1.25rem;font-variant-numeric:tabular-nums}
+.sum .dir b{color:var(--ok)}.sum .venc b{color:var(--danger)}
+.pw{overflow-x:auto;border:1px solid var(--line);border-radius:12px}
+table.per{width:100%;border-collapse:collapse;font-size:13.5px;min-width:560px}
+.per th{background:var(--soft);color:var(--muted);font-size:11.5px;letter-spacing:.05em;text-transform:uppercase;padding:8px 10px;text-align:left;white-space:nowrap}
+.per td{padding:8px 10px;border-top:1px solid var(--line);vertical-align:top}
+.per td.num{text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap}
+.per small{color:var(--muted);display:block}
+.per small.o-ab{color:var(--blue);font-weight:600}.per small.o-venc{color:var(--danger);font-weight:600}.per small.o-dir{color:var(--ok);font-weight:600}.per small.o-calc{color:var(--warn)}.per small.o-part{color:var(--violet);font-weight:600}
+.per tr.cur td{background:color-mix(in srgb,var(--blue-bg) 55%,transparent)}
+#load{position:fixed;inset:0;z-index:9000;display:grid;place-items:center;padding:24px;background:radial-gradient(1200px 700px at 50% 30%,var(--hero-b),var(--hero-a)) var(--hero-a);color:#fff;text-align:center}
+#load .ld-box{display:flex;flex-direction:column;align-items:center;gap:10px;max-width:420px}
+#load .ld-spin{width:56px;height:56px;border-radius:50%;border:5px solid rgba(255,255,255,.22);border-top-color:var(--gold);animation:ld-rot .9s linear infinite;margin-bottom:6px}
+#load b{font-family:var(--f-display);font-size:1.35rem;line-height:1.2}
+#load span{opacity:.88;font-size:14.5px;min-height:22px}
+#load .ld-bar{width:min(260px,70vw);height:5px;border-radius:99px;background:rgba(255,255,255,.2);overflow:hidden;margin-top:8px}
+#load .ld-bar i{display:block;height:100%;width:40%;border-radius:99px;background:var(--gold);animation:ld-bar 1.4s ease-in-out infinite}
+@keyframes ld-rot{to{transform:rotate(360deg)}}
+@keyframes ld-bar{0%{margin-left:-40%}100%{margin-left:100%}}
+@media (prefers-reduced-motion:reduce){#load .ld-spin,#load .ld-bar i{animation-duration:3s}}
+body.carregando{overflow:hidden}
+#toast{position:fixed;left:50%;transform:translateX(-50%);bottom:max(18px,env(safe-area-inset-bottom,0px));background:var(--fg);color:var(--bg);padding:10px 16px;border-radius:10px;font-size:14px;z-index:60;max-width:90vw}
+@media (max-width:560px){.sum{grid-template-columns:1fr}}
+@media (pointer:coarse){input,select{font-size:16px}.btn{min-height:42px}}
+
+.stat.k-gozo b{color:var(--blue)}.stat.k-venc2 b{color:var(--danger)}.stat.k-aviso b{color:var(--warn)}
+.alertas{display:flex;flex-direction:column;gap:6px}
+.al{border-radius:10px;padding:8px 12px;font-size:13.5px;background:var(--soft);color:var(--muted)}
+.al.aviso{background:var(--warn-bg);color:var(--warn)}.al.erro{background:var(--danger-bg);color:var(--danger)}
+h4.sec{margin-top:6px;font-size:.98rem}
+.sub{color:var(--muted);font-size:12.5px;margin:0}
+.fr{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:8px;align-items:end}
+.fr label{font-size:12px}
+.inl{display:flex;gap:6px;align-items:center;flex-wrap:wrap}
+.inl input,.inl select{padding:6px 8px;font-size:13px;border-radius:8px}
+.btn.sm{padding:6px 10px;font-size:13px;box-shadow:none}
+.btn.del{color:var(--danger)}
+.ck{flex-direction:row!important;align-items:center;gap:8px!important;color:var(--fg)!important;font-weight:500!important}
+.ck input{width:auto}
+table.per td.act{min-width:190px}
+.mapa{width:100%;border-collapse:collapse;font-size:13.5px}
+.mapa td,.mapa th{padding:6px 8px;border-top:1px solid var(--line);text-align:left;vertical-align:middle}
+.mapa th{background:var(--soft);color:var(--muted);font-size:11.5px;text-transform:uppercase;letter-spacing:.05em;border-top:0}
+.mapa select{width:100%;padding:6px 8px;font-size:13px}
+.scr{max-height:260px;overflow:auto;border:1px solid var(--line);border-radius:12px}
+dialog{width:min(900px,96vw)}
+dialog form>*{flex-shrink:0}   /* sem isto, as tabelas com rolagem encolhem a zero dentro do diálogo */
+
+</style>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+
+<header class="hero wrap"><div class="inner">
+  <div class="top"><a class="home" href="/*HOME_URL*/" target="_top"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 11l9-8 9 8M5 10v10h5v-6h4v6h5V10"/></svg>Sistema Interno do RH</a>
+  <button class="themebtn" id="themeBtn" type="button"></button></div>
+  <div class="goldrule"></div>
+  <h1>Licença-prêmio</h1>
+  <p>Câmara Municipal de Rio Verde/GO · períodos aquisitivos, prazos de gozo e controle dos servidores efetivos (Estatuto, arts. 194 a 197)</p>
+</div></header>
+
+<main class="wrap"><div class="inner">
+  <div class="stats" id="stats"></div>
+  <form class="bar" id="buscaF" role="search">
+    <label class="search"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></svg><input id="q" type="search" placeholder="Buscar servidor por nome (3 letras ou mais) ou matrícula" aria-label="Buscar servidor" autocomplete="off"></label>
+    <button class="btn primary" id="buscaBtn" type="submit">Buscar</button>
+    <button class="btn" id="cfgBtn" type="button">Regras</button>
+    <button class="btn" id="panBtn" type="button" title="Carrega todos os efetivos de uma vez">Panorama dos efetivos</button>
+  </form>
+  <div id="notice"></div>
+  <div id="view"></div>
+  <p class="note" id="foot"></p>
+</div></main>
+<dialog id="dlg"></dialog>
+<div id="load" role="status" aria-live="polite"><div class="ld-box"><div class="ld-spin" aria-hidden="true"></div><b>Licença-prêmio</b><span id="ldS">Abrindo o sistema</span><div class="ld-bar" aria-hidden="true"><i></i></div></div></div>
+<div id="toast" hidden></div>
+
+<script>
+/*PB_JS*/
+/*ENGINE_JS*/
+const HOME_URL="/*HOME_URL*/";
+const TEMA_KEY='rhcrv-tema',CFG_LS='rhcrv-licenca-cfg-v1',REG_LS='rhcrv-licenca-reg-v1';
+const WORKER_URL='https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+const {REGRA,EFEITOS,D,isoMs,toIso,fmt,classificarTipo,calcular,parseAfastamentos,norm}=window.LP;
+const $=s=>document.querySelector(s);
+const esc=s=>String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const uid=()=>'x'+Math.random().toString(36).slice(2,9);
+const DAY=864e5,MIN=new Set(['de','da','do','das','dos','e','a','o']),ROMAN=/^(i|ii|iii|iv|v|vi|vii|viii|ix|x)$/i;
+const hojeMs=()=>{const n=new Date();return Date.UTC(n.getFullYear(),n.getMonth(),n.getDate());};
+const fmtCurto=ms=>fmt(ms).slice(0,5);
+function titulo(s){return String(s||'').toLowerCase().replace(/\s+/g,' ').trim().split(' ').map((w,i)=>(i>0&&ROMAN.test(w))?w.toUpperCase():(i>0&&MIN.has(w))?w:w.replace(/(^|[-\/(])(\p{L})/gu,(m,a,b)=>a+b.toUpperCase())).join(' ').replace(/\b(Rpps|Inss|Pad|Cid)\b/g,m=>m.toUpperCase());}
+let dbh=null;
+let cfg={avisoDias:180,vinculos:{},mapa:{}};   // vinculos: {vínculo normalizado: true/false}; mapa: {tipo de afastamento normalizado: efeito}
+let registros={};                              // lançamentos do RH por matrícula
+
+/* ---------- tema ---------- */
+const ICO2={sun:'<circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/>',moon:'<path d="M21 12.8A9 9 0 1111.2 3a7 7 0 009.8 9.8z"/>'};
+function isDark(){const m=/rgba?\((\d+),\s*(\d+),\s*(\d+)/.exec(getComputedStyle(document.body).backgroundColor);return m?(0.2126*m[1]+0.7152*m[2]+0.0722*m[3])/255<0.4:false;}
+function themeBtn(){const d=isDark();$('#themeBtn').innerHTML=`<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${ICO2[d?'sun':'moon']}</svg>${d?'Modo claro':'Modo escuro'}`;}
+$('#themeBtn').addEventListener('click',()=>{const n=isDark()?'light':'dark';document.documentElement.setAttribute('data-theme',n);try{localStorage.setItem(TEMA_KEY,n);}catch(e){}themeBtn();});
+try{const s=localStorage.getItem(TEMA_KEY);document.documentElement.setAttribute('data-theme',s==='dark'?'dark':'light');}catch(e){document.documentElement.setAttribute('data-theme','light');}
+function toast(m){const t=$('#toast');t.textContent=m;t.hidden=false;clearTimeout(toast.t);toast.t=setTimeout(()=>t.hidden=true,4500);}
+function carga(on,msg){const l=$('#load');if(!l) return;l.hidden=!on;document.body.classList.toggle('carregando',!!on);if(msg) $('#ldS').textContent=msg;}
+
+/* ---------- guardado no servidor ---------- */
+const lerLS=k=>{try{return JSON.parse(localStorage.getItem(k)||'null');}catch(e){return null;}};
+const gravaLS=(k,v)=>{try{localStorage.setItem(k,JSON.stringify(v));}catch(e){}};
+async function lerDoc(caminho){try{const s=await dbh.doc(caminho).get();return s.exists?JSON.parse(s.data().json):null;}catch(e){return null;}}
+let fila=Promise.resolve();
+function salvarCfg(){
+  gravaLS(CFG_LS,cfg);
+  if(dbh) dbh.doc('licenca/config').set({json:JSON.stringify(cfg)}).catch(()=>toast('Não foi possível salvar as regras no servidor.'));
+}
+/* grava só a matrícula alterada, relendo o servidor antes, para não apagar o que outra pessoa do RH lançou ao mesmo tempo */
+function salvarReg(mat){
+  gravaLS(REG_LS,{por:registros});
+  const vazio=r=>!r||!(r.inicio||r.conferido||r.obs||(r.eventos&&r.eventos.length)||(r.gozos&&r.gozos.length)||(r.periodos&&Object.keys(r.periodos).length));
+  if(vazio(registros[mat])) delete registros[mat];
+  if(!dbh){toast('Salvo só neste navegador: sem conexão com o servidor.');return Promise.resolve();}
+  fila=fila.then(async()=>{
+    try{
+      const atual=(await lerDoc('licenca/registro'))||{},por=Object.assign({},atual.por||{});
+      if(registros[mat]) por[mat]=registros[mat];else delete por[mat];
+      await dbh.doc('licenca/registro').set({json:JSON.stringify({v:1,por})});
+      Object.keys(por).forEach(k=>{if(k!==mat) registros[k]=por[k];});
+    }catch(e){toast('Não foi possível salvar no servidor: '+(e.message||e));}
+  });
+  return fila;
+}
+
+/* ---------- carga do Centi ---------- */
+async function lerPdf(bytes){
+  if(!lerPdf.ok){
+    try{const r=await fetch(WORKER_URL);if(!r.ok) throw 0;pdfjsLib.GlobalWorkerOptions.workerSrc=URL.createObjectURL(new Blob([await r.text()],{type:'text/javascript'}));}
+    catch(e){pdfjsLib.GlobalWorkerOptions.workerSrc=WORKER_URL;}
+    lerPdf.ok=true;
+  }
+  const doc=await pdfjsLib.getDocument({data:bytes}).promise,pags=[];
+  for(let i=1;i<=doc.numPages;i++){
+    const tc=await (await doc.getPage(i)).getTextContent();
+    pags.push(tc.items.map(t=>({s:t.str,x:t.transform[4],y:t.transform[5]})));
+  }
+  return parseAfastamentos(pags);
+}
+const ehEfetivoK=k=>k in cfg.vinculos?!!cfg.vinculos[k]:/efetivo/.test(k);
+const mesAno=()=>{const n=new Date();return [n.getMonth()+1,n.getFullYear()];};
+const vincVistos=new Map(),tiposVistos=new Map();   // o que já apareceu nesta sessão, para a janela Regras
+const veVinc=(tipoAdm)=>{const k=norm(tipoAdm);if(!vincVistos.has(k)) vincVistos.set(k,{k,nome:titulo(tipoAdm),n:0});vincVistos.get(k).n++;};
+/* f: cadastro do Centi {Id,Matricula,Nome,DataAdmissao,Situacao,TipoAdm,Cargo,Lotacao,afast}; rows: afastamentos desse servidor lidos do PDF */
+function construir(f,rows){
+  return recalcular({cid:String(f.Id||''),mat:String(f.Matricula).trim(),nome:titulo(f.Nome),cargo:titulo(f.Cargo),lot:titulo(f.Lotacao),vinculo:titulo(f.TipoAdm),vinculoK:norm(f.TipoAdm),situacao:f.Situacao||'',adm:D(f.DataAdmissao),afast:f.afast||'',rows:rows||[]});
+}
+function recalcular(p){
+  p.eventos=p.rows.map(r=>({tipo:r.tipo,efeito:classificarTipo(r.tipo,cfg.mapa).efeito,ini:r.ini,fim:r.fim}));
+  p.r=p.adm==null?{erro:'Sem data de admissão no Centi.',per:[],ciclos:[],interrompidos:[],alertas:[],tags:{},situacao:{codigo:'erro',rotulo:'Sem data de admissão'},saldo:0}
+    :calcular({adm:p.adm,eventos:p.eventos,registro:registros[p.mat]||{}},hojeMs(),cfg);
+  if(p.adm!=null){
+    if(String(p.situacao).trim().toLowerCase()!=='ativo') p.r.alertas.unshift({nivel:'info',msg:'Situação no Centi: '+p.situacao+'.'});
+    if(!ehEfetivoK(p.vinculoK)) p.r.alertas.unshift({nivel:'aviso',msg:'Vínculo "'+p.vinculo+'": o art. 194 vale para titular de cargo efetivo. O cálculo abaixo é só informativo.'});
+  }
+  return p;
+}
+async function garantirSessao(){
+  if(PB.centi.user) return true;
+  const h=await PB.connect();if(h&&!dbh) dbh=h;
+  return !!PB.centi.user;
+}
+const msgErro=e=>e.status===401?'A sessão do Centi expirou. Entre de novo e repita a busca.':(e.message||String(e));
+
+/* ---------- busca de servidor ---------- */
+let modo='busca',resultados=null,pAberta=null,pan=null;
+async function buscar(termo){
+  termo=String(termo||'').trim();
+  if(!(/^\d{3,12}$/.test(termo)||termo.replace(/[%_]/g,'').length>=3)){toast('Digite ao menos 3 letras do nome ou a matrícula.');return;}
+  const b=$('#buscaBtn');b.disabled=true;b.textContent='Buscando…';
+  try{
+    if(!(await garantirSessao())){toast('Entre com o acesso do Centi para buscar.');return;}
+    const r=await PB.centi.licencaBusca(termo);
+    (r.Data||[]).forEach(f=>veVinc(f.TipoAdm));
+    resultados={termo,lista:r.Data||[]};modo='busca';render();
+  }catch(e){toast('Não foi possível buscar no Centi: '+msgErro(e));}
+  finally{b.disabled=false;b.textContent='Buscar';}
+}
+async function abrirServidor(f){
+  carga(true,'Buscando os afastamentos de '+titulo(f.Nome)+'…');
+  try{
+    if(!(await garantirSessao())){toast('Entre com o acesso do Centi.');return;}
+    const [mes,ano]=mesAno();
+    const pdf=await PB.centi.afastamentosPdf(mes,ano,f.Id);
+    carga(true,'Lendo os afastamentos…');
+    const {rows,ruins}=await lerPdf(pdf);
+    const meus=rows.filter(r=>String(r.mat).trim()===String(f.Matricula).trim());
+    meus.forEach(r=>{const k=norm(r.tipo);if(!tiposVistos.has(k)) tiposVistos.set(k,{k,tipo:r.tipo,n:0});tiposVistos.get(k).n++;});
+    const p=construir(f,meus);
+    if(ruins.length) p.r.alertas.push({nivel:'aviso',msg:ruins.length+' afastamento(s) do relatório do Centi não puderam ser lidos. Confira no Centi (FP071) antes de confiar no cálculo.'});
+    dlgPessoa(p);
+  }catch(e){toast('Não foi possível buscar os dados no Centi: '+msgErro(e));}
+  finally{carga(false);}
+}
+async function abrirPorMatricula(mat){
+  carga(true,'Buscando o cadastro…');
+  try{
+    if(!(await garantirSessao())){toast('Entre com o acesso do Centi.');return;}
+    const r=await PB.centi.licencaBusca(mat);
+    const f=(r.Data||[]).find(x=>String(x.Matricula).trim()===String(mat));
+    if(!f){toast('Matrícula '+mat+' não encontrada no Centi.');return;}
+    carga(false);await abrirServidor(f);
+  }catch(e){toast('Não foi possível buscar no Centi: '+msgErro(e));}
+  finally{carga(false);}
+}
+
+/* ---------- panorama (opcional: carrega todos os efetivos de uma vez) ---------- */
+let pessoas=[],filtro='';
+async function carregarPanorama(){
+  const b=$('#panBtn');b.disabled=true;
+  carga(true,'Conectando ao Centi…');
+  try{
+    if(!(await garantirSessao())){toast('Entre com o acesso do Centi para buscar os dados.');return;}
+    const [mes,ano]=mesAno();
+    carga(true,'Buscando servidores ativos…');
+    const q=await PB.centi.licencaQuadro(mes,ano);
+    carga(true,'Baixando a relação de afastamentos…');
+    const pdf=await PB.centi.afastamentosPdf(mes,ano);
+    carga(true,'Lendo os afastamentos…');
+    const {rows,ruins}=await lerPdf(pdf);
+    if(!rows.length) throw new Error('Não consegui ler nenhum afastamento do relatório do Centi. O layout do relatório pode ter mudado.');
+    carga(true,'Calculando os períodos…');
+    await new Promise(r=>setTimeout(r,30));
+    const por=new Map();rows.forEach(r=>{const k=String(r.mat).trim();if(!por.has(k)) por.set(k,[]);por.get(k).push(r);const t=norm(r.tipo);if(!tiposVistos.has(t)) tiposVistos.set(t,{k:t,tipo:r.tipo,n:0});tiposVistos.get(t).n++;});
+    (q.Pessoas||[]).forEach(p=>veVinc(p.TIPOADMISSAO));
+    const base=(q.Pessoas||[]).filter(p=>ehEfetivoK(norm(p.TIPOADMISSAO))&&D(p.DATAADMISSAO)!=null);
+    pessoas=base.map(x=>construir({Id:'',Matricula:x.MATRICULA,Nome:x.NOME,DataAdmissao:x.DATAADMISSAO,TipoAdm:x.TIPOADMISSAO,Cargo:x.CARGO,Lotacao:x.LOTACAO,Situacao:x.SITUACAO,afast:x.TIPOAFASTAMENTO},por.get(String(x.MATRICULA).trim()))).sort((a,b)=>a.nome.localeCompare(b.nome,'pt-BR'));
+    pan={em:new Date().toISOString(),ruins,excl:(q.Pessoas||[]).length-base.length,nAfast:rows.length};
+    modo='panorama';render();toast(pessoas.length+' servidores efetivos analisados.');
+  }catch(e){toast('Não foi possível buscar no Centi: '+msgErro(e));}
+  finally{b.disabled=false;carga(false);}
+}
+
+/* ---------- exibição ---------- */
+const STAT={formacao:['Em formação','dia'],disponivel:['A gozar','dir'],parcial:['Gozo parcial','prog'],vencida:['Vencida','venc'],perdida:['Direito perdido','venc'],requerida:['Requerida','prog'],gozada:['Gozada','dia'],indenizada:['Indenizada','dia'],conferir:['A conferir','sem'],anterior:['Regra anterior*','sem']};
+const SIT_COR={gozo:'hoje',disp:'dir',vencendo:'sem',venc:'venc',req:'prog',conf:'sem',form:'dia',dia:'dia'};
+const tags=p=>{
+  const r=p.r,t=[`<span class="tag ${SIT_COR[r.situacao.codigo]||'dia'}">${esc(r.situacao.rotulo)}</span>`];
+  if(r.tags.acum) t.push('<span class="tag venc" title="Art. 194, §6º: não é permitido acumular mais de um período">Acúmulo</span>');
+  if(r.tags.conf&&r.situacao.codigo!=='conf') t.push('<span class="tag sem">Período a conferir</span>');
+  if(r.tags.naoconf) t.push('<span class="tag" title="O RH ainda não marcou que conferiu o histórico deste servidor no arquivo">Histórico não conferido</span>');
+  if(p.afast) t.push('<span class="tag" title="Afastamento no Centi">'+esc(titulo(String(p.afast).split('/')[0]))+'</span>');
+  return t.join('');
+};
+const abertosDe=r=>r.per.filter(x=>['disponivel','parcial','vencida','requerida','anterior'].includes(x.status));
+function prazoTxt(p){
+  const r=p.r;
+  if(r.erro) return esc(r.erro);
+  if(r.emGozo) return 'Em gozo até <b>'+fmt(r.emGozo.fim)+'</b>';
+  const ab=abertosDe(r).sort((a,b)=>a.janelaFim-b.janelaFim)[0];
+  if(ab){
+    if(ab.status==='vencida') return 'Venceu em '+fmt(ab.janelaFim)+'<br><small style="color:var(--danger)">requerer até '+fmt(ab.requererAte)+'</small>';
+    if(ab.status==='requerida') return 'Requerida'+(ab.acaoData?' em '+fmt(ab.acaoData):'');
+    return 'Gozar até <b>'+fmt(ab.janelaFim)+'</b>'+(ab.saldo<REGRA.DIAS?'<br><small>restam '+ab.saldo+' dias</small>':'');
+  }
+  if(r.proximo) return 'Direito em '+fmt(r.proximo.direitoEm);
+  return '—';
+}
+const casa=(p,q,f)=>(!f||p.r.tags[f])&&(!q||norm(p.nome+' '+p.mat+' '+p.cargo+' '+p.lot).includes(q));
+function render(){
+  $('#stats').innerHTML='';
+  if(modo==='panorama'&&pessoas.length) return renderPanorama();
+  const view=$('#view');
+  $('#notice').innerHTML='';
+  const acomp=Object.entries(registros).map(([mat,r])=>({mat,nome:r.nome||('Matrícula '+mat),conf:!!r.conferido,n:((r.gozos||[]).length)+((r.eventos||[]).length)+Object.keys(r.periodos||{}).length})).sort((a,b)=>a.nome.localeCompare(b.nome,'pt-BR'));
+  const res=resultados?(resultados.lista.length?`<div class="tblwrap"><table class="lst"><thead><tr><th>Servidor</th><th>Matrícula</th><th>Vínculo</th><th>Situação</th><th style="text-align:right">Admissão</th></tr></thead><tbody>${resultados.lista.map((f,i)=>`<tr data-r="${i}"><td class="n"><b>${esc(titulo(f.Nome))}</b><span>${esc(titulo(f.Cargo))} · ${esc(titulo(f.Lotacao))}</span></td><td>${esc(f.Matricula)}</td><td>${ehEfetivoK(norm(f.TipoAdm))?'<span class="tag dir">'+esc(titulo(f.TipoAdm))+'</span>':'<span class="tag">'+esc(titulo(f.TipoAdm))+'</span>'}</td><td>${String(f.Situacao).toLowerCase()==='ativo'?'Ativo':'<span class="tag sem">'+esc(titulo(f.Situacao))+'</span>'}</td><td class="num">${esc(f.DataAdmissao)}</td></tr>`).join('')}</tbody></table></div><p class="note">${resultados.lista.length} resultado(s) para "${esc(resultados.termo)}"${resultados.lista.length>=50?' (mostrando os 50 primeiros: refine a busca)':''}. Clique no servidor para ver os períodos.</p>`
+    :`<div class="empty"><h2>Ninguém encontrado</h2><p>Nenhum servidor com "${esc(resultados.termo)}". Tente outra parte do nome ou a matrícula.</p></div>`):'';
+  const ac=acomp.length?`<section class="panel" style="margin-top:16px"><h2><i style="background:var(--accent)"></i>Servidores acompanhados pelo RH<span>${acomp.length}</span></h2><p class="sub" style="margin-bottom:6px">Quem já tem lançamentos do RH nesta tela (gozos antigos, faltas ou conferência).</p><ul class="mini">${acomp.map(a=>`<li data-m="${esc(a.mat)}"><div class="pn"><b>${esc(a.nome)}</b><span>Matrícula ${esc(a.mat)} · ${a.n} lançamento(s)</span></div><div class="dt">${a.conf?'conferido':'a conferir'}</div></li>`).join('')}</ul></section>`:'';
+  const vazio=!resultados&&!acomp.length?`<div class="empty"><h2>Busque um servidor</h2><p>Digite o nome (3 letras ou mais) ou a matrícula. O sistema traz os afastamentos só dessa pessoa e calcula os períodos da licença-prêmio. Para ver todos os efetivos de uma vez, use <b>Panorama dos efetivos</b>.</p></div>`:'';
+  view.innerHTML=res+ac+vazio;
+  $('#foot').textContent='Dados do Centi lidos na hora, só do servidor escolhido. Licenças já gozadas antes do Centi e faltas injustificadas são lançadas aqui pelo RH. Nada é gravado no Centi.';
+}
+function renderPanorama(){
+  const view=$('#view');
+  const c=k=>pessoas.filter(p=>p.r.tags[k]).length;
+  const cards=[['','Servidores efetivos',pessoas.length,''],['gozo','Em gozo agora',c('gozo'),'k-gozo'],['disp','Com direito a gozar',c('disp'),'k-direito'],['vencendo','Prazo vencendo ('+cfg.avisoDias+' dias)',c('vencendo'),'k-aviso'],['venc','Vencidas ou perdidas',c('venc'),'k-venc2'],['naoconf','Histórico não conferido',c('naoconf'),'k-sem']];
+  $('#stats').innerHTML=cards.map(s=>`<button type="button" class="stat ${s[3]}${filtro===s[0]?' on':''}" data-f="${s[0]}"><b>${s[2]}</b><span>${s[1]}</span></button>`).join('');
+  const hoje=hojeMs(),q=norm(($('#q2')||{}).value||''),lista=pessoas.filter(p=>casa(p,q,filtro));
+  const urg=pessoas.map(p=>({p,ab:abertosDe(p.r).filter(x=>x.status!=='requerida').sort((a,b)=>a.janelaFim-b.janelaFim)[0]})).filter(x=>x.ab).sort((a,b)=>a.ab.janelaFim-b.ab.janelaFim).slice(0,12);
+  const prox=pessoas.filter(p=>p.r.proximo&&p.r.proximo.direitoEm>hoje&&p.r.proximo.direitoEm<=hoje+365*DAY).sort((a,b)=>a.r.proximo.direitoEm-b.r.proximo.direitoEm);
+  const li=(p,d)=>`<li data-i="${pessoas.indexOf(p)}"><div class="pn"><b>${esc(p.nome)}</b><span>${esc(p.cargo)} · ${esc(p.lot)}</span></div><div class="dt">${d}</div></li>`;
+  const painel=(tit,cor,arr,fn,vazio)=>`<section class="panel"><h2><i style="background:${cor}"></i>${tit}<span>${arr.length}</span></h2>${arr.length?`<ul class="mini">${arr.map(fn).join('')}</ul>`:'<div class="none">'+vazio+'</div>'}</section>`;
+  $('#notice').innerHTML=`<div class="banner"><b>Dados pessoais.</b> Esta tela mostra nomes e datas de servidores; use somente em ambiente interno. O cálculo segue o Estatuto (Lei 3.968/2000, arts. 194 a 197): 90 dias a cada 5 anos de efetivo exercício, gozo nos 5 anos seguintes e 90 dias para requerer depois disso.${pan.ruins.length?` <b>Atenção:</b> ${pan.ruins.length} afastamento(s) do relatório do Centi não puderam ser lidos (matrículas ${esc(pan.ruins.slice(0,6).join(', '))}${pan.ruins.length>6?'…':''}).`:''}</div>`;
+  const linhas=lista.map(p=>`<tr data-i="${pessoas.indexOf(p)}"><td class="n"><b>${esc(p.nome)}</b><span>${esc(p.cargo)} · ${esc(p.lot)}</span></td><td class="num">${fmt(p.r.inicio||p.adm)}</td><td>${tags(p)}</td><td class="num">${prazoTxt(p)}</td><td class="num">${p.r.saldo>0?'<b>'+p.r.saldo+'</b> dias':'—'}</td></tr>`).join('');
+  const foco=document.activeElement&&document.activeElement.id==='q2';
+  view.innerHTML=`<div class="bar" style="margin-top:0"><button class="btn" type="button" data-voltar>← Voltar à busca</button><label class="search"><input id="q2" type="search" placeholder="Filtrar a lista por nome, matrícula, cargo ou lotação" aria-label="Filtrar" autocomplete="off" value="${esc(($('#q2')||{}).value||'')}"></label><select id="ft" aria-label="Filtrar"><option value="">Todos os efetivos</option><option value="gozo">Em gozo agora</option><option value="req">Com licença requerida</option><option value="disp">Com direito a gozar</option><option value="vencendo">Com prazo vencendo</option><option value="venc">Vencidas ou perdidas</option><option value="conf">Períodos a conferir</option><option value="naoconf">Histórico não conferido</option><option value="acum">Períodos acumulados</option><option value="form">Sem direito ainda</option></select><button class="btn" type="button" data-csv>Exportar CSV</button></div>
+   <div class="panels">${painel('Prazos mais próximos de vencer','var(--danger)',urg,x=>li(x.p,(x.ab.status==='vencida'?'venceu ':'até ')+fmt(x.ab.janelaFim)+'<br><span style="font-weight:500;color:var(--muted)">'+(STAT[x.ab.status][0])+'</span>'),'Nenhum período em aberto.')}${painel('Direitos que se completam em 12 meses','var(--ok)',prox,p=>li(p,fmt(p.r.proximo.direitoEm)+'<br><span style="font-weight:500;color:var(--muted)">período '+p.r.proximo.n+'</span>'),'Nenhum direito se completa nos próximos 12 meses.')}</div>
+   <div class="tblwrap"><table class="lst"><thead><tr><th>Servidor</th><th style="text-align:right">Início da contagem</th><th>Situação</th><th style="text-align:right">Prazo</th><th style="text-align:right">A gozar</th></tr></thead><tbody>${linhas||'<tr><td colspan="5" class="none" style="padding:18px">Nada encontrado para este filtro.</td></tr>'}</tbody></table></div>
+   <p class="note">${lista.length} de ${pessoas.length} servidores.</p>`;
+  $('#ft').value=filtro;
+  if(foco){const e=$('#q2');e.focus();e.setSelectionRange(e.value.length,e.value.length);}
+  $('#foot').textContent='Dados do Centi (Cubo funcionário reduzido e Relação de afastamentos) de '+new Date(pan.em).toLocaleString('pt-BR')+'; '+pan.nAfast+' afastamentos lidos. '+(pan.excl?pan.excl+' servidor(es) de outros vínculos ficaram de fora (veja Regras). ':'')+'Nada é gravado no Centi.';
+}
+
+/* ---------- ficha ---------- */
+function fechar(){const d=$('#dlg');if(d.open) d.close();}
+function abrirDlg(html){
+  const d=$('#dlg'),rol=d.open?d.querySelector('form').scrollTop:0;
+  d.innerHTML='<form method="dialog" autocomplete="off">'+html+'</form>';
+  const f=d.querySelector('form');f.addEventListener('submit',ev=>ev.preventDefault());
+  d.querySelectorAll('[data-x]').forEach(b=>b.addEventListener('click',fechar));
+  if(!d.open) d.showModal();
+  f.scrollTop=rol;return d;
+}
+const OPC_ACAO=[['','Sem marca'],['quitada','Gozada (conferido no arquivo, sem datas)'],['indenizada','Convertida em indenização'],['requerida','Requerida pelo servidor']];
+function dlgPessoa(p){
+  pAberta=p;
+  const r=p.r,reg=registros[p.mat]||{};
+  const rows=r.per.map(x=>{
+    const st=STAT[x.status]||['—','dia'];
+    let prazo='';
+    if(x.completo){
+      prazo=`<small>direito em ${fmt(x.direitoEm)} · gozo até ${fmt(x.janelaFim)}</small>`;
+      if(x.status==='vencida') prazo+=`<small class="o-venc">requerer até ${fmt(x.requererAte)}</small>`;
+      if(x.status==='perdida') prazo+=`<small class="o-venc">prazo para requerer acabou em ${fmt(x.requererAte)}</small>`;
+      if(x.status==='anterior') prazo+='<small class="o-calc">direito anterior à LC 181/2020: conferir qual regra vale</small>';
+      if(x.status==='conferir') prazo+='<small class="o-calc">sem gozo lançado e prazo já passou: confira no arquivo</small>';
+      if(x.vencendo&&(x.status==='disponivel'||x.status==='parcial')) prazo+='<small class="o-calc">prazo vencendo</small>';
+    }else prazo=`<small>completa em ${fmt(x.fim)}${x.susp?` (inclui ${x.susp} dias suspensos)`:''}</small>`;
+    const gz=x.gozos&&x.gozos.length?x.gozos.map(g=>`${fmtCurto(g.ini)} a ${fmtCurto(g.fim)} · ${g.usados} d${g.tipo==='indenizacao'?' (indenização)':''}${g.origem==='centi'?' · Centi':''}`).join('<br>'):'<small>—</small>';
+    const marca=x.acao?(OPC_ACAO.find(o=>o[0]===x.acao)||[,''])[1].toLowerCase():'';
+    const act=x.completo&&!(x.cred>=REGRA.DIAS&&!x.acao)?`<div class="inl"><select data-acao="${x.n}">${OPC_ACAO.map(o=>`<option value="${o[0]}"${o[0]===x.acao?' selected':''}>${esc(o[1])}</option>`).join('')}</select>${x.acao==='requerida'?`<input type="date" data-acaodata="${x.n}" value="${toIso(x.acaoData)}" aria-label="Data do requerimento">`:''}</div>`:'';
+    return `<tr><td>${fmt(x.ini)} a ${fmt(x.fim)}<small>período ${x.n}</small></td><td><span class="tag ${st[1]}">${st[0]}</span>${marca?'<small>'+esc(marca)+'</small>':''}${prazo}</td><td>${gz}</td><td class="num">${x.completo?x.saldo+' d':'—'}</td><td class="act">${act}</td></tr>`;
+  }).join('');
+  const intr=r.interrompidos.length?`<h4 class="sec">Contagens interrompidas</h4><div class="alertas">${r.interrompidos.map(x=>`<div class="al">${fmt(x.ini)} a ${fmt(x.fim)}: ${esc(x.motivo)}. A contagem recomeçou em ${fmt(x.fim+DAY)}.</div>`).join('')}</div>`:'';
+  const evT=p.eventos.slice().sort((a,b)=>a.ini-b.ini).map(e=>{const c=classificarTipo(e.tipo,cfg.mapa);return `<tr><td>${esc(titulo(e.tipo))}</td><td class="num">${fmt(e.ini)} a ${e.fim>=Date.UTC(2090,0,1)?'sem fim':fmt(e.fim)}</td><td>${esc(EFEITOS[e.efeito])}${c.origem==='RH'?' <small>(regra do RH)</small>':''}</td></tr>`;}).join('');
+  const gozos=(reg.gozos||[]).map(g=>`<tr><td>${g.tipo==='indenizacao'?'Indenização':'Gozo'}</td><td class="num">${fmt(isoMs(g.ini))} a ${fmt(isoMs(g.fim))}${g.dias?' · '+g.dias+' d':''}</td><td>${esc(g.obs||'')}</td><td><button type="button" class="btn sm del" data-delg="${esc(g.id)}">Remover</button></td></tr>`).join('');
+  const evM=(reg.eventos||[]).map(e=>`<tr><td>${esc(({falta:'Falta injustificada',suspende:'Suspende a contagem',interrompe:'Interrompe a contagem',familia:'Doença na família'})[e.tipo]||e.tipo)}</td><td class="num">${fmt(isoMs(e.ini))}${e.fim&&e.fim!==e.ini?' a '+fmt(isoMs(e.fim)):''}</td><td>${esc(e.obs||'')}</td><td><button type="button" class="btn sm del" data-dele="${esc(e.id)}">Remover</button></td></tr>`).join('');
+  const L=[['Cargo',p.cargo],['Lotação',p.lot],['Matrícula',p.mat],['Vínculo',p.vinculo],['Admissão',fmt(p.adm)],['Início da contagem',r.inicio?fmt(r.inicio)+(reg.inicio?' (ajustado pelo RH)':''):''],['Afastamento no Centi',p.afast?titulo(String(p.afast).split('/')[0]):'']].filter(x=>x[1]);
+  abrirDlg(`<h3>${esc(p.nome)}</h3><dl class="ficha">${L.map(x=>`<dt>${x[0]}</dt><dd>${esc(x[1])}</dd>`).join('')}</dl>
+    <div>${tags(p)}</div>
+    <div class="sum"><div class="dir"><small>A gozar</small><b>${r.saldo} dias</b></div><div><small>Períodos em aberto</small><b>${abertosDe(r).length}</b></div><div><small>Próximo direito</small><b style="font-size:1rem">${r.proximo?fmt(r.proximo.direitoEm):'—'}</b></div></div>
+    ${r.alertas.length?`<div class="alertas">${r.alertas.map(a=>`<div class="al ${a.nivel}">${esc(a.msg)}</div>`).join('')}</div>`:''}
+    <h4 class="sec">Períodos aquisitivos</h4>
+    <div class="pw"><table class="per"><thead><tr><th>Período aquisitivo</th><th>Situação e prazos</th><th>Licença gozada</th><th style="text-align:right">Saldo</th><th>Marcar</th></tr></thead><tbody>${rows}</tbody></table></div>
+    ${r.per.some(x=>x.completo&&x.direitoEm<REGRA.LC181)?'<p class="sub">* Direito completado antes de 06/05/2020 (LC 181): o texto vigente não diz se o prazo de gozo e a perda valem para ele. Por isso o sistema não dá o direito como perdido sozinho.</p>':''}
+    ${intr}
+    <h4 class="sec">Afastamentos do Centi (${p.eventos.length})</h4>
+    ${p.eventos.length?`<div class="scr"><table class="mapa"><thead><tr><th>Tipo</th><th style="text-align:right">Período</th><th>Efeito na contagem</th></tr></thead><tbody>${evT}</tbody></table></div>`:'<p class="sub">Nenhum afastamento lançado no Centi.</p>'}
+    <h4 class="sec">Lançamentos do RH: licenças já gozadas ou indenizadas</h4>
+    <p class="sub">Para quem já tirou licença-prêmio antes do Centi. Datas conferidas no arquivo.</p>
+    ${gozos?`<div class="scr"><table class="mapa"><tbody>${gozos}</tbody></table></div>`:''}
+    <div class="fr"><label>Tipo<select id="g-tipo"><option value="gozo">Licença gozada</option><option value="indenizacao">Indenização</option></select></label><label>Início<input id="g-ini" type="date"></label><label>Fim<input id="g-fim" type="date"></label><label>Dias (opcional)<input id="g-dias" type="number" min="1" max="365"></label><label>Observação<input id="g-obs" placeholder="processo, portaria…"></label><button type="button" class="btn sm" data-addg>Adicionar</button></div>
+    <h4 class="sec">Lançamentos do RH: faltas e outros fatos que mexem na contagem</h4>
+    <p class="sub">Faltas injustificadas não vêm do Centi: até 10 dias no período suspendem a contagem; acima disso, interrompem.</p>
+    ${evM?`<div class="scr"><table class="mapa"><tbody>${evM}</tbody></table></div>`:''}
+    <div class="fr"><label>Tipo<select id="e-tipo"><option value="falta">Falta injustificada</option><option value="suspende">Suspende a contagem</option><option value="interrompe">Interrompe a contagem</option><option value="familia">Doença na família</option></select></label><label>Início<input id="e-ini" type="date"></label><label>Fim (se mais de um dia)<input id="e-fim" type="date"></label><label>Observação<input id="e-obs"></label><button type="button" class="btn sm" data-adde>Adicionar</button></div>
+    <h4 class="sec">Conferência</h4>
+    <label class="ck"><input type="checkbox" id="c-conf"${reg.conferido?' checked':''}>Histórico conferido no arquivo (todas as licenças já gozadas deste servidor estão lançadas)</label>
+    <div class="fr"><label>Início da contagem, se diferente da admissão<input id="c-ini" type="date" value="${esc(reg.inicio||'')}"></label><label style="grid-column:span 2">Observação<input id="c-obs" value="${esc(reg.obs||'')}" placeholder="ex.: tempo anterior reconhecido pelo processo nº…"></label><button type="button" class="btn sm" data-salvc>Salvar conferência</button></div>
+    <div class="row"><button type="button" class="btn primary" data-x>Fechar</button></div>`);
+}
+const regDe=p=>{const r=registros[p.mat]||(registros[p.mat]={});r.nome=p.nome;r.cid=p.cid;return r;};   // nome e Id ficam junto para a lista "acompanhados"
+function aposEdicao(p){
+  recalcular(p);salvarReg(p.mat);
+  render();
+  if($('#dlg').open) dlgPessoa(p);
+}
+function acaoDlg(e){
+  const p=pAberta;if(!p) return;
+  const t=e.target;
+  if(t.matches('[data-acao]')){
+    const n=t.dataset.acao,reg=regDe(p);reg.periodos=reg.periodos||{};
+    if(!t.value) delete reg.periodos[n];else reg.periodos[n]=Object.assign({},reg.periodos[n],{acao:t.value,data:t.value==='requerida'?(reg.periodos[n]&&reg.periodos[n].data)||toIso(hojeMs()):''});
+    aposEdicao(p);return;
+  }
+  if(t.matches('[data-acaodata]')){const reg=regDe(p),m=reg.periodos&&reg.periodos[t.dataset.acaodata];if(m&&t.value){m.data=t.value;aposEdicao(p);}return;}
+}
+function cliqueDlg(e){
+  const p=pAberta;if(!p) return;
+  const t=e.target.closest('button');if(!t) return;
+  const v=id=>($('#'+id)||{}).value||'';
+  if(t.dataset.addg!==undefined){
+    const ini=v('g-ini'),fim=v('g-fim')||ini;
+    if(!ini||isoMs(fim)<isoMs(ini)){toast('Informe o início e o fim da licença (o fim não pode ser antes do início).');return;}
+    const reg=regDe(p);(reg.gozos=reg.gozos||[]).push({id:uid(),tipo:v('g-tipo'),ini,fim,dias:+v('g-dias')||0,obs:v('g-obs')});
+    aposEdicao(p);return;
+  }
+  if(t.dataset.adde!==undefined){
+    const ini=v('e-ini'),fim=v('e-fim')||ini;
+    if(!ini||isoMs(fim)<isoMs(ini)){toast('Informe a data (ou o início e o fim).');return;}
+    const reg=regDe(p);(reg.eventos=reg.eventos||[]).push({id:uid(),tipo:v('e-tipo'),ini,fim,obs:v('e-obs')});
+    aposEdicao(p);return;
+  }
+  if(t.dataset.delg){const reg=regDe(p);reg.gozos=(reg.gozos||[]).filter(g=>g.id!==t.dataset.delg);aposEdicao(p);return;}
+  if(t.dataset.dele){const reg=regDe(p);reg.eventos=(reg.eventos||[]).filter(g=>g.id!==t.dataset.dele);aposEdicao(p);return;}
+  if(t.dataset.salvc!==undefined){
+    const reg=regDe(p);reg.conferido=$('#c-conf').checked;reg.inicio=v('c-ini');reg.obs=v('c-obs').trim();
+    if(!reg.inicio) delete reg.inicio;if(!reg.obs) delete reg.obs;if(!reg.conferido) delete reg.conferido;
+    aposEdicao(p);toast('Conferência salva.');return;
+  }
+}
+
+/* ---------- regras ---------- */
+function dlgRegras(){
+  const vk=new Map(vincVistos);Object.keys(cfg.vinculos).forEach(k=>{if(!vk.has(k)) vk.set(k,{k,nome:titulo(k),n:0});});
+  if(!vk.has('servidor publico efetivo')) vk.set('servidor publico efetivo',{k:'servidor publico efetivo',nome:'Servidor Público Efetivo',n:0});
+  const tk=new Map(tiposVistos);Object.keys(cfg.mapa).forEach(k=>{if(!tk.has(k)) tk.set(k,{k,tipo:k,n:0});});
+  const vi=[...vk.values()].sort((a,b)=>b.n-a.n).map(v=>`<label class="ck"><input type="checkbox" data-vk="${esc(v.k)}"${ehEfetivoK(v.k)?' checked':''}>${esc(v.nome)}${v.n?` <small>(${v.n} vistos)</small>`:''}</label>`).join('');
+  const mp=[...tk.values()].sort((a,b)=>b.n-a.n).map(t=>{
+    const pad=classificarTipo(t.tipo,{}).efeito,cur=cfg.mapa[t.k]||'';
+    return `<tr><td>${esc(titulo(t.tipo))}</td><td class="num">${t.n||'—'}</td><td><select data-mk="${esc(t.k)}"><option value="">Padrão: ${esc(EFEITOS[pad])}</option>${Object.keys(EFEITOS).map(k=>`<option value="${k}"${cur===k?' selected':''}>${esc(EFEITOS[k])}</option>`).join('')}</select></td></tr>`;
+  }).join('');
+  const d=abrirDlg(`<h3>Regras da licença-prêmio</h3>
+    <p>Valem o Estatuto (Lei 3.968/2000, arts. 194 a 197) e as escolhas abaixo. Os prazos do Estatuto (5 anos, 90 dias, janela de 5 anos, 90 dias para requerer) estão fixos no sistema.</p>
+    <h4 class="sec">Quais vínculos têm direito</h4>
+    <p class="sub">O art. 194 vale para titular de cargo efetivo. Outro vínculo só deve ser marcado se o jurídico entender que também tem direito. Quem não está marcado ainda pode ser consultado, mas com aviso. A lista mostra os vínculos que já apareceram nas buscas.</p>
+    <div class="alertas">${vi}</div>
+    <h4 class="sec">Alerta de prazo</h4>
+    <label>Avisar quando faltar até (dias) para acabar o prazo de gozo<input name="aviso" type="number" min="30" max="1000" value="${cfg.avisoDias}"></label>
+    <h4 class="sec">O que cada afastamento do Centi faz com a contagem</h4>
+    <p class="sub">Já vem classificado pelo Estatuto (arts. 196 e 197). Mude só se o RH ou o jurídico entender diferente. O que ficar "A revisar" é tratado como exercício e aparece como aviso na ficha. A lista mostra os tipos que já apareceram nas fichas abertas.</p>
+    ${mp?`<div class="scr"><table class="mapa"><thead><tr><th>Tipo de afastamento</th><th style="text-align:right">Registros</th><th>Efeito</th></tr></thead><tbody>${mp}</tbody></table></div>`:'<p class="sub">Nenhum tipo ainda: abra a ficha de um servidor para eles aparecerem aqui.</p>'}
+    <div class="row"><button type="button" class="btn" data-x>Cancelar</button><button class="btn primary" type="submit">Salvar</button></div>`);
+  d.querySelector('form').addEventListener('submit',()=>{
+    const nv=Object.assign({},cfg.vinculos);d.querySelectorAll('[data-vk]').forEach(c=>{nv[c.dataset.vk]=c.checked;});
+    const nm=Object.assign({},cfg.mapa);d.querySelectorAll('[data-mk]').forEach(s=>{if(s.value) nm[s.dataset.mk]=s.value;else delete nm[s.dataset.mk];});
+    const av=Math.round(+d.querySelector('[name=aviso]').value);
+    cfg={avisoDias:av>=30&&av<=1000?av:180,vinculos:nv,mapa:nm};
+    salvarCfg();fechar();
+    if(modo==='panorama') toast('Regras salvas. Clique em Panorama dos efetivos para recalcular com a lista atualizada.');else toast('Regras salvas.');
+    pessoas.forEach(recalcular);render();
+  });
+}
+
+/* ---------- exportar (panorama) ---------- */
+function csv(){
+  const q=norm(($('#q2')||{}).value||''),lista=pessoas.filter(p=>casa(p,q,filtro));
+  if(!lista.length){toast('Nada para exportar.');return;}
+  const c=v=>'"'+String(v==null?'':v).replace(/"/g,'""')+'"';
+  const cab=['Nome','Matrícula','Cargo','Lotação','Admissão','Início da contagem','Situação','Períodos em aberto','Dias a gozar','Próximo prazo','Próximo direito','Histórico conferido'];
+  const lin=lista.map(p=>{
+    const ab=abertosDe(p.r).sort((a,b)=>a.janelaFim-b.janelaFim)[0];
+    return [p.nome,p.mat,p.cargo,p.lot,fmt(p.adm),fmt(p.r.inicio),p.r.situacao.rotulo,abertosDe(p.r).length,p.r.saldo,ab?fmt(ab.janelaFim):'',p.r.proximo?fmt(p.r.proximo.direitoEm):'',p.r.tags.naoconf?'Não':'Sim'].map(c).join(';');
+  });
+  const blob=new Blob(['﻿'+[cab.map(c).join(';')].concat(lin).join('\r\n')],{type:'text/csv;charset=utf-8'});
+  const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='licenca-premio-'+new Date().toISOString().slice(0,10)+'.csv';document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(a.href),2000);
+}
+
+/* ---------- eventos ---------- */
+$('#buscaF').addEventListener('submit',e=>{e.preventDefault();buscar($('#q').value);});
+$('#cfgBtn').addEventListener('click',dlgRegras);
+$('#panBtn').addEventListener('click',carregarPanorama);
+$('#dlg').addEventListener('change',acaoDlg);
+$('#dlg').addEventListener('click',cliqueDlg);
+document.addEventListener('input',e=>{if(e.target.id==='q2') render();});
+document.addEventListener('change',e=>{if(e.target.id==='ft'){filtro=e.target.value;render();}});
+document.addEventListener('click',e=>{
+  if(e.target.closest('[data-voltar]')){modo='busca';filtro='';render();return;}
+  if(e.target.closest('[data-csv]')){csv();return;}
+  const st=e.target.closest('.stat');if(st){filtro=filtro===st.dataset.f?'':st.dataset.f;render();return;}
+  const r=e.target.closest('#view [data-i]');if(r){dlgPessoa(pessoas[+r.dataset.i]);return;}
+  const q=e.target.closest('#view [data-r]');if(q&&resultados){abrirServidor(resultados.lista[+q.dataset.r]);return;}
+  const m=e.target.closest('#view [data-m]');if(m) abrirPorMatricula(m.dataset.m);
+});
+try{matchMedia('(prefers-color-scheme: dark)').addEventListener('change',themeBtn);new MutationObserver(themeBtn).observe(document.documentElement,{attributes:true,attributeFilter:['data-theme']});}catch(e){}
+
+(function init(){
+  const c=lerLS(CFG_LS);if(c&&typeof c==='object') cfg=Object.assign(cfg,c);
+  const r=lerLS(REG_LS);if(r&&r.por) registros=r.por;
+  themeBtn();render();carga(true,'Conectando ao servidor…');
+  (async()=>{
+    try{
+      if(window.claude&&window.claude.use) dbh=await window.claude.use('db');
+      if(!dbh) dbh=await PB.connect();
+      if(dbh){
+        const c2=await lerDoc('licenca/config');if(c2&&typeof c2==='object') cfg=Object.assign(cfg,c2);
+        const r2=await lerDoc('licenca/registro');if(r2&&r2.por) registros=r2.por;
+        render();
+      }
+    }catch(e){dbh=null;}
+    finally{carga(false);}
+  })();
+})();
+</script>

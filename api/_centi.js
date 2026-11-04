@@ -95,6 +95,51 @@ const feriasPayload = () => ({
 });
 const feriasLinhas = cube => cuboColunas(cube, FERIAS_COLUNAS, false);
 
+/* Cubo funcionário reduzido (FP245): vínculo, admissão e situação de todos, ativos e desligados. A licença-prêmio usa este e não o FP051,
+   que o Centi vem respondendo com erro 500. Só as colunas necessárias: sem CPF, PIS, sexo nem outros dados pessoais. */
+const QUADRO_MODULO = 120968;
+const QUADRO_COLUNAS = ['MATRICULA', 'NOME', 'SITUACAO', 'TIPOADMISSAO', 'DATAADMISSAO', 'LOTACAO', 'CARGO', 'TIPOAFASTAMENTO', 'DATAAFASTAMENTO'];
+const quadroPayload = (mes, ano) => ({
+  ModuleKey: QUADRO_MODULO, Guid: crypto.randomUUID(),
+  Params: [
+    { Key: 'Orgaos', Value: vazio() }, { Key: 'Funcionario', Value: vazio() }, { Key: 'FiltroFuncionarios', Value: '0' },
+    { Key: 'Cargos', Value: vazio() }, { Key: 'ClassesNeiveis', Value: vazio() }, { Key: 'Funcao', Value: vazio() },
+    { Key: 'IdLotacao', Value: vazio() }, { Key: 'DataRef', Value: '01/' + String(mes).padStart(2, '0') + '/' + ano },
+    { Key: 'TiposAdmissao', Value: vazio() }, { Key: 'IdHierarquia', Value: vazio() }, { Key: 'Situacao', Value: '0' },
+    { Key: 'Biometria', Value: '0' }, { Key: 'TagFuncionario', Value: '' }, { Key: 'Cube', Value: '' }, { Key: 'CubeExcel', Value: '' },
+    { Key: 'QuebrarTexto', Value: '0' }, { Key: 'TipoCuboProcessamento', Value: '0' }, { Key: 'NumberOfDecimalPlaces', Value: '0' },
+    { Key: 'Name', Value: '' }, { Key: 'Description', Value: '' }, { Key: 'SysInternal', Value: '0' }, { Key: 'RestApp', Value: '0' },
+    { Key: 'Token', Value: '' }, { Key: 'GuidTransacao', Value: '' }, { Key: 'Captcha', Value: '' }, { Key: 'Background', Value: '0' }
+  ]
+});
+const quadroLinhas = cube => cuboColunas(cube, QUADRO_COLUNAS, true);
+
+/* Relação de afastamentos (FP071): o Centi só entrega em PDF. De 01/01/1990 até o fim do mês da referência, do órgão inteiro ou só de um servidor (Id do cadastro).
+   O PDF vai como veio (gzip) e o navegador o lê com pdf.js. */
+const AFASTAMENTOS_MODULO = 121058;
+const afastamentosPayload = (mes, ano, funcionario) => {
+  const fim = new Date(Date.UTC(ano, mes, 0)).getUTCDate();   // último dia do mês da referência
+  const mm = String(mes).padStart(2, '0');
+  return {
+    ModuleKey: AFASTAMENTOS_MODULO, Guid: crypto.randomUUID(),
+    Params: [
+      { Key: 'Orgaos', Value: vazio() }, { Key: 'Funcionarios', Value: funcionario ? { Params: [{ Key: 'Tag', Value: '0' }, { Key: 'Array', Value: [String(funcionario)] }] } : vazio() }, { Key: 'Lotacoes', Value: vazio() }, { Key: 'Cargos', Value: vazio() },
+      { Key: 'TipoAfastamentos', Value: vazio() }, { Key: 'TipoAdmissao', Value: vazio() }, { Key: 'IdHierarquia', Value: vazio() },
+      { Key: 'DataFin', Value: '01/' + mm + '/' + ano }, { Key: 'DataIn', Value: '01/01/1990:' + fim + '/' + mm + '/' + ano },
+      { Key: 'BeneficiarioRPPS', Value: '0' }, { Key: 'Ordenacao', Value: '0' },
+      { Key: 'EmbeddedFonts', Value: '0' }, { Key: 'ImprimirQrCodeGenerico', Value: '0' }, { Key: 'ChaveEletronica', Value: '' },
+      { Key: 'TextoCentralizado', Value: '' }, { Key: 'MarcaDagua', Value: '0' }, { Key: 'ApenasPrimeiraPagina', Value: '0' },
+      { Key: 'TamanhoTextoCentralizado', Value: '' }, { Key: 'PrintOptimized', Value: '0' }, { Key: 'ExportXlsxSimplificado', Value: '0' },
+      { Key: 'RelatorioVerificacaoItem', Value: '' }, { Key: 'GerarCubo', Value: '0' }, { Key: 'CadastrarEValidarCubo', Value: '0' },
+      { Key: 'TypeReturn', Value: '0' }, { Key: 'SendMail', Value: '0' }, { Key: 'EmailRemetente', Value: '' }, { Key: 'Remetente', Value: '' },
+      { Key: 'Emails', Value: '' }, { Key: 'Assunto', Value: '' }, { Key: 'Msg', Value: '' }, { Key: 'Sign', Value: '0' }, { Key: 'IdAssinatura', Value: '' },
+      { Key: 'FileName', Value: '' }, { Key: 'StorageReport', Value: '0' }, { Key: 'Name', Value: '' }, { Key: 'Description', Value: '' },
+      { Key: 'SysInternal', Value: '0' }, { Key: 'RestApp', Value: '0' }, { Key: 'Token', Value: '' }, { Key: 'GuidTransacao', Value: '' },
+      { Key: 'Captcha', Value: '' }, { Key: 'Background', Value: '0' }
+    ]
+  };
+};
+
 /* Ficha financeira (FP024): uma ficha por folha (mensal, 13º…) do funcionário na referência. Só os dados que a tela mostra:
    sem CPF, sem apontamentos e sem o histórico de processamento. */
 const num = x => (typeof x === 'number' ? x : Number(x) || 0);
@@ -127,4 +172,17 @@ const espelhoPayload = () => ({
   ]
 });
 
-module.exports = { isAdmin, adminUsers, espelhoPayload, BASE, centiPost, cuboPayload, cuboLinhas, feriasPayload, feriasLinhas, fichaResumo, centiLogin, isAllowed, allowedUsers, pbPassword, readBody, send };
+module.exports = { quadroPayload, quadroLinhas, afastamentosPayload, isAdmin, adminUsers, espelhoPayload, BASE, centiPost, cuboPayload, cuboLinhas, feriasPayload, feriasLinhas, fichaResumo, centiLogin, isAllowed, allowedUsers, pbPassword, readBody, send };
+
+/* Busca de servidor para a licença-prêmio: só o que a tela usa do cadastro (sem CPF, nascimento e dados de integração).
+   Número = matrícula exata; texto = nome contendo o termo. No máximo 50 resultados. */
+const BUSCA_CAMPOS = ['Id', 'Matricula', 'Nome', 'DataAdmissao', 'Situacao', 'TipoAdm', 'Cargo', 'Lotacao'];
+function buscaFiltro(termo) {
+  const t = String(termo || '').trim().replace(/[%_]/g, '');
+  if (/^\d{3,12}$/.test(t)) return { FieldName: 'Matricula', List: false, Operation: 0, TypeFilter: 3, Value: t, between: '' };
+  if (t.length >= 3 && t.length <= 60) return { FieldName: 'Nome', List: false, Operation: 6, TypeFilter: 0, Value: '%' + t.toUpperCase() + '%', between: '' };
+  return null;
+}
+const buscaLinhas = data => (data || []).slice(0, 50).map(f => { const o = {}; BUSCA_CAMPOS.forEach(k => { o[k] = f[k] == null ? '' : String(f[k]); }); return o; });
+module.exports.buscaFiltro = buscaFiltro;
+module.exports.buscaLinhas = buscaLinhas;

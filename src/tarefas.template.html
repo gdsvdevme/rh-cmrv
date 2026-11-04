@@ -47,7 +47,8 @@ main{padding-block:0 40px}
 .seg button.on{background:var(--accent);color:var(--accent-fg)}
 .btn{border:1px solid var(--line);background:var(--surface);border-radius:10px;padding:10px 14px;cursor:pointer;font-weight:600;font-size:14px;display:inline-flex;align-items:center;gap:8px;box-shadow:var(--shadow)}
 .btn:hover{border-color:var(--accent)}.btn.primary{background:var(--accent);color:var(--accent-fg);border-color:var(--accent)}.btn.danger{color:var(--danger)}.btn.sm{padding:4px 9px;font-size:12.5px;box-shadow:none}.btn:disabled{opacity:.6;cursor:wait}
-.chk{display:inline-flex;align-items:center;gap:8px;font-size:13.5px;color:var(--muted);cursor:pointer}
+.acoes{display:flex;gap:10px;align-items:center;margin-left:auto}.btn.nova{padding:12px 20px;font-size:15px;border-radius:12px;box-shadow:0 6px 16px -4px color-mix(in srgb,var(--accent) 60%,transparent)}.btn.nova:hover{filter:brightness(1.08);transform:translateY(-1px)}
+.chk{flex-basis:100%;display:inline-flex;align-items:center;gap:8px;font-size:13.5px;color:var(--muted);cursor:pointer}
 .board{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px;margin-top:16px;align-items:start}
 @media (max-width:900px){.board{grid-template-columns:minmax(0,1fr)}}
 .col{background:var(--col);border:1px solid var(--line);border-radius:16px;padding:12px;min-height:160px}
@@ -120,8 +121,7 @@ body.carregando{overflow:hidden}
   <div class="bar">
     <label class="search"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></svg><input id="q" type="search" placeholder="Buscar tarefa" aria-label="Buscar" autocomplete="off"></label>
     <div class="seg" id="seg" role="group" aria-label="Mostrar"><button type="button" data-v="" class="on">Todas</button><button type="button" data-v="eq">Da equipe</button><button type="button" data-v="pv">Só minhas (privadas)</button></div>
-    <button class="btn primary" id="novaBtn" type="button">+ Nova tarefa</button>
-    <button class="btn" id="refBtn" type="button">Atualizar</button>
+    <div class="acoes"><button class="btn" id="refBtn" type="button">Atualizar</button><button class="btn primary nova" id="novaBtn" type="button"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>Nova tarefa</button></div>
     <label class="chk"><input type="checkbox" id="arqChk"> Mostrar concluídas de meses anteriores</label>
   </div>
   <div id="notice"></div>

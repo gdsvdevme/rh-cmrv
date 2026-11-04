@@ -24,6 +24,42 @@ async function centiPost(path, body, extra) {
   return { status: r.status, data, headers: r.headers };
 }
 
+async function centiGet(path, extra) {
+  const r = await fetch(BASE + '/' + path, { headers: Object.assign({ referer: REFERER }, extra || {}) });
+  let data = null; try { data = await r.json(); } catch (e) {}
+  return { status: r.status, data, headers: r.headers };
+}
+
+/* O Centi renumera as telas (ModuleKey) quando se atualiza: em 04/11/2026, 669 das 814 telas mudaram de número e
+   todo número fixo no código passou a abrir OUTRA tela (o relatório de afastamentos virou um que reclama da folha, e o cubo
+   de funcionários dava erro 500). Por isso o número de cada tela é lido do menu do Centi (GET restauth/modules), pelo código
+   da tela (FP071, FP051…). Os números fixos abaixo só valem se o menu não puder ser lido. */
+const MODULOS_TTL = 30 * 60 * 1000;
+let modulos = { em: 0, mapa: null };
+function lerMenu(data) {
+  const mapa = new Map();
+  (function anda(lista) {
+    (Array.isArray(lista) ? lista : []).forEach(x => {
+      if (!x || typeof x !== 'object') return;
+      if (x.Command && x.ModuleKey != null) mapa.set(String(x.Command), x.ModuleKey);
+      anda(x.SubItems);
+    });
+  })(data && data.Value);
+  return mapa;
+}
+/* h: cabeçalhos da pessoa (user, token, refreshtoken, Authorization). Devolve o resultado cru se a sessão for inválida,
+   para a função responder 401. */
+async function chaveDaTela(codigo, padrao, h) {
+  if (!modulos.mapa || Date.now() - modulos.em > MODULOS_TTL) {
+    const r = await centiGet('restauth/modules', h);
+    const mapa = lerMenu(r.data);
+    if (mapa.size) modulos = { em: Date.now(), mapa };
+    else return { chave: padrao, falhou: r };   // menu ilegível: usa o número fixo e deixa quem chamou decidir
+  }
+  return { chave: modulos.mapa.has(codigo) ? modulos.mapa.get(codigo) : padrao };
+}
+const limparMenu = () => { modulos = { em: 0, mapa: null }; };
+
 const centiLogin = (user, pass) =>
   centiPost('rest/login', { User: user, Pass: LZ.compressToBase64(pass), Encrypted: true, TypeRequest: 0, FrontBeta: true });
 
@@ -95,8 +131,8 @@ const feriasPayload = () => ({
 });
 const feriasLinhas = cube => cuboColunas(cube, FERIAS_COLUNAS, false);
 
-/* Cubo funcionário reduzido (FP245): vínculo, admissão e situação de todos, ativos e desligados. A licença-prêmio usa este e não o FP051,
-   que o Centi vem respondendo com erro 500. Só as colunas necessárias: sem CPF, PIS, sexo nem outros dados pessoais. */
+/* Cubo funcionário reduzido (FP245): vínculo, admissão e situação de todos, ativos e desligados. Só as colunas necessárias para a
+   licença-prêmio: sem CPF, PIS, sexo nem outros dados pessoais. */
 const QUADRO_MODULO = 120968;
 const QUADRO_COLUNAS = ['MATRICULA', 'NOME', 'SITUACAO', 'TIPOADMISSAO', 'DATAADMISSAO', 'LOTACAO', 'CARGO', 'TIPOAFASTAMENTO', 'DATAAFASTAMENTO'];
 const quadroPayload = (mes, ano) => ({
@@ -174,7 +210,7 @@ const espelhoPayload = () => ({
   ]
 });
 
-module.exports = { quadroPayload, quadroLinhas, afastamentosPayload, isAdmin, adminUsers, espelhoPayload, BASE, centiPost, cuboPayload, cuboLinhas, feriasPayload, feriasLinhas, fichaResumo, centiLogin, isAllowed, allowedUsers, pbPassword, readBody, send };
+module.exports = { centiGet, chaveDaTela, limparMenu, lerMenu, quadroPayload, quadroLinhas, afastamentosPayload, isAdmin, adminUsers, espelhoPayload, BASE, centiPost, cuboPayload, cuboLinhas, feriasPayload, feriasLinhas, fichaResumo, centiLogin, isAllowed, allowedUsers, pbPassword, readBody, send };
 
 /* Busca de servidor para a licença-prêmio: só o que a tela usa do cadastro (sem CPF, nascimento e dados de integração).
    Número = matrícula exata; texto = nome contendo o termo. No máximo 50 resultados. */
@@ -185,6 +221,8 @@ function buscaFiltro(termo) {
   if (t.length >= 3 && t.length <= 60) return { FieldName: 'Nome', List: false, Operation: 6, TypeFilter: 0, Value: '%' + t.toUpperCase() + '%', between: '' };
   return null;
 }
-const buscaLinhas = data => (data || []).slice(0, 50).map(f => { const o = {}; BUSCA_CAMPOS.forEach(k => { o[k] = f[k] == null ? '' : String(f[k]); }); return o; });
+/* quem está ativo vem primeiro, depois por nome */
+const buscaLinhas = data => (data || []).slice(0, 50).map(f => { const o = {}; BUSCA_CAMPOS.forEach(k => { o[k] = f[k] == null ? '' : String(f[k]); }); return o; })
+  .sort((a, b) => (/^ativo$/i.test(b.Situacao) - /^ativo$/i.test(a.Situacao)) || a.Nome.localeCompare(b.Nome, 'pt-BR'));
 module.exports.buscaFiltro = buscaFiltro;
 module.exports.buscaLinhas = buscaLinhas;

@@ -1,8 +1,9 @@
 /* POST /api/centi  { path, body }   cabeçalhos: x-centi-user, x-centi-token, x-centi-refresh
    Repassa ao Centi uma consulta feita com o token da própria pessoa (o Centi aplica as permissões dela).
-   Só as rotas listadas em ROTAS e as consultas somente leitura "cubo-funcionario" (FP051), "ficha-financeira" (FP024) "ferias" (FP051 + FP273) e "espelho-ponto" (FP170, devolve o PDF compactado em gzip) são aceitos. O Centi renova o token sozinho; se renovar,
+   Só as rotas listadas em ROTAS e as consultas somente leitura "cubo-funcionario" (FP051), "ficha-financeira" (FP024) "ferias" (FP051 + FP273),
+   "licenca-busca" (busca de servidor por nome ou matrícula), "licenca-quadro" (FP245), "espelho-ponto" (FP170) e "afastamentos-pdf" (FP071, do órgão ou de um servidor; os dois últimos devolvem o PDF compactado em gzip) são aceitos. O Centi renova o token sozinho; se renovar,
    o novo vem nos cabeçalhos x-centi-token e x-centi-refresh da resposta. */
-const { BASE, centiPost, cuboPayload, espelhoPayload, cuboLinhas, feriasPayload, feriasLinhas, fichaResumo, isAllowed, readBody, send } = require('./_centi');
+const { BASE, centiPost, cuboPayload, espelhoPayload, quadroPayload, quadroLinhas, afastamentosPayload, buscaFiltro, buscaLinhas, cuboLinhas, feriasPayload, feriasLinhas, fichaResumo, isAllowed, readBody, send } = require('./_centi');
 
 const ROTAS = /^restauth\/(searchentity)$/;
 
@@ -15,27 +16,53 @@ module.exports = async (req, res) => {
   if (!isAllowed(user)) return send(res, 403, { message: 'Usuário sem permissão neste sistema.' });
   const { path, body } = readBody(req);
   const cubo = path === 'cubo-funcionario', ficha = path === 'ficha-financeira', ferias = path === 'ferias', espelho = path === 'espelho-ponto';
-  if (typeof path !== 'string' || (!cubo && !ficha && !ferias && !espelho && !ROTAS.test(path))) return send(res, 400, { message: 'Consulta não permitida.' });
+  const quadro = path === 'licenca-quadro', afast = path === 'afastamentos-pdf', busca = path === 'licenca-busca';
+  if (typeof path !== 'string' || (!cubo && !ficha && !ferias && !espelho && !quadro && !afast && !busca && !ROTAS.test(path))) return send(res, 400, { message: 'Consulta não permitida.' });
   const mes = Number(body && body.mes), ano = Number(body && body.ano), matricula = String((body && body.matricula) || '').trim();
-  if ((cubo || ficha || ferias || espelho) && !(mes >= 1 && mes <= 12 && ano >= 2000 && ano <= 2100)) return send(res, 400, { message: 'Referência inválida.' });
+  if ((cubo || ficha || ferias || espelho || quadro || afast) && !(mes >= 1 && mes <= 12 && ano >= 2000 && ano <= 2100)) return send(res, 400, { message: 'Referência inválida.' });
   if (ficha && !/^\d{1,12}$/.test(matricula)) return send(res, 400, { message: 'Matrícula inválida.' });
+  const funcionario = String((body && body.funcionario) || '').trim();
+  if (afast && funcionario && !/^\d{1,12}$/.test(funcionario)) return send(res, 400, { message: 'Servidor inválido.' });
+  const filtroBusca = busca ? buscaFiltro(body && body.termo) : null;
+  if (busca && !filtroBusca) return send(res, 400, { message: 'Digite ao menos 3 letras do nome ou a matrícula.' });
   try {
     const h = { user, token, refreshtoken: refresh, Authorization: 'Bearer ' + token };
-    if (cubo || ficha || ferias || espelho) Object.assign(h, { company: process.env.CENTI_COMPANY || '1', year: String(ano), month: String(mes), 'x-ts-ajax-request': 'true' });
-    if (espelho) {
-      /* o Centi monta o PDF do órgão inteiro (leva de 25 s a 1 min). Devolvemos o gzip dele sem reabrir: a Vercel limita a resposta a 4,5 MB */
-      const e = await centiPost('restauth/operation', espelhoPayload(), h);
+    if (cubo || ficha || ferias || espelho || quadro || afast) Object.assign(h, { company: process.env.CENTI_COMPANY || '1', year: String(ano), month: String(mes), 'x-ts-ajax-request': 'true' });
+    if (espelho || afast) {
+      /* o Centi monta o PDF (o espelho do órgão inteiro leva de 25 s a 1 min). Devolvemos o gzip dele sem reabrir: a Vercel limita a resposta a 4,5 MB */
+      const e = await centiPost('restauth/operation', espelho ? espelhoPayload() : afastamentosPayload(mes, ano, funcionario), h);
       const t0 = e.headers.get('token'), r0 = e.headers.get('refreshtoken');
       if (t0) res.setHeader('x-centi-token', t0);
       if (r0) res.setHeader('x-centi-refresh', r0);
       const gz = e.data && e.data.File && e.data.File.DataCompress;
-      if (!gz) return send(res, e.status === 401 ? 401 : 502, { message: (e.data && e.data.Message && e.data.Message[0]) || 'O Centi não devolveu o espelho de ponto.' });
+      if (!gz) return send(res, e.status === 401 ? 401 : 502, { message: (e.data && e.data.Message && e.data.Message[0]) || (espelho ? 'O Centi não devolveu o espelho de ponto.' : 'O Centi não devolveu a relação de afastamentos.') });
       const buf = Buffer.from(gz, 'base64');
-      if (buf.length > 4.4 * 1024 * 1024) return send(res, 413, { message: 'O espelho ficou grande demais para baixar por aqui (' + (buf.length / 1048576).toFixed(1) + ' MB). Gere no Centi (FP170) e anexe o PDF.' });
+      if (buf.length > 4.4 * 1024 * 1024) return send(res, 413, { message: espelho
+        ? 'O espelho ficou grande demais para baixar por aqui (' + (buf.length / 1048576).toFixed(1) + ' MB). Gere no Centi (FP170) e anexe o PDF.'
+        : 'A relação de afastamentos ficou grande demais para baixar por aqui (' + (buf.length / 1048576).toFixed(1) + ' MB).' });
       res.statusCode = 200;
       res.setHeader('Content-Type', 'application/gzip');
       res.setHeader('Cache-Control', 'no-store');
       return res.end(buf);
+    }
+    if (busca) {
+      const b = await centiPost('restauth/searchentity', { Depth: 1, Entity: 'SFuncionario', Start: 1, Filters: [filtroBusca] }, h);
+      const tb = b.headers.get('token'), rb = b.headers.get('refreshtoken');
+      if (tb) res.setHeader('x-centi-token', tb);
+      if (rb) res.setHeader('x-centi-refresh', rb);
+      if (b.status === 401) return send(res, 401, { message: 'Sessão do Centi expirada.' });
+      if (!b.data || b.data.Success === false) return send(res, 502, { message: (b.data && b.data.Message && b.data.Message[0]) || 'O Centi não respondeu à busca.' });
+      return send(res, 200, { Data: buscaLinhas(b.data.Data) });
+    }
+    if (quadro) {
+      /* quadro (Cubo funcionário reduzido): só ativos e só as colunas que a licença-prêmio usa */
+      const q = await centiPost('restauth/operation', quadroPayload(mes, ano), h);
+      const t2 = q.headers.get('token'), r2 = q.headers.get('refreshtoken');
+      if (t2) res.setHeader('x-centi-token', t2);
+      if (r2) res.setHeader('x-centi-refresh', r2);
+      const cq = q.data && q.data.Cube;
+      if (!cq) return send(res, q.status === 401 ? 401 : 502, { message: (q.data && q.data.Message && q.data.Message[0]) || 'O Centi não devolveu o cubo de funcionários.' });
+      return send(res, 200, { Pessoas: quadroLinhas(cq) });
     }
     if (ferias) {
       /* quadro de ativos (Cubo funcionário) + gozos de férias (Cubo movimentação férias); o direito é calculado na tela */

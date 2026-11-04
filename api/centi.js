@@ -1,8 +1,8 @@
 /* POST /api/centi  { path, body }   cabeçalhos: x-centi-user, x-centi-token, x-centi-refresh
    Repassa ao Centi uma consulta feita com o token da própria pessoa (o Centi aplica as permissões dela).
-   Só as rotas listadas em ROTAS e as consultas somente leitura "cubo-funcionario" (FP051), "ficha-financeira" (FP024) e "ferias" (FP051 + FP273) são aceitos. O Centi renova o token sozinho; se renovar,
+   Só as rotas listadas em ROTAS e as consultas somente leitura "cubo-funcionario" (FP051), "ficha-financeira" (FP024) "ferias" (FP051 + FP273) e "espelho-ponto" (FP170, devolve o PDF compactado em gzip) são aceitos. O Centi renova o token sozinho; se renovar,
    o novo vem nos cabeçalhos x-centi-token e x-centi-refresh da resposta. */
-const { BASE, centiPost, cuboPayload, cuboLinhas, feriasPayload, feriasLinhas, fichaResumo, isAllowed, readBody, send } = require('./_centi');
+const { BASE, centiPost, cuboPayload, espelhoPayload, cuboLinhas, feriasPayload, feriasLinhas, fichaResumo, isAllowed, readBody, send } = require('./_centi');
 
 const ROTAS = /^restauth\/(searchentity)$/;
 
@@ -14,14 +14,29 @@ module.exports = async (req, res) => {
   if (!user || !token) return send(res, 401, { message: 'Sessão do Centi ausente. Entre novamente.' });
   if (!isAllowed(user)) return send(res, 403, { message: 'Usuário sem permissão neste sistema.' });
   const { path, body } = readBody(req);
-  const cubo = path === 'cubo-funcionario', ficha = path === 'ficha-financeira', ferias = path === 'ferias';
-  if (typeof path !== 'string' || (!cubo && !ficha && !ferias && !ROTAS.test(path))) return send(res, 400, { message: 'Consulta não permitida.' });
+  const cubo = path === 'cubo-funcionario', ficha = path === 'ficha-financeira', ferias = path === 'ferias', espelho = path === 'espelho-ponto';
+  if (typeof path !== 'string' || (!cubo && !ficha && !ferias && !espelho && !ROTAS.test(path))) return send(res, 400, { message: 'Consulta não permitida.' });
   const mes = Number(body && body.mes), ano = Number(body && body.ano), matricula = String((body && body.matricula) || '').trim();
-  if ((cubo || ficha || ferias) && !(mes >= 1 && mes <= 12 && ano >= 2000 && ano <= 2100)) return send(res, 400, { message: 'Referência inválida.' });
+  if ((cubo || ficha || ferias || espelho) && !(mes >= 1 && mes <= 12 && ano >= 2000 && ano <= 2100)) return send(res, 400, { message: 'Referência inválida.' });
   if (ficha && !/^\d{1,12}$/.test(matricula)) return send(res, 400, { message: 'Matrícula inválida.' });
   try {
     const h = { user, token, refreshtoken: refresh, Authorization: 'Bearer ' + token };
-    if (cubo || ficha || ferias) Object.assign(h, { company: process.env.CENTI_COMPANY || '1', year: String(ano), month: String(mes), 'x-ts-ajax-request': 'true' });
+    if (cubo || ficha || ferias || espelho) Object.assign(h, { company: process.env.CENTI_COMPANY || '1', year: String(ano), month: String(mes), 'x-ts-ajax-request': 'true' });
+    if (espelho) {
+      /* o Centi monta o PDF do órgão inteiro (leva de 25 s a 1 min). Devolvemos o gzip dele sem reabrir: a Vercel limita a resposta a 4,5 MB */
+      const e = await centiPost('restauth/operation', espelhoPayload(), h);
+      const t0 = e.headers.get('token'), r0 = e.headers.get('refreshtoken');
+      if (t0) res.setHeader('x-centi-token', t0);
+      if (r0) res.setHeader('x-centi-refresh', r0);
+      const gz = e.data && e.data.File && e.data.File.DataCompress;
+      if (!gz) return send(res, e.status === 401 ? 401 : 502, { message: (e.data && e.data.Message && e.data.Message[0]) || 'O Centi não devolveu o espelho de ponto.' });
+      const buf = Buffer.from(gz, 'base64');
+      if (buf.length > 4.4 * 1024 * 1024) return send(res, 413, { message: 'O espelho ficou grande demais para baixar por aqui (' + (buf.length / 1048576).toFixed(1) + ' MB). Gere no Centi (FP170) e anexe o PDF.' });
+      res.statusCode = 200;
+      res.setHeader('Content-Type', 'application/gzip');
+      res.setHeader('Cache-Control', 'no-store');
+      return res.end(buf);
+    }
     if (ferias) {
       /* quadro de ativos (Cubo funcionário) + gozos de férias (Cubo movimentação férias); o direito é calculado na tela */
       const f1 = await centiPost('restauth/operation', cuboPayload(mes, ano), h);

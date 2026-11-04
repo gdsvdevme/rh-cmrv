@@ -103,4 +103,24 @@ function fichaResumo(f) {
   };
 }
 
-module.exports = { BASE, centiPost, cuboPayload, cuboLinhas, feriasPayload, feriasLinhas, fichaResumo, centiLogin, isAllowed, allowedUsers, pbPassword, readBody, send };
+/* Espelho de ponto (FP170) de todo o órgão. A referência (mês/ano) vai nos cabeçalhos da chamada, não aqui. */
+const ESPELHO_MODULO = 121017;
+const espelhoPayload = () => ({
+  ModuleKey: ESPELHO_MODULO, Guid: crypto.randomUUID(),
+  Params: [
+    { Key: 'Orgaos', Value: { Params: [{ Key: 'Tag', Value: '0' }, { Key: 'Array', Value: [process.env.CENTI_ORGAO || '1'] }] } },
+    { Key: 'Fechamentos', Value: vazio() }, { Key: 'Lotacao', Value: vazio() }, { Key: 'IdHierarquia', Value: vazio() },
+    { Key: 'OrdenarPor', Value: '0' }, { Key: 'AgruparPorLotacao', Value: '0' }, { Key: 'AgregarPorNivel', Value: '0' }, { Key: 'IdNivel', Value: '' },
+    { Key: 'EmbeddedFonts', Value: '0' }, { Key: 'ImprimirQrCodeGenerico', Value: '0' }, { Key: 'ChaveEletronica', Value: '' },
+    { Key: 'TextoCentralizado', Value: '' }, { Key: 'MarcaDagua', Value: '0' }, { Key: 'ApenasPrimeiraPagina', Value: '0' },
+    { Key: 'TamanhoTextoCentralizado', Value: '' }, { Key: 'PrintOptimized', Value: '0' }, { Key: 'ExportXlsxSimplificado', Value: '0' },
+    { Key: 'RelatorioVerificacaoItem', Value: '' }, { Key: 'GerarCubo', Value: '0' }, { Key: 'CadastrarEValidarCubo', Value: '0' },
+    { Key: 'TypeReturn', Value: '0' }, { Key: 'SendMail', Value: '0' }, { Key: 'EmailRemetente', Value: '' }, { Key: 'Remetente', Value: '' },
+    { Key: 'Emails', Value: '' }, { Key: 'Assunto', Value: '' }, { Key: 'Msg', Value: '' }, { Key: 'Sign', Value: '0' }, { Key: 'IdAssinatura', Value: '' },
+    { Key: 'FileName', Value: '' }, { Key: 'StorageReport', Value: '0' }, { Key: 'Name', Value: '' }, { Key: 'Description', Value: '' },
+    { Key: 'SysInternal', Value: '0' }, { Key: 'RestApp', Value: '0' }, { Key: 'Token', Value: '' }, { Key: 'GuidTransacao', Value: '' },
+    { Key: 'Captcha', Value: '' }, { Key: 'Background', Value: '0' }
+  ]
+});
+
+module.exports = { espelhoPayload, BASE, centiPost, cuboPayload, cuboLinhas, feriasPayload, feriasLinhas, fichaResumo, centiLogin, isAllowed, allowedUsers, pbPassword, readBody, send };

@@ -1,5 +1,6 @@
 {
   "buildCommand": "",
   "outputDirectory": "site",
-  "cleanUrls": true
+  "cleanUrls": true,
+  "functions": { "api/centi.js": { "maxDuration": 60 } }
 }

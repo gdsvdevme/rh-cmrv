@@ -555,12 +555,14 @@ function prazoDoCiclo(dia,ciclo){   // dia vazio = sem data específica; dia 31 
 }
 const novoModelo=(d,compartilhada,dia)=>{const id=idAleatorio();return {id,serie:id,titulo:d.titulo,descricao:d.descricao,coluna:'modelo',compartilhada,autor:PB.nome||PB.email||'',
   prioridade:d.prioridade,prazo:'',criada_em:new Date().toISOString(),concluido_em:'',recorrencia:'mensal',dia_prazo:dia,ciclo:''};};
+/* o tempo real pode entregar a tarefa antes do create() responder: insere sem duplicar o id */
+function addUnico(arr,t,fim){const i=arr.findIndex(x=>x.id===t.id);if(i>=0) arr[i]=t;else if(fim) arr.push(t);else arr.unshift(t);}
 const modeloDe=t=>t&&t.serie?modelos.find(m=>m.id===t.serie):null;
 async function criarOcorrencia(m,ciclo,coluna){
   const dados={id:idCiclo(m.id,ciclo),titulo:m.titulo,descricao:m.descricao||'',coluna:coluna||'fazer',compartilhada:!!m.compartilhada,autor:m.autor||'',
     prioridade:m.prioridade||'normal',prazo:prazoDoCiclo(m.dia_prazo,ciclo),criada_em:new Date().toISOString(),concluido_em:coluna==='concluida'?hojeIso():'',
     recorrencia:'mensal',dia_prazo:m.dia_prazo||'',serie:m.id,ciclo};
-  const c=await dbh.tarefas.create(dados);lista.unshift(c);return c;
+  const c=await dbh.tarefas.create(dados);addUnico(lista,c);return c;
 }
 /* garante a ocorrência do mês de cada modelo ativo (quando o mês vira, a nova nasce em "A fazer") */
 async function gerarRecorrentes(){
@@ -718,10 +720,10 @@ function dlgTarefa(id,col){
     try{
       if(novo&&!rec){
         dados.autor=PB.nome||PB.email||'';dados.criada_em=new Date().toISOString();dados.concluido_em=dados.coluna==='concluida'?hojeIso():'';
-        const c=await dbh.tarefas.create(dados);lista.unshift(c);render();
+        const c=await dbh.tarefas.create(dados);addUnico(lista,c);render();
         toast(dados.compartilhada?'Tarefa criada para toda a equipe.':'Tarefa privada criada, só você a vê.');
       }else if(novo&&rec){
-        const mod=await dbh.tarefas.create(novoModelo(dados,compartilhada,dia));modelos.push(mod);
+        const mod=await dbh.tarefas.create(novoModelo(dados,compartilhada,dia));addUnico(modelos,mod,1);
         await criarOcorrencia(mod,ciclo,dados.coluna);
         render();toast('Tarefa recorrente criada. Todo mês ela volta para "A fazer"'+(dia?' com prazo até o dia '+dia:' sem data específica')+'.');
       }else{
@@ -733,7 +735,7 @@ function dlgTarefa(id,col){
           await dbh.tarefas.remove(m.id);modelos=modelos.filter(x=>x.id!==m.id);
           Object.assign(dados,{serie:'',ciclo:'',recorrencia:'',dia_prazo:''});
         }else if(!recorrente&&rec){   // tarefa comum que passa a repetir
-          const mod=await dbh.tarefas.create(novoModelo(dados,compartilhada,dia));modelos.push(mod);
+          const mod=await dbh.tarefas.create(novoModelo(dados,compartilhada,dia));addUnico(modelos,mod,1);
           Object.assign(dados,{serie:mod.id,ciclo,recorrencia:'mensal',dia_prazo:dia});
         }
         salvar(id,dados,rec&&!recorrente?'Tarefa atualizada. Ela passa a repetir todo mês.':!rec&&recorrente?'Repetição encerrada. Não nascem novas tarefas nos próximos meses.':'Tarefa atualizada.');

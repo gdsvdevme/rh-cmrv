@@ -5,6 +5,8 @@
    o novo vem nos cabeçalhos x-centi-token e x-centi-refresh da resposta. */
 const { BASE, centiPost, cuboPayload, espelhoPayload, quadroPayload, quadroLinhas, afastamentosPayload, buscaFiltro, buscaLinhas, cuboLinhas, feriasPayload, feriasLinhas, fichaResumo, isAllowed, readBody, send } = require('./_centi');
 
+const { semFolha, referencias } = require('./_ref');
+
 const ROTAS = /^restauth\/(searchentity)$/;
 
 module.exports = async (req, res) => {
@@ -30,12 +32,22 @@ module.exports = async (req, res) => {
     if (cubo || ficha || ferias || espelho || quadro || afast) Object.assign(h, { company: process.env.CENTI_COMPANY || '1', year: String(ano), month: String(mes), 'x-ts-ajax-request': 'true' });
     if (espelho || afast) {
       /* o Centi monta o PDF (o espelho do órgão inteiro leva de 25 s a 1 min). Devolvemos o gzip dele sem reabrir: a Vercel limita a resposta a 4,5 MB */
-      const e = await centiPost('restauth/operation', espelho ? espelhoPayload() : afastamentosPayload(mes, ano, funcionario), h);
+      let e, usada = { mes, ano };
+      if (espelho) e = await centiPost('restauth/operation', espelhoPayload(), h);
+      else {
+        /* se a folha do mês pedido ainda não foi processada, o Centi recusa: tenta o mês anterior (e mais um) */
+        for (const ref of referencias(mes, ano, 3)) {
+          e = await centiPost('restauth/operation', afastamentosPayload(mes, ano, funcionario, ref), Object.assign({}, h, { year: String(ref.ano), month: String(ref.mes) }));
+          usada = ref;
+          if (!semFolha(e)) break;
+        }
+        res.setHeader('x-centi-ref', String(usada.mes).padStart(2, '0') + '/' + usada.ano);
+      }
       const t0 = e.headers.get('token'), r0 = e.headers.get('refreshtoken');
       if (t0) res.setHeader('x-centi-token', t0);
       if (r0) res.setHeader('x-centi-refresh', r0);
       const gz = e.data && e.data.File && e.data.File.DataCompress;
-      if (!gz) return send(res, e.status === 401 ? 401 : 502, { message: (e.data && e.data.Message && e.data.Message[0]) || (espelho ? 'O Centi não devolveu o espelho de ponto.' : 'O Centi não devolveu a relação de afastamentos.') });
+      if (!gz) return send(res, e.status === 401 ? 401 : 502, { message: ((e.data && e.data.Message && e.data.Message[0]) || (espelho ? 'O Centi não devolveu o espelho de ponto.' : 'O Centi não devolveu a relação de afastamentos.')).replace(/\.?\s*$/, '.') + (afast && semFolha(e) ? ' Tentei também os dois meses anteriores.' : '') });
       const buf = Buffer.from(gz, 'base64');
       if (buf.length > 4.4 * 1024 * 1024) return send(res, 413, { message: espelho
         ? 'O espelho ficou grande demais para baixar por aqui (' + (buf.length / 1048576).toFixed(1) + ' MB). Gere no Centi (FP170) e anexe o PDF.'
@@ -56,7 +68,11 @@ module.exports = async (req, res) => {
     }
     if (quadro) {
       /* quadro (Cubo funcionário reduzido): só ativos e só as colunas que a licença-prêmio usa */
-      const q = await centiPost('restauth/operation', quadroPayload(mes, ano), h);
+      let q;
+      for (const ref of referencias(mes, ano, 3)) {   // mesma regra: folha do mês ainda não processada -> mês anterior
+        q = await centiPost('restauth/operation', quadroPayload(ref.mes, ref.ano), Object.assign({}, h, { year: String(ref.ano), month: String(ref.mes) }));
+        if (!semFolha(q)) break;
+      }
       const t2 = q.headers.get('token'), r2 = q.headers.get('refreshtoken');
       if (t2) res.setHeader('x-centi-token', t2);
       if (r2) res.setHeader('x-centi-refresh', r2);

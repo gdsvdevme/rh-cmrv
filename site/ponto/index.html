@@ -173,6 +173,8 @@ input,select,textarea{border-radius:12px}
 @keyframes wave{0%,60%,100%{transform:rotate(0)}10%,30%{transform:rotate(16deg)}20%,40%{transform:rotate(-10deg)}50%{transform:rotate(8deg)}}
 @media (prefers-reduced-motion:reduce){.hello,.hello .wave{animation:none}.btn:hover,.themebtn:hover{transform:none}}
 @media print{.hello{display:none}}
+/* o conteúdo que sobe sobre o cabeçalho precisa ficar acima dele */
+.hero~main,.hero~.wrap,.stats,.layout,.grid{position:relative;z-index:2}
 
 </style>
 

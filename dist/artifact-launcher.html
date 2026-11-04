@@ -50,6 +50,7 @@ main{padding-block:0 40px}
 .tile{position:relative;background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:20px;display:flex;flex-direction:column;gap:12px;min-width:0;box-shadow:var(--shadow);text-decoration:none;color:inherit;transition:transform .15s,border-color .15s}
 a.tile:hover{transform:translateY(-3px);border-color:var(--accent)}
 a.tile:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
+.tile[draggable=true]{cursor:grab}.tile.dragging{opacity:.45}.tile.over{outline:2px dashed var(--accent);outline-offset:2px}
 .tile.off{background:color-mix(in srgb,var(--surface) 70%,var(--bg))}
 .ico{width:56px;height:56px;border-radius:15px;display:grid;place-items:center;background:var(--tint);color:var(--ink);flex:none}
 .tile h3{font-size:1.05rem;line-height:1.25}
@@ -117,8 +118,8 @@ const PB=(function(){
   let token='',email='',col='rhcmrv_users',loginP=null;
   let cs=null;   // sessão do Centi: {user,nome,token,refreshToken}
 
-  /* só vale a sessão que tem o acesso do Centi junto; sessões antigas (login simples) pedem novo login */
-  function readAuth(){try{const a=JSON.parse(localStorage.getItem(AUTH_KEY)||'null');if(a&&a.token&&a.centi&&a.centi.token){token=a.token;email=a.email||'';col=a.col||'rhcmrv_users';cs=a.centi;}}catch(e){}}
+  /* só vale a sessão que tem o acesso do Centi junto e a marca de admin; sessões antigas (login simples ou sem a marca) pedem novo login */
+  function readAuth(){try{const a=JSON.parse(localStorage.getItem(AUTH_KEY)||'null');if(a&&a.token&&a.centi&&a.centi.token&&typeof a.centi.admin==='boolean'){token=a.token;email=a.email||'';col=a.col||'rhcmrv_users';cs=a.centi;}}catch(e){}}
   function saveAuth(){try{localStorage.setItem(AUTH_KEY,JSON.stringify({token,email,col,centi:cs}));}catch(e){}}
   function clearAuth(){token='';email='';col='rhcmrv_users';cs=null;try{localStorage.removeItem(AUTH_KEY);}catch(e){}}
 
@@ -280,6 +281,7 @@ const PB=(function(){
   const centi={
     get user(){return cs?cs.user:'';},
     get nome(){return cs?(cs.nome||cs.user):'';},
+    get admin(){return !!(cs&&cs.admin);},   // administrador do sistema (edita o painel dos mini sistemas)
     /* Cubo funcionário (FP051) do Centi na referência mes/ano -> {Data:[{MATRICULA,NOMEFUNC,CARGO,HIERARQUIA,...}],Total}; só ativos */
     /* Ficha financeira (FP024) da matrícula no mês/ano -> {Fichas:[{Folha,Mes,Ano,TotalProventos,TotalDescontos,LiquidoReceber,Eventos:[...]}]}; não é guardada */
     ficha(matricula,mes,ano){return centiCall('ficha-financeira',{matricula,mes,ano});},
@@ -363,7 +365,7 @@ const PB=(function(){
       }
     }
   }
-  return {connect,centi,logout(){clearAuth();location.reload();},get email(){return email;},get nome(){return centi.nome;},get userId(){return userId();},url:URL_BASE};
+  return {connect,centi,logout(){clearAuth();location.reload();},get email(){return email;},get nome(){return centi.nome;},get admin(){return centi.admin;},get userId(){return userId();},url:URL_BASE};
 })();
 
 const FLOW_URL="fluxogramas/";
@@ -423,9 +425,12 @@ function load(){
   try{const d=JSON.parse(localStorage.getItem(LS)||'null');if(d&&Array.isArray(d.tiles)) return d;}catch(e){}
   return null;
 }
+/* só quem entrou como administrador edita o painel; sem sessão (modo local ou artefato) o painel é só de leitura */
+const podeEditar=()=>PB.centi.admin;
 function persist(){
   clearTimeout(saveT);
   saveT=setTimeout(async()=>{
+    if(!podeEditar()) return;     // só administrador grava o painel (o PocketBase também barra)
     const json=JSON.stringify(st);
     if(!dbh){try{localStorage.setItem(LS,json);}catch(e){}}
     if(dbh){try{await dbh.doc('painel/tiles').set({json});}catch(e){toast('Não foi possível salvar no servidor. Verifique a conexão.');}}
@@ -437,16 +442,18 @@ function render(){
   const q=filter.trim().toLowerCase();
   const tiles=st.tiles.filter(t=>!q||(t.nome+' '+t.desc).toLowerCase().includes(q));
   $('#count').textContent=st.tiles.length+(st.tiles.length===1?' sistema':' sistemas');
+  if(edit&&!podeEditar()) edit=false;
+  $('#editBtn').hidden=!podeEditar();
   $('#editBtn').innerHTML=edit?'Concluir edição':'Editar painel';
   $('#editBtn').className='btn'+(edit?' primary':'');
-  $('#editInfo').innerHTML=edit?'<div class="edit-banner">Modo de edição: altere, reordene, exclua ou adicione sistemas. Para abrir um sistema, conclua a edição.</div>':'';
+  $('#editInfo').innerHTML=edit?'<div class="edit-banner">Modo de edição: arraste os cartões para reordenar (ou use as setas), altere nome e descrição, exclua ou adicione sistemas. Para abrir um sistema, conclua a edição.</div>':'';
   const cards=tiles.map(t=>{
     const i=st.tiles.indexOf(t);
     const on=t.status==='ok'&&t.url;
     const style=`--tint:hsl(${t.hue} 70% ${document.documentElement.dataset.theme==='dark'?'22%':'93%'});--ink:hsl(${t.hue} 60% 38%)`;
     const pill=`<span class="pill ${t.status==='ok'?'ok':t.status==='dev'?'warn':''}">${STATUS[t.status]||''}</span>`;
     const inner=`<div class="ico">${svg(t.icone)}</div><h3>${esc(t.nome)}</h3><p>${esc(t.desc)}</p>`;
-    if(edit) return `<div class="tile" style="${style}">${inner}<div class="foot">${pill}</div>
+    if(edit) return `<div class="tile" data-id="${t.id}" draggable="true" style="${style}">${inner}<div class="foot">${pill}</div>
       <div class="tools"><button class="btn sm" data-a="edit" data-id="${t.id}">Editar</button><button class="btn sm" data-a="up" data-id="${t.id}"${i===0?' disabled':''} aria-label="Mover para antes">↑</button><button class="btn sm" data-a="down" data-id="${t.id}"${i===st.tiles.length-1?' disabled':''} aria-label="Mover para depois">↓</button><button class="btn sm danger" data-a="del" data-id="${t.id}">Excluir</button></div></div>`;
     const foot=`<div class="foot">${pill}${on?'<span class="open">Abrir ›</span>':''}</div>`;
     return on?`<a class="tile" style="${style}" href="${esc(t.url)}" target="_top">${inner}${foot}</a>`
@@ -502,7 +509,21 @@ document.addEventListener('click',ev=>{
       break;
   }
 });
-$('#editBtn').addEventListener('click',()=>{edit=!edit;render();});
+$('#editBtn').addEventListener('click',()=>{if(!podeEditar()) return;edit=!edit;render();});
+/* arrastar e soltar para reordenar (no celular, as setas) */
+let dragId=null;
+function mover(de,para){
+  const i=st.tiles.findIndex(x=>x.id===de),j=st.tiles.findIndex(x=>x.id===para);
+  if(i<0||j<0||i===j) return;
+  const [t]=st.tiles.splice(i,1);st.tiles.splice(j,0,t);persist();render();
+}
+(function arrastar(){
+  const g=$('#grid');
+  g.addEventListener('dragstart',ev=>{const t=ev.target.closest&&ev.target.closest('.tile[data-id]');if(!edit||!t||ev.target.closest('button')) return;dragId=t.dataset.id;ev.dataTransfer.effectAllowed='move';try{ev.dataTransfer.setData('text/plain',dragId);}catch(e){}t.classList.add('dragging');});
+  g.addEventListener('dragover',ev=>{if(!edit||!dragId) return;const t=ev.target.closest('.tile[data-id]');if(!t) return;ev.preventDefault();g.querySelectorAll('.over').forEach(x=>{if(x!==t) x.classList.remove('over');});if(t.dataset.id!==dragId) t.classList.add('over');});
+  g.addEventListener('drop',ev=>{if(!edit||!dragId) return;const t=ev.target.closest('.tile[data-id]');if(!t) return;ev.preventDefault();const de=dragId;dragId=null;mover(de,t.dataset.id);});
+  g.addEventListener('dragend',()=>{dragId=null;render();});
+})();
 $('#q').addEventListener('input',e=>{filter=e.target.value;render();});
 document.addEventListener('keydown',e=>{if(e.key==='Escape'&&!$('#modal').hidden) closeModal();});
 document.querySelector('#themeBtn').addEventListener('click',()=>{const n=isDark()?'light':'dark';document.documentElement.setAttribute('data-theme',n);try{localStorage.setItem(TEMA_KEY,n);}catch(e){}});
@@ -545,10 +566,11 @@ function migrar(){
       if(window.claude&&window.claude.use) dbh=await window.claude.use('db');
       if(!dbh) dbh=await PB.connect();
       if(dbh){
-        $('#storeNote').textContent='As alterações deste painel ficam salvas no servidor.';
+        $('#storeNote').textContent=podeEditar()?'As alterações deste painel ficam salvas no servidor.':'O painel é editado pelos administradores.';
+        render();
         const s=await dbh.doc('painel/tiles').get();
         if(s.exists){try{const d=JSON.parse(s.data().json);if(d&&Array.isArray(d.tiles)){st=d;migrar();render();}}catch(e){}}
-        else if(load()){
+        else if(load()&&podeEditar()){
           await dbh.doc('painel/tiles').set({json:JSON.stringify(st)});
           const v=await dbh.doc('painel/tiles').get();
           if(v.exists){try{localStorage.removeItem(LS);}catch(e){}toast('Dados deste navegador enviados ao servidor.');}

@@ -9,6 +9,10 @@ const REFERER = process.env.CENTI_REFERER || 'https://go.centi.com.br/camarariov
 const allowedUsers = () => (process.env.CENTI_ALLOWED_USERS || '')
   .split(',').map(s => s.trim().toLowerCase()).filter(Boolean);
 const isAllowed = user => allowedUsers().includes(String(user || '').trim().toLowerCase());
+/* administradores do sistema (editam o painel dos mini sistemas); precisam estar em CENTI_ALLOWED_USERS também */
+const adminUsers = () => (process.env.CENTI_ADMIN_USERS || '')
+  .split(',').map(x => x.trim().toLowerCase()).filter(Boolean);
+const isAdmin = user => adminUsers().includes(String(user || '').trim().toLowerCase());
 
 async function centiPost(path, body, extra) {
   const r = await fetch(BASE + '/' + path, {
@@ -123,4 +127,4 @@ const espelhoPayload = () => ({
   ]
 });
 
-module.exports = { espelhoPayload, BASE, centiPost, cuboPayload, cuboLinhas, feriasPayload, feriasLinhas, fichaResumo, centiLogin, isAllowed, allowedUsers, pbPassword, readBody, send };
+module.exports = { isAdmin, adminUsers, espelhoPayload, BASE, centiPost, cuboPayload, cuboLinhas, feriasPayload, feriasLinhas, fichaResumo, centiLogin, isAllowed, allowedUsers, pbPassword, readBody, send };

@@ -203,8 +203,8 @@ const PB=(function(){
   let token='',email='',col='rhcmrv_users',loginP=null;
   let cs=null;   // sessão do Centi: {user,nome,token,refreshToken}
 
-  /* só vale a sessão que tem o acesso do Centi junto; sessões antigas (login simples) pedem novo login */
-  function readAuth(){try{const a=JSON.parse(localStorage.getItem(AUTH_KEY)||'null');if(a&&a.token&&a.centi&&a.centi.token){token=a.token;email=a.email||'';col=a.col||'rhcmrv_users';cs=a.centi;}}catch(e){}}
+  /* só vale a sessão que tem o acesso do Centi junto e a marca de admin; sessões antigas (login simples ou sem a marca) pedem novo login */
+  function readAuth(){try{const a=JSON.parse(localStorage.getItem(AUTH_KEY)||'null');if(a&&a.token&&a.centi&&a.centi.token&&typeof a.centi.admin==='boolean'){token=a.token;email=a.email||'';col=a.col||'rhcmrv_users';cs=a.centi;}}catch(e){}}
   function saveAuth(){try{localStorage.setItem(AUTH_KEY,JSON.stringify({token,email,col,centi:cs}));}catch(e){}}
   function clearAuth(){token='';email='';col='rhcmrv_users';cs=null;try{localStorage.removeItem(AUTH_KEY);}catch(e){}}
 
@@ -366,6 +366,7 @@ const PB=(function(){
   const centi={
     get user(){return cs?cs.user:'';},
     get nome(){return cs?(cs.nome||cs.user):'';},
+    get admin(){return !!(cs&&cs.admin);},   // administrador do sistema (edita o painel dos mini sistemas)
     /* Cubo funcionário (FP051) do Centi na referência mes/ano -> {Data:[{MATRICULA,NOMEFUNC,CARGO,HIERARQUIA,...}],Total}; só ativos */
     /* Ficha financeira (FP024) da matrícula no mês/ano -> {Fichas:[{Folha,Mes,Ano,TotalProventos,TotalDescontos,LiquidoReceber,Eventos:[...]}]}; não é guardada */
     ficha(matricula,mes,ano){return centiCall('ficha-financeira',{matricula,mes,ano});},
@@ -449,7 +450,7 @@ const PB=(function(){
       }
     }
   }
-  return {connect,centi,logout(){clearAuth();location.reload();},get email(){return email;},get nome(){return centi.nome;},get userId(){return userId();},url:URL_BASE};
+  return {connect,centi,logout(){clearAuth();location.reload();},get email(){return email;},get nome(){return centi.nome;},get admin(){return centi.admin;},get userId(){return userId();},url:URL_BASE};
 })();
 
 const HOME_URL="../";

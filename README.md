@@ -61,6 +61,7 @@ No código das páginas, depois do login: `PB.centi.user`, `PB.centi.nome` e `PB
 
 **Variáveis de ambiente na Vercel** (Settings → Environment Variables; nunca no repositório):
 - `CENTI_ALLOWED_USERS`: usuários do Centi que podem usar o sistema, separados por vírgula (ex.: `usuario1,usuario2`). Sem isso, ninguém entra.
+- `CENTI_ADMIN_USERS`: usuários do Centi que são **administradores** do sistema (também precisam estar em `CENTI_ALLOWED_USERS`). Só eles veem o botão **Editar painel** e podem reordenar (arrastando os cartões), renomear, descrever, adicionar e excluir os mini sistemas do painel inicial. A trava é no PocketBase: no primeiro login depois da atualização, a função cria o campo `admin` em `rhcmrv_users` e passa a exigir admin para gravar o documento `painel/tiles` de `rhcmrv_docs` (o `pocketbase/setup.py` mantém as mesmas regras).
 - `APP_SECRET`: texto longo e aleatório; deriva a senha interna de cada conta do PocketBase. Não pode mudar depois (mudar pede nova criação das contas).
 - `PB_ADMIN_EMAIL` e `PB_ADMIN_PASSWORD`: superusuário do PocketBase, usado só para criar a conta de quem entra pela primeira vez.
 - `PB_URL` (opcional, padrão `https://pb.devgabriel.app.br`).

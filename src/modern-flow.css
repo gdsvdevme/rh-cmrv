@@ -1,0 +1,12 @@
+/* ===== visual moderno: fluxogramas ===== */
+body{background:radial-gradient(1100px 520px at 85% -120px,color-mix(in srgb,var(--accent) 10%,transparent),transparent 70%),var(--bg);background-attachment:fixed}
+.card{border-radius:18px;transition:box-shadow .2s,border-color .2s}
+.card:hover{box-shadow:0 12px 30px rgba(6,61,39,.10)}
+.btn{border-radius:99px;padding-inline:14px;transition:transform .15s,border-color .15s}
+.btn:hover{transform:translateY(-1px)}
+.topbar{backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px)}
+.nav button{border-radius:12px}
+input,select,textarea{border-radius:10px}
+.hello{margin:12px 10px 4px;width:fit-content;display:flex;align-items:center;gap:6px;font-family:var(--f-display);font-weight:600;font-size:13.5px;padding:5px 12px;border-radius:99px;background:rgba(255,255,255,.16);color:#fff;white-space:nowrap}
+@media (prefers-reduced-motion:reduce){.btn:hover{transform:none}}
+@media print{.hello{display:none}}

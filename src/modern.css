@@ -1,0 +1,23 @@
+/* ===== visual moderno (compartilhado) ===== */
+body{background:radial-gradient(1100px 520px at 85% -120px,color-mix(in srgb,var(--accent) 12%,transparent),transparent 70%),var(--bg);background-attachment:fixed}
+.hero{border-radius:0 0 32px 32px;padding-bottom:clamp(48px,7vw,72px)!important;background:radial-gradient(600px 300px at 12% 0,rgba(255,255,255,.12),transparent 70%),linear-gradient(135deg,var(--hero-a),var(--hero-b));position:relative;overflow:hidden}
+.hero::before{content:"";position:absolute;left:-80px;bottom:-120px;width:300px;height:300px;border-radius:50%;background:radial-gradient(circle,rgba(212,170,74,.28),transparent 70%);pointer-events:none}
+.hero>.inner{position:relative;z-index:1}
+.themebtn{backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);border-radius:99px!important;padding:8px 14px!important;transition:background .15s,transform .15s}
+.themebtn:hover{transform:translateY(-1px)}
+.hero .home{border-radius:99px!important;backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px)}
+.hello{margin:0 0 6px;font-family:var(--f-display);font-weight:600;font-size:clamp(1rem,2.4vw,1.2rem);display:inline-flex;align-items:center;gap:8px;padding:6px 14px 6px 10px;border-radius:99px;background:rgba(255,255,255,.14);border:1px solid rgba(255,255,255,.22);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);color:#fff;opacity:1!important;animation:rise .5s both}
+.hello .wave{display:inline-block;transform-origin:70% 70%;animation:wave 2.2s .6s 1}
+.hero h1{letter-spacing:-.02em;font-weight:700}
+.btn{border-radius:99px!important;transition:transform .15s,border-color .15s,box-shadow .15s}
+.btn:hover{transform:translateY(-1px)}
+.btn.sm{border-radius:99px!important}
+.card,.panel{border-radius:20px!important;transition:box-shadow .2s,border-color .2s}
+.card:hover,.panel:hover{box-shadow:0 14px 34px rgba(6,61,39,.12)}
+input,select,textarea{border-radius:12px}
+.pill,.chip,.tag{border-radius:99px}
+.modal{border-radius:22px!important}
+@keyframes rise{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
+@keyframes wave{0%,60%,100%{transform:rotate(0)}10%,30%{transform:rotate(16deg)}20%,40%{transform:rotate(-10deg)}50%{transform:rotate(8deg)}}
+@media (prefers-reduced-motion:reduce){.hello,.hello .wave{animation:none}.btn:hover,.themebtn:hover{transform:none}}
+@media print{.hello{display:none}}

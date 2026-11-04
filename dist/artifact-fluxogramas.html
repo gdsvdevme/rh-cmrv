@@ -439,6 +439,22 @@ const PB=(function(){
     /* Férias: ativos (FP051) + gozos de férias (FP273) -> {Pessoas:[...],Gozos:[{MATRICULA,DTAQUIINI,DTAQUIFIN,SALDO,GOZOINICIAL,GOZOFINAL,...}]} */
     ferias(mes,ano){return centiCall('ferias',{mes,ano});},
     cubo(mes,ano){return centiCall('cubo-funcionario',{mes,ano});},
+    /* Espelho de ponto (FP170) do órgão inteiro na referência mes/ano -> Uint8Array com o PDF (o Centi leva de 25 s a 1 min) */
+    async espelho(mes,ano){
+      if(!cs) throw new Error('Sem sessão do Centi. Entre novamente.');
+      const r=await fetch(CENTI_BASE+'/api/centi',{method:'POST',
+        headers:{'Content-Type':'application/json','x-centi-user':cs.user,'x-centi-token':cs.token,'x-centi-refresh':cs.refreshToken||''},
+        body:JSON.stringify({path:'espelho-ponto',body:{mes,ano}})});
+      const nt=r.headers.get('x-centi-token'),nr=r.headers.get('x-centi-refresh');
+      if(nt){cs.token=nt;if(nr)cs.refreshToken=nr;saveAuth();}
+      if(!r.ok){
+        let j=null; try{j=await r.json();}catch(e){}
+        if(r.status===401){clearAuth();}
+        const err=new Error((j&&j.message)||('Centi: HTTP '+r.status));err.status=r.status;throw err;
+      }
+      if(typeof DecompressionStream==='undefined') throw new Error('Este navegador não consegue abrir o arquivo do Centi. Use um navegador mais recente.');
+      return new Uint8Array(await new Response(r.body.pipeThrough(new DecompressionStream('gzip'))).arrayBuffer());
+    },
     search(entity,filters,start,depth){
       return centiCall('restauth/searchentity',{Depth:depth||50,Entity:entity,Start:start==null?1:start,
         Filters:(filters||[]).map(f=>Object.assign({List:false,TypeFilter:0,between:''},f))});

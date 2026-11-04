@@ -125,8 +125,15 @@ dialog .row{justify-content:flex-end}
 <main class="wrap"><div class="inner"><div class="grid">
   <div class="col">
     <section class="panel">
-      <h2><span class="n">1</span>Anexar o PDF</h2>
-      <label class="drop" id="drop" for="file"><b>Escolher ou arrastar o PDF</b><span id="dropS">O PDF com todos os espelhos (uma página por servidor)</span></label>
+      <h2><span class="n">1</span>Espelhos de ponto</h2>
+      <div class="row" style="align-items:center;gap:8px;flex-wrap:wrap">
+        <select id="cMes" aria-label="Mês do espelho"></select>
+        <input id="cAno" type="number" min="2000" max="2100" aria-label="Ano do espelho" style="width:84px">
+      </div>
+      <button class="btn primary" id="cGerar" type="button" style="width:100%;margin-top:10px">Gerar espelhos no Centi</button>
+      <p class="hint" style="margin:6px 0 12px;font-size:12.5px;color:var(--muted)">Usa a tela Espelho de ponto (FP170) com o órgão Câmara Municipal de Rio Verde. Leva cerca de 1 minuto.</p>
+      <p class="hint" style="margin:0 0 6px;font-size:12.5px;color:var(--muted)">Ou, se preferir, anexe um PDF que você já gerou:</p>
+      <label class="drop" id="drop" for="file" style="padding:10px 12px"><b style="font-size:14px">Escolher ou arrastar o PDF</b><span id="dropS">O PDF com todos os espelhos (uma página por servidor)</span></label>
       <input id="file" type="file" accept="application/pdf,.pdf" hidden>
       <div id="resumo"></div>
     </section>
@@ -365,6 +372,22 @@ const PB=(function(){
     /* Férias: ativos (FP051) + gozos de férias (FP273) -> {Pessoas:[...],Gozos:[{MATRICULA,DTAQUIINI,DTAQUIFIN,SALDO,GOZOINICIAL,GOZOFINAL,...}]} */
     ferias(mes,ano){return centiCall('ferias',{mes,ano});},
     cubo(mes,ano){return centiCall('cubo-funcionario',{mes,ano});},
+    /* Espelho de ponto (FP170) do órgão inteiro na referência mes/ano -> Uint8Array com o PDF (o Centi leva de 25 s a 1 min) */
+    async espelho(mes,ano){
+      if(!cs) throw new Error('Sem sessão do Centi. Entre novamente.');
+      const r=await fetch(CENTI_BASE+'/api/centi',{method:'POST',
+        headers:{'Content-Type':'application/json','x-centi-user':cs.user,'x-centi-token':cs.token,'x-centi-refresh':cs.refreshToken||''},
+        body:JSON.stringify({path:'espelho-ponto',body:{mes,ano}})});
+      const nt=r.headers.get('x-centi-token'),nr=r.headers.get('x-centi-refresh');
+      if(nt){cs.token=nt;if(nr)cs.refreshToken=nr;saveAuth();}
+      if(!r.ok){
+        let j=null; try{j=await r.json();}catch(e){}
+        if(r.status===401){clearAuth();}
+        const err=new Error((j&&j.message)||('Centi: HTTP '+r.status));err.status=r.status;throw err;
+      }
+      if(typeof DecompressionStream==='undefined') throw new Error('Este navegador não consegue abrir o arquivo do Centi. Use um navegador mais recente.');
+      return new Uint8Array(await new Response(r.body.pipeThrough(new DecompressionStream('gzip'))).arrayBuffer());
+    },
     search(entity,filters,start,depth){
       return centiCall('restauth/searchentity',{Depth:depth||50,Entity:entity,Start:start==null?1:start,
         Filters:(filters||[]).map(f=>Object.assign({List:false,TypeFilter:0,between:''},f))});
@@ -532,6 +555,34 @@ function lerCabecalho(txt){
   const m=/\b(\d{4,})\s+-\s+(.+?)\s+CPF:/.exec(txt);if(!m) return null;
   const cargo=/Cargo:\s*(.+?)(?:\s+(?:Órgão|Lotação|Horário|Período|Dossiê):|$)/.exec(txt),per=/Período:\s*(\d{2}\/\d{2}\/\d{4})\s+a\s+(\d{2}\/\d{2}\/\d{4})/.exec(txt);
   return {mat:m[1],nome:titulo(m[2]),cargo:cargo?titulo(cargo[1]):'',periodo:per?per[1]+' a '+per[2]:''};
+}
+/* ---------- gerar o espelho direto do Centi (FP170) ---------- */
+const MESES=['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'];
+(function iniciarCentiUi(){
+  const n=new Date(),a=new Date(n.getFullYear(),n.getMonth()-1,1);        // padrão: mês anterior (o do mês atual ainda não fecha)
+  $('#cMes').innerHTML=MESES.map((m,i)=>'<option value="'+(i+1)+'">'+m+'</option>').join('');
+  $('#cMes').value=String(a.getMonth()+1);$('#cAno').value=a.getFullYear();
+  $('#cGerar').addEventListener('click',gerarDoCenti);
+})();
+async function gerarDoCenti(){
+  const mes=+$('#cMes').value,ano=+$('#cAno').value;
+  if(!(ano>=2000&&ano<=2100)){toast('Informe um ano válido.');return;}
+  if(!PB.centi.user){const h=await PB.connect();if(h&&!dbh) dbh=h;}
+  if(!PB.centi.user){toast('Entre com o acesso do Centi para gerar o espelho.');return;}
+  $('#cGerar').disabled=true;
+  carga(true,'Gerando no Centi…','Espelho de ponto de '+MESES[mes-1]+'/'+ano+' (FP170). Leva cerca de 1 minuto.',0.15);
+  try{
+    const pdf=await PB.centi.espelho(mes,ano);
+    const nome='Espelho-de-ponto-'+String(mes).padStart(2,'0')+'-'+ano+'.pdf';
+    await iniciarPdfjs();
+    const doc=await pdfjsLib.getDocument({data:pdf.slice()}).promise;
+    if(doc.numPages<2){carga(false);toast('O Centi ainda não tem o espelho de '+MESES[mes-1]+'/'+ano+' (veio sem servidores). Escolha outro mês.');return;}
+    carga(false);
+    await abrirPdf(new File([pdf],nome,{type:'application/pdf'}));
+  }catch(e){
+    carga(false);console.error(e);
+    toast('Não foi possível gerar no Centi: '+(e&&e.message||e));
+  }finally{$('#cGerar').disabled=false;}
 }
 async function abrirPdf(file){
   if(!file) return;

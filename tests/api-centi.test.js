@@ -16,16 +16,28 @@ const SEM_FOLHA=m=>({Message:['A folha deste servidor não foi processada em '+m
 const PDF=zlib.gzipSync(Buffer.from('%PDF-1.4 teste')).toString('base64');
 const param=(body,k)=>(body.Params.find(p=>p.Key===k)||{}).Value;
 
+/* menu de telas do Centi de "hoje": os números NÃO são os que estavam fixos no código */
+const MENU_HOJE={Value:[{Command:'FP',ModuleKey:1,SubItems:[{Command:'FP071',ModuleKey:5071},{Command:'FP245',ModuleKey:5245},{Command:'FP051',ModuleKey:5051},{Command:'FP273',ModuleKey:5273},{Command:'FP170',ModuleKey:5170}]}]};
+let menuResp,leiturasDoMenu;
+const resp=(d,status=200)=>({status,headers:{get:()=>null},json:async()=>d});
+/* instala o Centi simulado; a leitura do menu (GET restauth/modules) é tratada à parte e contada */
+function instalar(trata){
+  C.limparMenu();leiturasDoMenu=0;menuResp=()=>({status:200,data:MENU_HOJE});
+  global.fetch=async(url,init)=>{
+    if(/\/restauth\/modules$/.test(url)){leiturasDoMenu++;const m=menuResp();return resp(m.data,m.status);}
+    return trata(url,init);
+  };
+}
+
 /* Centi simulado: processa só os meses em `ok` (formato "MM/AAAA"); guarda o que recebeu */
 function centiFalso(ok,outroErro){
   const vistos=[];
-  global.fetch=async(url,init)=>{
+  instalar(async(url,init)=>{
     const body=JSON.parse(init.body),mes=String(init.headers.month).padStart(2,'0')+'/'+init.headers.year;
     vistos.push({url,mes,body});
-    const resp=d=>({status:200,headers:{get:()=>null},json:async()=>d});
     if(outroErro) return resp({Message:[outroErro]});
     return resp(ok.includes(mes)?{File:{DataCompress:PDF},Message:[]}:SEM_FOLHA(mes));
-  };
+  });
   return vistos;
 }
 function chamar(body){
@@ -85,16 +97,15 @@ test('afastamentos: outro erro do Centi não é repetido em outros meses',async(
 
 test('quadro (panorama): mesma regra do mês de referência',async()=>{
   const vistos=[];
-  global.fetch=async(url,init)=>{
+  instalar(async(url,init)=>{
     const body=JSON.parse(init.body),mes=String(init.headers.month).padStart(2,'0')+'/'+init.headers.year;
-    vistos.push({mes,ref:param(body,'DataRef')});
-    const resp=d=>({status:200,headers:{get:()=>null},json:async()=>d});
+    vistos.push({mes,ref:param(body,'DataRef'),tela:body.ModuleKey});
     if(mes==='11/2026') return resp(SEM_FOLHA(mes));
     return resp({Cube:{Columns:[{Name:'MATRICULA'},{Name:'NOME'},{Name:'SITUACAO'}],Rows:[{Values:['1','Fulano','Ativo']},{Values:['2','Beltrano','Rescindido']}]},Message:[]});
-  };
+  });
   const r=await chamar({path:'licenca-quadro',body:{mes:11,ano:2026}});
   assert.equal(r.status,200);
-  assert.deepEqual(vistos,[{mes:'11/2026',ref:'01/11/2026'},{mes:'10/2026',ref:'01/10/2026'}]);
+  assert.deepEqual(vistos,[{mes:'11/2026',ref:'01/11/2026',tela:5245},{mes:'10/2026',ref:'01/10/2026',tela:5245}]);
   assert.equal(JSON.parse(r.body).Pessoas.length,1);   // só ativos
 });
 
@@ -115,7 +126,8 @@ test('rotas continuam validando entrada',async()=>{
 const CENTI_SESSAO_INVALIDA={LogKey:null,ErrorCode:'10304',Success:false,Message:['Sessão inválida.','Efetue login novamente.'],Code:null,ReloadOperation:false};
 function centiSessaoInvalida(){
   const vistos=[];
-  global.fetch=async(url,init)=>{vistos.push(url);return {status:500,headers:{get:()=>null},json:async()=>CENTI_SESSAO_INVALIDA};};
+  instalar(async(url)=>{vistos.push(url);return resp(CENTI_SESSAO_INVALIDA,500);});
+  menuResp=()=>({status:500,data:CENTI_SESSAO_INVALIDA});   // o menu também recusa o token
   return vistos;
 }
 
@@ -145,13 +157,63 @@ test('token inválido no Centi vira 401 em todas as rotas, para o navegador pedi
   }
 });
 
-test('token inválido não gasta tentativas de outros meses',async()=>{
+test('token inválido não gasta tentativas: nem relatório nem outros meses',async()=>{
   const vistos=centiSessaoInvalida();
-  await chamar({path:'afastamentos-pdf',body:{mes:11,ano:2026,funcionario:'1'}});
-  assert.equal(vistos.length,1);
+  const r=await chamar({path:'afastamentos-pdf',body:{mes:11,ano:2026,funcionario:'1'}});
+  assert.equal(r.status,401);
+  assert.equal(vistos.length,0);   // parou já na leitura do menu
 });
 
 test('sem cabeçalhos de sessão a função já responde 401',async()=>{
   const res=await new Promise(resolve=>{const r={statusCode:0,setHeader(){},end(b){resolve({status:this.statusCode,body:b});}};handler({method:'POST',headers:{},body:{path:'licenca-busca',body:{termo:'aline'}}},r);});
   assert.equal(res.status,401);
+});
+
+test('o número da tela vem do menu do Centi, não de um número fixo (o Centi renumera as telas ao atualizar)',async()=>{
+  const vistos=centiFalso(['11/2026']);
+  await chamar({path:'afastamentos-pdf',body:{mes:11,ano:2026}});
+  assert.equal(vistos[0].body.ModuleKey,5071);   // FP071 no menu de hoje; o número fixo no código era 121058
+  assert.notEqual(vistos[0].body.ModuleKey,121058);
+});
+
+test('o menu é lido uma vez e reaproveitado nas chamadas seguintes',async()=>{
+  centiFalso(['11/2026']);
+  await chamar({path:'afastamentos-pdf',body:{mes:11,ano:2026}});
+  await chamar({path:'afastamentos-pdf',body:{mes:11,ano:2026,funcionario:'7'}});
+  assert.equal(leiturasDoMenu,1);
+});
+
+test('se o menu não puder ser lido, usa o número padrão e segue',async()=>{
+  const vistos=centiFalso(['11/2026']);
+  menuResp=()=>({status:500,data:{Message:['Erro inesperado no servidor.']}});
+  const r=await chamar({path:'afastamentos-pdf',body:{mes:11,ano:2026}});
+  assert.equal(r.status,200);
+  assert.equal(vistos[0].body.ModuleKey,121058);
+});
+
+test('cubo de funcionários e férias também usam o número do menu',async()=>{
+  const telas=[];
+  instalar(async(url,init)=>{
+    const body=JSON.parse(init.body);telas.push(body.ModuleKey);
+    return resp({Cube:{Columns:[{Name:'MATRICULA'},{Name:'SITUACAO'}],Rows:[{Values:['1','Ativo']}]},Message:[]});
+  });
+  const r=await chamar({path:'ferias',body:{mes:11,ano:2026}});
+  assert.equal(r.status,200);
+  assert.deepEqual(telas,[5051,5273]);   // FP051 e FP273
+  telas.length=0;
+  await chamar({path:'cubo-funcionario',body:{mes:11,ano:2026}});
+  assert.deepEqual(telas,[5051]);
+});
+
+test('busca: pede 50 por página (Depth é o tamanho da página) e lista os ativos primeiro',async()=>{
+  const pedidos=[];
+  const reg=(Id,Nome,Situacao)=>({Id,Matricula:'1000'+Id,Nome,Situacao,TipoAdm:'X',Cargo:'C',Lotacao:'L',DataAdmissao:'01/01/2020',Cpf:'000',DataNascimento:'01/01/1990'});
+  instalar(async(url,init)=>{pedidos.push(JSON.parse(init.body));return resp({Success:true,Data:[reg('1','ZELIA','Rescindido'),reg('2','MARIA','Ativo'),reg('3','ANA','Rescindido'),reg('4','BIA','Ativo')]});});
+  const r=await chamar({path:'licenca-busca',body:{termo:'mari'}});
+  assert.equal(r.status,200);
+  assert.equal(pedidos[0].Depth,50);   // com Depth 1 só vinha um resultado
+  const lista=JSON.parse(r.body).Data;
+  assert.deepEqual(lista.map(x=>x.Nome),['BIA','MARIA','ANA','ZELIA']);   // ativos por nome, depois os demais
+  assert.equal('Cpf' in lista[0],false);                                   // sem dados pessoais além do que a tela usa
+  assert.equal('DataNascimento' in lista[0],false);
 });

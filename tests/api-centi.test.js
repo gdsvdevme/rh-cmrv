@@ -10,7 +10,7 @@ Module._load=function(req,...r){return req==='lz-string'?{compressToBase64:s=>s}
 process.env.CENTI_ALLOWED_USERS='rh.teste';
 const handler=require('../api/centi.js');
 const C=require('../api/_centi.js');
-const {semFolha,referencias}=require('../api/_ref.js');
+const {semFolha,referencias,sessaoInvalida}=require('../api/_ref.js');
 
 const SEM_FOLHA=m=>({Message:['A folha deste servidor não foi processada em '+m]});
 const PDF=zlib.gzipSync(Buffer.from('%PDF-1.4 teste')).toString('base64');
@@ -109,4 +109,49 @@ test('rotas continuam validando entrada',async()=>{
   assert.equal((await chamar({path:'afastamentos-pdf',body:{mes:13,ano:2026}})).status,400);
   assert.equal((await chamar({path:'afastamentos-pdf',body:{mes:11,ano:2026,funcionario:'1 OR 1=1'}})).status,400);
   assert.equal((await chamar({path:'licenca-busca',body:{termo:'al'}})).status,400);
+});
+
+/* resposta real do Centi a um token inválido: HTTP 500 + ErrorCode 10304 */
+const CENTI_SESSAO_INVALIDA={LogKey:null,ErrorCode:'10304',Success:false,Message:['Sessão inválida.','Efetue login novamente.'],Code:null,ReloadOperation:false};
+function centiSessaoInvalida(){
+  const vistos=[];
+  global.fetch=async(url,init)=>{vistos.push(url);return {status:500,headers:{get:()=>null},json:async()=>CENTI_SESSAO_INVALIDA};};
+  return vistos;
+}
+
+test('sessaoInvalida reconhece o erro de token do Centi e não confunde com outros',()=>{
+  assert.equal(sessaoInvalida({status:500,data:CENTI_SESSAO_INVALIDA}),true);
+  assert.equal(sessaoInvalida({status:401,data:null}),true);
+  assert.equal(sessaoInvalida({status:200,data:{Message:['Efetue login novamente.']}}),true);
+  assert.equal(sessaoInvalida({status:200,data:SEM_FOLHA('11/2026')}),false);
+  assert.equal(sessaoInvalida({status:500,data:{Message:['Erro inesperado no servidor.']}}),false);
+  assert.equal(sessaoInvalida({status:200,data:{Fichas:[]}}),false);
+});
+
+test('token inválido no Centi vira 401 em todas as rotas, para o navegador pedir o login de novo',async()=>{
+  for(const [path,body] of [
+    ['licenca-busca',{termo:'aline costa'}],
+    ['licenca-quadro',{mes:11,ano:2026}],
+    ['afastamentos-pdf',{mes:11,ano:2026,funcionario:'2145'}],
+    ['espelho-ponto',{mes:10,ano:2026}],
+    ['ficha-financeira',{matricula:'10149701',mes:10,ano:2026}],   // antes devolvia 200 com lista vazia
+    ['cubo-funcionario',{mes:10,ano:2026}],
+    ['ferias',{mes:10,ano:2026}]
+  ]){
+    centiSessaoInvalida();
+    const r=await chamar({path,body});
+    assert.equal(r.status,401,path+' deveria responder 401');
+    assert.match(JSON.parse(r.body).message,/sessão do Centi expirou/i);
+  }
+});
+
+test('token inválido não gasta tentativas de outros meses',async()=>{
+  const vistos=centiSessaoInvalida();
+  await chamar({path:'afastamentos-pdf',body:{mes:11,ano:2026,funcionario:'1'}});
+  assert.equal(vistos.length,1);
+});
+
+test('sem cabeçalhos de sessão a função já responde 401',async()=>{
+  const res=await new Promise(resolve=>{const r={statusCode:0,setHeader(){},end(b){resolve({status:this.statusCode,body:b});}};handler({method:'POST',headers:{},body:{path:'licenca-busca',body:{termo:'aline'}}},r);});
+  assert.equal(res.status,401);
 });

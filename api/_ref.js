@@ -13,4 +13,9 @@ function referencias(mes, ano, n) {
   return out;
 }
 
-module.exports = { semFolha, referencias };
+/* Token vencido ou inválido: o Centi responde HTTP 500 com ErrorCode 10304 e "Sessão inválida. Efetue login novamente." (ou 401).
+   Sem esse reconhecimento a função devolvia 502 e o navegador não sabia que precisava pedir o login de novo. */
+const sessaoInvalida = r => !!r && (r.status === 401 || !!(r.data && (String(r.data.ErrorCode) === '10304'
+  || /sess[ãa]o inv[áa]lida|efetue login novamente/i.test(String((r.data.Message || []).join(' '))))));
+
+module.exports = { semFolha, referencias, sessaoInvalida };

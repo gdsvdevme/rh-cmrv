@@ -24,6 +24,8 @@ Sistema web editável (sem servidor, sem dependências para rodar) com organogra
 
 **De onde vêm os dados:** o quadro vem do FP245 e não do FP051, que o Centi vem respondendo com erro 500. A relação de afastamentos (FP071) é lida do PDF pela posição das colunas; se o Centi mudar o layout e nada puder ser lido, a tela avisa em vez de mostrar números errados, e registros que não puderem ser lidos aparecem no aviso amarelo. **Mês de referência:** o Centi recusa os relatórios quando a folha do mês de referência ainda não foi processada ("A folha deste servidor não foi processada em 11/2026"). Por isso `afastamentos-pdf` e `licenca-quadro` tentam o mês atual, depois o anterior e mais um (o período dos afastamentos continua indo até o fim do mês atual); se nenhum servir, a tela mostra o motivo.
 
+**Sessão do Centi inválida:** com o token vencido, o Centi responde HTTP 500 com `Sessão inválida` (código 10304). A função em `api/centi.js` reconhece isso (e o 401) em todas as consultas e responde 401; o `pb.js` então abre a tela de login de novo, com o aviso "Sua sessão do Centi expirou", e **repete a consulta sozinho** depois que a pessoa entra. Vale para todas as telas que consultam o Centi (Férias, Pessoal, Carimbos, Licença-prêmio).
+
 Funções novas em `api/centi.js`: `licenca-busca` (nome ou matrícula, até 50 resultados, só os campos que a tela usa: sem CPF nem nascimento), `afastamentos-pdf` (do órgão ou, com o Id do servidor, só dele) e `licenca-quadro` (panorama).
 
 **Histórico anterior ao Centi:** quem já tirou licença-prêmio antes do Centi aparece com períodos "A conferir" até o RH lançar o gozo, marcar o período ou marcar o histórico como conferido. No panorama, os cartões e o filtro mostram quantos ainda não foram conferidos.

@@ -173,7 +173,7 @@ const PB=(function(){
     catch(e){
       if(e.status===401||e.status===403){
         clearAuth();
-        if(await login()) return raw(method,path,body);
+        if(await login('Sua sessão expirou. Entre novamente para continuar.')) return raw(method,path,body);
       }
       throw e;
     }
@@ -239,7 +239,7 @@ const PB=(function(){
       const f=wrap.querySelector('form'),err=wrap.querySelector('[data-err]'),go=wrap.querySelector('.pbl-go'),eye=wrap.querySelector('[data-eye]');
       const erro=(t,info)=>{err.className='pbl-err'+(info?' info':'');err.innerHTML=t?ico('alert',16)+'<span></span>':'';if(t) err.lastChild.textContent=t;};
       const ocupado=on=>{go.disabled=on;go.innerHTML=on?'<i class="pbl-sp"></i><span>Entrando…</span>':'<span>Entrar</span>';};
-      if(msg) erro(msg);
+      if(msg) erro(msg,true);
       const done=ok=>{wrap.remove();loginP=null;resolve(ok);};
       f.e.focus();
       eye.addEventListener('click',()=>{const ver=f.p.type==='password';f.p.type=ver?'text':'password';eye.setAttribute('aria-pressed',ver);eye.setAttribute('aria-label',ver?'Ocultar a senha':'Mostrar a senha');eye.innerHTML=ico(ver?'eyeoff':'eye');f.p.focus();});
@@ -360,8 +360,23 @@ const PB=(function(){
   };
 
   /* ---------- API do Centi (pelo servidor do sistema, com o acesso da própria pessoa) ---------- */
-  async function centiCall(path,body){
-    if(!cs) throw new Error('Sem sessão do Centi. Entre novamente.');
+  /* Sessão do Centi inválida (token vencido sem renovação, sessão apagada ou outro login): pede o login de novo, com aviso, e repete
+     a consulta uma vez. O erro só chega à tela se o login for refeito e a consulta ainda assim falhar. */
+  function erroSessao(){const e=new Error('Sem sessão do Centi. Entre novamente.');e.status=401;return e;}
+  async function comSessao(fn){
+    try{if(!cs) throw erroSessao();return await fn();}
+    catch(e){
+      if(e.status!==401) throw e;
+      clearAuth();
+      if(!(await login('Sua sessão do Centi expirou. Entre novamente para continuar.'))) throw e;
+      const b=document.getElementById('pb-logout');if(b) b.remove();vigiarLogout();   // o botão Sair passa a mostrar o usuário novo
+      return fn();
+    }
+  }
+  const centiCall=(path,body)=>comSessao(()=>centiCallUma(path,body));
+  const centiPdf=(path,mes,ano,funcionario)=>comSessao(()=>centiPdfUma(path,mes,ano,funcionario));
+  async function centiCallUma(path,body){
+    if(!cs) throw erroSessao();
     const r=await fetch(CENTI_BASE+'/api/centi',{method:'POST',
       headers:{'Content-Type':'application/json','x-centi-user':cs.user,'x-centi-token':cs.token,'x-centi-refresh':cs.refreshToken||''},
       body:JSON.stringify({path,body})});
@@ -375,8 +390,8 @@ const PB=(function(){
     return j;
   }
   /* consulta que o Centi entrega em PDF: a função devolve o gzip dele e o navegador abre */
-  async function centiPdf(path,mes,ano,funcionario){
-    if(!cs) throw new Error('Sem sessão do Centi. Entre novamente.');
+  async function centiPdfUma(path,mes,ano,funcionario){
+    if(!cs) throw erroSessao();
     const r=await fetch(CENTI_BASE+'/api/centi',{method:'POST',
       headers:{'Content-Type':'application/json','x-centi-user':cs.user,'x-centi-token':cs.token,'x-centi-refresh':cs.refreshToken||''},
       body:JSON.stringify({path,body:{mes,ano,funcionario:funcionario||''}})});

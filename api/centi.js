@@ -5,7 +5,14 @@
    o novo vem nos cabeçalhos x-centi-token e x-centi-refresh da resposta. */
 const { BASE, centiPost, cuboPayload, espelhoPayload, quadroPayload, quadroLinhas, afastamentosPayload, buscaFiltro, buscaLinhas, cuboLinhas, feriasPayload, feriasLinhas, fichaResumo, isAllowed, readBody, send } = require('./_centi');
 
-const { semFolha, referencias } = require('./_ref');
+const { semFolha, referencias, sessaoInvalida } = require('./_ref');
+
+/* toda chamada ao Centi passa por aqui: sessão inválida vira erro "expirou", respondido como 401 no fim da função */
+const post = async (...a) => {
+  const r = await centiPost(...a);
+  if (sessaoInvalida(r)) { const e = new Error('Sessão do Centi expirada.'); e.expirou = true; throw e; }
+  return r;
+};
 
 const ROTAS = /^restauth\/(searchentity)$/;
 
@@ -33,11 +40,11 @@ module.exports = async (req, res) => {
     if (espelho || afast) {
       /* o Centi monta o PDF (o espelho do órgão inteiro leva de 25 s a 1 min). Devolvemos o gzip dele sem reabrir: a Vercel limita a resposta a 4,5 MB */
       let e, usada = { mes, ano };
-      if (espelho) e = await centiPost('restauth/operation', espelhoPayload(), h);
+      if (espelho) e = await post('restauth/operation', espelhoPayload(), h);
       else {
         /* se a folha do mês pedido ainda não foi processada, o Centi recusa: tenta o mês anterior (e mais um) */
         for (const ref of referencias(mes, ano, 3)) {
-          e = await centiPost('restauth/operation', afastamentosPayload(mes, ano, funcionario, ref), Object.assign({}, h, { year: String(ref.ano), month: String(ref.mes) }));
+          e = await post('restauth/operation', afastamentosPayload(mes, ano, funcionario, ref), Object.assign({}, h, { year: String(ref.ano), month: String(ref.mes) }));
           usada = ref;
           if (!semFolha(e)) break;
         }
@@ -58,7 +65,7 @@ module.exports = async (req, res) => {
       return res.end(buf);
     }
     if (busca) {
-      const b = await centiPost('restauth/searchentity', { Depth: 1, Entity: 'SFuncionario', Start: 1, Filters: [filtroBusca] }, h);
+      const b = await post('restauth/searchentity', { Depth: 1, Entity: 'SFuncionario', Start: 1, Filters: [filtroBusca] }, h);
       const tb = b.headers.get('token'), rb = b.headers.get('refreshtoken');
       if (tb) res.setHeader('x-centi-token', tb);
       if (rb) res.setHeader('x-centi-refresh', rb);
@@ -70,7 +77,7 @@ module.exports = async (req, res) => {
       /* quadro (Cubo funcionário reduzido): só ativos e só as colunas que a licença-prêmio usa */
       let q;
       for (const ref of referencias(mes, ano, 3)) {   // mesma regra: folha do mês ainda não processada -> mês anterior
-        q = await centiPost('restauth/operation', quadroPayload(ref.mes, ref.ano), Object.assign({}, h, { year: String(ref.ano), month: String(ref.mes) }));
+        q = await post('restauth/operation', quadroPayload(ref.mes, ref.ano), Object.assign({}, h, { year: String(ref.ano), month: String(ref.mes) }));
         if (!semFolha(q)) break;
       }
       const t2 = q.headers.get('token'), r2 = q.headers.get('refreshtoken');
@@ -82,13 +89,13 @@ module.exports = async (req, res) => {
     }
     if (ferias) {
       /* quadro de ativos (Cubo funcionário) + gozos de férias (Cubo movimentação férias); o direito é calculado na tela */
-      const f1 = await centiPost('restauth/operation', cuboPayload(mes, ano), h);
+      const f1 = await post('restauth/operation', cuboPayload(mes, ano), h);
       const t1 = f1.headers.get('token'), r1 = f1.headers.get('refreshtoken');
       if (t1) res.setHeader('x-centi-token', t1);
       if (r1) res.setHeader('x-centi-refresh', r1);
       const c1 = f1.data && f1.data.Cube;
       if (!c1) return send(res, f1.status === 401 ? 401 : 502, { message: (f1.data && f1.data.Message && f1.data.Message[0]) || 'O Centi não devolveu o cubo de funcionários.' });
-      const f2 = await centiPost('restauth/operation', feriasPayload(), h);
+      const f2 = await post('restauth/operation', feriasPayload(), h);
       const c2 = f2.data && f2.data.Cube;
       if (!c2) return send(res, f2.status === 401 ? 401 : 502, { message: (f2.data && f2.data.Message && f2.data.Message[0]) || 'O Centi não devolveu o cubo de férias.' });
       const quadro = cuboLinhas(c1).map(p => ({ ID: p.ID, MATRICULA: p.MATRICULA, NOMEFUNC: p.NOMEFUNC, CARGO: p.CARGO, HIERARQUIA: p.HIERARQUIA,
@@ -97,7 +104,7 @@ module.exports = async (req, res) => {
     }
     if (ficha) {
       /* acha as fichas (uma por folha) da matrícula na referência e carrega cada uma */
-      const busca = await centiPost('restauth/searchentity', { Depth: 50, Entity: 'SFichaFinanceiraPessoa', Start: 1,
+      const busca = await post('restauth/searchentity', { Depth: 50, Entity: 'SFichaFinanceiraPessoa', Start: 1,
         Filters: [{ FieldName: 'Matricula', List: false, Operation: 0, TypeFilter: 3, Value: matricula, between: '' }] }, h);
       const bt = busca.headers.get('token'), br = busca.headers.get('refreshtoken');
       if (bt) res.setHeader('x-centi-token', bt);
@@ -106,12 +113,12 @@ module.exports = async (req, res) => {
       const achadas = ((busca.data && busca.data.Data) || []).filter(f => String(f.Matricula) === matricula).slice(0, 10);
       const fichas = [];
       for (const f of achadas) {
-        const d = await centiPost('restauth/postdata', { Id: String(f.Id), Method: 'folha.carregarfichafinanceira' }, h);
+        const d = await post('restauth/postdata', { Id: String(f.Id), Method: 'folha.carregarfichafinanceira' }, h);
         if (d.data && d.data.Id) fichas.push(fichaResumo(d.data));
       }
       return send(res, 200, { Fichas: fichas });
     }
-    const r = await centiPost(cubo ? 'restauth/operation' : path, cubo ? cuboPayload(mes, ano) : (body || {}), h);
+    const r = await post(cubo ? 'restauth/operation' : path, cubo ? cuboPayload(mes, ano) : (body || {}), h);
     const nt = r.headers.get('token'), nr = r.headers.get('refreshtoken');
     if (nt) res.setHeader('x-centi-token', nt);
     if (nr) res.setHeader('x-centi-refresh', nr);
@@ -122,6 +129,7 @@ module.exports = async (req, res) => {
     }
     return send(res, r.status === 401 ? 401 : 200, r.data == null ? {} : r.data);
   } catch (e) {
+    if (e && e.expirou) return send(res, 401, { message: 'Sua sessão do Centi expirou. Entre novamente.' });
     return send(res, 502, { message: 'Não foi possível falar com o Centi.' });
   }
 };

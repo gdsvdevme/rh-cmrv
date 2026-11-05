@@ -48,7 +48,8 @@ module.exports = async (req, res) => {
     if (espelho || afast) {
       /* o Centi monta o PDF (o espelho do órgão inteiro leva de 25 s a 1 min). Devolvemos o gzip dele sem reabrir: a Vercel limita a resposta a 4,5 MB */
       let e, usada = { mes, ano };
-      if (espelho) e = await post('restauth/operation', await tela('FP170', espelhoPayload(), h), h);
+      let modKey = null;
+      if (espelho) { const pl = await tela('FP170', espelhoPayload(), h); modKey = pl.ModuleKey; e = await post('restauth/operation', pl, h); }
       else {
         /* se a folha do mês pedido ainda não foi processada, o Centi recusa: tenta o mês anterior (e mais um) */
         for (const ref of referencias(mes, ano, 3)) {
@@ -62,6 +63,14 @@ module.exports = async (req, res) => {
       if (t0) res.setHeader('x-centi-token', t0);
       if (r0) res.setHeader('x-centi-refresh', r0);
       const gz = e.data && e.data.File && e.data.File.DataCompress;
+      if (!gz && espelho) {
+        /* sem PDF e sem mensagem: devolve o que o Centi respondeu (sem tokens) para dar para ver a causa */
+        const d = e.data && typeof e.data === 'object' ? e.data : {};
+        const det = 'Centi: HTTP ' + e.status + (d.ErrorCode ? ', código ' + d.ErrorCode : '') + ', tela ' + modKey + ', referência ' + String(mes).padStart(2, '0') + '/' + ano
+          + ', campos [' + Object.keys(d).join(', ') + ']' + (d.Message && d.Message.length ? ', mensagem: ' + [].concat(d.Message).join(' | ') : '') + (d.Success === false ? ', Success=false' : '');
+        console.error('espelho-ponto sem PDF', det, JSON.stringify(d).slice(0, 800));
+        if (!(d.Message && d.Message[0])) return send(res, e.status === 401 ? 401 : 502, { message: 'O Centi não devolveu o espelho de ponto. (' + det + ')' });
+      }
       if (!gz) return send(res, e.status === 401 ? 401 : 502, { message: ((e.data && e.data.Message && e.data.Message[0]) || (espelho ? 'O Centi não devolveu o espelho de ponto.' : 'O Centi não devolveu a relação de afastamentos.')).replace(/\.?\s*$/, '.') + (afast && semFolha(e) ? ' Tentei também os dois meses anteriores.' : '') });
       const buf = Buffer.from(gz, 'base64');
       if (buf.length > 4.4 * 1024 * 1024) return send(res, 413, { message: espelho

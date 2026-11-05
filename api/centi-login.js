@@ -1,7 +1,7 @@
 /* POST /api/centi-login  { user, pass }
    Valida o acesso no Centi, confere se a pessoa está autorizada, garante a conta dela no PocketBase
    e devolve os tokens. A senha do Centi só passa por aqui e não é guardada em lugar nenhum. */
-const { centiLogin, isAllowed, isAdmin, allowedUsers, pbPassword, readBody, send } = require('./_centi');
+const { centiLogin, isAllowed, isAdmin, allowedUsers, usuarioDoToken, pbPassword, readBody, send } = require('./_centi');
 
 const PB_URL = (process.env.PB_URL || 'https://pb.devgabriel.app.br').replace(/\/+$/, '');
 const COL = 'rhcmrv_users';
@@ -123,6 +123,20 @@ async function garantirAdmin(session, quer) {
   }
 }
 
+/* Limites de tentativas, em memória e por instância da função (reduzem o risco, não o eliminam; o ideal é somar a regra de limite
+   de taxa da Vercel). Protegem as contas do Centi, que bloqueiam depois de poucas falhas, e impedem usar este endereço para
+   testar senhas em massa. Só falha de senha conta; entrar certo zera o contador do usuário. */
+const JANELA = 15 * 60 * 1000, MAX_USUARIO = 3, MAX_IP = 15;
+const falhas = new Map();   // "u:<usuario>" ou "i:<ip>" -> { n, desde }
+const quantas = k => { const f = falhas.get(k); if (!f) return 0; if (Date.now() - f.desde > JANELA) { falhas.delete(k); return 0; } return f.n; };
+const somar = k => {
+  const n = quantas(k), f = falhas.get(k);
+  falhas.set(k, { n: n + 1, desde: f && n ? f.desde : Date.now() });
+  if (falhas.size > 2000) for (const [kk, v] of falhas) if (Date.now() - v.desde > JANELA) falhas.delete(kk);
+};
+const ipDe = req => String((req.headers && (req.headers['x-forwarded-for'] || req.headers['x-real-ip'])) || '').split(',')[0].trim() || 'desconhecido';
+const NOME_OK = /^[\p{L}\p{N}._@+\-]{1,80}$/u;
+
 module.exports = async (req, res) => {
   if (req.method !== 'POST') return send(res, 405, { message: 'Use POST.' });
   if (!process.env.APP_SECRET || !allowedUsers().length)
@@ -130,14 +144,23 @@ module.exports = async (req, res) => {
   const { user, pass } = readBody(req);
   if (typeof user !== 'string' || typeof pass !== 'string' || !user.trim() || !pass || user.length > 120 || pass.length > 200)
     return send(res, 400, { message: 'Informe usuário e senha do Centi.' });
-  const username = user.trim().toLowerCase();
-  if (!isAllowed(username))
+  const digitado = user.trim().toLowerCase();
+  if (!NOME_OK.test(digitado)) return send(res, 400, { message: 'Usuário inválido. Use o mesmo usuário que você digita no Centi.' });
+  if (!isAllowed(digitado))
     return send(res, 403, { message: 'Este usuário do Centi não tem permissão para usar este sistema.' });
+  const ip = ipDe(req), kU = 'u:' + digitado, kI = 'i:' + ip;
+  if (quantas(kU) >= MAX_USUARIO || quantas(kI) >= MAX_IP)
+    return send(res, 429, { message: 'Muitas tentativas de entrada. Aguarde alguns minutos e tente de novo (isso protege a sua conta do Centi contra bloqueio).' });
   try {
     const c = await centiLogin(user.trim(), pass);
     const d = c.data || {};
-    if (!d.Success && !d.Token) return send(res, 401, { message: (d.Message && d.Message[0]) || 'Usuário ou senha do Centi incorretos.' });
+    if (!d.Success && !d.Token) { somar(kU); somar(kI); return send(res, 401, { message: (d.Message && d.Message[0]) || 'Usuário ou senha do Centi incorretos.' }); }
     if (d.Tokenized || !d.Token) return send(res, 401, { message: 'Este usuário exige confirmação por PIN no Centi, o que o sistema ainda não suporta.' });
+    falhas.delete(kU);
+    /* a conta é a que o Centi confirma, não o texto digitado (evita confundir "Fulano" com "fulano" ou apelidos de login) */
+    const username = (usuarioDoToken(d.Token) || digitado).toLowerCase();
+    if (!NOME_OK.test(username)) return send(res, 403, { message: 'O usuário do Centi tem um formato que este sistema não aceita.' });
+    if (!isAllowed(username)) return send(res, 403, { message: 'Este usuário do Centi não tem permissão para usar este sistema.' });
     const session = await pbSession(username);
     try { await garantirTarefas(session.token); } catch (e) { /* não impede o login */ }
     const admin = isAdmin(username);
@@ -152,4 +175,4 @@ module.exports = async (req, res) => {
 };
 module.exports.garantirTarefas = garantirTarefas;
 module.exports.garantirAdmin = garantirAdmin;   // exportada para teste
-module.exports._reset = () => { tarefasOk = false; adminOk = false; };
+module.exports._reset = () => { tarefasOk = false; adminOk = false; falhas.clear(); };

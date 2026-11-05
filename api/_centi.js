@@ -8,7 +8,16 @@ const REFERER = process.env.CENTI_REFERER || 'https://go.centi.com.br/camarariov
 
 const allowedUsers = () => (process.env.CENTI_ALLOWED_USERS || '')
   .split(',').map(s => s.trim().toLowerCase()).filter(Boolean);
-const isAllowed = user => allowedUsers().includes(String(user || '').trim().toLowerCase());
+/* "*" na lista libera qualquer usuário do Centi; os outros nomes ficam só como registro e voltam a valer se o "*" for retirado */
+const allowAll = () => allowedUsers().includes('*');
+const isAllowed = user => allowAll() || allowedUsers().includes(String(user || '').trim().toLowerCase());
+/* nome da conta confirmado pelo próprio Centi (claim "User" do token que ele devolve no login), em vez do texto digitado */
+const usuarioDoToken = jwt => {
+  try {
+    const c = JSON.parse(Buffer.from(String(jwt).split('.')[1], 'base64url').toString('utf8'));
+    return String(c.User || c.unique_name || '').trim();
+  } catch (e) { return ''; }
+};
 /* administradores do sistema (editam o painel dos mini sistemas); precisam estar em CENTI_ALLOWED_USERS também */
 const adminUsers = () => (process.env.CENTI_ADMIN_USERS || '')
   .split(',').map(x => x.trim().toLowerCase()).filter(Boolean);
@@ -210,7 +219,7 @@ const espelhoPayload = () => ({
   ]
 });
 
-module.exports = { centiGet, chaveDaTela, limparMenu, lerMenu, quadroPayload, quadroLinhas, afastamentosPayload, isAdmin, adminUsers, espelhoPayload, BASE, centiPost, cuboPayload, cuboLinhas, feriasPayload, feriasLinhas, fichaResumo, centiLogin, isAllowed, allowedUsers, pbPassword, readBody, send };
+module.exports = { allowAll, usuarioDoToken, centiGet, chaveDaTela, limparMenu, lerMenu, quadroPayload, quadroLinhas, afastamentosPayload, isAdmin, adminUsers, espelhoPayload, BASE, centiPost, cuboPayload, cuboLinhas, feriasPayload, feriasLinhas, fichaResumo, centiLogin, isAllowed, allowedUsers, pbPassword, readBody, send };
 
 /* Busca de servidor para a licença-prêmio: só o que a tela usa do cadastro (sem CPF, nascimento e dados de integração).
    Número = matrícula exata; texto = nome contendo o termo. No máximo 50 resultados. */

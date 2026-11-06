@@ -255,11 +255,14 @@ function toast(m,undo){
 }
 
 /* ---------- edição ---------- */
-function snap(){hist.push(JSON.stringify(dados.pessoas));if(hist.length>30) hist.shift();}
+/* ajustes manuais que sobrevivem a "Atualizar do Centi": grupo por pessoa (mov), grupos renomeados (ren), exclusões (exc) e pessoas adicionadas à mão (p.man) */
+const chaveP=p=>(p.m||'')+'|'+p.n;
+function defG(p,g){p.g=g;dados.mov=dados.mov||{};dados.mov[chaveP(p)]=g;}
+function snap(){hist.push(JSON.stringify({p:dados.pessoas,mov:dados.mov||{},ren:dados.ren||{},exc:dados.exc||[]}));if(hist.length>30) hist.shift();}
 function mudou(msg){dados.editado=new Date().toISOString();salvar();render();toast(msg,true);}
 function desfazer(){
   const j=hist.pop();if(!j) return;
-  dados.pessoas=JSON.parse(j);dados.editado=new Date().toISOString();salvar();render();toast('Alteração desfeita.');
+  const h=JSON.parse(j);if(Array.isArray(h)) dados.pessoas=h;else{dados.pessoas=h.p;dados.mov=h.mov;dados.ren=h.ren;dados.exc=h.exc;}dados.editado=new Date().toISOString();salvar();render();toast('Alteração desfeita.');
 }
 function agrupar(){
   const grupos=new Map();
@@ -314,8 +317,8 @@ function dlgPessoa(i){
     snap();
     abertos.add(grupoInfo(g).k);
     const nome=titulo(f.elements.n.value),r={n:nome,c:titulo(f.elements.c.value),t:f.elements.t.value,g};
-    if(nova){r.o=dados.pessoas.reduce((m,x)=>Math.max(m,x.o),-1)+1;dados.pessoas.push(r);mudou(nome+' adicionado(a).');}
-    else{Object.assign(dados.pessoas[i],r);mudou(nome+' atualizado(a).');}
+    if(nova){r.o=dados.pessoas.reduce((m,x)=>Math.max(m,x.o),-1)+1;r.man=true;dados.pessoas.push(r);mudou(nome+' adicionado(a).');}
+    else{const q=dados.pessoas[i],antes=chaveP(q);Object.assign(q,r);if(dados.mov) delete dados.mov[antes];if(!q.man) defG(q,g);mudou(nome+' atualizado(a).');}
   });
   ligarGrupo($('#dlg form'));
 }
@@ -330,7 +333,7 @@ function dlgMover(i){
 function moverPara(i,raw){
   const p=dados.pessoas[i];
   if(!p||norm(raw)===norm(p.g)) return;
-  snap();p.g=raw;abertos.add(grupoInfo(raw).k);mudou(p.n+' movido(a) para '+grupoInfo(raw).nome+'.');
+  snap();defG(p,raw);abertos.add(grupoInfo(raw).k);mudou(p.n+' movido(a) para '+grupoInfo(raw).nome+'.');
 }
 function dlgRenomear(raw){
   const g=grupoInfo(raw);
@@ -339,7 +342,7 @@ function dlgRenomear(raw){
     <div class="row"><button type="button" class="btn" data-x>Cancelar</button><button class="btn primary" type="submit">Renomear</button></div>`,
   f=>{
     const n=f.elements.n.value.trim();if(!n||norm(n)===norm(raw)) return;
-    snap();dados.pessoas.forEach(p=>{if(norm(p.g)===norm(raw)) p.g=n;});abertos.delete(grupoInfo(raw).k);abertos.add(grupoInfo(n).k);mudou('Grupo renomeado para '+grupoInfo(n).nome+'.');
+    snap();dados.ren=dados.ren||{};dados.ren[norm(raw)]=n;Object.keys(dados.ren).forEach(k=>{if(norm(dados.ren[k])===norm(raw)) dados.ren[k]=n;});dados.pessoas.forEach(p=>{if(norm(p.g)===norm(raw)) defG(p,n);});abertos.delete(grupoInfo(raw).k);abertos.add(grupoInfo(n).k);mudou('Grupo renomeado para '+grupoInfo(n).nome+'.');
   });
 }
 /* seleção por caixas de marcação (modo de edição): a seleção persiste entre buscas */
@@ -364,7 +367,7 @@ function dlgMoverSel(){
     <div class="row"><button type="button" class="btn" data-x>Cancelar</button><button class="btn primary" type="submit">Mover</button></div>`,
   f=>{
     const g=lerGrupo(f);if(g==null) return false;
-    snap();let n=0;ps.forEach(p=>{if(norm(p.g)!==norm(g)){p.g=g;n++;}});
+    snap();let n=0;ps.forEach(p=>{if(norm(p.g)!==norm(g)){defG(p,g);n++;}});
     if(!n){hist.pop();toast('Os selecionados já estão nesse grupo.');return;}
     abertos.add(grupoInfo(g).k);marcados.clear();
     mudou(n+' servidor'+(n>1?'es movidos':' movido')+' para '+grupoInfo(g).nome+'.');
@@ -373,7 +376,7 @@ function dlgMoverSel(){
 }
 function excluir(i){
   const p=dados.pessoas[i];if(!p) return;
-  snap();dados.pessoas.splice(i,1);mudou(p.n+' removido(a).');
+  snap();dados.pessoas.splice(i,1);if(!p.man){dados.exc=dados.exc||[];dados.exc.push(chaveP(p));}mudou(p.n+' removido(a).');
 }
 function confirmar(msg,ok){
   abrirDlg(`<h3>Confirmar</h3><p>${esc(msg)}</p><div class="row"><button type="button" class="btn" data-x>Cancelar</button><button class="btn primary" type="submit">Continuar</button></div>`,()=>{ok();});
@@ -489,9 +492,21 @@ async function sincronizar(ref){
 function aplicarCenti(mapa){
   const r=converter(bruto,mapa);
   if(!r.pessoas.length){toast('Nenhum servidor ativo encontrado com estes campos.');return dlgCampos(mapa);}
-  dados={v:2,importado:new Date().toISOString(),fonte:'Centi',mapa:Object.assign({v:3},mapa),ignorados:r.ign,semHierarquia:r.semHier,pessoas:r.pessoas};hist=[];
+  /* preserva a estrutura montada à mão: renomeações, movimentações, exclusões e pessoas adicionadas */
+  const ant=dados||{};
+  if(!ant.mov&&ant.editado){   /* dados antigos, sem registro dos ajustes: quem hoje está em grupo diferente do Centi foi movido à mão */
+    const novo=new Map(r.pessoas.map(p=>[chaveP(p),p]));ant.mov={};
+    (ant.pessoas||[]).forEach(p=>{const n=novo.get(chaveP(p));if(n&&norm(n.g)!==norm(p.g)) ant.mov[chaveP(p)]=p.g;});
+  }
+  const mov=ant.mov||{},ren=ant.ren||{},exc=new Set(ant.exc||[]);let pres=0;
+  let pessoas=r.pessoas.filter(p=>!exc.has(chaveP(p)));
+  pessoas.forEach(p=>{const k=chaveP(p);if(mov[k]){p.g=mov[k];pres++;}else if(ren[norm(p.g)]){p.g=ren[norm(p.g)];pres++;}});
+  const man=(ant.pessoas||[]).filter(p=>p.man);
+  man.forEach(p=>{if(!pessoas.some(x=>chaveP(x)===chaveP(p))) pessoas.push(p);});
+  pessoas.forEach((p,i)=>{if(p.man) p.o=r.pessoas.length+i;});
+  dados={v:2,importado:new Date().toISOString(),fonte:'Centi',mapa:Object.assign({v:3},mapa),ignorados:r.ign,semHierarquia:r.semHier,pessoas,mov,ren,exc:[...exc]};hist=[];
   salvar();render();
-  toast(r.pessoas.length+' servidores ativos na referência '+mapa.ref+'.'+(r.semHier?' '+r.semHier+' sem hierarquia (agentes políticos) ficaram de fora.':''));
+  toast(dados.pessoas.length+' servidores ativos na referência '+mapa.ref+'.'+(pres?' '+pres+' ajustes manuais de grupo mantidos.':'')+(r.semHier?' '+r.semHier+' sem hierarquia (agentes políticos) ficaram de fora.':''));
 }
 async function dlgCampos(mapa){
   try{
@@ -501,7 +516,7 @@ async function dlgCampos(mapa){
   const f=achatar(bruto[0],'',{},0),ks=Object.keys(f);
   const m=mapa||(dados&&dados.mapa&&dados.mapa.v===3?dados.mapa:null)||autoMapa(f);
   const sel=k=>`<label>${CAMPOS[k][0]}<select name="${k}"><option value="">— não usar —</option>${ks.map(x=>`<option value="${esc(x)}"${m.campos[k]===x?' selected':''}>${esc(x)}${f[x]!==''&&f[x]!=null?' — '+esc(String(f[x]).slice(0,40)):''}</option>`).join('')}</select></label>`;
-  abrirDlg(`<h3>Campos do Centi</h3><p>Fonte: Cubo funcionário (FP051) do Centi. Escolha qual campo alimenta cada informação. Os exemplos vêm do primeiro registro. ${dados&&dados.editado?'<b>Aplicar recria a hierarquia e descarta as edições manuais.</b>':''}</p>
+  abrirDlg(`<h3>Campos do Centi</h3><p>Fonte: Cubo funcionário (FP051) do Centi. Escolha qual campo alimenta cada informação. Os exemplos vêm do primeiro registro. ${dados&&dados.editado?'<b>Aplicar recria a lista a partir do Centi, mantendo as movimentações, renomeações e exclusões feitas à mão.</b>':''}</p>
     <label>Referência (mês/ano)<input name="ref" required pattern="\\d{2}/\\d{4}" value="${esc(m.ref||refAtual())}"></label>
     ${Object.keys(CAMPOS).map(sel).join('')}
     <div class="row"><button type="button" class="btn" data-x>Cancelar</button><button class="btn primary" type="submit">Aplicar</button></div>`,
@@ -617,7 +632,7 @@ function importar(){
 $('#impBtn').addEventListener('click',importar);
 function atualizarCenti(){
   const v=($('#refSel').value||'').split('-'),ref=v.length===2?v[1]+'/'+v[0]:'';   // vazio = automático (mês atual)
-  if(dados&&dados.editado) confirmar('Buscar do Centi substitui todas as alterações feitas manualmente na hierarquia (movimentações, edições e exclusões). Deseja continuar?',()=>sincronizar(ref));
+  if(dados&&dados.editado) confirmar('Atualizar do Centi traz os dados novos e mantém a estrutura que você montou (movimentações, renomeações, exclusões e pessoas adicionadas). Deseja continuar?',()=>sincronizar(ref));
   else sincronizar(ref);
 }
 $('#cenBtn').addEventListener('click',atualizarCenti);

@@ -34,6 +34,27 @@ button,input,select,textarea{font:inherit;color:inherit}
 .hero h1{font-size:clamp(1.6rem,4.4vw,2.4rem);line-height:1.12}
 .hero p{margin:8px 0 0;opacity:.85}
 main{padding-block:0 40px}
+.homewrap{margin-top:30px}
+.intro h2{font-size:1.35rem}.intro p{margin:4px 0 18px;color:var(--muted)}
+.crumb+.homewrap{margin-top:6px}
+.cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,290px),1fr));gap:16px}
+.card2{position:relative;display:flex;flex-direction:column;gap:6px;padding:22px 22px 18px;background:var(--surface);border:1px solid var(--line);border-radius:18px;box-shadow:var(--shadow);text-decoration:none;color:inherit;overflow:hidden;min-height:190px;transition:transform .18s ease,box-shadow .18s ease,border-color .18s ease}
+.card2::before{content:"";position:absolute;inset:0 0 auto 0;height:5px;background:linear-gradient(90deg,var(--accent),var(--gold))}
+.card2::after{content:"";position:absolute;right:-38px;bottom:-38px;width:130px;height:130px;border-radius:50%;background:var(--soft);z-index:0}
+.card2>*{position:relative;z-index:1}
+a.card2:hover{transform:translateY(-4px);border-color:var(--accent);box-shadow:0 12px 30px rgba(6,61,39,.18)}
+a.card2:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
+.card2 .ic{width:52px;height:52px;border-radius:14px;display:grid;place-items:center;background:linear-gradient(135deg,var(--hero-a),var(--hero-b));color:#fff;margin-bottom:8px;box-shadow:0 6px 14px rgba(6,61,39,.28)}
+.card2 b{font-family:var(--f-display);font-size:1.18rem;line-height:1.2}
+.card2 .d{color:var(--muted);font-size:14px;max-width:34ch}
+.card2 .go{margin-top:auto;padding-top:12px;font-weight:700;color:var(--accent);font-size:14px;display:inline-flex;align-items:center;gap:6px}
+a.card2:hover .go svg{transform:translateX(4px)}.card2 .go svg{transition:transform .18s}
+.card2.plan{background:transparent;border:2px dashed var(--line);box-shadow:none;min-height:190px}
+.card2.plan::before,.card2.plan::after{display:none}
+.card2.plan .ic{background:var(--soft);color:var(--muted);box-shadow:none}
+.card2.plan b{color:var(--muted)}
+.card2 .tg{position:absolute;top:16px;right:16px;font-size:11px;font-weight:700;padding:3px 10px;border-radius:99px;background:var(--soft);color:var(--muted)}
+@media (prefers-reduced-motion:reduce){.card2,.card2 .go svg{transition:none}a.card2:hover{transform:none}}
 .tipos{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,200px),1fr));gap:12px;margin-top:-22px}
 .tipo{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:12px 16px;box-shadow:var(--shadow);text-align:left;cursor:pointer;display:block;width:100%}
 .tipo{text-decoration:none;color:inherit}.tipo:hover{border-color:var(--accent)}.tipo.plan:hover{border-color:var(--line)}
@@ -641,7 +662,7 @@ const CONSIDERANDOS=`CONSIDERANDO OS ARTIGOS 10 E 11, INCISO II, DA LEI N. 3.968
 CONSIDERANDO A LEI 7.435/2023 QUE DISPÕE SOBRE O PLANO DE CARGOS E REMUNERAÇÃO DOS SERVIDORES PÚBLICOS DA CÂMARA MUNICIPAL DE RIO VERDE/GO...`;
 const TIPOS={
   conta:{
-    nome:'Abertura de conta',desc:'Declaração para abertura de conta salário (Banco do Brasil)',
+    icone:'conta',nome:'Abertura de conta',desc:'Declaração para abertura de conta salário (Banco do Brasil)',
     fonte:'Verdana',sz:22,lh1:1.215,
     campos:[
       {id:'nome',rot:'Nome completo',tipo:'texto',ph:'Nome do servidor'},
@@ -672,7 +693,7 @@ const TIPOS={
     }
   },
   portaria:{
-    cat:'portarias',nome:'Portaria de nomeação',desc:'Nomeia servidor comissionado para ocupar cargo',
+    cat:'portarias',icone:'portaria',nome:'Portaria de nomeação',desc:'Nomeia servidor comissionado para ocupar cargo',
     fonte:'Times New Roman',sz:24,lh1:1.15,
     campos:[
       {id:'numero',rot:'Nº da portaria',tipo:'texto',metade:true,ph:'307'},{id:'ano',rot:'Ano',tipo:'texto',metade:true,padrao:()=>String(new Date().getFullYear())},
@@ -711,7 +732,7 @@ const TIPOS={
   }
 };
 /* categorias da tela inicial: um tipo sem categoria abre direto; com categoria aparece numa lista (ex.: Portarias) */
-const CATS={portarias:{nome:'Portarias',desc:'Nomeação de servidores e outros atos da Presidência'},decretos:{nome:'Decretos',desc:'Em breve',plan:true}};
+const CATS={portarias:{icone:'portaria',nome:'Portarias',desc:'Nomeação de servidores e outros atos da Presidência'},decretos:{icone:'decreto',nome:'Decretos',desc:'Em breve',plan:true}};
 
 /* ---------- prévia (HTML) ---------- */
 const T=()=>TIPOS[tipoAtual];
@@ -879,20 +900,30 @@ $('#form').addEventListener('click',e=>{
 $('#form').addEventListener('keydown',e=>{if(e.target.id==='srv'&&e.key==='Enter'){e.preventDefault();buscarServidor();}});
 
 /* ---------- navegação: tela inicial, lista de uma categoria e editor (endereço #conta, #portarias, #portaria) ---------- */
-const cartao=(href,t)=>`<${t.plan?'div':'a'} class="tipo${t.plan?' plan':''}"${t.plan?' aria-disabled="true"':` href="#${href}"`}>${t.plan?'<span class="tg">Em breve</span>':''}<b>${esc(t.nome)}</b><span>${esc(t.desc)}</span></${t.plan?'div':'a'}>`;
+const ICONES={
+  conta:'<rect x="3" y="6" width="18" height="13" rx="2"/><path d="M3 10h18M7 15h4"/>',
+  portaria:'<path d="M6 3h9l4 4v14H6z"/><path d="M15 3v4h4M9 12h7M9 16h7"/>',
+  decreto:'<path d="M5 4h11a3 3 0 013 3v13H8a3 3 0 01-3-3V4z"/><path d="M5 17a3 3 0 013-3h11M9 8h6"/>'
+};
+const cartao=(href,t)=>{
+  const ic=`<span class="ic" aria-hidden="true"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">${ICONES[t.icone]||ICONES.portaria}</svg></span>`;
+  const corpo=`${t.plan?'<span class="tg">Em breve</span>':''}${ic}<b>${esc(t.nome)}</b><span class="d">${esc(t.desc)}</span>${t.plan?'':'<span class="go">Abrir<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg></span>'}`;
+  return t.plan?`<div class="card2 plan" aria-disabled="true">${corpo}</div>`:`<a class="card2" href="#${href}">${corpo}</a>`;
+};
 function mostrar(tela){
   $('#home').hidden=tela==='edit';$('#editor').hidden=tela!=='edit';$('#crumb').hidden=tela==='home';
 }
 function inicio(){
   mostrar('home');
-  const h=$('#home');h.className='tipos';
-  h.innerHTML=Object.entries(TIPOS).filter(([k,t])=>!t.cat).map(([k,t])=>cartao(k,t)).join('')+Object.entries(CATS).map(([k,c])=>cartao(k,c)).join('');
+  const h=$('#home');h.className='homewrap';
+  h.innerHTML=`<div class="intro"><h2>O que você quer gerar?</h2><p>Escolha um modelo. O documento sai no papel timbrado da Câmara, pronto para imprimir ou editar no Word.</p></div><div class="cards">`+
+    Object.entries(TIPOS).filter(([k,t])=>!t.cat).map(([k,t])=>cartao(k,t)).join('')+Object.entries(CATS).map(([k,c])=>cartao(k,c)).join('')+'</div>';
 }
 function lista(cat){
   mostrar('list');
   $('#crumb').className='crumb';$('#crumb').innerHTML=`<a href="#">← Documentos</a><h2>${esc(CATS[cat].nome)}</h2>`;
-  const h=$('#home');h.className='tipos lista';
-  h.innerHTML=Object.entries(TIPOS).filter(([k,t])=>t.cat===cat).map(([k,t])=>cartao(k,t)).join('');
+  const h=$('#home');h.className='homewrap';
+  h.innerHTML=`<div class="intro"><p>${esc(CATS[cat].desc)}. Escolha o modelo.</p></div><div class="cards">`+Object.entries(TIPOS).filter(([k,t])=>t.cat===cat).map(([k,t])=>cartao(k,t)).join('')+'</div>';
 }
 function abrir(id){
   tipoAtual=id;valores=valoresIniciais(TIPOS[id]);

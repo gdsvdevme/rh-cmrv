@@ -9,6 +9,7 @@
   site/licenca-premio/index.html licença-prêmio: períodos aquisitivos, prazos de gozo e controle dos efetivos (Estatuto, arts. 194 a 197)
   site/tarefas/index.html       tarefas do RH: checklist em quadro (kanban), equipe ou privadas
   site/carimbos/index.html      carimbos em PDF: posiciona o carimbo nas páginas e organiza por hierarquia
+  site/documentos/index.html    gerador de documentos: abertura de conta (e, no futuro, portarias e decretos) no papel timbrado, em Word e PDF
   dist/artifact-*.html          fragmentos para publicar como artefato
 
 Uso: python3 build.py [--flow-url URL] [--home-url URL]
@@ -23,6 +24,7 @@ Uso: python3 build.py [--flow-url URL] [--home-url URL]
   --licenca-url  endereço do sistema de Licença-prêmio usado no painel (artefato)
   --tarefas-url  endereço do sistema de Tarefas usado no painel (artefato)
   --carimbos-url  endereço do sistema de Carimbos usado no painel (artefato)
+  --documentos-url  endereço do Gerador de Documentos usado no painel (artefato)
 """
 import glob, os, sys
 root = os.path.dirname(os.path.abspath(__file__))
@@ -51,13 +53,16 @@ import base64
 stamp = base64.b64encode(open(os.path.join(root, 'src/carimbo-padrao.png'), 'rb').read()).decode()
 carimbos = mod(rd('src/carimbos.template.html')).replace('/*PB_JS*/', pbjs).replace('/*STAMP_B64*/', stamp)
 
+documentos = mod(rd('src/documentos.template.html')).replace('/*PB_JS*/', pbjs).replace('/*EXTENSO_JS*/', rd('src/extenso.js').replace('</script>', '<\\/script>')).replace('/*TIMBRADO_B64*/', base64.b64encode(open(os.path.join(root, 'src/timbrado.docx'), 'rb').read()).decode())
+
 head = ('<!doctype html>\n<html lang="pt-BR"><head><meta charset="utf-8">'
         '<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"></head>'
         '<body style="margin:0">\n')
 page = lambda frag: head + frag + '\n</body></html>\n'
 
 # site (hospedagem comum, ex.: Vercel)
-wr('site/index.html', page(launcher.replace('/*FLOW_URL*/', 'fluxogramas/').replace('/*PESSOAL_URL*/', 'pessoal/').replace('/*PONTO_URL*/', 'ponto/').replace('/*FERIAS_URL*/', 'ferias/').replace('/*LICENCA_URL*/', 'licenca-premio/').replace('/*TAREFAS_URL*/', 'tarefas/').replace('/*CARIMBOS_URL*/', 'carimbos/')))
+wr('site/index.html', page(launcher.replace('/*FLOW_URL*/', 'fluxogramas/').replace('/*PESSOAL_URL*/', 'pessoal/').replace('/*PONTO_URL*/', 'ponto/').replace('/*FERIAS_URL*/', 'ferias/').replace('/*LICENCA_URL*/', 'licenca-premio/').replace('/*TAREFAS_URL*/', 'tarefas/').replace('/*CARIMBOS_URL*/', 'carimbos/').replace('/*DOCUMENTOS_URL*/', 'documentos/')))
+wr('site/documentos/index.html', page(documentos.replace('/*HOME_URL*/', '../')))
 wr('site/carimbos/index.html', page(carimbos.replace('/*HOME_URL*/', '../')))
 wr('site/ferias/index.html', page(ferias.replace('/*HOME_URL*/', '../')))
 wr('site/licenca-premio/index.html', page(licenca.replace('/*HOME_URL*/', '../')))
@@ -66,7 +71,8 @@ wr('site/ponto/index.html', page(ponto.replace('/*HOME_URL*/', '../')))
 wr('site/pessoal/index.html', page(pessoal.replace('/*HOME_URL*/', '../')))
 wr('site/fluxogramas/index.html', page(flow.replace('/*HOME_URL*/', '../')))
 # fragmentos de artefato
-wr('dist/artifact-launcher.html', launcher.replace('/*FLOW_URL*/', opt('--flow-url', 'fluxogramas/')).replace('/*PESSOAL_URL*/', opt('--pessoal-url', 'pessoal/')).replace('/*PONTO_URL*/', opt('--ponto-url', 'ponto/')).replace('/*FERIAS_URL*/', opt('--ferias-url', 'ferias/')).replace('/*LICENCA_URL*/', opt('--licenca-url', 'licenca-premio/')).replace('/*TAREFAS_URL*/', opt('--tarefas-url', 'tarefas/')).replace('/*CARIMBOS_URL*/', opt('--carimbos-url', 'carimbos/')))
+wr('dist/artifact-launcher.html', launcher.replace('/*FLOW_URL*/', opt('--flow-url', 'fluxogramas/')).replace('/*PESSOAL_URL*/', opt('--pessoal-url', 'pessoal/')).replace('/*PONTO_URL*/', opt('--ponto-url', 'ponto/')).replace('/*FERIAS_URL*/', opt('--ferias-url', 'ferias/')).replace('/*LICENCA_URL*/', opt('--licenca-url', 'licenca-premio/')).replace('/*TAREFAS_URL*/', opt('--tarefas-url', 'tarefas/')).replace('/*CARIMBOS_URL*/', opt('--carimbos-url', 'carimbos/')).replace('/*DOCUMENTOS_URL*/', opt('--documentos-url', 'documentos/')))
+wr('dist/artifact-documentos.html', documentos.replace('/*HOME_URL*/', opt('--home-url', '../')))
 wr('dist/artifact-carimbos.html', carimbos.replace('/*HOME_URL*/', opt('--home-url', '../')))
 wr('dist/artifact-tarefas.html', tarefas.replace('/*HOME_URL*/', opt('--home-url', '../')))
 wr('dist/artifact-licenca.html', licenca.replace('/*HOME_URL*/', opt('--home-url', '../')))

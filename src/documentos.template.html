@@ -252,7 +252,7 @@ const camposEfeitos=[
 const TIPOS={
   conta:{
     icone:'conta',nome:'Abertura de conta',desc:'Declaração para abertura de conta salário (Banco do Brasil)',
-    fonte:'Verdana',sz:22,lh1:1.215,
+    fonte:'Times New Roman',sz:24,lh1:1.15,
     campos:[
       {id:'nome',rot:'Nome completo',tipo:'texto',ph:'Nome do servidor'},
       {id:'cpf',rot:'CPF',tipo:'cpf',metade:true},{id:'identidade',rot:'Identidade',tipo:'texto',metade:true,ph:'Nº, órgão e UF'},
@@ -363,7 +363,8 @@ function htmlBloco(b,t){
   if(b.k==='ass') return `<div style="margin-top:${b.antes/15}px">${b.linhas.map(l=>`<p style="text-align:center;${b.b===0?'':'font-weight:700;'}line-height:${pxLinha(240,t)};margin:0">${esc(l)}</p>`).join('')}</div>`;
   return '';
 }
-const folhaHtml=(bl,t)=>`<div class="sheet" style="font-family:${t.fonte==='Verdana'?'Verdana,Tahoma,"DejaVu Sans",sans-serif':'"Times New Roman","Liberation Serif",Times,serif'};font-size:${(t.sz/2*96/72).toFixed(2)}px">${bgUrl?`<img class="bg" src="${bgUrl}" alt="">`:''}<div class="txt">${bl.map(b=>htmlBloco(b,t)).join('')}</div></div>`;
+const FONTES={'Times New Roman':"'Times New Roman','Liberation Serif',Times,serif",Verdana:"Verdana,Tahoma,'DejaVu Sans',sans-serif"};
+const folhaHtml=(bl,t)=>`<div class="sheet" style="font-family:${FONTES[t.fonte]||'serif'};font-size:${(t.sz/2*96/72).toFixed(2)}px">${bgUrl?`<img class="bg" src="${bgUrl}" alt="">`:''}<div class="txt">${bl.map(b=>htmlBloco(b,t)).join('')}</div></div>`;
 
 /* ---------- Word (.docx) a partir do timbrado ---------- */
 const X=s=>String(s==null?'':s).replace(/[&<>]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[c]));

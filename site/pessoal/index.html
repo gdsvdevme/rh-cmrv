@@ -155,6 +155,13 @@ input,select,textarea{border-radius:12px}
 /* o conteúdo que sobe sobre o cabeçalho precisa ficar acima dele */
 .hero~main,.hero~.wrap,.stats,.layout,.grid{position:relative;z-index:2}
 
+.lote-bar{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin:6px 0}.lote-bar small{flex:1}
+.lote-lista{list-style:none;margin:0 0 8px;padding:0;max-height:min(40vh,320px);overflow:auto;border:1px solid var(--line,#ccc);border-radius:8px}
+.lote-lista li{border-bottom:1px solid var(--line,#ddd)}.lote-lista li:last-child{border:0}
+.lote-lista label{display:flex;flex-wrap:wrap;gap:4px 8px;align-items:center;padding:7px 10px;cursor:pointer}.lote-lista label span{font-size:12px;opacity:.7}
+.lote-lista input{width:auto;margin:0}
+.lote-marc{display:flex;flex-wrap:wrap;gap:4px;margin-bottom:8px}.chip{display:inline-flex;align-items:center;gap:4px;padding:2px 4px 2px 9px;border-radius:99px;background:rgba(0,120,80,.12);font-size:12px}
+.chip button{border:0;background:none;cursor:pointer;font:inherit;color:inherit;padding:0 4px}
 </style>
 
 <header class="hero wrap"><div class="inner">
@@ -173,7 +180,9 @@ input,select,textarea{border-radius:12px}
     <button class="btn" id="expBtn" type="button">Expandir tudo</button>
     <button class="btn" id="edtBtn" type="button">Editar hierarquia</button>
     <button class="btn" id="addBtn" type="button" hidden>+ Pessoa</button>
+    <button class="btn" id="lotBtn" type="button" hidden title="Buscar servidores, marcar vários e transferir de uma vez para um grupo">Mover em lote</button>
     <button class="btn" id="undoBtn" type="button" hidden>Desfazer</button>
+    <label class="btn" title="Referência (mês/ano) buscada no Centi. Em branco: o mês atual, ou o anterior se ainda não houver dados."><span style="font-size:12px">Referência</span> <input type="month" id="refSel" style="border:0;background:transparent;font:inherit"></label>
     <button class="btn primary" id="cenBtn" type="button">Buscar do Centi</button>
     <button class="btn" id="camBtn" type="button" title="Escolher quais campos do Centi alimentam cada informação">Campos do Centi</button>
     <button class="btn" id="impBtn" type="button">Importar planilha (CSV)</button>
@@ -711,6 +720,47 @@ function dlgRenomear(raw){
     snap();dados.pessoas.forEach(p=>{if(norm(p.g)===norm(raw)) p.g=n;});abertos.delete(grupoInfo(raw).k);abertos.add(grupoInfo(n).k);mudou('Grupo renomeado para '+grupoInfo(n).nome+'.');
   });
 }
+function dlgLote(){
+  const sel=new Set();   // índices em dados.pessoas, mantidos entre buscas
+  abrirDlg(`<h3>Mover em lote</h3>
+    <label>Buscar servidor (nome, cargo, matrícula ou grupo)<input name="q" type="search" placeholder="🔍 Digite para buscar…"></label>
+    <div class="lote-bar"><small data-cnt></small> <button type="button" class="btn sm" data-all>Marcar os da busca</button> <button type="button" class="btn sm" data-none>Limpar marcados</button></div>
+    <ul class="lote-lista" data-lista></ul>
+    <div data-marc class="lote-marc"></div>
+    ${campoGrupo('')}
+    <div class="row"><button type="button" class="btn" data-x>Cancelar</button><button class="btn primary" type="submit" data-go>Mover</button></div>`,
+  f=>{
+    if(!sel.size){toast('Marque pelo menos um servidor.');return false;}
+    const g=lerGrupo(f);if(g==null) return false;
+    snap();let n=0;
+    sel.forEach(i=>{const p=dados.pessoas[i];if(p&&norm(p.g)!==norm(g)){p.g=g;n++;}});
+    abertos.add(grupoInfo(g).k);
+    if(!n){toast('Os servidores marcados já estão nesse grupo.');hist.pop();return;}
+    mudou(n+' servidor'+(n>1?'es movidos':' movido')+' para '+grupoInfo(g).nome+'.');
+  });
+  const d=$('#dlg'),f=d.querySelector('form');d.style.width='min(640px,96vw)';
+  ligarGrupo(f);
+  const lista=f.querySelector('[data-lista]'),cnt=f.querySelector('[data-cnt]'),marc=f.querySelector('[data-marc]'),go=f.querySelector('[data-go]');
+  let vis=[];
+  const atual=()=>{
+    const q=norm(f.elements.q.value);
+    vis=dados.pessoas.map((p,i)=>i).filter(i=>{const p=dados.pessoas[i];return !q||norm(p.n+' '+p.c+' '+(p.m||'')+' '+grupoInfo(p.g).nome).includes(q);}).slice(0,200);
+    lista.innerHTML=vis.length?vis.map(i=>{const p=dados.pessoas[i];return `<li><label><input type="checkbox" data-i="${i}"${sel.has(i)?' checked':''}> <b>${esc(p.n)}</b> <span>${esc(p.c)} · ${esc(grupoInfo(p.g).nome)}</span></label></li>`;}).join(''):'<li><small>Nenhum servidor encontrado.</small></li>';
+    resumo();
+  };
+  const resumo=()=>{
+    cnt.textContent=sel.size+' marcado'+(sel.size===1?'':'s')+(vis.length>=200?' · mostrando os 200 primeiros, refine a busca':'');
+    go.textContent=sel.size?'Mover '+sel.size:'Mover';
+    marc.innerHTML=[...sel].map(i=>`<span class="chip">${esc(dados.pessoas[i].n)}<button type="button" data-rm="${i}" aria-label="Desmarcar ${esc(dados.pessoas[i].n)}">×</button></span>`).join('');
+  };
+  f.elements.q.addEventListener('input',atual);
+  f.elements.q.addEventListener('keydown',e=>{if(e.key==='Enter') e.preventDefault();});
+  lista.addEventListener('change',e=>{const c=e.target.closest('input[data-i]');if(!c) return;c.checked?sel.add(+c.dataset.i):sel.delete(+c.dataset.i);resumo();});
+  marc.addEventListener('click',e=>{const b=e.target.closest('button[data-rm]');if(!b) return;sel.delete(+b.dataset.rm);atual();});
+  f.querySelector('[data-all]').addEventListener('click',()=>{vis.forEach(i=>sel.add(i));atual();});
+  f.querySelector('[data-none]').addEventListener('click',()=>{sel.clear();atual();});
+  atual();
+}
 function excluir(i){
   const p=dados.pessoas[i];if(!p) return;
   snap();dados.pessoas.splice(i,1);mudou(p.n+' removido(a).');
@@ -809,11 +859,17 @@ async function sincronizar(ref){
   try{
     if(!(await garantirSessao())){toast('Entre com o acesso do Centi para buscar os dados.');return;}
     const salvo=dados&&dados.mapa&&dados.mapa.v===3?dados.mapa:null;   // mapeamentos de versões antigas são refeitos
-    ref=ref||(salvo&&salvo.ref)||refAtual();
-    const m=/^(\d{2})\/(\d{4})$/.exec(ref);if(!m){toast('Informe a referência no formato MM/AAAA.');return;}
-    toast('Buscando no Centi (referência '+ref+')…');
-    const r=await PB.centi.cubo(+m[1],+m[2]);
-    bruto=r.Data||[];bruto.total=r.Total;
+    const auto=!ref;   // sem referência escolhida: mês atual, recuando até 2 meses se o Centi ainda não tiver dados
+    if(auto) ref=refAtual();
+    let m=/^(\d{2})\/(\d{4})$/.exec(ref);if(!m){toast('Informe a referência no formato MM/AAAA.');return;}
+    let r;
+    for(let t=0;;t++){
+      toast('Buscando no Centi (referência '+ref+')…');
+      r=await PB.centi.cubo(+m[1],+m[2]);
+      bruto=r.Data||[];bruto.total=r.Total;
+      if(bruto.length||!auto||t>=2) break;
+      const d=new Date(+m[2],+m[1]-2,1);ref=String(d.getMonth()+1).padStart(2,'0')+'/'+d.getFullYear();m=/^(\d{2})\/(\d{4})$/.exec(ref);
+    }
     if(!bruto.length){toast('O Centi não devolveu servidores ativos na referência '+ref+'.');return;}
     const mapa=Object.assign({},salvo||autoMapa(achatar(bruto[0],'',{},0)),{ref,v:3});
     if(!mapa.campos.n){toast('Não identifiquei o campo do nome. Escolha os campos abaixo.');return dlgCampos(mapa);}
@@ -916,8 +972,9 @@ function render(){
   if(!has) edit=false;
   document.body.classList.toggle('editando',edit);
   $('#edtBtn').textContent=edit?'Concluir edição':'Editar hierarquia';$('#edtBtn').classList.toggle('primary',edit);
-  $('#addBtn').hidden=!(has&&edit);$('#undoBtn').hidden=!(has&&edit);$('#undoBtn').disabled=!hist.length;
+  $('#addBtn').hidden=!(has&&edit);$('#lotBtn').hidden=!(has&&edit);$('#undoBtn').hidden=!(has&&edit);$('#undoBtn').disabled=!hist.length;
   $('#cenBtn').textContent=has?'Atualizar do Centi':'Buscar do Centi';
+  {const mr=dados&&dados.mapa&&/^(\d{2})\/(\d{4})$/.exec(dados.mapa.ref||'');$('#refSel').placeholder=mr?mr[2]+'-'+mr[1]:'';$('#refSel').title=mr?'Última busca: '+dados.mapa.ref+'. Deixe em branco para buscar o mês atual.':'';}
   if(!has){
     stats.innerHTML='';$('#notice').innerHTML='';$('#foot').textContent='';
     view.innerHTML=`<div class="empty"><h2>Nenhum dado de pessoal ainda</h2><p>Busque os servidores ativos direto do Centi. Se preferir, importe uma planilha CSV (colunas Nome, Cargo, Tipo de admissão e Hierarquia). Os dados ficam salvos no servidor e não vão para o código do sistema.</p><button class="btn primary" type="button" data-cen>Buscar do Centi</button> <button class="btn" type="button" data-imp>Importar planilha (CSV)</button></div>`;
@@ -947,8 +1004,9 @@ function importar(){
 }
 $('#impBtn').addEventListener('click',importar);
 function atualizarCenti(){
-  if(dados&&dados.editado) confirmar('Buscar do Centi substitui todas as alterações feitas manualmente na hierarquia (movimentações, edições e exclusões). Deseja continuar?',()=>sincronizar());
-  else sincronizar();
+  const v=($('#refSel').value||'').split('-'),ref=v.length===2?v[1]+'/'+v[0]:'';   // vazio = automático (mês atual)
+  if(dados&&dados.editado) confirmar('Buscar do Centi substitui todas as alterações feitas manualmente na hierarquia (movimentações, edições e exclusões). Deseja continuar?',()=>sincronizar(ref));
+  else sincronizar(ref);
 }
 $('#cenBtn').addEventListener('click',atualizarCenti);
 $('#camBtn').addEventListener('click',()=>dlgCampos());
@@ -969,6 +1027,7 @@ $('#clrBtn').addEventListener('click',()=>{
 });
 $('#edtBtn').addEventListener('click',()=>{edit=!edit;render();});
 $('#addBtn').addEventListener('click',()=>dlgPessoa(null));
+$('#lotBtn').addEventListener('click',dlgLote);
 $('#undoBtn').addEventListener('click',desfazer);
 document.addEventListener('keydown',e=>{if(edit&&(e.ctrlKey||e.metaKey)&&e.key.toLowerCase()==='z'&&!/^(INPUT|TEXTAREA|SELECT)$/.test(e.target.tagName)&&!$('#dlg').open){e.preventDefault();desfazer();}});
 const dv=$('#view');

@@ -46,8 +46,9 @@ main{padding-block:0 40px}
   .grid>section.prev .hint{display:none}.grid>section.prev .acoes{margin-bottom:8px}.desk{padding:8px}}
 .panel{background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:16px;box-shadow:var(--shadow)}
 .panel h2{font-size:1.05rem;margin-bottom:10px}
-label.f{display:flex;flex-direction:column;gap:4px;font-size:13px;color:var(--muted);font-weight:600;margin-bottom:10px}
-label.f input,label.f select,label.f textarea{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:10px 12px;color:var(--fg);font-weight:400;width:100%}
+label.f,div.f{display:flex;flex-direction:column;gap:4px;font-size:13px;color:var(--muted);font-weight:600;margin-bottom:10px}
+label.f input[type=radio]{width:auto}
+label.f input:not([type=radio]),label.f select,label.f textarea,div.f input:not([type=radio]){background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:10px 12px;color:var(--fg);font-weight:400;width:100%}
 label.f input:focus,label.f select:focus{outline:2px solid var(--accent);outline-offset:0;border-color:var(--accent)}
 .two{display:grid;grid-template-columns:1fr 1fr;gap:10px}
 @media (max-width:480px){.two{grid-template-columns:1fr}}
@@ -57,6 +58,11 @@ label.f input:focus,label.f select:focus{outline:2px solid var(--accent);outline
 .btn{border:1px solid var(--line);background:var(--surface);border-radius:10px;padding:10px 14px;cursor:pointer;font-weight:600;font-size:14px;display:inline-flex;align-items:center;gap:8px;box-shadow:var(--shadow)}
 .btn:hover{border-color:var(--accent)}.btn.primary{background:var(--accent);color:var(--accent-fg);border-color:var(--accent)}.btn:disabled{opacity:.6;cursor:wait}
 .btn.sm{padding:4px 9px;font-size:12.5px;box-shadow:none}
+.busca .linha{display:flex;gap:8px}.busca .linha input{flex:1;min-width:0}
+.achados{list-style:none;margin:0 0 6px;padding:0;border:1px solid var(--line);border-radius:10px;max-height:220px;overflow:auto}
+.achados button{display:block;width:100%;text-align:left;border:0;background:transparent;padding:8px 12px;cursor:pointer;border-bottom:1px solid var(--line)}
+.achados li:last-child button{border-bottom:0}.achados button:hover{background:var(--soft)}
+.achados b{display:block;font-weight:600}.achados span{color:var(--muted);font-size:12.8px}
 .acoes{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:12px}
 details.cfg{margin-top:6px;border-top:1px solid var(--line);padding-top:10px}
 details.cfg summary{cursor:pointer;font-weight:700;font-size:13.5px;margin-bottom:10px}
@@ -64,7 +70,7 @@ details.cfg summary{cursor:pointer;font-weight:700;font-size:13.5px;margin-botto
 .desk{background:var(--desk);border:1px solid var(--line);border-radius:16px;padding:14px;overflow:hidden}
 #fit{width:100%}
 /* folha A4 (794 x 1123 px a 96 dpi); a zoom é ajustada pela largura disponível */
-.sheet{position:relative;width:793.7px;height:1122.5px;background:#fff;color:#000;box-shadow:0 4px 18px rgba(0,0,0,.25);overflow:hidden;font-family:Verdana,Tahoma,"DejaVu Sans",sans-serif;font-size:14.667px;transform-origin:top left}
+.sheet{position:relative;width:793.7px;height:1122.5px;background:#fff;color:#000;box-shadow:0 4px 18px rgba(0,0,0,.25);overflow:hidden;transform-origin:top left}
 .sheet .bg{position:absolute;left:0;top:0;width:100%;height:100%}
 .sheet .txt{position:absolute;left:75.6px;right:75.6px;top:113.4px}   /* margens do timbrado: 2 cm laterais e 3 cm no topo */
 .sheet p{margin:0}
@@ -572,7 +578,7 @@ const TIMBRADO_B64="UEsDBBQAAAAIAAAAIQAIaTvJqgEAAJEIAAATAAAAW0NvbnRlbnRfVHlwZXNd
 const TEMA_KEY='rhcrv-tema',LS_CFG='rhcrv-documentos-cfg';
 const $=s=>document.querySelector(s);
 const esc=s=>String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
-let dbh=null,pessoal=null,tipoAtual='conta',cfg=null,bgUrl='',zipBase=null;
+let dbh=null,tipoAtual='conta',cfg=null,bgUrl='',zipBase=null;
 
 /* ---------- tema ---------- */
 const ICO2={sun:'<circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/>',moon:'<path d="M21 12.8A9 9 0 1111.2 3a7 7 0 009.8 9.8z"/>'};
@@ -598,8 +604,8 @@ const titulo=s=>String(s||'').toLocaleLowerCase('pt-BR').replace(/(^|[\s\-/(])(\
 
 /* ---------- configuração fixa (órgão, presidente, diretora) ---------- */
 const CFG_PADRAO={orgao:'Câmara Municipal de Rio Verde',uf:'Goiás',cnpj:'25.040.627/0001-05',presidente:'FRANCISCO NUNES DE MORAES',
-  destinatario:'Gerência do Banco do Brasil',assinante:'Crislayne Pires Borges',cargoAssinante:'Diretora Financeira',cidade:'Câmara Municipal de Rio Verde'};
-const CFG_CAMPOS=[['orgao','Órgão'],['uf','Estado'],['cnpj','CNPJ'],['presidente','Presidente (Vereador)'],['destinatario','Destinatário da declaração'],['assinante','Quem assina'],['cargoAssinante','Cargo de quem assina'],['cidade','Local da data (antes da data)']];
+  destinatario:'Gerência do Banco do Brasil',assinante:'Crislayne Pires Borges',cargoAssinante:'Diretora Financeira',cidade:'Câmara Municipal de Rio Verde',cargoPresidente:'Presidente da Câmara'};
+const CFG_CAMPOS=[['orgao','Órgão'],['uf','Estado'],['cnpj','CNPJ'],['presidente','Presidente (Vereador)'],['destinatario','Destinatário da declaração'],['assinante','Quem assina'],['cargoAssinante','Cargo de quem assina'],['cidade','Local da data (antes da data)'],['cargoPresidente','Cargo do presidente (assina portarias)']];
 async function carregarCfg(){
   cfg=Object.assign({},CFG_PADRAO);
   try{
@@ -620,9 +626,13 @@ function salvarCfg(){
    O mesmo texto alimenta a prévia, o PDF e o Word. Para criar outro documento (portaria, decreto…),
    inclua uma entrada em TIPOS (e, se precisar de um bloco novo, trate-o em htmlBloco e xmlBloco).
    Bloco: {k:'titulo'|'par'|'campo'|'ass', ...}; runs: [{t:'texto',b:true}] */
+const CONSIDERANDOS=`CONSIDERANDO OS ARTIGOS 10 E 11, INCISO II, DA LEI N. 3.968/2000 – ESTATUTO DOS FUNCIONÁRIOS DO MUNICÍPIO DE RIO VERDE...
+
+CONSIDERANDO A LEI 7.435/2023 QUE DISPÕE SOBRE O PLANO DE CARGOS E REMUNERAÇÃO DOS SERVIDORES PÚBLICOS DA CÂMARA MUNICIPAL DE RIO VERDE/GO...`;
 const TIPOS={
   conta:{
     nome:'Abertura de conta',desc:'Declaração para abertura de conta salário (Banco do Brasil)',
+    fonte:'Verdana',sz:22,lh1:1.215,
     campos:[
       {id:'nome',rot:'Nome completo',tipo:'texto',ph:'Nome do servidor'},
       {id:'cpf',rot:'CPF',tipo:'cpf',metade:true},{id:'identidade',rot:'Identidade',tipo:'texto',metade:true,ph:'Nº, órgão e UF'},
@@ -637,7 +647,7 @@ const TIPOS={
       const sal=EXT.moeda(v.salario),ext=EXT.reais(v.salario);
       const campo=(r,t)=>({k:'campo',rot:r+':',val:t||''});
       return [
-        {k:'titulo',t:'DECLARAÇÃO PARA ABERTURA DE CONTA'},
+        {k:'titulo',t:'DECLARAÇÃO PARA ABERTURA DE CONTA',u:1,sp:80},
         {k:'par',runs:[{t:'A'}],jc:'left',depois:0},
         {k:'par',runs:[{t:c.destinatario}],jc:'left',depois:480},
         {k:'par',jc:'both',depois:240,runs:[
@@ -651,39 +661,79 @@ const TIPOS={
       ];
     }
   },
-  portaria:{nome:'Portaria',desc:'Em breve',plan:true},
+  portaria:{
+    nome:'Portaria de nomeação',desc:'Nomeia servidor comissionado para ocupar cargo',
+    fonte:'Times New Roman',sz:24,lh1:1.15,
+    campos:[
+      {id:'numero',rot:'Nº da portaria',tipo:'texto',metade:true,ph:'307'},{id:'ano',rot:'Ano',tipo:'texto',metade:true,padrao:()=>String(new Date().getFullYear())},
+      {id:'nome',rot:'Nome do servidor nomeado',tipo:'texto',ph:'Nome completo'},
+      {id:'cargo',rot:'Cargo',tipo:'texto',ph:'Assessor Parlamentar de Gabinete I'},
+      {id:'salario',rot:'Remuneração (R$)',tipo:'moeda',ph:'9288,29'},
+      {id:'lotacao',rot:'Lotação (completa "com lotação …")',tipo:'texto',ph:'no Gabinete do Vereador Fulano de Tal'},
+      {id:'retro',rot:'Efeitos do Art. 2º',tipo:'opcoes',opcoes:[['publicacao','Vigência na data da publicação'],['retroage','Retroagir os efeitos a uma data']],padrao:()=>'publicacao'},
+      {id:'dataRetro',rot:'Retroagir a partir de',tipo:'data',se:v=>v.retro==='retroage'},
+      {id:'data',rot:'Data da portaria',tipo:'data',padrao:hojeIso},
+      {id:'considerandos',rot:'Considerandos (um parágrafo por bloco, separados por linha em branco)',tipo:'area',padrao:()=>CONSIDERANDOS}
+    ],
+    arquivo:v=>'Portaria-'+(v.numero||'sn')+'-'+(v.ano||'')+(v.nome?'-'+v.nome.normalize('NFD').replace(/[̀-ͯ]/g,'').replace(/[^A-Za-z0-9]+/g,'-').replace(/^-|-$/g,''):''),
+    blocos(v,c){
+      const sal=EXT.moeda(v.salario),ext=EXT.reais(v.salario),pres=c.presidente.toLocaleUpperCase('pt-BR');
+      const art2=v.retro==='retroage'&&v.dataRetro
+        ?`Esta Portaria entrará em vigência na data de sua publicação, com efeitos retroativos a partir de ${dataBr(v.dataRetro)}, revogadas as disposições contrárias.`
+        :'Esta Portaria entrará em vigência na data de sua publicação, revogadas as disposições contrárias.';
+      const bl=[
+        {k:'titulo',t:`PORTARIA N.º ${v.numero||'___'}/ ${v.ano||'____'}`,antes:0,depois:480},
+        {k:'par',runs:[{t:'(Nomeia servidor para ocupar o cargo que menciona)'}],jc:'center',depois:360,line:240},
+        {k:'par',esq:3685,jc:'both',depois:240,line:240,runs:[{t:`O PRESIDENTE DA ${c.orgao.toLocaleUpperCase('pt-BR')}-GO., VEREADOR ${pres}, NO USO DE SUAS ATRIBUIÇÕES LEGAIS DE SEU CARGO ...`,b:1}]}
+      ];
+      String(v.considerandos||'').split(/\n\s*\n/).map(x=>x.replace(/\s*\n\s*/g,' ').trim()).filter(Boolean).forEach(x=>
+        bl.push({k:'par',esq:3685,jc:'both',depois:240,line:240,runs:[{t:x.toLocaleUpperCase('pt-BR'),b:1}]}));
+      bl.push({k:'par',esq:3685,jc:'both',antes:120,depois:480,line:240,runs:[{t:'R E S O L V E :',b:1}]});
+      bl.push({k:'par',jc:'both',depois:120,line:276,runs:[{t:'Art. 1.º-',b:1},{t:' Nomear o servidor(a) '},{t:(v.nome||'').toLocaleUpperCase('pt-BR')||'____________',b:1},
+        {t:`, para ocupar o cargo de ${v.cargo||'____________'}, de livre nomeação e exoneração, com remuneração de ${sal?'R$ '+sal+(ext?' ('+ext+')':''):'R$ ____'}, com lotação ${v.lotacao||'____________'}, para cumprir suas funções conforme atribuições do cargo.`}]});
+      bl.push({k:'par',jc:'both',depois:120,line:276,runs:[{t:'Art. 2.º',b:1},{t:' - '+art2}]});
+      bl.push({k:'tres',t:['CUMPRA-SE','REGISTRE-SE','PUBLIQUE-SE'],antes:480,depois:360});
+      const m=/^(\d{4})-(\d{2})-(\d{2})$/.exec(v.data||'');
+      bl.push({k:'par',jc:'left',depois:0,line:276,runs:[{t:`GABINETE DA PRESIDÊNCIA DA ${c.orgao.toLocaleUpperCase('pt-BR')}-GO.,`,b:1},{t:m?` aos ${+m[3]} dias do mês de ${MESES[+m[2]-1]} de ${m[1]}.`:' aos ___ dias do mês de ______ de ____.'}]});
+      bl.push({k:'ass',antes:1100,linhas:[titulo(c.presidente),c.cargoPresidente],b:0});
+      return bl;
+    }
+  },
   decreto:{nome:'Decreto',desc:'Em breve',plan:true}
 };
 
 /* ---------- prévia (HTML) ---------- */
-function runsHtml(rs){return rs.map(r=>r.b?`<b>${esc(r.t)}</b>`:esc(r.t)).join('');}
-function htmlBloco(b){
-  if(b.k==='titulo') return `<p class="t" style="margin:${(b.antes==null?47:b.antes/15)}px 0 32px">${esc(b.t)}</p>`;
-  if(b.k==='par') return `<p class="${b.jc==='both'?'j':''}" style="${b.jc==='both'?'':'line-height:1.82;'}margin:${(b.antes||0)/15}px 0 ${(b.depois||0)/15}px">${runsHtml(b.runs)}</p>`;
-  if(b.k==='campo') return `<p class="l" style="margin:0 0 8px"><b>${esc(b.rot)}</b>${b.val?' '+esc(b.val):''}</p>`;
-  if(b.k==='ass') return `<div style="margin-top:${b.antes/15}px">${b.linhas.map(l=>`<p class="c">${esc(l)}</p>`).join('')}</div>`;
+const T=()=>TIPOS[tipoAtual];
+const pxLinha=(line,t)=>((line||360)/240*(t.lh1||1.2)).toFixed(3);
+const rHtml=rs=>rs.map(r=>`<span style="${r.b?'font-weight:700;':''}${r.i?'font-style:italic;':''}">${esc(r.t)}</span>`).join('');
+function htmlBloco(b,t){
+  if(b.k==='titulo') return `<p style="text-align:center;font-weight:700;${b.u?'text-decoration:underline;':''}${b.sp?'letter-spacing:.36em;':''}margin:${(b.antes==null?700:b.antes)/15}px 0 ${(b.depois==null?480:b.depois)/15}px">${esc(b.t)}</p>`;
+  if(b.k==='par'){const jc=b.jc==='both'?'justify':b.jc;return `<p style="text-align:${jc};line-height:${pxLinha(b.line,t)};margin:${(b.antes||0)/15}px 0 ${(b.depois||0)/15}px ${(b.esq||0)/15}px">${rHtml(b.runs)}</p>`;}
+  if(b.k==='campo') return `<p style="line-height:${pxLinha(276,t)};margin:0 0 8px"><b>${esc(b.rot)}</b>${b.val?' '+esc(b.val):''}</p>`;
+  if(b.k==='tres') return `<p style="display:flex;justify-content:space-between;margin:${b.antes/15}px 0 ${b.depois/15}px">${b.t.map(x=>`<span>${esc(x)}</span>`).join('')}</p>`;
+  if(b.k==='ass') return `<div style="margin-top:${b.antes/15}px">${b.linhas.map(l=>`<p style="text-align:center;${b.b===0?'':'font-weight:700;'}line-height:${pxLinha(240,t)};margin:0">${esc(l)}</p>`).join('')}</div>`;
   return '';
 }
-const folhaHtml=bl=>`<div class="sheet">${bgUrl?`<img class="bg" src="${bgUrl}" alt="">`:''}<div class="txt">${bl.map(htmlBloco).join('')}</div></div>`;
+const folhaHtml=(bl,t)=>`<div class="sheet" style="font-family:${t.fonte==='Verdana'?'Verdana,Tahoma,"DejaVu Sans",sans-serif':'"Times New Roman","Liberation Serif",Times,serif'};font-size:${(t.sz/2*96/72).toFixed(2)}px">${bgUrl?`<img class="bg" src="${bgUrl}" alt="">`:''}<div class="txt">${bl.map(b=>htmlBloco(b,t)).join('')}</div></div>`;
 
 /* ---------- Word (.docx) a partir do timbrado ---------- */
 const X=s=>String(s==null?'':s).replace(/[&<>]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[c]));
-const FONTE='<w:rFonts w:ascii="Verdana" w:hAnsi="Verdana" w:cs="Verdana"/>';
-const rXml=(t,o)=>`<w:r><w:rPr>${FONTE}${o&&o.b?'<w:b/>':''}${o&&o.u?'<w:u w:val="single"/>':''}${o&&o.sp?`<w:spacing w:val="${o.sp}"/>`:''}<w:sz w:val="22"/><w:szCs w:val="22"/></w:rPr><w:t xml:space="preserve">${X(t)}</w:t></w:r>`;
-const pXml=(jc,spacing,runs)=>`<w:p><w:pPr><w:spacing ${spacing}/><w:jc w:val="${jc}"/></w:pPr>${runs}</w:p>`;
-function xmlBloco(b){
-  if(b.k==='titulo') return pXml('center',`w:before="${b.antes==null?700:b.antes}" w:after="480" w:line="240" w:lineRule="auto"`,rXml(b.t,{b:1,u:1,sp:80}));
-  if(b.k==='par') return pXml(b.jc,`w:before="${b.antes||0}" w:after="${b.depois||0}" w:line="360" w:lineRule="auto"`,b.runs.map(r=>rXml(r.t,r)).join(''));
-  if(b.k==='campo') return pXml('left','w:before="0" w:after="120" w:line="276" w:lineRule="auto"',rXml(b.rot,{b:1})+(b.val?rXml(' '+b.val):''));
-  if(b.k==='ass') return b.linhas.map((l,i)=>pXml('center',`w:before="${i?0:b.antes}" w:after="0" w:line="240" w:lineRule="auto"`,rXml(l,{b:1}))).join('');
+const rXml=(t,o,tp)=>`<w:r><w:rPr><w:rFonts w:ascii="${tp.fonte}" w:hAnsi="${tp.fonte}" w:cs="${tp.fonte}"/>${o&&o.b?'<w:b/>':''}${o&&o.i?'<w:i/>':''}${o&&o.u?'<w:u w:val="single"/>':''}${o&&o.sp?`<w:spacing w:val="${o.sp}"/>`:''}<w:sz w:val="${tp.sz}"/><w:szCs w:val="${tp.sz}"/></w:rPr><w:t xml:space="preserve">${X(t)}</w:t></w:r>`;
+const pXml=(jc,spacing,runs,ind,tabs)=>`<w:p><w:pPr>${tabs||''}<w:spacing ${spacing}/>${ind?`<w:ind w:left="${ind}"/>`:''}<w:jc w:val="${jc}"/></w:pPr>${runs}</w:p>`;
+function xmlBloco(b,t){
+  if(b.k==='titulo') return pXml('center',`w:before="${b.antes==null?700:b.antes}" w:after="${b.depois==null?480:b.depois}" w:line="240" w:lineRule="auto"`,rXml(b.t,{b:1,u:b.u,sp:b.sp},t));
+  if(b.k==='par') return pXml(b.jc,`w:before="${b.antes||0}" w:after="${b.depois||0}" w:line="${b.line||360}" w:lineRule="auto"`,b.runs.map(r=>rXml(r.t,r,t)).join(''),b.esq);
+  if(b.k==='campo') return pXml('left','w:before="0" w:after="120" w:line="276" w:lineRule="auto"',rXml(b.rot,{b:1},t)+(b.val?rXml(' '+b.val,null,t):''));
+  if(b.k==='tres') return pXml('left',`w:before="${b.antes}" w:after="${b.depois}" w:line="240" w:lineRule="auto"`,b.t.map((x,i)=>(i?'<w:r><w:tab/></w:r>':'')+rXml(x,null,t)).join(''),0,'<w:tabs><w:tab w:val="center" w:pos="4819"/><w:tab w:val="right" w:pos="9638"/></w:tabs>');
+  if(b.k==='ass') return b.linhas.map((l,i)=>pXml('center',`w:before="${i?0:b.antes}" w:after="0" w:line="240" w:lineRule="auto"`,rXml(l,{b:b.b!==0},t))).join('');
   return '';
 }
-async function gerarDocx(bl){
+async function gerarDocx(bl,t){
   if(!window.JSZip) throw new Error('A biblioteca JSZip não carregou (verifique a internet).');
   const zip=await JSZip.loadAsync(TIMBRADO_B64,{base64:true});
   const xml=await zip.file('word/document.xml').async('string');
   if(!xml.includes('<!--CORPO-->')) throw new Error('Modelo de timbrado inválido.');
-  zip.file('word/document.xml',xml.replace('<!--CORPO-->',bl.map(xmlBloco).join('')));
+  zip.file('word/document.xml',xml.replace('<!--CORPO-->',bl.map(b=>xmlBloco(b,t)).join('')));
   return zip.generateAsync({type:'blob',mimeType:'application/vnd.openxmlformats-officedocument.wordprocessingml.document',compression:'DEFLATE'});
 }
 async function carregarFundo(){
@@ -702,15 +752,18 @@ function campoHtml(c){
   const a=`id="f_${c.id}" data-id="${c.id}" autocomplete="off"`;
   let inp;
   if(c.tipo==='data') inp=`<input type="date" ${a} value="${esc(dataIso(val))}">`;
+  else if(c.tipo==='area') inp=`<textarea ${a} rows="9">${esc(val)}</textarea>`;
+  else if(c.tipo==='opcoes') inp=`<span style="display:flex;flex-direction:column;gap:6px;font-weight:400">${c.opcoes.map(([k,r])=>`<label style="display:flex;gap:8px;align-items:center;color:var(--fg)"><input type="radio" name="r_${c.id}" data-id="${c.id}" value="${k}"${val===k?' checked':''}>${esc(r)}</label>`).join('')}</span>`;
   else if(c.tipo==='moeda') inp=`<input type="text" inputmode="decimal" ${a} value="${esc(val)}" placeholder="${esc(c.ph||'')}">`;
   else if(c.tipo==='cpf') inp=`<input type="text" inputmode="numeric" ${a} value="${esc(val)}" placeholder="000.000.000-00">`;
   else inp=`<input type="text" ${a} value="${esc(val)}" placeholder="${esc(c.ph||'')}">`;
   const extra=c.tipo==='cpf'?`<span class="hint" id="h_${c.id}"></span>`:'';
-  return `<label class="f" style="margin-bottom:${c.tipo==='moeda'?4:10}px">${esc(c.rot)}${inp}${extra}</label>`+(c.tipo==='moeda'?`<div class="extenso" id="x_${c.id}" aria-live="polite"></div>`:'');
+  const lab=c.tipo==='opcoes'?'div':'label';
+  return `<div id="w_${c.id}"><${lab} class="f" style="margin-bottom:${c.tipo==='moeda'?4:10}px">${esc(c.rot)}${inp}${extra}</${lab}>`+(c.tipo==='moeda'?`<div class="extenso" id="x_${c.id}" aria-live="polite"></div>`:'')+'</div>';
 }
 function montarForm(){
   const t=TIPOS[tipoAtual];
-  const seletor=pessoal&&pessoal.pessoas?`<label class="f">Preencher com um servidor da Hierarquia de Pessoal (opcional)<input id="srv" list="srvList" placeholder="Digite o nome" autocomplete="off"></label><datalist id="srvList">${pessoal.pessoas.map(p=>`<option value="${esc(p.n)}">${esc(p.c||'')}</option>`).join('')}</datalist><p class="hint" style="margin:-4px 0 12px">Traz nome, cargo, matrícula e admissão. CPF, identidade, endereço, nascimento e salário o sistema não guarda: digite abaixo.</p>`:'';
+  const seletor=`<div class="busca"><label class="f" style="margin-bottom:6px">Buscar servidor no Centi (opcional)<span class="linha"><input id="srv" type="search" placeholder="Nome (3 letras ou mais) ou matrícula" autocomplete="off"><button type="button" class="btn" id="srvBtn">Buscar</button></span></label><div id="srvRes" aria-live="polite"></div><p class="hint" style="margin:6px 0 12px">Traz nome, cargo, matrícula e admissão direto do Centi. CPF, identidade, endereço, nascimento e salário a busca do Centi não entrega: digite abaixo.</p></div>`;
   let h=seletor,i=0;const cs=t.campos;
   while(i<cs.length){
     if(cs[i].metade&&cs[i+1]&&cs[i+1].metade){h+=`<div class="two">${campoHtml(cs[i])}${campoHtml(cs[i+1])}</div>`;i+=2;}
@@ -723,6 +776,7 @@ function montarForm(){
 }
 function atualizarAuxiliares(){
   const t=TIPOS[tipoAtual];
+  t.campos.forEach(c=>{if(c.se){const w=$('#w_'+c.id);if(w) w.hidden=!c.se(valores);}});
   t.campos.forEach(c=>{
     if(c.tipo==='moeda'){const e=EXT.reais(valores[c.id]);const x=$('#x_'+c.id);if(x) x.innerHTML=e?`<b>R$ ${EXT.moeda(valores[c.id])}</b> (${esc(e)})`:'<span class="hint">O valor por extenso aparece aqui.</span>';}
     if(c.tipo==='cpf'){const h=$('#h_'+c.id);if(h){const d=String(valores[c.id]||'').replace(/\D/g,'');h.className='hint'+(!d?'':cpfValido(d)?' ok':' bad');h.textContent=!d?'':cpfValido(d)?'CPF válido':d.length<11?'':'CPF com dígitos verificadores inválidos. Confira.';}}
@@ -732,8 +786,8 @@ let desenho=0;
 function desenhar(){
   const t=TIPOS[tipoAtual];
   const bl=t.blocos(valores,cfg);
-  $('#folha').innerHTML=folhaHtml(bl);
-  $('#pj').innerHTML=folhaHtml(bl);
+  $('#folha').innerHTML=folhaHtml(bl,t);
+  $('#pj').innerHTML=folhaHtml(bl,t);
   ajustar();
 }
 function ajustar(){
@@ -750,15 +804,7 @@ window.addEventListener('resize',ajustar);
 $('#form').addEventListener('input',e=>{
   const el=e.target,t=TIPOS[tipoAtual];
   if(el.dataset.cfg){cfg[el.dataset.cfg]=el.value;clearTimeout(salvarCfg.t);salvarCfg.t=setTimeout(salvarCfg,500);desenhar();return;}
-  if(el.id==='srv'){
-    const p=pessoal&&pessoal.pessoas.find(x=>x.n===el.value);
-    if(p){
-      Object.assign(valores,{nome:p.n,cargo:p.c||valores.cargo,matricula:p.m||valores.matricula,admissao:p.a?dataIso(p.a):valores.admissao});
-      ['nome','cargo','matricula','admissao'].forEach(k=>{const f=$('#f_'+k);if(f) f.value=k==='admissao'?dataIso(valores[k]):valores[k]||'';});
-      atualizarAuxiliares();desenhar();
-    }
-    return;
-  }
+  if(el.id==='srv') return;
   const id=el.dataset.id;if(!id) return;
   const c=t.campos.find(x=>x.id===id);
   if(c.tipo==='cpf'){el.value=maskCpf(el.value);}
@@ -774,6 +820,41 @@ $('#form').addEventListener('focusout',e=>{
   if(e.target.dataset&&e.target.dataset.id==='salario'){const m=EXT.moeda(e.target.value);if(m){e.target.value=m;valores.salario=m;atualizarAuxiliares();desenhar();}}
 });
 
+/* ---------- busca de servidor no Centi ---------- */
+let achados=[];
+const tituloNome=s=>titulo(s);
+async function garantirSessao(){
+  if(PB.centi.user) return true;
+  const h=await PB.connect();if(h&&!dbh) dbh=h;
+  return !!PB.centi.user;
+}
+async function buscarServidor(){
+  const termo=($('#srv').value||'').trim(),res=$('#srvRes'),btn=$('#srvBtn');
+  if(termo.replace(/\s/g,'').length<3){res.innerHTML='<p class="hint bad">Digite ao menos 3 letras do nome ou a matrícula.</p>';return;}
+  btn.disabled=true;btn.textContent='Buscando…';res.innerHTML='';
+  try{
+    if(!(await garantirSessao())){res.innerHTML='<p class="hint bad">Entre com o acesso do Centi para buscar.</p>';return;}
+    const r=await PB.centi.licencaBusca(termo);
+    achados=r.Data||[];
+    res.innerHTML=achados.length?`<ul class="achados">${achados.map((f,i)=>`<li><button type="button" data-srv="${i}"><b>${esc(tituloNome(f.Nome))}</b><span>${esc(tituloNome(f.Cargo))}${f.Lotacao?' · '+esc(tituloNome(f.Lotacao)):''} · Mat. ${esc(f.Matricula)}${/^ativo$/i.test(f.Situacao)?'':' · '+esc(tituloNome(f.Situacao))}</span></button></li>`).join('')}</ul>${achados.length>=50?'<p class="hint">Mostrando os 50 primeiros: refine a busca.</p>':''}`:'<p class="hint">Nenhum servidor encontrado.</p>';
+  }catch(e){res.innerHTML=`<p class="hint bad">${esc(e.status===401?'A sessão do Centi expirou. Entre de novo e repita a busca.':'Não foi possível buscar no Centi: '+(e.message||e))}</p>`;}
+  finally{btn.disabled=false;btn.textContent='Buscar';}
+}
+function usarServidor(f){
+  const t=TIPOS[tipoAtual],novo={nome:tituloNome(f.Nome),cargo:tituloNome(f.Cargo),matricula:f.Matricula,admissao:dataIso(f.DataAdmissao)};
+  Object.keys(novo).forEach(k=>{
+    if(!t.campos.some(c=>c.id===k)||!novo[k]) return;
+    valores[k]=novo[k];const el=$('#f_'+k);if(el) el.value=novo[k];
+  });
+  atualizarAuxiliares();desenhar();
+  $('#srvRes').innerHTML=`<p class="hint ok">Dados de ${esc(tituloNome(f.Nome))} preenchidos. Confira e complete o restante.</p>`;
+}
+$('#form').addEventListener('click',e=>{
+  if(e.target.closest('#srvBtn')) buscarServidor();
+  const b=e.target.closest('[data-srv]');if(b) usarServidor(achados[+b.dataset.srv]);
+});
+$('#form').addEventListener('keydown',e=>{if(e.target.id==='srv'&&e.key==='Enter'){e.preventDefault();buscarServidor();}});
+
 function montarTipos(){
   $('#tipos').innerHTML=Object.entries(TIPOS).map(([k,t])=>`<button type="button" class="tipo${t.plan?' plan':''}${k===tipoAtual?' on':''}" data-t="${k}"${t.plan?' disabled aria-disabled="true"':''}${k===tipoAtual?' aria-pressed="true"':''}>${t.plan?'<span class="tg">Em breve</span>':''}<b>${esc(t.nome)}</b><span>${esc(t.desc)}</span></button>`).join('');
 }
@@ -787,7 +868,7 @@ $('#docxBtn').addEventListener('click',async()=>{
   const b=$('#docxBtn');b.disabled=true;
   try{
     const t=TIPOS[tipoAtual];
-    const blob=await gerarDocx(t.blocos(valores,cfg));
+    const blob=await gerarDocx(t.blocos(valores,cfg),t);
     const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=t.arquivo(valores)+'.docx';
     document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(a.href),4000);
   }catch(e){toast('Não foi possível gerar o Word: '+(e.message||e));}
@@ -808,10 +889,6 @@ $('#pdfBtn').addEventListener('click',()=>{
   try{
     if(window.claude&&window.claude.use) dbh=await window.claude.use('db');
     if(!dbh) dbh=await PB.connect();
-    if(dbh){
-      const s=await dbh.doc('pessoal/dados').get();
-      if(s.exists){try{const d=JSON.parse(s.data().json);if(d&&Array.isArray(d.pessoas)) pessoal=d;}catch(e){}}
-    }
   }catch(e){dbh=null;}
   await carregarCfg();
   await carregarFundo();

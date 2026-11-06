@@ -660,6 +660,33 @@ function salvarCfg(){
 const CONSIDERANDOS=`CONSIDERANDO OS ARTIGOS 10 E 11, INCISO II, DA LEI N. 3.968/2000 – ESTATUTO DOS FUNCIONÁRIOS DO MUNICÍPIO DE RIO VERDE...
 
 CONSIDERANDO A LEI 7.435/2023 QUE DISPÕE SOBRE O PLANO DE CARGOS E REMUNERAÇÃO DOS SERVIDORES PÚBLICOS DA CÂMARA MUNICIPAL DE RIO VERDE/GO...`;
+/* esqueleto comum das portarias: título, ementa, abertura, considerandos, RESOLVE, artigos, "Cumpra-se", data e assinatura do presidente */
+function blocosPortaria(v,c,o){
+  const pres=c.presidente.toLocaleUpperCase('pt-BR'),org=c.orgao.toLocaleUpperCase('pt-BR');
+  const art2=v.retro==='retroage'&&v.dataRetro
+    ?`Esta Portaria entrará em vigência na data de sua publicação, com efeitos retroativos a partir de ${dataBr(v.dataRetro)}, revogadas as disposições contrárias.`
+    :'Esta Portaria entrará em vigência na data de sua publicação, revogadas as disposições contrárias.';
+  const bl=[
+    {k:'titulo',t:o.titulo,depois:480},
+    {k:'par',runs:[{t:o.ementa}],jc:'center',depois:360,line:240},
+    {k:'par',esq:3685,jc:'both',depois:240,line:240,runs:[{t:`O PRESIDENTE DA ${org}-GO., VEREADOR ${pres}, ${o.abertura}`,b:1}]}
+  ];
+  String(v.considerandos||'').split(/\n\s*\n/).map(x=>x.replace(/\s*\n\s*/g,' ').trim()).filter(Boolean).forEach(x=>
+    bl.push({k:'par',esq:3685,jc:'both',depois:240,line:240,runs:[{t:x.toLocaleUpperCase('pt-BR'),b:1}]}));
+  bl.push({k:'par',esq:3685,jc:'both',antes:120,depois:480,line:240,runs:[{t:'R E S O L V E :',b:1}]});
+  bl.push({k:'par',jc:'both',depois:120,line:276,runs:o.art1});
+  bl.push({k:'par',jc:'both',depois:120,line:276,runs:[{t:'Art. 2.º',b:1},{t:' - '+art2}]});
+  bl.push({k:'tres',t:['CUMPRA-SE','REGISTRE-SE','PUBLIQUE-SE'],antes:480,depois:360});
+  const m=/^(\d{4})-(\d{2})-(\d{2})$/.exec(v.data||'');
+  bl.push({k:'par',jc:'left',depois:0,line:276,runs:[{t:`GABINETE DA PRESIDÊNCIA DA ${org}-GO.,`,b:1},{t:m?` aos ${+m[3]} dias do mês de ${MESES[+m[2]-1]} de ${m[1]}.`:' aos ___ dias do mês de ______ de ____.'}]});
+  bl.push({k:'ass',antes:1100,linhas:[titulo(c.presidente),c.cargoPresidente],b:0});
+  return bl;
+}
+const arquivoPortaria=v=>'Portaria-'+(v.numero||'sn')+'-'+(v.ano||'')+(v.nome?'-'+v.nome.normalize('NFD').replace(/[̀-ͯ]/g,'').replace(/[^A-Za-z0-9]+/g,'-').replace(/^-|-$/g,''):'');
+const CONSIDERANDOS_EXON=`CONSIDERANDO O ARTIGO 115, § 1º, ALÍNEA “A” DA LEI N. 3.968/2000 – ESTATUTO DOS FUNCIONÁRIOS DO MUNICÍPIO DE RIO VERDE...`;
+const camposEfeitos=[
+  {id:'retro',rot:'Efeitos do Art. 2º',tipo:'opcoes',opcoes:[['publicacao','Vigência na data da publicação'],['retroage','Retroagir os efeitos a uma data']],padrao:()=>'publicacao'},
+  {id:'dataRetro',rot:'Retroagir a partir de',tipo:'data',se:v=>v.retro==='retroage'}];
 const TIPOS={
   conta:{
     icone:'conta',nome:'Abertura de conta',desc:'Declaração para abertura de conta salário (Banco do Brasil)',
@@ -706,28 +733,32 @@ const TIPOS={
       {id:'data',rot:'Data da portaria',tipo:'data',padrao:hojeIso},
       {id:'considerandos',rot:'Considerandos (um parágrafo por bloco, separados por linha em branco)',tipo:'area',padrao:()=>CONSIDERANDOS}
     ],
-    arquivo:v=>'Portaria-'+(v.numero||'sn')+'-'+(v.ano||'')+(v.nome?'-'+v.nome.normalize('NFD').replace(/[̀-ͯ]/g,'').replace(/[^A-Za-z0-9]+/g,'-').replace(/^-|-$/g,''):''),
+    arquivo:arquivoPortaria,
     blocos(v,c){
-      const sal=EXT.moeda(v.salario),ext=EXT.reais(v.salario),pres=c.presidente.toLocaleUpperCase('pt-BR');
-      const art2=v.retro==='retroage'&&v.dataRetro
-        ?`Esta Portaria entrará em vigência na data de sua publicação, com efeitos retroativos a partir de ${dataBr(v.dataRetro)}, revogadas as disposições contrárias.`
-        :'Esta Portaria entrará em vigência na data de sua publicação, revogadas as disposições contrárias.';
-      const bl=[
-        {k:'titulo',t:`PORTARIA N.º ${v.numero||'___'}/ ${v.ano||'____'}`,depois:480},
-        {k:'par',runs:[{t:'(Nomeia servidor para ocupar o cargo que menciona)'}],jc:'center',depois:360,line:240},
-        {k:'par',esq:3685,jc:'both',depois:240,line:240,runs:[{t:`O PRESIDENTE DA ${c.orgao.toLocaleUpperCase('pt-BR')}-GO., VEREADOR ${pres}, NO USO DE SUAS ATRIBUIÇÕES LEGAIS DE SEU CARGO ...`,b:1}]}
-      ];
-      String(v.considerandos||'').split(/\n\s*\n/).map(x=>x.replace(/\s*\n\s*/g,' ').trim()).filter(Boolean).forEach(x=>
-        bl.push({k:'par',esq:3685,jc:'both',depois:240,line:240,runs:[{t:x.toLocaleUpperCase('pt-BR'),b:1}]}));
-      bl.push({k:'par',esq:3685,jc:'both',antes:120,depois:480,line:240,runs:[{t:'R E S O L V E :',b:1}]});
-      bl.push({k:'par',jc:'both',depois:120,line:276,runs:[{t:'Art. 1.º-',b:1},{t:' Nomear o(a) servidor(a) '},{t:(v.nome||'').toLocaleUpperCase('pt-BR')||'____________',b:1},
-        {t:`, para ocupar o cargo de ${v.cargo||'____________'}, de livre nomeação e exoneração, com remuneração de ${sal?'R$ '+sal+(ext?' ('+ext+')':''):'R$ ____'}, com lotação ${v.lotacao||'____________'}, para cumprir suas funções conforme atribuições do cargo.`}]});
-      bl.push({k:'par',jc:'both',depois:120,line:276,runs:[{t:'Art. 2.º',b:1},{t:' - '+art2}]});
-      bl.push({k:'tres',t:['CUMPRA-SE','REGISTRE-SE','PUBLIQUE-SE'],antes:480,depois:360});
-      const m=/^(\d{4})-(\d{2})-(\d{2})$/.exec(v.data||'');
-      bl.push({k:'par',jc:'left',depois:0,line:276,runs:[{t:`GABINETE DA PRESIDÊNCIA DA ${c.orgao.toLocaleUpperCase('pt-BR')}-GO.,`,b:1},{t:m?` aos ${+m[3]} dias do mês de ${MESES[+m[2]-1]} de ${m[1]}.`:' aos ___ dias do mês de ______ de ____.'}]});
-      bl.push({k:'ass',antes:1100,linhas:[titulo(c.presidente),c.cargoPresidente],b:0});
-      return bl;
+      const sal=EXT.moeda(v.salario),ext=EXT.reais(v.salario);
+      return blocosPortaria(v,c,{titulo:`PORTARIA N.º ${v.numero||'___'}/ ${v.ano||'____'}`,ementa:'(Nomeia servidor para ocupar o cargo que menciona)',
+        abertura:'NO USO DE SUAS ATRIBUIÇÕES LEGAIS DE SEU CARGO ...',
+        art1:[{t:'Art. 1.º-',b:1},{t:' Nomear o(a) servidor(a) '},{t:(v.nome||'').toLocaleUpperCase('pt-BR')||'____________',b:1},
+          {t:`, para ocupar o cargo de ${v.cargo||'____________'}, de livre nomeação e exoneração, com remuneração de ${sal?'R$ '+sal+(ext?' ('+ext+')':''):'R$ ____'}, com lotação ${v.lotacao||'____________'}, para cumprir suas funções conforme atribuições do cargo.`}]});
+    }
+  },
+  exoneracao:{
+    cat:'portarias',icone:'portaria',nome:'Exoneração de cargo comissionado',desc:'Portaria que exonera servidor de cargo em comissão',
+    fonte:'Times New Roman',sz:24,lh1:1.15,
+    campos:[
+      {id:'numero',rot:'Nº da portaria',tipo:'texto',metade:true,ph:'306'},{id:'ano',rot:'Ano',tipo:'texto',metade:true,padrao:()=>String(new Date().getFullYear())},
+      {id:'nome',rot:'Nome do servidor exonerado',tipo:'texto',ph:'Nome completo'},
+      {id:'matricula',rot:'Matrícula',tipo:'texto',metade:true},{id:'cargo',rot:'Cargo comissionado',tipo:'texto',metade:true,ph:'Assessor Parlamentar de Gabinete I'},
+      ...camposEfeitos,
+      {id:'data',rot:'Data da portaria',tipo:'data',padrao:hojeIso},
+      {id:'considerandos',rot:'Considerandos (um parágrafo por bloco, separados por linha em branco)',tipo:'area',padrao:()=>CONSIDERANDOS_EXON}
+    ],
+    arquivo:v=>arquivoPortaria(v).replace('Portaria-','Portaria-exoneracao-'),
+    blocos(v,c){
+      return blocosPortaria(v,c,{titulo:`PORTARIA Nº. ${v.numero||'___'}/${v.ano||'____'}`,ementa:'(Exonera o(a) servidor(a) do cargo que menciona)',
+        abertura:'NO USO DAS ATRIBUIÇÕES LEGAIS DE SEU CARGO, ETC E ...',
+        art1:[{t:'Art. 1.º -',b:1},{t:' Exonerar o(a) servidor(a) '},{t:(v.nome||'').toLocaleUpperCase('pt-BR')||'____________',b:1},
+          {t:` matrícula: ${v.matricula||'________'}, do cargo comissionado de ${v.cargo||'____________'}, desfazendo na data da publicação deste Ato, a relação jurídica entre o servidor e o Poder Legislativo do Município de Rio Verde, Estado de Goiás.`}]});
     }
   }
 };

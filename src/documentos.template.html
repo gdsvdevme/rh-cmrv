@@ -277,7 +277,7 @@ const TIPOS={
       String(v.considerandos||'').split(/\n\s*\n/).map(x=>x.replace(/\s*\n\s*/g,' ').trim()).filter(Boolean).forEach(x=>
         bl.push({k:'par',esq:3685,jc:'both',depois:240,line:240,runs:[{t:x.toLocaleUpperCase('pt-BR'),b:1}]}));
       bl.push({k:'par',esq:3685,jc:'both',antes:120,depois:480,line:240,runs:[{t:'R E S O L V E :',b:1}]});
-      bl.push({k:'par',jc:'both',depois:120,line:276,runs:[{t:'Art. 1.º-',b:1},{t:' Nomear o servidor(a) '},{t:(v.nome||'').toLocaleUpperCase('pt-BR')||'____________',b:1},
+      bl.push({k:'par',jc:'both',depois:120,line:276,runs:[{t:'Art. 1.º-',b:1},{t:' Nomear o(a) servidor(a) '},{t:(v.nome||'').toLocaleUpperCase('pt-BR')||'____________',b:1},
         {t:`, para ocupar o cargo de ${v.cargo||'____________'}, de livre nomeação e exoneração, com remuneração de ${sal?'R$ '+sal+(ext?' ('+ext+')':''):'R$ ____'}, com lotação ${v.lotacao||'____________'}, para cumprir suas funções conforme atribuições do cargo.`}]});
       bl.push({k:'par',jc:'both',depois:120,line:276,runs:[{t:'Art. 2.º',b:1},{t:' - '+art2}]});
       bl.push({k:'tres',t:['CUMPRA-SE','REGISTRE-SE','PUBLIQUE-SE'],antes:480,depois:360});

@@ -424,6 +424,8 @@ const PB=(function(){
     /* Relação de afastamentos (FP071), de 1990 até o fim da referência -> Uint8Array com o PDF; com o Id do servidor traz só ele */
     afastamentosPdf(mes,ano,funcionario){return centiPdf('afastamentos-pdf',mes,ano,funcionario);},
     /* Busca de servidor por nome (3+ letras) ou matrícula -> {Data:[{Id,Matricula,Nome,DataAdmissao,Situacao,TipoAdm,Cargo,Lotacao}]} (até 50) */
+    /* CPF, nascimento, identidade e endereço de UM servidor (FP001 + DM017), pelo Id da busca -> {Nome,Cpf,DataNascimento,Identidade,Endereco}; nada é guardado */
+    servidorDados(id){return centiCall('servidor-dados',{id});},
     licencaBusca(termo){return centiCall('licenca-busca',{termo});},
     search(entity,filters,start,depth){
       return centiCall('restauth/searchentity',{Depth:depth||50,Entity:entity,Start:start==null?1:start,

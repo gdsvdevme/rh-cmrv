@@ -331,7 +331,7 @@ function campoHtml(c){
 }
 function montarForm(){
   const t=TIPOS[tipoAtual];
-  const seletor=`<div class="busca"><label class="f" style="margin-bottom:6px">Buscar servidor no Centi (opcional)<span class="linha"><input id="srv" type="search" placeholder="Nome (3 letras ou mais) ou matrícula" autocomplete="off"><button type="button" class="btn" id="srvBtn">Buscar</button></span></label><div id="srvRes" aria-live="polite"></div><p class="hint" style="margin:6px 0 12px">Traz nome, cargo, matrícula e admissão direto do Centi. CPF, identidade, endereço, nascimento e salário a busca do Centi não entrega: digite abaixo.</p></div>`;
+  const seletor=`<div class="busca"><label class="f" style="margin-bottom:6px">Buscar servidor no Centi (opcional)<span class="linha"><input id="srv" type="search" placeholder="Nome (3 letras ou mais) ou matrícula" autocomplete="off"><button type="button" class="btn" id="srvBtn">Buscar</button></span></label><div id="srvRes" aria-live="polite"></div><p class="hint" style="margin:6px 0 12px">Ao escolher o servidor, traz do Centi nome, cargo, matrícula, admissão, CPF, identidade, endereço e nascimento (sem guardar nada). O salário você digita.</p></div>`;
   let h=seletor,i=0;const cs=t.campos;
   while(i<cs.length){
     if(cs[i].metade&&cs[i+1]&&cs[i+1].metade){h+=`<div class="two">${campoHtml(cs[i])}${campoHtml(cs[i+1])}</div>`;i+=2;}
@@ -408,14 +408,26 @@ async function buscarServidor(){
   }catch(e){res.innerHTML=`<p class="hint bad">${esc(e.status===401?'A sessão do Centi expirou. Entre de novo e repita a busca.':'Não foi possível buscar no Centi: '+(e.message||e))}</p>`;}
   finally{btn.disabled=false;btn.textContent='Buscar';}
 }
-function usarServidor(f){
-  const t=TIPOS[tipoAtual],novo={nome:tituloNome(f.Nome),cargo:tituloNome(f.Cargo),matricula:f.Matricula,admissao:dataIso(f.DataAdmissao)};
+const ufMaiuscula=e=>e.replace(/ - ([A-Za-z]{2})(?=,|$)/,(m,u)=>' - '+u.toUpperCase()).replace(/\bCep\b/,'CEP').replace(/\bNº\b/,'nº');
+function preencher(t,novo){
   Object.keys(novo).forEach(k=>{
     if(!t.campos.some(c=>c.id===k)||!novo[k]) return;
-    valores[k]=novo[k];const el=$('#f_'+k);if(el) el.value=novo[k];
+    valores[k]=novo[k];const el=$('#f_'+k);if(el) el.value=k==='nascimento'||k==='admissao'?dataIso(novo[k]):novo[k];
   });
+}
+async function usarServidor(f){
+  const t=TIPOS[tipoAtual],res=$('#srvRes'),nome=tituloNome(f.Nome);
+  preencher(t,{nome,cargo:tituloNome(f.Cargo),matricula:f.Matricula,admissao:dataIso(f.DataAdmissao)});
   atualizarAuxiliares();desenhar();
-  $('#srvRes').innerHTML=`<p class="hint ok">Dados de ${esc(tituloNome(f.Nome))} preenchidos. Confira e complete o restante.</p>`;
+  res.innerHTML=`<p class="hint">Buscando CPF, identidade e endereço de ${esc(nome)}…</p>`;
+  try{
+    const d=await PB.centi.servidorDados(f.Id);
+    preencher(t,{cpf:d.Cpf,identidade:d.Identidade,endereco:d.Endereco?ufMaiuscula(tituloNome(d.Endereco)):'',nascimento:dataIso(d.DataNascimento)||dataIso(f.DataNascimento)});
+    if(d.Nome&&d.Nome.trim()) preencher(t,{nome:tituloNome(d.Nome)});
+    atualizarAuxiliares();desenhar();
+    const falta=[['CPF',d.Cpf],['identidade',d.Identidade],['endereço',d.Endereco],['nascimento',d.DataNascimento]].filter(x=>!x[1]).map(x=>x[0]);
+    res.innerHTML=`<p class="hint ok">Dados de ${esc(nome)} preenchidos. Confira${falta.length?'; o Centi não tem: '+esc(falta.join(', ')):''}. Salário você digita.</p>`;
+  }catch(e){res.innerHTML=`<p class="hint bad">Nome, cargo, matrícula e admissão foram preenchidos, mas não foi possível buscar CPF, identidade e endereço: ${esc(e.status===401?'a sessão do Centi expirou, entre de novo e escolha o servidor outra vez.':(e.message||e))}</p>`;}
 }
 $('#form').addEventListener('click',e=>{
   if(e.target.closest('#srvBtn')) buscarServidor();

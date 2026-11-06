@@ -34,6 +34,11 @@ button,input,select,textarea{font:inherit;color:inherit}
 main{padding-block:0 40px}
 .tipos{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,200px),1fr));gap:12px;margin-top:-22px}
 .tipo{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:12px 16px;box-shadow:var(--shadow);text-align:left;cursor:pointer;display:block;width:100%}
+.tipo{text-decoration:none;color:inherit}.tipo:hover{border-color:var(--accent)}.tipo.plan:hover{border-color:var(--line)}
+.tipos.lista{margin-top:18px}
+.crumb{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-top:18px}
+.crumb a{color:var(--accent);font-weight:600;text-decoration:none;font-size:14px}.crumb a:hover{text-decoration:underline}
+.crumb h2{font-size:1.25rem}
 .tipo b{font-family:var(--f-display);display:block}
 .tipo span{color:var(--muted);font-size:13px}
 .tipo.on{border-color:var(--accent);outline:2px solid var(--accent)}
@@ -134,9 +139,10 @@ input,select,textarea{border-radius:12px}
 </div></header>
 
 <main class="wrap"><div class="inner">
-  <div class="tipos" id="tipos" role="group" aria-label="Tipo de documento"></div>
+  <div id="crumb"></div>
+  <div class="tipos" id="home"></div>
   <div id="notice"></div>
-  <div class="grid">
+  <div class="grid" id="editor" hidden>
     <section class="panel" aria-labelledby="hForm">
       <h2 id="hForm">Dados do documento</h2>
       <div id="form"></div>
@@ -662,7 +668,7 @@ const TIPOS={
     }
   },
   portaria:{
-    nome:'Portaria de nomeação',desc:'Nomeia servidor comissionado para ocupar cargo',
+    cat:'portarias',nome:'Portaria de nomeação',desc:'Nomeia servidor comissionado para ocupar cargo',
     fonte:'Times New Roman',sz:24,lh1:1.15,
     campos:[
       {id:'numero',rot:'Nº da portaria',tipo:'texto',metade:true,ph:'307'},{id:'ano',rot:'Ano',tipo:'texto',metade:true,padrao:()=>String(new Date().getFullYear())},
@@ -682,7 +688,7 @@ const TIPOS={
         ?`Esta Portaria entrará em vigência na data de sua publicação, com efeitos retroativos a partir de ${dataBr(v.dataRetro)}, revogadas as disposições contrárias.`
         :'Esta Portaria entrará em vigência na data de sua publicação, revogadas as disposições contrárias.';
       const bl=[
-        {k:'titulo',t:`PORTARIA N.º ${v.numero||'___'}/ ${v.ano||'____'}`,antes:0,depois:480},
+        {k:'titulo',t:`PORTARIA N.º ${v.numero||'___'}/ ${v.ano||'____'}`,depois:480},
         {k:'par',runs:[{t:'(Nomeia servidor para ocupar o cargo que menciona)'}],jc:'center',depois:360,line:240},
         {k:'par',esq:3685,jc:'both',depois:240,line:240,runs:[{t:`O PRESIDENTE DA ${c.orgao.toLocaleUpperCase('pt-BR')}-GO., VEREADOR ${pres}, NO USO DE SUAS ATRIBUIÇÕES LEGAIS DE SEU CARGO ...`,b:1}]}
       ];
@@ -698,9 +704,10 @@ const TIPOS={
       bl.push({k:'ass',antes:1100,linhas:[titulo(c.presidente),c.cargoPresidente],b:0});
       return bl;
     }
-  },
-  decreto:{nome:'Decreto',desc:'Em breve',plan:true}
+  }
 };
+/* categorias da tela inicial: um tipo sem categoria abre direto; com categoria aparece numa lista (ex.: Portarias) */
+const CATS={portarias:{nome:'Portarias',desc:'Nomeação de servidores e outros atos da Presidência'},decretos:{nome:'Decretos',desc:'Em breve',plan:true}};
 
 /* ---------- prévia (HTML) ---------- */
 const T=()=>TIPOS[tipoAtual];
@@ -791,7 +798,7 @@ function desenhar(){
   ajustar();
 }
 function ajustar(){
-  const fit=$('#fit'),s=$('#folha .sheet');if(!s) return;
+  const fit=$('#fit'),s=$('#folha .sheet');if(!s||$('#editor').hidden) return;
   const mob=window.innerWidth<=980;
   const maxH=mob?window.innerHeight*0.45-70:window.innerHeight-170;
   const k=Math.max(.2,Math.min(1,fit.clientWidth/793.7,maxH/1122.5));
@@ -855,13 +862,35 @@ $('#form').addEventListener('click',e=>{
 });
 $('#form').addEventListener('keydown',e=>{if(e.target.id==='srv'&&e.key==='Enter'){e.preventDefault();buscarServidor();}});
 
-function montarTipos(){
-  $('#tipos').innerHTML=Object.entries(TIPOS).map(([k,t])=>`<button type="button" class="tipo${t.plan?' plan':''}${k===tipoAtual?' on':''}" data-t="${k}"${t.plan?' disabled aria-disabled="true"':''}${k===tipoAtual?' aria-pressed="true"':''}>${t.plan?'<span class="tg">Em breve</span>':''}<b>${esc(t.nome)}</b><span>${esc(t.desc)}</span></button>`).join('');
+/* ---------- navegação: tela inicial, lista de uma categoria e editor (endereço #conta, #portarias, #portaria) ---------- */
+const cartao=(href,t)=>`<${t.plan?'div':'a'} class="tipo${t.plan?' plan':''}"${t.plan?' aria-disabled="true"':` href="#${href}"`}>${t.plan?'<span class="tg">Em breve</span>':''}<b>${esc(t.nome)}</b><span>${esc(t.desc)}</span></${t.plan?'div':'a'}>`;
+function mostrar(tela){
+  $('#home').hidden=tela==='edit';$('#editor').hidden=tela!=='edit';$('#crumb').hidden=tela==='home';
 }
-$('#tipos').addEventListener('click',e=>{
-  const b=e.target.closest('[data-t]');if(!b||TIPOS[b.dataset.t].plan) return;
-  tipoAtual=b.dataset.t;valores=valoresIniciais(TIPOS[tipoAtual]);montarTipos();montarForm();desenhar();
-});
+function inicio(){
+  mostrar('home');
+  const h=$('#home');h.className='tipos';
+  h.innerHTML=Object.entries(TIPOS).filter(([k,t])=>!t.cat).map(([k,t])=>cartao(k,t)).join('')+Object.entries(CATS).map(([k,c])=>cartao(k,c)).join('');
+}
+function lista(cat){
+  mostrar('list');
+  $('#crumb').className='crumb';$('#crumb').innerHTML=`<a href="#">← Documentos</a><h2>${esc(CATS[cat].nome)}</h2>`;
+  const h=$('#home');h.className='tipos lista';
+  h.innerHTML=Object.entries(TIPOS).filter(([k,t])=>t.cat===cat).map(([k,t])=>cartao(k,t)).join('');
+}
+function abrir(id){
+  tipoAtual=id;valores=valoresIniciais(TIPOS[id]);
+  const t=TIPOS[id];
+  mostrar('edit');
+  $('#crumb').className='crumb';$('#crumb').innerHTML=`<a href="#${t.cat||''}">← ${t.cat?esc(CATS[t.cat].nome):'Documentos'}</a><h2>${esc(t.nome)}</h2>`;
+  montarForm();desenhar();window.scrollTo(0,0);
+}
+function rota(){
+  const h=(location.hash||'').slice(1);
+  if(TIPOS[h]) abrir(h);else if(CATS[h]&&!CATS[h].plan) lista(h);else inicio();
+}
+window.addEventListener('hashchange',rota);
+
 
 /* ---------- saídas ---------- */
 $('#docxBtn').addEventListener('click',async()=>{
@@ -892,8 +921,7 @@ $('#pdfBtn').addEventListener('click',()=>{
   }catch(e){dbh=null;}
   await carregarCfg();
   await carregarFundo();
-  valores=valoresIniciais(TIPOS[tipoAtual]);
-  montarTipos();montarForm();desenhar();
+  rota();
   carga(false);
 })();
 </script>

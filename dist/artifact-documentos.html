@@ -34,6 +34,11 @@ button,input,select,textarea{font:inherit;color:inherit}
 main{padding-block:0 40px}
 .tipos{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,200px),1fr));gap:12px;margin-top:-22px}
 .tipo{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:12px 16px;box-shadow:var(--shadow);text-align:left;cursor:pointer;display:block;width:100%}
+.tipo{text-decoration:none;color:inherit}.tipo:hover{border-color:var(--accent)}.tipo.plan:hover{border-color:var(--line)}
+.tipos.lista{margin-top:18px}
+.crumb{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-top:18px}
+.crumb a{color:var(--accent);font-weight:600;text-decoration:none;font-size:14px}.crumb a:hover{text-decoration:underline}
+.crumb h2{font-size:1.25rem}
 .tipo b{font-family:var(--f-display);display:block}
 .tipo span{color:var(--muted);font-size:13px}
 .tipo.on{border-color:var(--accent);outline:2px solid var(--accent)}
@@ -134,9 +139,10 @@ input,select,textarea{border-radius:12px}
 </div></header>
 
 <main class="wrap"><div class="inner">
-  <div class="tipos" id="tipos" role="group" aria-label="Tipo de documento"></div>
+  <div id="crumb"></div>
+  <div class="tipos" id="home"></div>
   <div id="notice"></div>
-  <div class="grid">
+  <div class="grid" id="editor" hidden>
     <section class="panel" aria-labelledby="hForm">
       <h2 id="hForm">Dados do documento</h2>
       <div id="form"></div>
@@ -441,6 +447,8 @@ const PB=(function(){
     /* Relação de afastamentos (FP071), de 1990 até o fim da referência -> Uint8Array com o PDF; com o Id do servidor traz só ele */
     afastamentosPdf(mes,ano,funcionario){return centiPdf('afastamentos-pdf',mes,ano,funcionario);},
     /* Busca de servidor por nome (3+ letras) ou matrícula -> {Data:[{Id,Matricula,Nome,DataAdmissao,Situacao,TipoAdm,Cargo,Lotacao}]} (até 50) */
+    /* CPF, nascimento, identidade e endereço de UM servidor (FP001 + DM017), pelo Id da busca -> {Nome,Cpf,DataNascimento,Identidade,Endereco}; nada é guardado */
+    servidorDados(id){return centiCall('servidor-dados',{id});},
     licencaBusca(termo){return centiCall('licenca-busca',{termo});},
     search(entity,filters,start,depth){
       return centiCall('restauth/searchentity',{Depth:depth||50,Entity:entity,Start:start==null?1:start,
@@ -662,7 +670,7 @@ const TIPOS={
     }
   },
   portaria:{
-    nome:'Portaria de nomeação',desc:'Nomeia servidor comissionado para ocupar cargo',
+    cat:'portarias',nome:'Portaria de nomeação',desc:'Nomeia servidor comissionado para ocupar cargo',
     fonte:'Times New Roman',sz:24,lh1:1.15,
     campos:[
       {id:'numero',rot:'Nº da portaria',tipo:'texto',metade:true,ph:'307'},{id:'ano',rot:'Ano',tipo:'texto',metade:true,padrao:()=>String(new Date().getFullYear())},
@@ -682,7 +690,7 @@ const TIPOS={
         ?`Esta Portaria entrará em vigência na data de sua publicação, com efeitos retroativos a partir de ${dataBr(v.dataRetro)}, revogadas as disposições contrárias.`
         :'Esta Portaria entrará em vigência na data de sua publicação, revogadas as disposições contrárias.';
       const bl=[
-        {k:'titulo',t:`PORTARIA N.º ${v.numero||'___'}/ ${v.ano||'____'}`,antes:0,depois:480},
+        {k:'titulo',t:`PORTARIA N.º ${v.numero||'___'}/ ${v.ano||'____'}`,depois:480},
         {k:'par',runs:[{t:'(Nomeia servidor para ocupar o cargo que menciona)'}],jc:'center',depois:360,line:240},
         {k:'par',esq:3685,jc:'both',depois:240,line:240,runs:[{t:`O PRESIDENTE DA ${c.orgao.toLocaleUpperCase('pt-BR')}-GO., VEREADOR ${pres}, NO USO DE SUAS ATRIBUIÇÕES LEGAIS DE SEU CARGO ...`,b:1}]}
       ];
@@ -698,9 +706,10 @@ const TIPOS={
       bl.push({k:'ass',antes:1100,linhas:[titulo(c.presidente),c.cargoPresidente],b:0});
       return bl;
     }
-  },
-  decreto:{nome:'Decreto',desc:'Em breve',plan:true}
+  }
 };
+/* categorias da tela inicial: um tipo sem categoria abre direto; com categoria aparece numa lista (ex.: Portarias) */
+const CATS={portarias:{nome:'Portarias',desc:'Nomeação de servidores e outros atos da Presidência'},decretos:{nome:'Decretos',desc:'Em breve',plan:true}};
 
 /* ---------- prévia (HTML) ---------- */
 const T=()=>TIPOS[tipoAtual];
@@ -763,7 +772,7 @@ function campoHtml(c){
 }
 function montarForm(){
   const t=TIPOS[tipoAtual];
-  const seletor=`<div class="busca"><label class="f" style="margin-bottom:6px">Buscar servidor no Centi (opcional)<span class="linha"><input id="srv" type="search" placeholder="Nome (3 letras ou mais) ou matrícula" autocomplete="off"><button type="button" class="btn" id="srvBtn">Buscar</button></span></label><div id="srvRes" aria-live="polite"></div><p class="hint" style="margin:6px 0 12px">Traz nome, cargo, matrícula e admissão direto do Centi. CPF, identidade, endereço, nascimento e salário a busca do Centi não entrega: digite abaixo.</p></div>`;
+  const seletor=`<div class="busca"><label class="f" style="margin-bottom:6px">Buscar servidor no Centi (opcional)<span class="linha"><input id="srv" type="search" placeholder="Nome (3 letras ou mais) ou matrícula" autocomplete="off"><button type="button" class="btn" id="srvBtn">Buscar</button></span></label><div id="srvRes" aria-live="polite"></div><p class="hint" style="margin:6px 0 12px">Ao escolher o servidor, traz do Centi nome, cargo, matrícula, admissão, CPF, identidade, endereço e nascimento (sem guardar nada). O salário você digita.</p></div>`;
   let h=seletor,i=0;const cs=t.campos;
   while(i<cs.length){
     if(cs[i].metade&&cs[i+1]&&cs[i+1].metade){h+=`<div class="two">${campoHtml(cs[i])}${campoHtml(cs[i+1])}</div>`;i+=2;}
@@ -791,7 +800,7 @@ function desenhar(){
   ajustar();
 }
 function ajustar(){
-  const fit=$('#fit'),s=$('#folha .sheet');if(!s) return;
+  const fit=$('#fit'),s=$('#folha .sheet');if(!s||$('#editor').hidden) return;
   const mob=window.innerWidth<=980;
   const maxH=mob?window.innerHeight*0.45-70:window.innerHeight-170;
   const k=Math.max(.2,Math.min(1,fit.clientWidth/793.7,maxH/1122.5));
@@ -840,14 +849,26 @@ async function buscarServidor(){
   }catch(e){res.innerHTML=`<p class="hint bad">${esc(e.status===401?'A sessão do Centi expirou. Entre de novo e repita a busca.':'Não foi possível buscar no Centi: '+(e.message||e))}</p>`;}
   finally{btn.disabled=false;btn.textContent='Buscar';}
 }
-function usarServidor(f){
-  const t=TIPOS[tipoAtual],novo={nome:tituloNome(f.Nome),cargo:tituloNome(f.Cargo),matricula:f.Matricula,admissao:dataIso(f.DataAdmissao)};
+const ufMaiuscula=e=>e.replace(/ - ([A-Za-z]{2})(?=,|$)/,(m,u)=>' - '+u.toUpperCase()).replace(/\bCep\b/,'CEP').replace(/\bNº\b/,'nº');
+function preencher(t,novo){
   Object.keys(novo).forEach(k=>{
     if(!t.campos.some(c=>c.id===k)||!novo[k]) return;
-    valores[k]=novo[k];const el=$('#f_'+k);if(el) el.value=novo[k];
+    valores[k]=novo[k];const el=$('#f_'+k);if(el) el.value=k==='nascimento'||k==='admissao'?dataIso(novo[k]):novo[k];
   });
+}
+async function usarServidor(f){
+  const t=TIPOS[tipoAtual],res=$('#srvRes'),nome=tituloNome(f.Nome);
+  preencher(t,{nome,cargo:tituloNome(f.Cargo),matricula:f.Matricula,admissao:dataIso(f.DataAdmissao)});
   atualizarAuxiliares();desenhar();
-  $('#srvRes').innerHTML=`<p class="hint ok">Dados de ${esc(tituloNome(f.Nome))} preenchidos. Confira e complete o restante.</p>`;
+  res.innerHTML=`<p class="hint">Buscando CPF, identidade e endereço de ${esc(nome)}…</p>`;
+  try{
+    const d=await PB.centi.servidorDados(f.Id);
+    preencher(t,{cpf:d.Cpf,identidade:d.Identidade,endereco:d.Endereco?ufMaiuscula(tituloNome(d.Endereco)):'',nascimento:dataIso(d.DataNascimento)||dataIso(f.DataNascimento)});
+    if(d.Nome&&d.Nome.trim()) preencher(t,{nome:tituloNome(d.Nome)});
+    atualizarAuxiliares();desenhar();
+    const falta=[['CPF',d.Cpf],['identidade',d.Identidade],['endereço',d.Endereco],['nascimento',d.DataNascimento]].filter(x=>!x[1]).map(x=>x[0]);
+    res.innerHTML=`<p class="hint ok">Dados de ${esc(nome)} preenchidos. Confira${falta.length?'; o Centi não tem: '+esc(falta.join(', ')):''}. Salário você digita.</p>`;
+  }catch(e){res.innerHTML=`<p class="hint bad">Nome, cargo, matrícula e admissão foram preenchidos, mas não foi possível buscar CPF, identidade e endereço: ${esc(e.status===401?'a sessão do Centi expirou, entre de novo e escolha o servidor outra vez.':(e.message||e))}</p>`;}
 }
 $('#form').addEventListener('click',e=>{
   if(e.target.closest('#srvBtn')) buscarServidor();
@@ -855,13 +876,35 @@ $('#form').addEventListener('click',e=>{
 });
 $('#form').addEventListener('keydown',e=>{if(e.target.id==='srv'&&e.key==='Enter'){e.preventDefault();buscarServidor();}});
 
-function montarTipos(){
-  $('#tipos').innerHTML=Object.entries(TIPOS).map(([k,t])=>`<button type="button" class="tipo${t.plan?' plan':''}${k===tipoAtual?' on':''}" data-t="${k}"${t.plan?' disabled aria-disabled="true"':''}${k===tipoAtual?' aria-pressed="true"':''}>${t.plan?'<span class="tg">Em breve</span>':''}<b>${esc(t.nome)}</b><span>${esc(t.desc)}</span></button>`).join('');
+/* ---------- navegação: tela inicial, lista de uma categoria e editor (endereço #conta, #portarias, #portaria) ---------- */
+const cartao=(href,t)=>`<${t.plan?'div':'a'} class="tipo${t.plan?' plan':''}"${t.plan?' aria-disabled="true"':` href="#${href}"`}>${t.plan?'<span class="tg">Em breve</span>':''}<b>${esc(t.nome)}</b><span>${esc(t.desc)}</span></${t.plan?'div':'a'}>`;
+function mostrar(tela){
+  $('#home').hidden=tela==='edit';$('#editor').hidden=tela!=='edit';$('#crumb').hidden=tela==='home';
 }
-$('#tipos').addEventListener('click',e=>{
-  const b=e.target.closest('[data-t]');if(!b||TIPOS[b.dataset.t].plan) return;
-  tipoAtual=b.dataset.t;valores=valoresIniciais(TIPOS[tipoAtual]);montarTipos();montarForm();desenhar();
-});
+function inicio(){
+  mostrar('home');
+  const h=$('#home');h.className='tipos';
+  h.innerHTML=Object.entries(TIPOS).filter(([k,t])=>!t.cat).map(([k,t])=>cartao(k,t)).join('')+Object.entries(CATS).map(([k,c])=>cartao(k,c)).join('');
+}
+function lista(cat){
+  mostrar('list');
+  $('#crumb').className='crumb';$('#crumb').innerHTML=`<a href="#">← Documentos</a><h2>${esc(CATS[cat].nome)}</h2>`;
+  const h=$('#home');h.className='tipos lista';
+  h.innerHTML=Object.entries(TIPOS).filter(([k,t])=>t.cat===cat).map(([k,t])=>cartao(k,t)).join('');
+}
+function abrir(id){
+  tipoAtual=id;valores=valoresIniciais(TIPOS[id]);
+  const t=TIPOS[id];
+  mostrar('edit');
+  $('#crumb').className='crumb';$('#crumb').innerHTML=`<a href="#${t.cat||''}">← ${t.cat?esc(CATS[t.cat].nome):'Documentos'}</a><h2>${esc(t.nome)}</h2>`;
+  montarForm();desenhar();window.scrollTo(0,0);
+}
+function rota(){
+  const h=(location.hash||'').slice(1);
+  if(TIPOS[h]) abrir(h);else if(CATS[h]&&!CATS[h].plan) lista(h);else inicio();
+}
+window.addEventListener('hashchange',rota);
+
 
 /* ---------- saídas ---------- */
 $('#docxBtn').addEventListener('click',async()=>{
@@ -892,8 +935,7 @@ $('#pdfBtn').addEventListener('click',()=>{
   }catch(e){dbh=null;}
   await carregarCfg();
   await carregarFundo();
-  valores=valoresIniciais(TIPOS[tipoAtual]);
-  montarTipos();montarForm();desenhar();
+  rota();
   carga(false);
 })();
 </script>

@@ -217,3 +217,43 @@ test('busca: pede 50 por página (Depth é o tamanho da página) e lista os ativ
   assert.equal('Cpf' in lista[0],false);                                   // sem dados pessoais além do que a tela usa
   assert.equal('DataNascimento' in lista[0],false);
 });
+
+/* ---- dados do servidor para os documentos (FP001 -> DM017) ---- */
+const F=(o)=>Object.entries(o).map(([Key,Value])=>({Key,Value}));
+const REF=(Id,Display)=>({Fields:F({Id,Display})});
+const PESSOA=(extra={})=>({Entity:{Fields:F(Object.assign({
+  Nome:'MARIA DA SILVA',Cpf:'52998224725',DataNascimento:'15/03/1990',
+  PessoaFuncionarioDocumentos:{Fields:F({RG:'1234567',OrgaoExpeditor:'SSP',UFExpeditor:'GO'})},
+  Endereco:[{Fields:F({Principal:0,Logradouro:'Rua Velha',Numero:'1'})},
+    {Fields:F({Principal:1,IdTipoLogradouro:REF(1,'Área'),Logradouro:'RUA 17, 231',Numero:'231',Quadra:'39',Lote:'02',Bairro:'PROMISSÃO',IdCidade:REF(5,'Rio Verde, GO'),Cep:'75907012'})}]
+},extra))}});
+test('servidorDados: CPF formatado, identidade com órgão/UF e endereço principal sem repetir tipo nem número',()=>{
+  const d=C.servidorDados(PESSOA());
+  assert.equal(d.Cpf,'529.982.247-25');
+  assert.equal(d.Identidade,'1234567 SSP/GO');
+  assert.equal(d.DataNascimento,'15/03/1990');
+  assert.equal(d.Endereco,'RUA 17, 231, Quadra 39, Lote 02, PROMISSÃO, Rio Verde - GO, CEP 75.907-012');
+  const e=C.servidorDados(PESSOA({Endereco:[{Fields:F({Principal:1,IdTipoLogradouro:REF(1,'Avenida'),Logradouro:'Goiás',Numero:'100',IdCidade:REF(5,'Rio Verde, GO')})}]}));
+  assert.equal(e.Endereco,'Avenida Goiás, nº 100, Rio Verde - GO');
+  assert.equal(C.servidorDados({Entity:{Fields:[]}}).Identidade,'');
+});
+test('idPessoaDoFuncionario lê a pessoa física do cadastro do funcionário',()=>{
+  assert.equal(C.idPessoaDoFuncionario({Entity:{Fields:F({IdPessoaFisica:REF(14015,'X')})}}),'14015');
+  assert.equal(C.idPessoaDoFuncionario({Entity:{Fields:[]}}),'');
+});
+test('servidor-dados: carrega FP001 e DM017 pelo número de tela do menu e devolve só os dados pedidos',async()=>{
+  const gets=[];
+  C.limparMenu();
+  global.fetch=async(url,init)=>{
+    if(/\/restauth\/modules$/.test(url)) return resp({Value:[{Command:'FP001',ModuleKey:777},{Command:'DM017',ModuleKey:888}]});
+    gets.push(url.replace(/^.*\/restauth\//,''));
+    if(/entity=777&key=3740/.test(url)) return resp({Entity:{Fields:F({IdPessoaFisica:REF(14015,'MARIA')})}});
+    if(/entity=888&key=14015/.test(url)) return resp(PESSOA());
+    return resp({Message:['inesperado']},500);
+  };
+  const r=await chamar({path:'servidor-dados',body:{id:'3740'}});
+  assert.equal(r.status,200);
+  assert.deepEqual(gets,['load?entity=777&key=3740','load?entity=888&key=14015']);
+  assert.deepEqual(Object.keys(JSON.parse(r.body)).sort(),['Cpf','DataNascimento','Endereco','Identidade','Nome']);
+  assert.equal((await chamar({path:'servidor-dados',body:{id:'abc'}})).status,400);
+});

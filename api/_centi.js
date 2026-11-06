@@ -235,3 +235,48 @@ const buscaLinhas = data => (data || []).slice(0, 50).map(f => { const o = {}; B
   .sort((a, b) => (/^ativo$/i.test(b.Situacao) - /^ativo$/i.test(a.Situacao)) || a.Nome.localeCompare(b.Nome, 'pt-BR'));
 module.exports.buscaFiltro = buscaFiltro;
 module.exports.buscaLinhas = buscaLinhas;
+
+/* Dados pessoais de UM servidor para os documentos (declaração de conta, portarias): lidos dos cadastros do Centi
+   FP001 (Funcionário, que aponta a pessoa) e DM017 (Pessoa física: CPF, nascimento, RG e endereço).
+   Só é chamado quando a pessoa escolhe o servidor; nada é guardado. As telas carregam um registro por
+   GET restauth/load?entity=<ModuleKey>&key=<Id>, e o registro vem como {Entity:{Fields:[{Key,Value}]}}. */
+const campos = e => { const o = {}; ((e && e.Entity && e.Entity.Fields) || []).forEach(f => { o[f.Key] = f.Value; }); return o; };
+/* campo que aponta outro cadastro: {Fields:[{Key:'Id',Value:..},{Key:'Display',Value:..}]} */
+const refCampo = v => { const o = {}; ((v && v.Fields) || []).forEach(f => { o[f.Key] = f.Value; }); return o; };
+const txt = v => (v == null || typeof v === 'object') ? '' : String(v).trim();
+const mascaraCpf = v => { const d = txt(v).replace(/\D/g, ''); return d.length === 11 ? d.replace(/(\d{3})(\d{3})(\d{3})(\d{2})/, '$1.$2.$3-$4') : txt(v); };
+const mascaraCep = v => { const d = txt(v).replace(/\D/g, ''); return d.length === 8 ? d.replace(/(\d{2})(\d{3})(\d{3})/, '$1.$2-$3') : ''; };
+const campos2 = lista => { const o = {}; ((lista && lista.Fields) || []).forEach(f => { o[f.Key] = f.Value; }); return o; };
+/* "Rua 5, 120, Quadra 3, Lote 7, Compl., Bairro, Rio Verde - GO, CEP 75.900-000" */
+function montarEndereco(lista) {
+  const reg = (lista || []).map(campos2);
+  const e = reg.find(x => Number(x.Principal) === 1) || reg[0];
+  if (!e) return '';
+  const tipo = txt(refCampo(e.IdTipoLogradouro).Display), logr = txt(e.Logradouro);
+  /* o tipo (ex.: "Área") só entra se o logradouro ainda não começar por uma palavra de tipo (ex.: "RUA 17, 231") */
+  const jaTemTipo = /^(rua|av\.?|avenida|alameda|al\.?|travessa|tv\.?|pra[çc]a|rodovia|rod\.?|estrada|beco|via|vila|largo|parque|setor|quadra|[áa]rea)(\s|$)/i;
+  const rua = !tipo || jaTemTipo.test(logr) || logr.toLowerCase().startsWith(tipo.toLowerCase()) ? logr : (tipo + ' ' + logr).trim();
+  const numero = txt(e.Numero);
+  const partes = [rua];
+  if (numero && numero !== '0' && !new RegExp('(^|[\\s,])' + numero.replace(/\W/g, '') + '$').test(rua)) partes.push('nº ' + numero);
+  if (txt(e.Quadra) && txt(e.Quadra) !== '0') partes.push('Quadra ' + txt(e.Quadra));
+  if (txt(e.Lote) && txt(e.Lote) !== '0') partes.push('Lote ' + txt(e.Lote));
+  partes.push(txt(e.Complemento), txt(e.Bairro), txt(refCampo(e.IdCidade).Display).replace(/,\s*/, ' - '));
+  const cep = mascaraCep(e.Cep);
+  if (cep) partes.push('CEP ' + cep);
+  return partes.filter(Boolean).join(', ');
+}
+/* Identidade como "1234567 SSP/GO" */
+function montarIdentidade(doc) {
+  const rg = txt(doc.RG), org = txt(doc.OrgaoExpeditor), uf = txt(doc.UFExpeditor);
+  if (!rg) return '';
+  return rg + (org ? ' ' + org + (uf ? '/' + uf : '') : (uf ? ' ' + uf : ''));
+}
+function servidorDados(pessoa) {
+  const c = campos(pessoa), doc = campos2(c.PessoaFuncionarioDocumentos);
+  return { Nome: txt(c.Nome), Cpf: mascaraCpf(c.Cpf), DataNascimento: txt(c.DataNascimento).slice(0, 10), Identidade: montarIdentidade(doc), Endereco: montarEndereco(c.Endereco) };
+}
+/* Id da pessoa física a partir do registro do funcionário (FP001) */
+const idPessoaDoFuncionario = func => { const id = refCampo(campos(func).IdPessoaFisica).Id; return /^\d{1,12}$/.test(String(id == null ? '' : id)) ? String(id) : ''; };
+module.exports.servidorDados = servidorDados;
+module.exports.idPessoaDoFuncionario = idPessoaDoFuncionario;

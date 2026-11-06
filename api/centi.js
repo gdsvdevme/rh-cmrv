@@ -3,7 +3,7 @@
    Só as rotas listadas em ROTAS e as consultas somente leitura "cubo-funcionario" (FP051), "ficha-financeira" (FP024) "ferias" (FP051 + FP273),
    "licenca-busca" (busca de servidor por nome ou matrícula), "licenca-quadro" (FP245), "espelho-ponto" (FP170) e "afastamentos-pdf" (FP071, do órgão ou de um servidor; os dois últimos devolvem o PDF compactado em gzip) são aceitos. O Centi renova o token sozinho; se renovar,
    o novo vem nos cabeçalhos x-centi-token e x-centi-refresh da resposta. */
-const { BASE, centiPost, chaveDaTela, cuboPayload, espelhoPayload, quadroPayload, quadroLinhas, afastamentosPayload, buscaFiltro, buscaLinhas, cuboLinhas, feriasPayload, feriasLinhas, fichaResumo, isAllowed, readBody, send } = require('./_centi');
+const { BASE, centiPost, chaveDaTela, cuboPayload, espelhoPayload, quadroPayload, quadroLinhas, afastamentosPayload, buscaFiltro, buscaLinhas, servidorDados, idPessoaDoFuncionario, centiGet, cuboLinhas, feriasPayload, feriasLinhas, fichaResumo, isAllowed, readBody, send } = require('./_centi');
 
 const { semFolha, referencias, sessaoInvalida } = require('./_ref');
 
@@ -33,13 +33,15 @@ module.exports = async (req, res) => {
   if (!isAllowed(user)) return send(res, 403, { message: 'Usuário sem permissão neste sistema.' });
   const { path, body } = readBody(req);
   const cubo = path === 'cubo-funcionario', ficha = path === 'ficha-financeira', ferias = path === 'ferias', espelho = path === 'espelho-ponto';
-  const quadro = path === 'licenca-quadro', afast = path === 'afastamentos-pdf', busca = path === 'licenca-busca';
-  if (typeof path !== 'string' || (!cubo && !ficha && !ferias && !espelho && !quadro && !afast && !busca && !ROTAS.test(path))) return send(res, 400, { message: 'Consulta não permitida.' });
+  const quadro = path === 'licenca-quadro', afast = path === 'afastamentos-pdf', busca = path === 'licenca-busca', dados = path === 'servidor-dados';
+  if (typeof path !== 'string' || (!cubo && !ficha && !ferias && !espelho && !quadro && !afast && !busca && !dados && !ROTAS.test(path))) return send(res, 400, { message: 'Consulta não permitida.' });
   const mes = Number(body && body.mes), ano = Number(body && body.ano), matricula = String((body && body.matricula) || '').trim();
   if ((cubo || ficha || ferias || espelho || quadro || afast) && !(mes >= 1 && mes <= 12 && ano >= 2000 && ano <= 2100)) return send(res, 400, { message: 'Referência inválida.' });
   if (ficha && !/^\d{1,12}$/.test(matricula)) return send(res, 400, { message: 'Matrícula inválida.' });
   const funcionario = String((body && body.funcionario) || '').trim();
   if (afast && funcionario && !/^\d{1,12}$/.test(funcionario)) return send(res, 400, { message: 'Servidor inválido.' });
+  const idServidor = String((body && body.id) || '').trim();
+  if (dados && !/^\d{1,12}$/.test(idServidor)) return send(res, 400, { message: 'Servidor inválido.' });
   const filtroBusca = busca ? buscaFiltro(body && body.termo) : null;
   if (busca && !filtroBusca) return send(res, 400, { message: 'Digite ao menos 3 letras do nome ou a matrícula.' });
   try {
@@ -118,6 +120,25 @@ module.exports = async (req, res) => {
       const quadro = cuboLinhas(c1).map(p => ({ ID: p.ID, MATRICULA: p.MATRICULA, NOMEFUNC: p.NOMEFUNC, CARGO: p.CARGO, HIERARQUIA: p.HIERARQUIA,
         TIPOADMISSAO: p.TIPOADMISSAO, DATAADMISSAO: p.DATAADMISSAO, TIPOAFASTAMENTO: p.TIPOAFASTAMENTO }));
       return send(res, 200, { Pessoas: quadro, Gozos: feriasLinhas(c2) });
+    }
+    if (dados) {
+      /* FP001 (funcionário) -> pessoa física; DM017 (pessoa física) -> CPF, nascimento, identidade e endereço */
+      const carregar = async (codigo, padrao, key) => {
+        const k = await chaveDaTela(codigo, padrao, h);
+        if (k.falhou && sessaoInvalida(k.falhou)) { const e = new Error('Sessão do Centi expirada.'); e.expirou = true; throw e; }
+        const r = await centiGet('restauth/load?entity=' + k.chave + '&key=' + encodeURIComponent(key), h);
+        if (sessaoInvalida(r)) { const e = new Error('Sessão do Centi expirada.'); e.expirou = true; throw e; }
+        const t = r.headers.get('token'), rf = r.headers.get('refreshtoken');
+        if (t) res.setHeader('x-centi-token', t);
+        if (rf) res.setHeader('x-centi-refresh', rf);
+        return r.data;
+      };
+      const func = await carregar('FP001', 102744, idServidor);
+      const idPessoa = idPessoaDoFuncionario(func);
+      if (!idPessoa) return send(res, 502, { message: (func && func.Message && func.Message[0]) || 'O Centi não devolveu o cadastro deste servidor.' });
+      const pessoa = await carregar('DM017', 103891, idPessoa);
+      if (!pessoa || !pessoa.Entity) return send(res, 502, { message: (pessoa && pessoa.Message && pessoa.Message[0]) || 'O Centi não devolveu a pessoa física deste servidor.' });
+      return send(res, 200, servidorDados(pessoa));
     }
     if (ficha) {
       /* acha as fichas (uma por folha) da matrícula na referência e carrega cada uma */

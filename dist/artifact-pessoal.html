@@ -591,7 +591,7 @@ function grupoInfo(h){
   if(n==='setor administrativo') return {k:'setor',nome:'Setor Administrativo',ramo:0,sort:'0'};
   const m=/^vereador(a)?\s+(.+)$/.exec(n);
   if(m){const nm=titulo(String(h).replace(/^vereador(a)?\s+/i,''));return {k:'g:'+n,nome:'Gabinete '+(m[1]?'da Vereadora ':'do Vereador ')+nm,curto:nm,ramo:1,sort:norm(nm)};}
-  return {k:'o:'+n,nome:titulo(h),ramo:0,sort:'1'+norm(h)};
+  const t=String(h).trim();return {k:'o:'+n,nome:(t!==t.toUpperCase()&&t!==t.toLowerCase())?t:titulo(h),ramo:0,sort:'1'+norm(h)};
 }
 function decodificar(buf){
   try{return new TextDecoder('utf-8',{fatal:true}).decode(buf);}catch(e){return new TextDecoder('windows-1252').decode(buf);}
@@ -713,7 +713,7 @@ function moverPara(i,raw){
 function dlgRenomear(raw){
   const g=grupoInfo(raw);
   abrirDlg(`<h3>Renomear grupo</h3><p>Todas as ${g.nome?'pessoas de <b>'+esc(g.nome)+'</b>':'pessoas'} passam para o novo nome. Se o nome já existir, os grupos se juntam.</p>
-    <label>Novo nome (ex.: Vereador João Silva)<input name="n" required maxlength="80" value="${esc(raw)}"></label>
+    <label>Novo nome (ex.: Vereador João Silva, RH - Folha de Pagamento)<input name="n" required maxlength="80" value="${esc(raw)}"></label>
     <div class="row"><button type="button" class="btn" data-x>Cancelar</button><button class="btn primary" type="submit">Renomear</button></div>`,
   f=>{
     const n=f.elements.n.value.trim();if(!n||norm(n)===norm(raw)) return;
@@ -964,7 +964,7 @@ function grupoHtml(g,abrir,cor){
     });
   }else corpo=`<ul class="people">${g.visiveis.map(pessoaHtml).join('')}</ul>`;
   const total=g.pessoas.length,vis=g.visiveis.length;
-  const gact=edit?`<span class="gact"><button class="btn sm" type="button" data-gadd="${esc(g.raw)}">+ Pessoa</button>${g.k==='setor'?'':`<button class="btn sm" type="button" data-gren="${esc(g.raw)}">Renomear</button>`}</span>`:'';
+  const gact=edit?`<span class="gact"><button class="btn sm" type="button" data-gadd="${esc(g.raw)}">+ Pessoa</button><button class="btn sm" type="button" data-gren="${esc(g.raw)}">Renomear</button></span>`:'';
   return `<details class="grp" data-k="${esc(g.k)}" data-raw="${esc(g.raw)}" style="--bc:${cor}"${abrir||abertos.has(g.k)?' open':''}><summary><span class="gname">${esc(g.nome)}</span><span class="cnt">${vis===total?total:vis+' de '+total}</span>${gact}</summary>${corpo}</details>`;
 }
 function render(){

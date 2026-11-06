@@ -495,6 +495,7 @@ const PONTO_URL="ponto/";
 const FERIAS_URL="ferias/";
 const TAREFAS_URL="tarefas/";
 const CARIMBOS_URL="carimbos/";
+const DOCUMENTOS_URL="documentos/";
 const LICENCA_URL="licenca-premio/";
 const LS='rhcrv-painel-v1';
 const CACHE='rhcrv-painel-servidor';      // última cópia do painel vinda do servidor (evita mostrar nomes antigos enquanto o servidor responde)
@@ -533,7 +534,7 @@ const svg=(k,n)=>`<svg width="${n||28}" height="${n||28}" viewBox="0 0 24 24" fi
 const uid=()=>'t'+Math.random().toString(36).slice(2,9);
 
 function defaults(){
-  return {v:7,tiles:[
+  return {v:8,tiles:[
     {id:'t-fluxos',nome:'Fluxogramas e Manual do RH',desc:'Organograma, fluxogramas editáveis, competências, matriz de responsabilidades, manual de procedimentos e indicadores.',icone:'flow',hue:152,status:'ok',url:FLOW_URL},
     {id:'t-pessoal',nome:'Hierarquia de Pessoal',desc:'Quadro de pessoal organizado por hierarquia: setor administrativo e gabinetes dos vereadores.',icone:'org',hue:262,status:'ok',url:PESSOAL_URL},
     {id:'t-ponto',nome:'Ponto – Servidores Externos',desc:'Registro de ponto pelo celular com localização, assinatura digital e foto, e acompanhamento em tempo real pelo RH (simulação).',icone:'pin',hue:200,status:'ok',url:PONTO_URL},
@@ -541,6 +542,7 @@ function defaults(){
     {id:'t-licenca',nome:'Licença-prêmio',desc:'Períodos aquisitivos de cada servidor efetivo, prazos de gozo e de perda do direito, calculados pelo Estatuto (arts. 194 a 197) com os afastamentos do Centi.',icone:'award',hue:44,status:'ok',url:LICENCA_URL},
     {id:'t-tarefas',nome:'Tarefas do RH',desc:'Checklist em quadro (a fazer, em andamento, concluído) com tarefas da equipe ou privadas. As concluídas saem do quadro na virada do mês.',icone:'tasks',hue:212,status:'ok',url:TAREFAS_URL},
     {id:'t-carimbos',nome:'Carimbos em PDF',desc:'Anexe o PDF com os espelhos de ponto, escolha o carimbo, posicione e salve o PDF carimbado e organizado pela hierarquia (capa de cada gabinete ou setor).',icone:'file',hue:340,status:'ok',url:CARIMBOS_URL},
+    {id:'t-documentos',nome:'Gerador de Documentos',desc:'Gera documentos oficiais no papel timbrado da Câmara, em Word e PDF. Começa pela declaração de abertura de conta; portarias e decretos virão depois.',icone:'file',hue:200,status:'ok',url:DOCUMENTOS_URL},
     {id:'t-freq',nome:'Frequência',desc:'Registro e conferência de frequência.',icone:'clock',hue:48,status:'plan',url:''},
   ]};
 }
@@ -704,6 +706,10 @@ function migrar(){
   if(st.v<7){ // Licença-prêmio entra depois de Férias
     if(!st.tiles.some(x=>x.id==='t-licenca')){const d=defaults().tiles.find(t=>t.id==='t-licenca');const i=st.tiles.findIndex(x=>x.id==='t-ferias');st.tiles.splice(i>=0?i+1:st.tiles.length,0,d);}
     st.v=7;persist();
+  }
+  if(st.v<8){ // Gerador de Documentos entra depois de Carimbos
+    if(!st.tiles.some(x=>x.id==='t-documentos')){const d=defaults().tiles.find(t=>t.id==='t-documentos');const i=st.tiles.findIndex(x=>x.id==='t-carimbos');st.tiles.splice(i>=0?i+1:st.tiles.length,0,d);}
+    st.v=8;persist();
   }
 }
 (function init(){

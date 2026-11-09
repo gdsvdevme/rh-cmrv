@@ -85,6 +85,27 @@ async function garantirTarefas(userToken) {
   else console.error('rhcmrv_tarefas: não foi possível acrescentar os campos da recorrência (HTTP ' + u.status + '): ' + JSON.stringify(u.data).slice(0, 400));
 }
 
+/* Recibos de entrega dos espelhos de ponto (PDF anexado no Controle de devolução). Uma coleção própria, com arquivo protegido
+   (só abre com o token de arquivo de quem está logado). A tela apaga os recibos vencidos (expira_em, 90 dias após o envio). */
+const RECIBOS_REGRAS = { listRule: AUTH, viewRule: AUTH, createRule: AUTH, updateRule: AUTH, deleteRule: AUTH };
+const RECIBOS_CAMPOS = [campoTxt('ref', 7, { required: true }), campoTxt('setor', 200), campoTxt('por_nome', 120), campoTxt('por_matricula', 20),
+  campoTxt('por_user', 60), campoTxt('criado_em', 40), campoTxt('expira_em', 40),
+  { name: 'arquivo', type: 'file', required: true, maxSelect: 1, maxSize: 10 * 1024 * 1024, mimeTypes: ['application/pdf'], protected: true }];
+let recibosOk = false;
+async function garantirRecibos(userToken) {
+  if (recibosOk) return;
+  const t = await pb('GET', '/api/collections/rhcmrv_recibos/records?perPage=1', undefined, userToken);
+  if (t.status !== 404) { recibosOk = true; return; }
+  const adm = await tokenAdmin();
+  if (!adm) return;                                       // sem acesso administrativo: o setup.py cria depois
+  const c = await pb('POST', '/api/collections', Object.assign({
+    name: 'rhcmrv_recibos', type: 'base', fields: RECIBOS_CAMPOS,
+    indexes: ['CREATE INDEX idx_rhcmrv_recibos_ref ON rhcmrv_recibos (ref)', 'CREATE INDEX idx_rhcmrv_recibos_exp ON rhcmrv_recibos (expira_em)']
+  }, RECIBOS_REGRAS), adm);
+  if (c.status === 200) recibosOk = true;
+  else console.error('rhcmrv_recibos: não foi possível criar a coleção (HTTP ' + c.status + '): ' + JSON.stringify(c.data).slice(0, 400));
+}
+
 /* Administradores: o PocketBase é quem barra. A conta (rhcmrv_users) ganha o campo bool "admin", só o superusuário altera,
    e as regras de escrita de rhcmrv_docs passam a exigir admin para o documento do painel (painel/tiles).
    Roda uma vez por instância da função e, depois, só quando o campo da pessoa diverge de CENTI_ADMIN_USERS. */
@@ -163,6 +184,7 @@ module.exports = async (req, res) => {
     if (!isAllowed(username)) return send(res, 403, { message: 'Este usuário do Centi não tem permissão para usar este sistema.' });
     const session = await pbSession(username);
     try { await garantirTarefas(session.token); } catch (e) { /* não impede o login */ }
+    try { await garantirRecibos(session.token); } catch (e) { /* não impede o login */ }
     const admin = isAdmin(username);
     try { await garantirAdmin(session, admin); } catch (e) { console.error('admin: ' + (e && e.message)); }
     return send(res, 200, {
@@ -174,5 +196,6 @@ module.exports = async (req, res) => {
   }
 };
 module.exports.garantirTarefas = garantirTarefas;
+module.exports.garantirRecibos = garantirRecibos;
 module.exports.garantirAdmin = garantirAdmin;   // exportada para teste
-module.exports._reset = () => { tarefasOk = false; adminOk = false; falhas.clear(); };
+module.exports._reset = () => { tarefasOk = false; recibosOk = false; adminOk = false; falhas.clear(); };

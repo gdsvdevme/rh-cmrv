@@ -631,7 +631,42 @@ const PB=(function(){
       }
     }
   }
-  return {connect,centi,logout,get email(){return email;},get nome(){return centi.nome;},get admin(){return centi.admin;},get userId(){return userId();},url:URL_BASE};
+  /* ---------- recibos em PDF da entrega dos espelhos (coleção rhcmrv_recibos; o arquivo é protegido: abre com token de arquivo) ---------- */
+  const RECIBOS='/api/collections/rhcmrv_recibos/records';
+  const recibos={
+    get ok(){return !!token;},
+    /* envia o PDF; vence em `dias` dias. por = {nome,mat,user}. -> {id,arquivo,criado_em,expira_em} */
+    async enviar(ref,setor,file,por,dias){
+      if(!token) throw new Error('Entre no sistema para anexar o recibo.');
+      const agora=new Date(),exp=new Date(agora.getTime()+dias*864e5),fd=new FormData();
+      fd.append('ref',ref);fd.append('setor',setor);fd.append('por_nome',por.nome);fd.append('por_matricula',por.mat||'');fd.append('por_user',por.user||'');
+      fd.append('criado_em',agora.toISOString());fd.append('expira_em',exp.toISOString());fd.append('arquivo',file);
+      const r=await fetch(URL_BASE+RECIBOS,{method:'POST',headers:{Authorization:token},body:fd});
+      let j=null;try{j=await r.json();}catch(e){}
+      if(!r.ok){
+        const err=new Error(r.status===404?'O servidor ainda não tem a área de recibos. Saia do sistema e entre de novo.':((j&&j.message)||('HTTP '+r.status)));err.status=r.status;
+        if(r.status===401||r.status===403) clearAuth();
+        throw err;
+      }
+      return {id:j.id,arquivo:j.arquivo,criado_em:j.criado_em,expira_em:j.expira_em};
+    },
+    async url(rec){
+      const t=await api('POST','/api/files/token',{});
+      return URL_BASE+'/api/files/rhcmrv_recibos/'+rec.id+'/'+encodeURIComponent(rec.arquivo)+'?token='+encodeURIComponent(t.token);
+    },
+    async apagar(id){try{await api('DELETE',RECIBOS+'/'+id);}catch(e){if(e.status!==404) throw e;}},
+    /* apaga do servidor os recibos com mais de 90 dias; -> quantos */
+    async limparVencidos(){
+      if(!token) return 0;
+      let n=0;
+      try{
+        const r=await api('GET',RECIBOS+'?perPage=100&filter='+encodeURIComponent('expira_em < "'+new Date().toISOString()+'"'));
+        for(const it of (r.items||[])){await api('DELETE',RECIBOS+'/'+it.id);n++;}
+      }catch(e){/* coleção ainda inexistente ou sem acesso: nada a limpar */}
+      return n;
+    }
+  };
+  return {connect,centi,recibos,logout,get email(){return email;},get nome(){return centi.nome;},get admin(){return centi.admin;},get userId(){return userId();},url:URL_BASE};
 })();
 
 'use strict';

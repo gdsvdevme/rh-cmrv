@@ -5,7 +5,7 @@ const ICONES_ESP={
 };
 const TELAS_ESP={
   carimbar:{nome:'Carimbar',desc:'Carimbe os espelhos de ponto em PDF e organize pela hierarquia, com uma capa para cada setor ou gabinete.'},
-  devolucao:{nome:'Controle de devolução',desc:'Acompanhe quais setores devolveram o espelho de ponto: devolvido ao RH, devolvido com pendências ou não devolvido, com observação.'}
+  devolucao:{nome:'Controle de devolução',desc:'Dê baixa no ponto de um servidor que deixou o espelho, ou de uma hierarquia inteira (setor ou gabinete) de uma vez.'}
 };
 function cartaoEsp(k,t){
   return `<a class="card2" href="#${k}"><span class="ic" aria-hidden="true"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">${ICONES_ESP[k]}</svg></span><b>${esc(t.nome)}</b><span class="d">${esc(t.desc)}</span><span class="go">Abrir<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg></span></a>`;

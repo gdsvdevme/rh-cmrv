@@ -1,0 +1,4 @@
+# Arquivos gerados pelo build.py (edite src/ e rode `python3 build.py`):
+# o GitHub os recolhe nos diffs dos PRs e não os conta nas estatísticas da linguagem.
+site/** linguist-generated=true
+dist/** linguist-generated=true

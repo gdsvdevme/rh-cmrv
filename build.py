@@ -30,20 +30,40 @@ import glob, os, sys
 root = os.path.dirname(os.path.abspath(__file__))
 args = sys.argv[1:]
 opt = lambda k, d: args[args.index(k) + 1] if k in args else d
-rd = lambda p: open(os.path.join(root, p), encoding='utf-8').read()
+from functools import lru_cache
+rd = lru_cache(maxsize=None)(lambda p: open(os.path.join(root, p), encoding='utf-8').read())     # cada arquivo é lido uma vez
+GERADO = '<!-- ARQUIVO GERADO por build.py a partir de src/. Não edite aqui: altere src/ e rode `python3 build.py`. -->\n'
 def wr(p, s):
     p = os.path.join(root, p); os.makedirs(os.path.dirname(p), exist_ok=True)
+    if s.startswith('<!doctype html>\n'):            # site/: o aviso vem logo depois do doctype (sem mudar o modo de renderização)
+        s = '<!doctype html>\n' + GERADO + s[len('<!doctype html>\n'):]
+    else:                                            # dist/ (fragmentos de artefato)
+        s = GERADO + s
     open(p, 'w', encoding='utf-8').write(s)
 
+import re
+# trechos compartilhados e partes de um modelo, por marcadores dentro dele:
+#   /*SHARED:core,toast*/   junta src/shared/core.js + toast.js   (código comum a várias páginas)
+#   /*SHARED_CSS*/          cores e sombras comuns (src/shared/tokens.css)
+#   /*INCLUDE caminho*/     um arquivo de src/, ou, se for pasta, todos os arquivos dela em ordem alfabética (00-, 10-...)
+def incluir(m):
+    if '..' in m.group(1): sys.exit('INCLUDE não pode sair de src/: ' + m.group(1))
+    alvo = os.path.join(root, 'src', m.group(1))
+    nomes = sorted(glob.glob(os.path.join(alvo, '*'))) if os.path.isdir(alvo) else [alvo]
+    return '\n'.join(open(n, encoding='utf-8').read().removesuffix('\n') for n in nomes)
+def shared(t):
+    t = re.sub(r'/\*INCLUDE ([\w./-]+)\*/', incluir, t)
+    t = re.sub(r'/\*SHARED:([\w,]+)\*/', lambda m: ''.join(rd('src/shared/' + n + '.js') for n in m.group(1).split(',')), t)
+    return t.replace('/*SHARED_CSS*/', rd('src/shared/tokens.css'))
 hello = rd('src/hello.js'); mcss = rd('src/modern.css'); mflow = rd('src/modern-flow.css')
-mod = lambda t: t.replace('/*MODERN_CSS*/', mcss).replace('/*MODERN_FLOW_CSS*/', mflow).replace('/*HELLO_JS*/', hello)
+mod = lambda t: shared(t).replace('/*MODERN_CSS*/', mcss).replace('/*MODERN_FLOW_CSS*/', mflow).replace('/*HELLO_JS*/', hello)
 css = rd('src/styles.css')
 js = '\n'.join(open(f, encoding='utf-8').read() for f in sorted(glob.glob(os.path.join(root, 'src/js/*.js'))))
 js = js.replace('/*VOLUME_CSS*/', rd('src/volume.css').replace('`', '\\`'))
 pbjs = rd('src/pb.js').replace('/*PB_URL*/', opt('--pb-url', 'https://pb.devgabriel.app.br')).replace('/*CENTI_URL*/', opt('--centi-url', ''))
 js = js.replace('</script>', '<\\/script>')
 flow = mod(rd('src/index.template.html')).replace('/*CSS*/', css).replace('/*PB_JS*/', pbjs).replace('/*JS*/', js)
-launcher = rd('src/launcher.template.html').replace('/*PB_JS*/', pbjs)
+launcher = shared(rd('src/launcher.template.html')).replace('/*PB_JS*/', pbjs)
 pessoal = mod(rd('src/pessoal.template.html')).replace('/*PB_JS*/', pbjs)
 ponto = mod(rd('src/ponto.template.html'))
 ferias = mod(rd('src/ferias.template.html')).replace('/*PB_JS*/', pbjs)
@@ -53,7 +73,8 @@ import base64
 stamp = base64.b64encode(open(os.path.join(root, 'src/carimbo-padrao.png'), 'rb').read()).decode()
 carimbos = mod(rd('src/carimbos.template.html')).replace('/*PB_JS*/', pbjs).replace('/*STAMP_B64*/', stamp)
 
-documentos = mod(rd('src/documentos.template.html')).replace('/*PB_JS*/', pbjs).replace('/*EXTENSO_JS*/', rd('src/extenso.js').replace('</script>', '<\\/script>')).replace('/*TIMBRADO_B64*/', base64.b64encode(open(os.path.join(root, 'src/timbrado.docx'), 'rb').read()).decode())
+documentos = mod(rd('src/documentos.template.html')).replace('/*PB_JS*/', pbjs).replace('/*EXTENSO_JS*/', rd('src/extenso.js')
+    .replace('</script>', '<\\/script>')).replace('/*TIMBRADO_B64*/', base64.b64encode(open(os.path.join(root, 'src/timbrado.docx'), 'rb').read()).decode())
 
 head = ('<!doctype html>\n<html lang="pt-BR"><head><meta charset="utf-8">'
         '<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"></head>'
@@ -61,7 +82,9 @@ head = ('<!doctype html>\n<html lang="pt-BR"><head><meta charset="utf-8">'
 page = lambda frag: head + frag + '\n</body></html>\n'
 
 # site (hospedagem comum, ex.: Vercel)
-wr('site/index.html', page(launcher.replace('/*FLOW_URL*/', 'fluxogramas/').replace('/*PESSOAL_URL*/', 'pessoal/').replace('/*PONTO_URL*/', 'ponto/').replace('/*FERIAS_URL*/', 'ferias/').replace('/*LICENCA_URL*/', 'licenca-premio/').replace('/*TAREFAS_URL*/', 'tarefas/').replace('/*CARIMBOS_URL*/', 'carimbos/').replace('/*DOCUMENTOS_URL*/', 'documentos/')))
+wr('site/index.html', page(launcher.replace('/*FLOW_URL*/', 'fluxogramas/').replace('/*PESSOAL_URL*/', 'pessoal/').replace('/*PONTO_URL*/', 'ponto/')
+    .replace('/*FERIAS_URL*/', 'ferias/').replace('/*LICENCA_URL*/', 'licenca-premio/').replace('/*TAREFAS_URL*/', 'tarefas/')
+    .replace('/*CARIMBOS_URL*/', 'carimbos/').replace('/*DOCUMENTOS_URL*/', 'documentos/')))
 wr('site/documentos/index.html', page(documentos.replace('/*HOME_URL*/', '../')))
 wr('site/carimbos/index.html', page(carimbos.replace('/*HOME_URL*/', '../')))
 wr('site/ferias/index.html', page(ferias.replace('/*HOME_URL*/', '../')))
@@ -71,7 +94,10 @@ wr('site/ponto/index.html', page(ponto.replace('/*HOME_URL*/', '../')))
 wr('site/pessoal/index.html', page(pessoal.replace('/*HOME_URL*/', '../')))
 wr('site/fluxogramas/index.html', page(flow.replace('/*HOME_URL*/', '../')))
 # fragmentos de artefato
-wr('dist/artifact-launcher.html', launcher.replace('/*FLOW_URL*/', opt('--flow-url', 'fluxogramas/')).replace('/*PESSOAL_URL*/', opt('--pessoal-url', 'pessoal/')).replace('/*PONTO_URL*/', opt('--ponto-url', 'ponto/')).replace('/*FERIAS_URL*/', opt('--ferias-url', 'ferias/')).replace('/*LICENCA_URL*/', opt('--licenca-url', 'licenca-premio/')).replace('/*TAREFAS_URL*/', opt('--tarefas-url', 'tarefas/')).replace('/*CARIMBOS_URL*/', opt('--carimbos-url', 'carimbos/')).replace('/*DOCUMENTOS_URL*/', opt('--documentos-url', 'documentos/')))
+wr('dist/artifact-launcher.html', launcher.replace('/*FLOW_URL*/', opt('--flow-url', 'fluxogramas/'))
+    .replace('/*PESSOAL_URL*/', opt('--pessoal-url', 'pessoal/')).replace('/*PONTO_URL*/', opt('--ponto-url', 'ponto/'))
+    .replace('/*FERIAS_URL*/', opt('--ferias-url', 'ferias/')).replace('/*LICENCA_URL*/', opt('--licenca-url', 'licenca-premio/'))
+    .replace('/*TAREFAS_URL*/', opt('--tarefas-url', 'tarefas/')).replace('/*CARIMBOS_URL*/', opt('--carimbos-url', 'carimbos/')).replace('/*DOCUMENTOS_URL*/', opt('--documentos-url', 'documentos/')))
 wr('dist/artifact-documentos.html', documentos.replace('/*HOME_URL*/', opt('--home-url', '../')))
 wr('dist/artifact-carimbos.html', carimbos.replace('/*HOME_URL*/', opt('--home-url', '../')))
 wr('dist/artifact-tarefas.html', tarefas.replace('/*HOME_URL*/', opt('--home-url', '../')))

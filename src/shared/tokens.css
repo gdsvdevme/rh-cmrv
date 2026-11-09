@@ -1,0 +1,54 @@
+/* Cores e sombras comuns a todas as páginas (o build.py injeta onde o modelo tem o marcador SHARED_CSS). Cada página mantém só as suas variáveis próprias. */
+:root{
+  --bg:#eef4f0;
+  --surface:#fff;
+  --fg:#12281d;
+  --muted:#4f665a;
+  --line:#d1ddd6;
+  --accent:#0a6b3d;
+  --accent-fg:#fff;
+  --soft:#e3efe8;
+  --hero-a:#063d27;
+  --hero-b:#0b7a49;
+  --gold:#d4aa4a;
+  --shadow:0 1px 2px rgba(6,61,39,.09),0 6px 20px rgba(6,61,39,.07);
+  --warn:#8a5a00;
+  --warn-bg:#fdf0d5;
+  --danger:#b3261e;
+  --f-display:"Libre Franklin",system-ui,sans-serif;
+  --f-body:"Public Sans",system-ui,sans-serif;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --bg:#08130e;
+  --surface:#0f1e17;
+  --fg:#e3f1ea;
+  --muted:#90b0a0;
+  --line:#234034;
+  --accent:#52c98a;
+  --accent-fg:#04210f;
+  --soft:#15291f;
+  --hero-a:#04150d;
+  --hero-b:#0b4d31;
+  --gold:#d8b45e;
+  --shadow:0 1px 2px rgba(0,0,0,.4),0 6px 20px rgba(0,0,0,.3);
+  --warn:#f0c26a;
+  --warn-bg:#3a2d10;
+  --danger:#ff8a80;
+  color-scheme:dark;}}
+:root[data-theme="dark"]{
+  --bg:#08130e;
+  --surface:#0f1e17;
+  --fg:#e3f1ea;
+  --muted:#90b0a0;
+  --line:#234034;
+  --accent:#52c98a;
+  --accent-fg:#04210f;
+  --soft:#15291f;
+  --hero-a:#04150d;
+  --hero-b:#0b4d31;
+  --gold:#d8b45e;
+  --shadow:0 1px 2px rgba(0,0,0,.4),0 6px 20px rgba(0,0,0,.3);
+  --warn:#f0c26a;
+  --warn-bg:#3a2d10;
+  --danger:#ff8a80;
+  color-scheme:dark;}

@@ -120,7 +120,7 @@ function devBaixar(p,emLote){
   devAgendar();
 }
 function devDesfazer(id){delete dev.baixas[id];devAgendar();}
-function devDesenhar(){devAviso();qUltimas();hDesenhar();rDesenhar();}
+function devDesenhar(){devAviso();qUltimas();hDesenhar();rDesenhar();if(!$('#dRel').hidden) relDesenhar();}
 
 /* ---------- bloco 1: baixa individual ---------- */
 let qNovo='',qLista=[],qSel=0,qUltAberto=false;                       // 'Últimas baixas' abre recolhida
@@ -249,6 +249,50 @@ $('#rLista').addEventListener('change',async ev=>{
     const g=devSetores().find(x=>x.k===k);toast('Retirada registrada: '+(g?g.nome:'setor')+'.');
   }else delete dev.retiradas[k];
   devAgendar();rDesenhar();
+});
+/* ---------- relatório do mês (aba lateral): abre o relatório e recolhe os blocos de baixa ---------- */
+let relFiltro='todos',relBusca='';const relAberto=new Set();
+function relDados(){
+  const R=dev.retiradas||{},B=dev.baixas||{};
+  return devSetores().map(g=>{
+    const E=devPessoasDe(g.k).filter(p=>devElegivel(p)||B[pessoaId(p)]);
+    const feitos=E.filter(p=>B[pessoaId(p)]),falta=E.filter(p=>!B[pessoaId(p)]);
+    return {g,E,feitos,falta,ret:R[g.k]||null};
+  }).filter(x=>x.E.length||x.ret);
+}
+function relDesenhar(){
+  const D=relDados();
+  const tot=D.reduce((s,x)=>s+x.E.length,0),bx=D.reduce((s,x)=>s+x.feitos.length,0),ret=D.filter(x=>x.ret).length;
+  const mes=devRef?devMesNome(devRef):'';
+  $('#relCards').innerHTML=`<div><small>Espelhos emitidos</small><b>${tot}</b></div><div class="ok"><small>Com baixa</small><b>${bx}</b></div><div class="pend"><small>Sem baixa</small><b>${tot-bx}</b></div><div><small>Setores que retiraram</small><b>${ret}</b> <span class="muted">de ${D.length}</span></div>`;
+  const bt=(v,t,n)=>`<button type="button" class="${relFiltro===v?'on':''}" data-rf="${v}">${t} <b>${n}</b></button>`;
+  $('#relFlt').innerHTML=bt('todos','Todos',D.length)+bt('falta','Faltam baixas',D.filter(x=>x.falta.length).length)+bt('semret','Não retiraram',D.filter(x=>!x.ret).length)+bt('ok','Completos',D.filter(x=>!x.falta.length&&x.ret).length);
+  const q=norm(relBusca);
+  const V=D.filter(x=>(relFiltro==='todos'||(relFiltro==='falta'?x.falta.length:relFiltro==='semret'?!x.ret:(!x.falta.length&&x.ret)))&&(!q||norm(x.g.nome).includes(q)));
+  $('#relLista').innerHTML=!D.length?`<p class="muted" style="padding:16px;margin:0">${mes?'Nenhum espelho emitido em '+esc(mes)+' ainda.':'Escolha o mês.'}</p>`:
+    V.length?V.map(x=>{const k=x.g.k,aberto=relAberto.has(k),pc=x.E.length?Math.round(x.feitos.length*100/x.E.length):0;
+      return `<div class="relrow${aberto?' aberto':''}" data-k="${esc(k)}"><button type="button" class="relh" aria-expanded="${aberto}"><span class="rn">${esc(x.g.nome)}</span><div class="prog"><div class="bar"><i style="width:${pc}%"></i></div><span>${x.feitos.length}/${x.E.length}</span></div><span class="pill ${x.falta.length?'pend':'ok'}">${x.falta.length?x.falta.length+' sem baixa':'Baixas completas'}</span><span class="pill ${x.ret?'ok':'nao'}">${x.ret?'Retirou '+esc(brData(x.ret.d).slice(0,5)):'Não retirou'}</span></button>`+
+        (aberto?`<div class="reldet"><div><b>Sem baixa (${x.falta.length})</b><ul>${x.falta.map(p=>`<li>${esc(titulo(p.n))}${p.m?' <small>mat. '+esc(p.m)+'</small>':''}</li>`).join('')||'<li class="muted">Ninguém.</li>'}</ul></div><div><b>Com baixa (${x.feitos.length})</b><ul>${x.feitos.map(p=>{const b=dev.baixas[pessoaId(p)];return `<li>${esc(titulo(p.n))} <small>${esc(brData(b.d).slice(0,5))}${b.p&&b.p.n?' · '+esc(titulo(b.p.n)):''}</small></li>`;}).join('')||'<li class="muted">Ninguém.</li>'}</ul></div></div>`:'')+'</div>';}).join(''):'<p class="muted" style="padding:16px;margin:0">Nenhum setor nesta lista.</p>';
+}
+function relAlternar(ligar){
+  const rel=$('#dRel'),btn=$('#relBtn');
+  const on=ligar==null?rel.hidden:ligar;
+  rel.hidden=!on;$('#dBaixas').hidden=on;                                // abre o relatório e recolhe as baixas (e vice-versa)
+  btn.textContent=on?'Voltar às baixas':'Ver relatório';btn.setAttribute('aria-expanded',on?'true':'false');
+  if(on) relDesenhar();
+}
+$('#relBtn').addEventListener('click',()=>relAlternar());
+$('#relFlt').addEventListener('click',ev=>{const b=ev.target.closest('[data-rf]');if(!b) return;relFiltro=b.dataset.rf;relDesenhar();});
+$('#relBusca').addEventListener('input',ev=>{relBusca=ev.target.value;relDesenhar();});
+$('#relLista').addEventListener('click',ev=>{const h=ev.target.closest('.relh');if(!h) return;const k=h.closest('.relrow').dataset.k;if(relAberto.has(k)) relAberto.delete(k);else relAberto.add(k);relDesenhar();});
+$('#relCsv').addEventListener('click',()=>{
+  const D=relDados();if(!D.length){toast('Não há espelhos emitidos neste mês.');return;}
+  const c=v=>'"'+String(v==null?'':v).replace(/"/g,'""')+'"';
+  const rows=[['Setor ou gabinete','Servidor','Matrícula','Cargo','Baixa no ponto','Data da baixa','Baixa registrada por','Setor retirou o espelho impresso','Data da retirada']];
+  D.forEach(x=>x.E.forEach(p=>{const b=dev.baixas[pessoaId(p)];rows.push([x.g.nome,titulo(p.n),p.m||'',p.c?titulo(p.c):'',b?'Sim':'Não',b?brData(b.d):'',b&&b.p&&b.p.n?titulo(b.p.n):'',x.ret?'Sim':'Não',x.ret?brData(x.ret.d):'']);}));
+  const csv='﻿'+rows.map(r=>r.map(c).join(';')).join('\r\n');
+  const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([csv],{type:'text/csv;charset=utf-8'}));a.download='relatorio-devolucao-espelhos-'+(devRef||'mes')+'.csv';
+  document.body.appendChild(a);a.click();setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove();},4000);
 });
 $('#dAviso').addEventListener('click',ev=>{const b=ev.target.closest('[data-ym]');if(!b) return;$('#dMes').value=String(+b.dataset.ym.slice(5));$('#dAno').value=b.dataset.ym.slice(0,4);devCarregar();});
 $('#dMes').addEventListener('change',devCarregar);$('#dAno').addEventListener('change',devCarregar);

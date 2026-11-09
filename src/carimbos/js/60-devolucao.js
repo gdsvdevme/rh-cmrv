@@ -13,6 +13,8 @@ function devSetores(){
   return devSetoresCache=[...GH.values()].sort((a,b)=>a.ramo-b.ramo||a.sort.localeCompare(b.sort)).map(g=>({k:g.k,nome:g.nome,n:cont.get(g.k)||0}));
 }
 const devSit=k=>(dev.itens[k]&&dev.itens[k].s)||'nao';
+const devEntregue=k=>!!(dev.itens[k]&&dev.itens[k].e);
+const devNoFiltro=k=>devFiltro==='todos'||(devFiltro==='ent'?devEntregue(k):devSit(k)===devFiltro);
 async function devSalvar(){
   clearTimeout(devT);if(!devPend||!devRef) return;devPend=false;
   const json=JSON.stringify(dev),ref=devRef;
@@ -33,12 +35,15 @@ async function devCarregar(){
 }
 function devLinha(g){
   const it=dev.itens[g.k]||{},s=it.s||'nao';
+  const btns=['ok','pend','nao'].map(v=>`<button type="button" data-s="${v}" class="${s===v?'on':''}" aria-pressed="${s===v}">${DST[v]}</button>`).join('');
+  const data=s!=='nao'?`<input type="date" data-f="d" value="${esc(it.d||'')}" aria-label="Data da devolução">`:'';
+  const ph=s==='pend'?'Descreva as pendências…':'Observação (opcional)';
   return `<div class="drow ${s}" data-k="${esc(g.k)}">
-    <div class="nm"><b>${esc(g.nome)}</b><span>${g.n} servidor${g.n===1?'':'es'}${it.d?' · '+esc(DST_EM[s])+' em '+esc(brData(it.d)):''}</span></div>
-    <div class="seg" role="group" aria-label="Situação de ${esc(g.nome)}">${['ok','pend','nao'].map(v=>`<button type="button" data-s="${v}" class="${s===v?'on':''}" aria-pressed="${s===v}">${DST[v]}</button>`).join('')}</div>
-    <div class="obs">${s!=='nao'?`<input type="date" data-f="d" value="${esc(it.d||'')}" aria-label="Data da devolução">`:''}<textarea data-f="o" rows="1" placeholder="${s==='pend'?'Descreva as pendências…':'Observação (opcional)'}" aria-label="Observação de ${esc(g.nome)}">${esc(it.o||'')}</textarea></div>
-    ${s==='pend'?devPendencias(g,it):''}
+    <div class="nm"><b>${esc(g.nome)}</b><span>${g.n} servidor${g.n===1?'':'es'}</span></div>
+    <div class="st" data-l="Devolução do setor"><div class="seg" role="group" aria-label="Situação de ${esc(g.nome)}">${btns}</div>${data}</div>
     ${devRh(it)}
+    <div class="obs" data-l="Observação"><textarea data-f="o" rows="1" placeholder="${ph}" aria-label="Observação de ${esc(g.nome)}">${esc(it.o||'')}</textarea></div>
+    ${s==='pend'?devPendencias(g,it):''}
   </div>`;
 }
 /* servidores com pendência: escolhidos entre os do setor/gabinete na Hierarquia de Pessoal (guarda matrícula e nome) */
@@ -53,17 +58,17 @@ function devPendencias(g,it){
   const sel=livres.length?`<select data-pend="add" aria-label="Adicionar servidor com pendência"><option value="">+ Adicionar servidor…</option>${livres.map(p=>`<option value="${esc(pessoaId(p))}">${esc(p.n)}${p.c?' — '+esc(p.c):''}</option>`).join('')}</select>`:(ps.length?'':'<span class="muted">Este setor não tem servidores na hierarquia.</span>');
   return `<div class="pendbox"><b>Servidores com pendência</b>${chips}${sel}</div>`;
 }
-/* entrega do espelho pelo RH ao setor: marca com data e com quem marcou (nome e matrícula) */
+/* entrega do espelho pelo RH ao setor: interruptor com data e com quem marcou (nome e matrícula) */
 function devRh(it){
   const e=it.e;
-  let h='<div class="rh"><label class="ck2"><input type="checkbox" data-e="chk"'+(e?' checked':'')+'> Espelho entregue pelo RH ao setor</label>';
-  if(e) h+=`<input type="date" data-e="d" value="${esc(e.d||'')}" aria-label="Data da entrega pelo RH"><span class="quem">registrado por ${esc(e.p&&e.p.n||'—')}${e.p&&e.p.m?' (mat. '+esc(e.p.m)+')':''}</span>`;
+  let h='<div class="rh" data-l="Entrega do RH ao setor"><label class="sw"><input type="checkbox" data-e="chk" aria-label="Espelho entregue pelo RH ao setor"'+(e?' checked':'')+'><span>'+(e?'Entregue':'Não entregue')+'</span></label>';
+  if(e) h+=`<div class="rh2"><input type="date" data-e="d" value="${esc(e.d||'')}" aria-label="Data da entrega pelo RH"><span class="quem">registrado por ${esc(e.p&&e.p.n||'—')}${e.p&&e.p.m?' (mat. '+esc(e.p.m)+')':''}</span></div>`;
   return h+'</div>';
 }
 function devResumo(L){
-  const c={ok:0,pend:0,nao:0};L.forEach(g=>c[devSit(g.k)]++);
+  const c={ok:0,pend:0,nao:0,ent:0};L.forEach(g=>{c[devSit(g.k)]++;if(devEntregue(g.k)) c.ent++;});
   const bt=(v,t,n,cl)=>`<button type="button" class="${cl||''} ${devFiltro===v?'on':''}" data-flt="${v}"><small>${t}</small><b>${n}</b></button>`;
-  $('#dSum').innerHTML=bt('todos','Todos os setores',L.length,'')+bt('ok','Devolvidos ao RH',c.ok,'ok')+bt('pend','Com pendências',c.pend,'pend')+bt('nao','Não devolvidos',c.nao,'nao');
+  $('#dSum').innerHTML=bt('todos','Todos os setores',L.length,'')+bt('ent','Entregues pelo RH',c.ent,'ent')+bt('ok','Devolvidos ao RH',c.ok,'ok')+bt('pend','Com pendências',c.pend,'pend')+bt('nao','Não devolvidos',c.nao,'nao');
 }
 function devDesenhar(){
   const box=$('#dLista');
@@ -72,8 +77,9 @@ function devDesenhar(){
     return;}
   const L=devSetores();devResumo(L);
   const q=norm(devBusca);
-  const V=L.filter(g=>(devFiltro==='todos'||devSit(g.k)===devFiltro)&&(!q||norm(g.nome).includes(q)));
-  box.innerHTML=V.length?V.map(devLinha).join(''):'<p class="muted" style="padding:18px">Nenhum setor nesta lista.</p>';
+  const V=L.filter(g=>devNoFiltro(g.k)&&(!q||norm(g.nome).includes(q)));
+  const cab='<div class="dhead" aria-hidden="true"><span>Setor ou gabinete</span><span>Devolução do setor</span><span>Entrega do RH ao setor</span><span>Observação</span></div>';
+  box.innerHTML=V.length?cab+V.map(devLinha).join(''):'<p class="muted" style="padding:18px">Nenhum setor nesta lista.</p>';
 }
 function devMudar(k,campos){
   const it=Object.assign({},dev.itens[k]||{},campos);
@@ -92,7 +98,7 @@ $('#dLista').addEventListener('click',ev=>{
   const o=row.querySelector('textarea');
   devMudar(k,{s:b.dataset.s,o:o?o.value:''});
   const g=devSetores().find(x=>x.k===k);if(!g) return;
-  if(devFiltro!=='todos'&&devFiltro!==devSit(k)){devDesenhar();return;}     // saiu do filtro atual
+  if(!devNoFiltro(k)){devDesenhar();return;}     // saiu do filtro atual
   row.outerHTML=devLinha(g);devResumo(devSetores());
 });
 $('#dLista').addEventListener('input',ev=>{
@@ -134,7 +140,7 @@ $('#dLista').addEventListener('change',async ev=>{
       }else{
         devEntrega(k,()=>null);
       }
-      devRefaz(row,k);
+      if(!devNoFiltro(k)) devDesenhar();else devRefaz(row,k);
     }else if(f==='d'){
       if(t.value) devEntrega(k,e=>Object.assign(e,{d:t.value}));
     }

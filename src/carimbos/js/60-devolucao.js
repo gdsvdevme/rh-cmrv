@@ -37,8 +37,21 @@ function devLinha(g){
     <div class="nm"><b>${esc(g.nome)}</b><span>${g.n} servidor${g.n===1?'':'es'}${it.d?' · '+esc(DST_EM[s])+' em '+esc(brData(it.d)):''}</span></div>
     <div class="seg" role="group" aria-label="Situação de ${esc(g.nome)}">${['ok','pend','nao'].map(v=>`<button type="button" data-s="${v}" class="${s===v?'on':''}" aria-pressed="${s===v}">${DST[v]}</button>`).join('')}</div>
     <div class="obs">${s!=='nao'?`<input type="date" data-f="d" value="${esc(it.d||'')}" aria-label="Data da devolução">`:''}<textarea data-f="o" rows="1" placeholder="${s==='pend'?'Descreva as pendências…':'Observação (opcional)'}" aria-label="Observação de ${esc(g.nome)}">${esc(it.o||'')}</textarea></div>
+    ${s==='pend'?devPendencias(g,it):''}
     ${devRh(it)}
   </div>`;
+}
+/* servidores com pendência: escolhidos entre os do setor/gabinete na Hierarquia de Pessoal (guarda matrícula e nome) */
+const pessoaId=p=>p.m?String(p.m):'n:'+norm(p.n);
+function devPessoasDe(k){
+  return ((pessoal&&pessoal.pessoas)||[]).filter(p=>p._k===k).sort((a,b)=>(a.o==null?1e6:a.o)-(b.o==null?1e6:b.o)||a.n.localeCompare(b.n));
+}
+function devPendencias(g,it){
+  const ps=it.ps||[],marcados=new Set(ps.map(x=>x.i));
+  const livres=devPessoasDe(g.k).filter(p=>!marcados.has(pessoaId(p)));
+  const chips=ps.length?ps.map(x=>`<span class="chip">${esc(x.n)}${x.m?' · mat. '+esc(x.m):''}<button type="button" data-pend="rem" data-i="${esc(x.i)}" aria-label="Tirar ${esc(x.n)} da lista">×</button></span>`).join(''):'<span class="muted">Nenhum servidor marcado</span>';
+  const sel=livres.length?`<select data-pend="add" aria-label="Adicionar servidor com pendência"><option value="">+ Adicionar servidor…</option>${livres.map(p=>`<option value="${esc(pessoaId(p))}">${esc(p.n)}${p.c?' — '+esc(p.c):''}</option>`).join('')}</select>`:(ps.length?'':'<span class="muted">Este setor não tem servidores na hierarquia.</span>');
+  return `<div class="pendbox"><b>Servidores com pendência</b>${chips}${sel}</div>`;
 }
 /* entrega do espelho pelo RH ao setor: marca com data e com quem marcou (nome e matrícula) */
 function devRh(it){
@@ -127,6 +140,17 @@ $('#dLista').addEventListener('change',async ev=>{
     }
   }catch(e){toast(e.message||String(e));devRefaz(row,k);}
 });
+$('#dLista').addEventListener('change',ev=>{
+  const t=ev.target;if(!t.dataset||t.dataset.pend!=='add'||!t.value) return;
+  const row=t.closest('.drow'),k=row.dataset.k,p=devPessoasDe(k).find(x=>pessoaId(x)===t.value);if(!p) return;
+  const ps=((dev.itens[k]||{}).ps||[]).concat([{i:pessoaId(p),n:p.n,m:p.m?String(p.m):''}]);
+  devMudar(k,{ps});devRefaz(row,k);
+});
+$('#dLista').addEventListener('click',ev=>{
+  const b=ev.target.closest('[data-pend=rem]');if(!b) return;
+  const row=b.closest('.drow'),k=row.dataset.k;
+  devMudar(k,{ps:((dev.itens[k]||{}).ps||[]).filter(x=>x.i!==b.dataset.i)});devRefaz(row,k);
+});
 $('#dSum').addEventListener('click',ev=>{const b=ev.target.closest('[data-flt]');if(!b) return;devFiltro=b.dataset.flt;devDesenhar();});
 $('#dBusca').addEventListener('input',ev=>{devBusca=ev.target.value;devDesenhar();});
 $('#dMes').addEventListener('change',devCarregar);$('#dAno').addEventListener('change',devCarregar);
@@ -134,8 +158,9 @@ window.addEventListener('pagehide',devSalvar);
 $('#dCsv').addEventListener('click',()=>{
   if(!GH.size){toast('A hierarquia de pessoal não está carregada.');return;}
   const c=v=>'"'+String(v==null?'':v).replace(/"/g,'""')+'"';
-  const rows=[['Setor','Servidores','Situação','Data','Observação','Entregue pelo RH','Data da entrega pelo RH','Registrado por']].concat(devSetores().map(g=>{const it=dev.itens[g.k]||{},e=it.e||null;return [g.nome,
-    g.n,DST[devSit(g.k)],brData(it.d),(it.o||'').replace(/\s*\n\s*/g,' '),e?'Sim':'Não',e?brData(e.d):'',e&&e.p?e.p.n+(e.p.m?' (mat. '+e.p.m+')':''):''];}));
+  const rows=[['Setor','Servidores','Situação','Data','Observação','Entregue pelo RH','Data da entrega pelo RH','Registrado por','Servidores com pendência']].concat(devSetores().map(g=>{const it=dev.itens[g.k]||{},e=it.e||null;return [g.nome,
+    g.n,DST[devSit(g.k)],brData(it.d),(it.o||'').replace(/\s*\n\s*/g,' '),e?'Sim':'Não',e?brData(e.d):'',e&&e.p?e.p.n+(e.p.m?' (mat. '+e.p.m+')':''):'',
+    devSit(g.k)==='pend'?(it.ps||[]).map(x=>x.n+(x.m?' (mat. '+x.m+')':'')).join('; '):''];}));
   const csv='﻿'+rows.map(r=>r.map(c).join(';')).join('\r\n');
   const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([csv],{type:'text/csv;charset=utf-8'}));a.download='controle-devolucao-espelhos-'+(devRef||'mes')+'.csv';
   document.body.appendChild(a);a.click();setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove();},4000);

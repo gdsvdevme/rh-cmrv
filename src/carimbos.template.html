@@ -1,4 +1,4 @@
-<title>Carimbos em PDF</title>
+<title>Espelhos de ponto</title>
 <meta name="claude:viewport-fit-sides" content="cover">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Libre+Franklin:wght@500;600;700&family=Public+Sans:wght@400;500;600&display=swap">
 <style>
@@ -32,6 +32,32 @@ button,input,select{font:inherit;color:inherit}
 .hero h1{font-size:clamp(1.6rem,4.4vw,2.4rem);line-height:1.12}
 .hero p{margin:8px 0 0;opacity:.85}
 main{padding-block:0 40px}
+.tabs{display:flex;gap:8px;flex-wrap:wrap;margin-top:18px}
+.tab{border:1px solid rgba(255,255,255,.35);background:rgba(255,255,255,.1);color:#fff;border-radius:99px;padding:8px 16px;font-weight:600;font-size:14px;cursor:pointer}
+.tab:hover{background:rgba(255,255,255,.2)}.tab.on{background:#fff;color:var(--hero-a);border-color:#fff}
+.devwrap{margin-top:-20px;display:flex;flex-direction:column;gap:14px}
+.dsum{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:8px}
+.dsum button{text-align:left;border-radius:10px;padding:8px 12px;background:var(--soft);border:2px solid var(--line);cursor:pointer}
+.dsum button.on{border-color:var(--accent)}
+.dsum small{display:block;font-size:11px;font-weight:700;letter-spacing:.04em;text-transform:uppercase;color:var(--muted)}
+.dsum b{font-family:var(--f-display);font-size:1.3rem;font-variant-numeric:tabular-nums}
+.dsum .ok b{color:var(--ok)}.dsum .pend b{color:var(--warn)}.dsum .nao b{color:var(--danger)}
+.drow{display:grid;grid-template-columns:minmax(180px,1.1fr) auto minmax(180px,1.4fr);gap:10px 14px;align-items:start;padding:12px 14px;border-top:1px solid var(--line);border-left:5px solid var(--danger)}
+.drow:first-child{border-top:0}
+.drow.ok{border-left-color:var(--ok)}.drow.pend{border-left-color:var(--warn)}
+.drow .nm b{font-family:var(--f-display);font-size:14.5px;line-height:1.25;display:block}
+.drow .nm span{font-size:12.5px;color:var(--muted)}
+.seg{display:inline-flex;border:1px solid var(--line);border-radius:10px;overflow:hidden;flex-wrap:wrap}
+.seg button{border:0;background:var(--surface);padding:7px 11px;font-size:12.5px;font-weight:600;cursor:pointer;border-right:1px solid var(--line)}
+.seg button:last-child{border-right:0}
+.seg button.on[data-s=ok]{background:var(--ok-bg);color:var(--ok)}
+.seg button.on[data-s=pend]{background:var(--warn-bg);color:var(--warn)}
+.seg button.on[data-s=nao]{background:var(--danger-bg);color:var(--danger)}
+.drow .obs{display:flex;flex-direction:column;gap:6px}
+.drow textarea{width:100%;min-height:36px;resize:vertical;background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:7px 10px;color:var(--fg);font:inherit;font-size:13.5px}
+.drow input[type=date]{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:5px 8px;color:var(--fg);font-size:13px;align-self:flex-start}
+.dlist{border:1px solid var(--line);border-radius:12px;overflow:hidden}
+@media (max-width:760px){.drow{grid-template-columns:1fr}}
 .grid{display:grid;grid-template-columns:minmax(300px,380px) minmax(0,1fr);gap:16px;margin-top:-20px;align-items:start}
 @media (max-width:920px){.grid{grid-template-columns:1fr}}
 @media (min-width:921px){.col:last-child>.panel{position:sticky;top:10px}}
@@ -119,11 +145,12 @@ dialog .row{justify-content:flex-end}
   <div class="top"><a class="home" href="/*HOME_URL*/" target="_top"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 11l9-8 9 8M5 10v10h5v-6h4v6h5V10"/></svg>Sistema Interno do RH</a>
   <button class="themebtn" id="themeBtn" type="button"></button></div>
   <div class="goldrule"></div>
-  <h1>Carimbos em PDF</h1>
-  <p>Câmara Municipal de Rio Verde/GO · carimbe centenas de espelhos de ponto de uma vez, organizados pela hierarquia</p>
+  <h1>Espelhos de ponto</h1>
+  <p>Câmara Municipal de Rio Verde/GO · carimbe os espelhos de ponto de uma vez e acompanhe a devolução de cada setor</p>
+  <div class="tabs" role="tablist" aria-label="Espelhos de ponto"><button class="tab on" id="tabCar" type="button" role="tab" aria-selected="true">Carimbar</button><button class="tab" id="tabDev" type="button" role="tab" aria-selected="false">Controle de devolução</button></div>
 </div></header>
 
-<main class="wrap"><div class="inner"><div class="grid">
+<main class="wrap"><div class="inner"><div id="abaCar"><div class="grid">
   <div class="col">
     <section class="panel">
       <h2><span class="n">1</span>Espelhos de ponto</h2>
@@ -181,7 +208,22 @@ dialog .row{justify-content:flex-end}
       </div>
     </section>
   </div>
-</div></div></main>
+</div></div>
+<section class="devwrap" id="abaDev" hidden>
+  <section class="panel">
+    <h2 style="margin-bottom:6px">Controle de devolução dos espelhos de ponto</h2>
+    <p class="muted" style="margin:0 0 10px">Marque, para cada setor ou gabinete, se devolveu o espelho de ponto do mês: <b>entregue</b>, <b>entregue com pendências</b> ou <b>não entregue</b>, com uma observação se precisar. As marcações ficam salvas no servidor, mês a mês.</p>
+    <div class="row" style="align-items:center;gap:8px">
+      <select id="dMes" aria-label="Mês"></select>
+      <input id="dAno" type="number" min="2000" max="2100" aria-label="Ano" style="width:84px">
+      <input id="dBusca" type="search" placeholder="Buscar setor ou gabinete" aria-label="Buscar" autocomplete="off" style="flex:1 1 200px">
+      <button class="btn sm" id="dCsv" type="button">Baixar planilha (CSV)</button>
+    </div>
+    <div class="dsum" id="dSum" style="margin-top:12px"></div>
+  </section>
+  <div class="dlist panel" id="dLista" style="padding:0"></div>
+</section>
+</div></main>
 <dialog id="dlg"></dialog>
 <div id="load" role="status" aria-live="polite" hidden><div class="ld-box"><div class="ld-spin" aria-hidden="true"></div><b id="ldT">Carregando…</b><span id="ldS"></span><div class="ld-bar" aria-hidden="true"><i id="ldB"></i></div></div></div>
 <div id="toast" hidden></div>
@@ -598,6 +640,111 @@ $('#file').addEventListener('change',ev=>{const f=ev.target.files[0];ev.target.v
 drop.addEventListener('drop',ev=>{const f=ev.dataTransfer.files[0];if(f) abrirPdf(f);});
 try{matchMedia('(prefers-color-scheme: dark)').addEventListener('change',themeBtn);new MutationObserver(themeBtn).observe(document.documentElement,{attributes:true,attributeFilter:['data-theme']});}catch(e){}
 
+
+/* ---------- abas: Carimbar / Controle de devolução ---------- */
+function aba(){
+  const dev=location.hash==='#devolucao';
+  $('#abaCar').hidden=dev;$('#abaDev').hidden=!dev;
+  $('#tabCar').classList.toggle('on',!dev);$('#tabDev').classList.toggle('on',dev);
+  $('#tabCar').setAttribute('aria-selected',String(!dev));$('#tabDev').setAttribute('aria-selected',String(dev));
+  if(dev) devDesenhar();else if(pdfDoc) mostrar(cur);
+}
+$('#tabCar').addEventListener('click',()=>{history.replaceState(null,'',location.pathname+location.search);aba();});
+$('#tabDev').addEventListener('click',()=>{location.hash='devolucao';});
+window.addEventListener('hashchange',aba);
+
+/* ---------- controle de devolução ---------- */
+const DST={nao:'Não entregue',ok:'Entregue',pend:'Entregue com pendências'};
+let dev={itens:{}},devFiltro='todos',devBusca='',devT=null,devRef='',devPend=false;
+const devKey=()=>{const m=+$('#dMes').value,a=+$('#dAno').value;return(a>=2000&&a<=2100)?a+'-'+String(m).padStart(2,'0'):'';};
+const hoje=()=>{const d=new Date();return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');};
+const brData=iso=>/^\d{4}-\d{2}-\d{2}$/.test(iso||'')?iso.slice(8)+'/'+iso.slice(5,7)+'/'+iso.slice(0,4):'';
+function devSetores(){
+  const cont=new Map();
+  ((pessoal&&pessoal.pessoas)||[]).forEach(p=>{if(p._k) cont.set(p._k,(cont.get(p._k)||0)+1);});
+  return [...GH.values()].sort((a,b)=>a.ramo-b.ramo||a.sort.localeCompare(b.sort)).map(g=>({k:g.k,nome:g.nome,n:cont.get(g.k)||0}));
+}
+const devSit=k=>(dev.itens[k]&&dev.itens[k].s)||'nao';
+async function devSalvar(){
+  clearTimeout(devT);if(!devPend||!devRef) return;devPend=false;
+  const json=JSON.stringify(dev),ref=devRef;
+  if(dbh){try{await dbh.doc('devolucao/'+ref).set({json});return;}catch(e){toast('Não foi possível salvar no servidor.');}}
+  try{localStorage.setItem('rhcrv-devolucao-'+ref,json);}catch(e){}
+}
+function devAgendar(){devPend=true;clearTimeout(devT);devT=setTimeout(devSalvar,600);}
+async function devCarregar(){
+  await devSalvar();
+  devRef=devKey();dev={itens:{}};
+  if(!devRef){devDesenhar();return;}
+  const ref=devRef;let j=null;
+  try{if(dbh){const d=await dbh.doc('devolucao/'+ref).get();if(d.exists) j=d.data().json;}}catch(e){toast('Não foi possível ler as marcações do servidor.');}
+  if(j==null){try{j=localStorage.getItem('rhcrv-devolucao-'+ref);}catch(e){}}
+  if(ref!==devRef) return;                      // o mês mudou durante a leitura
+  try{const o=JSON.parse(j||'null');if(o&&o.itens&&typeof o.itens==='object') dev=o;}catch(e){}
+  devDesenhar();
+}
+function devLinha(g){
+  const it=dev.itens[g.k]||{},s=it.s||'nao';
+  return `<div class="drow ${s}" data-k="${esc(g.k)}">
+    <div class="nm"><b>${esc(g.nome)}</b><span>${g.n} servidor${g.n===1?'':'es'}${it.d?' · '+esc(DST[s].toLowerCase())+' em '+esc(brData(it.d)):''}</span></div>
+    <div class="seg" role="group" aria-label="Situação de ${esc(g.nome)}">${['ok','pend','nao'].map(v=>`<button type="button" data-s="${v}" class="${s===v?'on':''}" aria-pressed="${s===v}">${DST[v]}</button>`).join('')}</div>
+    <div class="obs">${s!=='nao'?`<input type="date" data-f="d" value="${esc(it.d||'')}" aria-label="Data da entrega">`:''}<textarea data-f="o" rows="1" placeholder="${s==='pend'?'Descreva as pendências…':'Observação (opcional)'}" aria-label="Observação de ${esc(g.nome)}">${esc(it.o||'')}</textarea></div>
+  </div>`;
+}
+function devResumo(L){
+  const c={ok:0,pend:0,nao:0};L.forEach(g=>c[devSit(g.k)]++);
+  const bt=(v,t,n,cl)=>`<button type="button" class="${cl||''} ${devFiltro===v?'on':''}" data-flt="${v}"><small>${t}</small><b>${n}</b></button>`;
+  $('#dSum').innerHTML=bt('todos','Todos os setores',L.length,'')+bt('ok','Entregues',c.ok,'ok')+bt('pend','Com pendências',c.pend,'pend')+bt('nao','Não entregues',c.nao,'nao');
+}
+function devDesenhar(){
+  const box=$('#dLista');
+  if(!pessoal||!GH.size){devResumo([]);box.innerHTML='<div class="empty" style="padding:24px"><h2>Hierarquia de pessoal não carregada</h2><p class="muted">Os setores vêm da Hierarquia de Pessoal. Abra-a e clique em <b>Atualizar do Centi</b> ao menos uma vez.</p></div>';return;}
+  const L=devSetores();devResumo(L);
+  const q=norm(devBusca);
+  const V=L.filter(g=>(devFiltro==='todos'||devSit(g.k)===devFiltro)&&(!q||norm(g.nome).includes(q)));
+  box.innerHTML=V.length?V.map(devLinha).join(''):'<p class="muted" style="padding:18px">Nenhum setor nesta lista.</p>';
+}
+function devMudar(k,campos){
+  const it=Object.assign({},dev.itens[k]||{},campos);
+  if(it.s==='nao'){delete it.d;}
+  else if(!it.d) it.d=hoje();
+  const g=devSetores().find(x=>x.k===k);if(g) it.nome=g.nome;
+  it.u=new Date().toISOString();
+  if(it.s==='nao'&&!(it.o||'').trim()) delete dev.itens[k];else dev.itens[k]=it;
+  devAgendar();
+}
+$('#dLista').addEventListener('click',ev=>{
+  const b=ev.target.closest('.seg button');if(!b) return;
+  const row=b.closest('.drow'),k=row.dataset.k;
+  const o=row.querySelector('textarea');
+  devMudar(k,{s:b.dataset.s,o:o?o.value:''});
+  const g=devSetores().find(x=>x.k===k);if(!g) return;
+  if(devFiltro!=='todos'&&devFiltro!==devSit(k)){devDesenhar();return;}     // saiu do filtro atual
+  row.outerHTML=devLinha(g);devResumo(devSetores());
+});
+$('#dLista').addEventListener('input',ev=>{
+  const f=ev.target.dataset&&ev.target.dataset.f;if(!f) return;
+  const k=ev.target.closest('.drow').dataset.k;
+  devMudar(k,{[f]:ev.target.value,s:devSit(k)});
+});
+$('#dSum').addEventListener('click',ev=>{const b=ev.target.closest('[data-flt]');if(!b) return;devFiltro=b.dataset.flt;devDesenhar();});
+$('#dBusca').addEventListener('input',ev=>{devBusca=ev.target.value;devDesenhar();});
+$('#dMes').addEventListener('change',devCarregar);$('#dAno').addEventListener('change',devCarregar);
+window.addEventListener('pagehide',devSalvar);
+$('#dCsv').addEventListener('click',()=>{
+  if(!GH.size){toast('A hierarquia de pessoal não está carregada.');return;}
+  const c=v=>'"'+String(v==null?'':v).replace(/"/g,'""')+'"';
+  const rows=[['Setor','Servidores','Situação','Data','Observação']].concat(devSetores().map(g=>{const it=dev.itens[g.k]||{};return [g.nome,g.n,DST[devSit(g.k)],brData(it.d),(it.o||'').replace(/\s*\n\s*/g,' ')];}));
+  const csv='﻿'+rows.map(r=>r.map(c).join(';')).join('\r\n');
+  const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([csv],{type:'text/csv;charset=utf-8'}));a.download='controle-devolucao-espelhos-'+(devRef||'mes')+'.csv';
+  document.body.appendChild(a);a.click();setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove();},4000);
+});
+(function(){
+  const n=new Date(),a=new Date(n.getFullYear(),n.getMonth()-1,1);      // padrão: mês anterior
+  $('#dMes').innerHTML=MESES.map((m,i)=>'<option value="'+(i+1)+'">'+m+'</option>').join('');
+  $('#dMes').value=String(a.getMonth()+1);$('#dAno').value=a.getFullYear();
+})();
+
 /* ---------- início ---------- */
 (async function init(){
   themeBtn();stampsUi();
@@ -615,6 +762,7 @@ try{matchMedia('(prefers-color-scheme: dark)').addEventListener('change',themeBt
     }
   }catch(e){dbh=null;}
   montarHierarquia();stampsUi();
+  await devCarregar();aba();
   carga(false);
   if(!pessoal) toast('A hierarquia de pessoal ainda não está salva no servidor. Abra a Hierarquia de Pessoal e clique em Atualizar do Centi.');
 })();

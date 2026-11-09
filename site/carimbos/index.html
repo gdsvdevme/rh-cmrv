@@ -785,7 +785,7 @@ function lerCabecalho(txt){
 /* ---------- gerar o espelho direto do Centi (FP170) ---------- */
 const MESES=['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'];
 (function iniciarCentiUi(){
-  const n=new Date(),a=new Date(n.getFullYear(),n.getMonth()-1,1);        // padrão: mês anterior (o do mês atual ainda não fecha)
+  const a=new Date();                                                       // padrão: mês atual (troque se quiser outro)
   $('#cMes').innerHTML=MESES.map((m,i)=>'<option value="'+(i+1)+'">'+m+'</option>').join('');
   $('#cMes').value=String(a.getMonth()+1);$('#cAno').value=a.getFullYear();
   $('#cGerar').addEventListener('click',gerarDoCenti);
@@ -1296,7 +1296,7 @@ $('#dCsv').addEventListener('click',()=>{
   document.body.appendChild(a);a.click();setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove();},4000);
 });
 (function(){
-  const n=new Date(),a=new Date(n.getFullYear(),n.getMonth()-1,1);      // padrão: mês anterior
+  const a=new Date();                                                     // padrão: mês atual (troque se quiser outro)
   $('#dMes').innerHTML=MESES.map((m,i)=>'<option value="'+(i+1)+'">'+m+'</option>').join('');
   $('#dMes').value=String(a.getMonth()+1);$('#dAno').value=a.getFullYear();
 })();

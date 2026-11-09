@@ -24,12 +24,24 @@ const MESES=['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agos
   $('#cRes').addEventListener('click',ev=>{const li=ev.target.closest('li[data-i]');if(!li) return;pessoaUnica=achados[+li.dataset.i];$('#cBusca').value='';$('#cRes').hidden=true;rotuloGerar();});
 })();
 /* ---------- gerar só de uma pessoa ---------- */
-let pessoaUnica=null,achados=[];
+let pessoaUnica=null,achados=[],proximaUnica=false,origemUnica=false;   // origemUnica: o PDF aberto foi gerado de uma pessoa só (sai sem capa)
 function rotuloGerar(){
   const p=pessoaUnica,um=$('#cUm').checked;
   $('#cEscolhida').hidden=!p;$('#cBuscaBox').hidden=!!p;
   if(p) $('#cEscNome').innerHTML='<b>'+esc(titulo(p.Nome))+'</b><br><span class="muted">mat. '+esc(p.Matricula)+(p.Cargo?' · '+esc(titulo(p.Cargo)):'')+'</span>';
   $('#cGerar').textContent=um?(p?'Gerar espelho de '+titulo(p.Nome).split(' ')[0]+' no Centi':'Escolha a pessoa acima'):'Gerar espelhos no Centi';
+}
+/* matrículas ativas na referência (cubo funcionário do Centi), guardadas por mês; null se não der para consultar */
+const ativosMesCache=new Map();
+async function matriculasAtivasDoMes(mes,ano){
+  if(!(mes>=1&&mes<=12&&ano>=2000&&ano<=2100)) return null;
+  const k=mes+'/'+ano;
+  if(ativosMesCache.has(k)) return ativosMesCache.get(k);
+  try{
+    const r=await PB.centi.cubo(mes,ano),set=new Set(((r&&r.Data)||[]).map(x=>digs(x.MATRICULA)).filter(Boolean));
+    if(!set.size) return null;
+    ativosMesCache.set(k,set);return set;
+  }catch(e){return null;}
 }
 async function buscarPessoa(){
   const t=$('#cBusca').value.trim(),box=$('#cRes');
@@ -39,7 +51,12 @@ async function buscarPessoa(){
     if(!PB.centi.user) return;
     const r=await PB.centi.licencaBusca(t);
     if($('#cBusca').value.trim()!==t) return;                          // a pessoa já digitou outra coisa
-    achados=((r&&r.Data)||[]).slice(0,10);
+    /* só ativos, e só quem consta no quadro do mês escolhido (quem tem espelho nele): rescindidos e inativos ficam de fora */
+    let lista=((r&&r.Data)||[]).filter(x=>/^ativo$/i.test(x.Situacao||''));
+    const ativosMes=await matriculasAtivasDoMes(+$('#cMes').value,+$('#cAno').value);
+    if(ativosMes) lista=lista.filter(x=>ativosMes.has(digs(x.Matricula)));
+    if($('#cBusca').value.trim()!==t) return;
+    achados=lista.slice(0,10);
     box.innerHTML=achados.length?'<ul class="g-l">'+achados.map((x,i)=>`<li data-i="${i}" style="padding-left:12px"><div class="nm">${esc(titulo(x.Nome))}${/^ativo$/i.test(x.Situacao)?'':'<span class="tag nao" style="margin-left:6px;display:inline-block;width:auto">'+esc(x.Situacao||'inativo')+'</span>'}<span>mat. ${esc(x.Matricula)}${x.Cargo?' · '+esc(titulo(x.Cargo)):''}</span></div></li>`).join('')+'</ul>':'<div class="empty" style="padding:14px">Ninguém encontrado.</div>';
     box.hidden=false;
   }catch(e){toast('Não foi possível buscar: '+(e&&e.message||e));}
@@ -86,6 +103,7 @@ async function gerarDoCenti(){
     const doc=await pdfjsLib.getDocument({data:pdf.slice()}).promise;
     if(!um&&doc.numPages<2){carga(false);toast('O Centi ainda não tem o espelho de '+MESES[mes-1]+'/'+ano+' (veio sem servidores). Escolha outro mês.');return;}
     carga(false);
+    proximaUnica=!!um;
     await abrirPdf(new File([pdf],nome,{type:'application/pdf'}));
   }catch(e){
     carga(false);console.error(e);
@@ -94,6 +112,7 @@ async function gerarDoCenti(){
 }
 async function abrirPdf(file){
   if(!file) return;
+  origemUnica=proximaUnica;proximaUnica=false;
   if(!/pdf$/i.test(file.name)&&file.type!=='application/pdf'){toast('Escolha um arquivo PDF.');return;}
   carga(true,'Lendo o PDF…','Abrindo '+file.name,0);
   try{

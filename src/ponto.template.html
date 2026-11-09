@@ -522,7 +522,7 @@ function csv(){
 function rerender(){renderPhone();renderAdmin();}
 $('#resetBtn').addEventListener('click',()=>{seedRegs();resetForm();ph.scr='login';ph.ult=null;newId=null;filt={s:'',t:'',l:''};rerender();toast('Simulação reiniciada.');});
 setInterval(()=>{const t=new Date();$('#clockAdm').textContent=fmtDT(t);const c=$('#pClock');if(c) c.firstChild.nodeValue=fmtH(t);},1000);
-try{matchMedia('(prefers-color-scheme: dark)').addEventListener('change',themeBtn);new MutationObserver(themeBtn).observe(document.documentElement,{attributes:true,attributeFilter:['data-theme']});}catch(e){}
+observarTema();
 seedRegs();themeBtn();rerender();
 </script>
 <script>

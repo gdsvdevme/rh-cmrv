@@ -419,7 +419,7 @@ bd.addEventListener('dragstart',e=>{const c=e.target.closest('.card');if(!c) ret
 bd.addEventListener('dragend',()=>bd.querySelectorAll('.dragging,.over').forEach(x=>x.classList.remove('dragging','over')));
 bd.addEventListener('dragover',e=>{const c=e.target.closest('.col');if(!c) return;e.preventDefault();bd.querySelectorAll('.over').forEach(x=>{if(x!==c) x.classList.remove('over');});c.classList.add('over');});
 bd.addEventListener('drop',e=>{const c=e.target.closest('.col');if(!c) return;e.preventDefault();const id=e.dataTransfer.getData('text/plain');bd.querySelectorAll('.over,.dragging').forEach(x=>x.classList.remove('over','dragging'));if(id) mover(id,c.dataset.col);});
-try{matchMedia('(prefers-color-scheme: dark)').addEventListener('change',themeBtn);new MutationObserver(themeBtn).observe(document.documentElement,{attributes:true,attributeFilter:['data-theme']});}catch(e){}
+observarTema();
 /* mantém o quadro em dia: colegas mexem nas tarefas da equipe, e a virada do mês tira as concluídas.
    Tempo real pelo servidor (aparece na hora) e, por garantia, uma conferência a cada 15 s (cobre queda de conexão e tarefa que virou privada). */
 let ouvindo=false;

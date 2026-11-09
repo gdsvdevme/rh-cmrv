@@ -560,7 +560,7 @@ document.addEventListener('click',e=>{
   const q=e.target.closest('#view [data-r]');if(q&&resultados){abrirServidor(resultados.lista[+q.dataset.r]);return;}
   const m=e.target.closest('#view [data-m]');if(m) abrirPorMatricula(m.dataset.m);
 });
-try{matchMedia('(prefers-color-scheme: dark)').addEventListener('change',themeBtn);new MutationObserver(themeBtn).observe(document.documentElement,{attributes:true,attributeFilter:['data-theme']});}catch(e){}
+observarTema();
 
 (function init(){
   const c=lerLS(CFG_LS);if(c&&typeof c==='object') cfg=Object.assign(cfg,c);

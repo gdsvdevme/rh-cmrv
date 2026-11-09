@@ -683,7 +683,7 @@ dv.addEventListener('drop',e=>{
 });
 $('#expBtn').addEventListener('click',()=>{allOpen=!allOpen;$('#expBtn').textContent=allOpen?'Recolher tudo':'Expandir tudo';render();});
 $('#q').addEventListener('input',render);$('#ft').addEventListener('change',render);
-try{matchMedia('(prefers-color-scheme: dark)').addEventListener('change',themeBtn);new MutationObserver(themeBtn).observe(document.documentElement,{attributes:true,attributeFilter:['data-theme']});}catch(e){}
+observarTema();
 
 (function init(){
   try{const d=JSON.parse(localStorage.getItem(LS)||'null');if(d&&Array.isArray(d.pessoas)) dados=d;}catch(e){}

@@ -1,6 +1,7 @@
 const LS='rhcrv-carimbos-v1';
 const WORKER_URL='https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
 const PADRAO={id:'padrao',nome:'Atesto jornada 40h (padrão)',src:'data:image/png;base64,/*STAMP_B64*/',padrao:true};
+/* atenção: este norm também reduz espaços repetidos; o de src/shared/norm.js (usado nas outras páginas) não. Por isso não é o compartilhado. */
 const norm=s=>String(s||'').normalize('NFD').replace(/[̀-ͯ]/g,'').toLowerCase().replace(/\s+/g,' ').trim();
 const digs=s=>String(s||'').replace(/\D/g,'').replace(/^0+/,'');
 const MIN=new Set(['de','da','do','das','dos','e','a','o']),ROMAN=/^(i|ii|iii|iv|v|vi|vii|viii|ix|x)$/i;

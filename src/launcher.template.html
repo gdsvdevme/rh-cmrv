@@ -320,8 +320,8 @@ function mover(de,para){
 })();
 $('#q').addEventListener('input',e=>{filter=e.target.value;render();});
 document.addEventListener('keydown',e=>{if(e.key==='Escape'&&!$('#modal').hidden) closeModal();});
-document.querySelector('#themeBtn').addEventListener('click',()=>{const n=isDark()?'light':'dark';document.documentElement.setAttribute('data-theme',n);try{localStorage.setItem(TEMA_KEY,n);}catch(e){}});
-try{matchMedia('(prefers-color-scheme: dark)').addEventListener('change',()=>{render();themeBtn();});new MutationObserver(()=>{render();themeBtn();}).observe(document.documentElement,{attributes:true,attributeFilter:['data-theme']});}catch(e){}
+ligarTema();                                   // o clique troca o tema; o observador abaixo redesenha o painel
+observarTema(()=>{render();themeBtn();});
 
 function migrar(){
   if(!st.v||st.v<2){ // sistemas novos entram no painel salvo

@@ -441,7 +441,7 @@ document.addEventListener('click',e=>{
   const st=e.target.closest('.stat');if(st){filtro=filtro===st.dataset.f?'':st.dataset.f;render();return;}
   const r=e.target.closest('#view [data-i]');if(r) dlgPessoa(+r.dataset.i);
 });
-try{matchMedia('(prefers-color-scheme: dark)').addEventListener('change',themeBtn);new MutationObserver(themeBtn).observe(document.documentElement,{attributes:true,attributeFilter:['data-theme']});}catch(e){}
+observarTema();
 
 (function init(){
   try{const c=JSON.parse(localStorage.getItem(CFG_LS)||'null');if(c&&c.dias) cfg=Object.assign(cfg,c);}catch(e){}

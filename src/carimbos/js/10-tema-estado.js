@@ -1,5 +1,6 @@
 /* ---------- tema ---------- */
 ligarTema();
+/* tela de carregamento com título e barra de progresso (t, s, p); as outras páginas usam o carga(on,msg) de src/shared/carga.js */
 function carga(on,t,s,p){
   $('#load').hidden=!on;document.body.classList.toggle('carregando',!!on);
   if(t) $('#ldT').textContent=t;if(s!=null) $('#ldS').textContent=s;if(p!=null) $('#ldB').style.width=Math.round(p*100)+'%';
@@ -41,6 +42,7 @@ function aplicarConfig(c){
 
 /* ---------- hierarquia (a mesma da Hierarquia de Pessoal) ---------- */
 function montarHierarquia(){
+  devSetoresCache=null;
   GH=new Map();idxMat=new Map();idxNome=new Map();
   ((pessoal&&pessoal.pessoas)||[]).forEach(p=>{
     const g=grupoInfo(p.g);if(!GH.has(g.k)) GH.set(g.k,g);

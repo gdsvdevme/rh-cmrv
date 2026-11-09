@@ -67,7 +67,6 @@ $('#file').addEventListener('change',ev=>{const f=ev.target.files[0];ev.target.v
 ['dragenter','dragover'].forEach(t=>drop.addEventListener(t,ev=>{ev.preventDefault();drop.classList.add('over');}));
 ['dragleave','drop'].forEach(t=>drop.addEventListener(t,ev=>{ev.preventDefault();drop.classList.remove('over');}));
 drop.addEventListener('drop',ev=>{const f=ev.dataTransfer.files[0];if(f) abrirPdf(f);});
-try{matchMedia('(prefers-color-scheme: dark)').addEventListener('change',themeBtn);new MutationObserver(themeBtn).observe(document.documentElement,{attributes:true,attributeFilter:['data-theme']});
-  }catch(e){}
+observarTema();
 
 

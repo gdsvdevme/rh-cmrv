@@ -1,6 +1,5 @@
 /* Núcleo compartilhado por todas as páginas (o build.py injeta onde o modelo tem o marcador SHARED:core). Mudou aqui, mudou em todas. */
 const TEMA_KEY='rhcrv-tema';
-let TOAST_MS=4500;                                  // a página pode trocar: TOAST_MS=3500;
 const $=s=>document.querySelector(s);
 const esc=s=>String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const ICO2={sun:'<circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/>',
@@ -18,5 +17,10 @@ function ligarTema(depois){
     try{localStorage.setItem(TEMA_KEY,n);}catch(e){}
     themeBtn();if(depois) depois();
   });
+}
+/* reage a mudanças do tema (preferência do sistema ou atributo data-theme); por padrão só refaz o botão */
+function observarTema(fn){
+  fn=fn||themeBtn;
+  try{matchMedia('(prefers-color-scheme: dark)').addEventListener('change',fn);new MutationObserver(fn).observe(document.documentElement,{attributes:true,attributeFilter:['data-theme']});}catch(e){}
 }
 try{const s=localStorage.getItem(TEMA_KEY);document.documentElement.setAttribute('data-theme',s==='dark'?'dark':'light');}catch(e){document.documentElement.setAttribute('data-theme','light');}

@@ -630,7 +630,6 @@ const PB=(function(){
 const HOME_URL="../";
 /* Núcleo compartilhado por todas as páginas (o build.py injeta onde o modelo tem o marcador SHARED:core). Mudou aqui, mudou em todas. */
 const TEMA_KEY='rhcrv-tema';
-let TOAST_MS=4500;                                  // a página pode trocar: TOAST_MS=3500;
 const $=s=>document.querySelector(s);
 const esc=s=>String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const ICO2={sun:'<circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/>',
@@ -649,8 +648,14 @@ function ligarTema(depois){
     themeBtn();if(depois) depois();
   });
 }
+/* reage a mudanças do tema (preferência do sistema ou atributo data-theme); por padrão só refaz o botão */
+function observarTema(fn){
+  fn=fn||themeBtn;
+  try{matchMedia('(prefers-color-scheme: dark)').addEventListener('change',fn);new MutationObserver(fn).observe(document.documentElement,{attributes:true,attributeFilter:['data-theme']});}catch(e){}
+}
 try{const s=localStorage.getItem(TEMA_KEY);document.documentElement.setAttribute('data-theme',s==='dark'?'dark':'light');}catch(e){document.documentElement.setAttribute('data-theme','light');}
-/* Aviso rápido (#toast), compartilhado (marcador SHARED:toast). A duração vem de TOAST_MS, definido no núcleo. */
+/* Aviso rápido (#toast), compartilhado (marcador SHARED:toast). A página pode trocar a duração depois do marcador: TOAST_MS=3500; */
+let TOAST_MS=4500;
 function toast(m){const t=$('#toast');t.textContent=m;t.hidden=false;clearTimeout(toast.t);toast.t=setTimeout(()=>t.hidden=true,TOAST_MS);}
 /* Tela de carregamento (#load) simples, compartilhada (marcador SHARED:carga). */
 function carga(on,msg){const l=$('#load');if(!l) return;l.hidden=!on;document.body.classList.toggle('carregando',!!on);if(msg) $('#ldS').textContent=msg;}
@@ -925,7 +930,7 @@ bd.addEventListener('dragstart',e=>{const c=e.target.closest('.card');if(!c) ret
 bd.addEventListener('dragend',()=>bd.querySelectorAll('.dragging,.over').forEach(x=>x.classList.remove('dragging','over')));
 bd.addEventListener('dragover',e=>{const c=e.target.closest('.col');if(!c) return;e.preventDefault();bd.querySelectorAll('.over').forEach(x=>{if(x!==c) x.classList.remove('over');});c.classList.add('over');});
 bd.addEventListener('drop',e=>{const c=e.target.closest('.col');if(!c) return;e.preventDefault();const id=e.dataTransfer.getData('text/plain');bd.querySelectorAll('.over,.dragging').forEach(x=>x.classList.remove('over','dragging'));if(id) mover(id,c.dataset.col);});
-try{matchMedia('(prefers-color-scheme: dark)').addEventListener('change',themeBtn);new MutationObserver(themeBtn).observe(document.documentElement,{attributes:true,attributeFilter:['data-theme']});}catch(e){}
+observarTema();
 /* mantém o quadro em dia: colegas mexem nas tarefas da equipe, e a virada do mês tira as concluídas.
    Tempo real pelo servidor (aparece na hora) e, por garantia, uma conferência a cada 15 s (cobre queda de conexão e tarefa que virou privada). */
 let ouvindo=false;

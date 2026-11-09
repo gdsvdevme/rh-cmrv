@@ -30,7 +30,8 @@ import glob, os, sys
 root = os.path.dirname(os.path.abspath(__file__))
 args = sys.argv[1:]
 opt = lambda k, d: args[args.index(k) + 1] if k in args else d
-rd = lambda p: open(os.path.join(root, p), encoding='utf-8').read()
+from functools import lru_cache
+rd = lru_cache(maxsize=None)(lambda p: open(os.path.join(root, p), encoding='utf-8').read())     # cada arquivo é lido uma vez
 GERADO = '<!-- ARQUIVO GERADO por build.py a partir de src/. Não edite aqui: altere src/ e rode `python3 build.py`. -->\n'
 def wr(p, s):
     p = os.path.join(root, p); os.makedirs(os.path.dirname(p), exist_ok=True)
@@ -46,6 +47,7 @@ import re
 #   /*SHARED_CSS*/          cores e sombras comuns (src/shared/tokens.css)
 #   /*INCLUDE caminho*/     um arquivo de src/, ou, se for pasta, todos os arquivos dela em ordem alfabética (00-, 10-...)
 def incluir(m):
+    if '..' in m.group(1): sys.exit('INCLUDE não pode sair de src/: ' + m.group(1))
     alvo = os.path.join(root, 'src', m.group(1))
     nomes = sorted(glob.glob(os.path.join(alvo, '*'))) if os.path.isdir(alvo) else [alvo]
     return '\n'.join(open(n, encoding='utf-8').read().removesuffix('\n') for n in nomes)

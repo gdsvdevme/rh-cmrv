@@ -80,24 +80,22 @@
   </div>
 </div></div>
 <section class="devwrap" id="abaDev" hidden>
+  <div class="row dmes"><span class="muted">Mês</span>
+    <select id="dMes" aria-label="Mês"></select>
+    <input id="dAno" type="number" min="2000" max="2100" aria-label="Ano" style="width:84px">
+  </div>
   <section class="panel qb">
-    <h2>Dar baixa no ponto</h2>
+    <h2>Baixa individual</h2>
     <input id="qBusca" type="search" placeholder="Nome ou matrícula de quem deixou o espelho…" aria-label="Servidor que deixou o espelho" autocomplete="off" style="width:100%">
     <div id="qRes" class="qres" role="listbox" hidden></div>
     <div id="qUlt"></div>
   </section>
   <section class="panel">
-    <div class="row" style="align-items:center;gap:8px">
-      <h2 style="margin:0;flex:1 1 220px">Devolução por setor</h2>
-      <select id="dMes" aria-label="Mês"></select>
-      <input id="dAno" type="number" min="2000" max="2100" aria-label="Ano" style="width:84px">
-      <input id="dBusca" type="search" placeholder="Buscar setor" aria-label="Buscar setor" autocomplete="off" style="flex:1 1 160px;max-width:260px">
-      <button class="btn sm" id="dCsv" type="button">Planilha (CSV)</button>
-    </div>
-    <div class="dsum" id="dSum" style="margin-top:12px"></div>
-    <details class="ajuda"><summary>Como funciona</summary><p class="muted" style="margin:6px 0 0">Use <b>Dar baixa no ponto</b> quando o servidor deixar o espelho: digite o nome ou a matrícula e tecle Enter. Ao baixar o último servidor de um setor, ele passa a <b>devolvido ao RH</b>. Clique no nome do setor para ver os servidores, marcar a situação (<b>devolvido ao RH</b>, <b>com pendências</b> ou <b>não devolvido</b>), a entrega do RH ao setor e observações. As marcações ficam salvas no servidor, mês a mês.</p></details>
+    <h2 style="margin-bottom:10px">Baixa por hierarquia</h2>
+    <select id="hSel" aria-label="Hierarquia" style="width:100%"></select>
+    <p class="muted" id="hInfo" style="margin:8px 0 10px"></p>
+    <div class="row"><button class="btn primary" id="hBaixar" type="button" disabled>Dar baixa em todos</button><button class="btn sm" id="hDesfazer" type="button" hidden>Desfazer as baixas desta hierarquia</button></div>
   </section>
-  <div class="dlist panel" id="dLista" style="padding:0"></div>
 </section>
 </div></main>
 <dialog id="dlg"></dialog>

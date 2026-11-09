@@ -26,7 +26,7 @@ let saveT=null;
 function guardar(){
   clearTimeout(saveT);
   saveT=setTimeout(async()=>{
-    const json=JSON.stringify({custom,sel,pos,fundo:$('#optFundo').checked,capas:$('#optCapas').checked});
+    const json=JSON.stringify({custom,sel,pos,fundoBranco:$('#optFundo').checked,capas:$('#optCapas').checked});
     if(dbh){try{await dbh.doc('carimbos/config').set({json});return;}catch(e){toast('Não foi possível salvar as preferências no servidor.');}}
     try{localStorage.setItem(LS,json);}catch(e){}
   },400);
@@ -36,7 +36,7 @@ function aplicarConfig(c){
   if(Array.isArray(c.custom)) custom=c.custom.filter(s=>s&&s.id&&s.src);
   if(c.sel&&stampsTodos().some(s=>s.id===c.sel)) sel=c.sel;
   if(c.pos&&c.pos.w>0) pos=c.pos;
-  if(typeof c.fundo==='boolean') $('#optFundo').checked=c.fundo;
+  if(typeof c.fundoBranco==='boolean') $('#optFundo').checked=c.fundoBranco;   // chave nova: a antiga ('fundo') ligava o fundo branco por padrão
   if(typeof c.capas==='boolean') $('#optCapas').checked=c.capas;
 }
 

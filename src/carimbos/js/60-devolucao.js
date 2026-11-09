@@ -225,7 +225,7 @@ function qDesenhar(){
   const box=$('#qRes');
   if(!qLista.length){box.hidden=true;return;}
   box.innerHTML=qLista.map((p,i)=>{const b=dev.baixas[pessoaId(p)],g=GH.get(p._k);
-    return `<button type="button" role="option" data-i="${i}" class="${i===qSel?'on':''}"><span><b>${esc(titulo(p.n))}</b><small>${p.m?'mat. '+esc(p.m)+' · ':''}${esc(g?g.nome:'')}</small></span>${b?'<span class="ja">já baixado '+esc(brData(b.d).slice(0,5))+'</span>':''}</button>`;}).join('');
+    return `<div class="qrow${i===qSel?' on':''}" data-i="${i}"><span class="qn"><b>${esc(titulo(p.n))}</b><small>${p.m?'mat. '+esc(p.m)+' · ':''}${esc(g?g.nome:'')}</small></span><label class="sw"><input type="checkbox" data-qi="${i}"${b?' checked':''} aria-label="Dar baixa no ponto de ${esc(p.n)}"><span>${b?'Baixado '+esc(brData(b.d).slice(0,5)):'Dar baixa'}</span></label></div>`;}).join('');
   box.hidden=false;
 }
 function qBuscar(){
@@ -254,7 +254,24 @@ $('#qBusca').addEventListener('keydown',ev=>{
   else if(ev.key==='Enter'){ev.preventDefault();qConfirmar(qLista[qSel]);}
   else if(ev.key==='Escape'){$('#qBusca').value='';qLista=[];qDesenhar();}
 });
-$('#qRes').addEventListener('click',ev=>{const b=ev.target.closest('button[data-i]');if(b) qConfirmar(qLista[+b.dataset.i]);});
+/* a baixa só acontece ao ligar o interruptor do servidor (clicar na linha não faz nada); desligar desfaz */
+async function qToggle(i,marcar){
+  const p=qLista[i];if(!p) return;
+  const id=pessoaId(p);
+  if(!marcar){
+    if(!dev.baixas[id]) return;
+    devDesfazer(id);qNovo='';qUltimas();devRedesenhaLinha(p._k);devResumo(devSetores());qDesenhar();
+    toast('Baixa desfeita: '+titulo(p.n));return;
+  }
+  if(dev.baixas[id]) return;
+  await devPorGarantir();
+  const completou=devBaixar(p),g=GH.get(p._k);
+  qNovo=id;qUltimas();devRedesenhaLinha(p._k);devResumo(devSetores());
+  if(qLista[i]===p) qDesenhar();                                       // mostra o interruptor ligado
+  toast('Baixa no ponto: '+titulo(p.n)+(completou?' · '+(g?g.nome:'setor')+' completo, devolvido ao RH':''));
+  setTimeout(()=>{if(qLista[i]===p){$('#qBusca').value='';qLista=[];qDesenhar();$('#qBusca').focus();}},900);   // pronto para o próximo
+}
+$('#qRes').addEventListener('change',ev=>{const t=ev.target;if(t.dataset&&t.dataset.qi!=null) qToggle(+t.dataset.qi,t.checked);});
 $('#qUlt').addEventListener('click',ev=>{
   const b=ev.target.closest('[data-undo]');if(!b) return;
   const id=b.dataset.undo,reg=dev.baixas[id];devDesfazer(id);qNovo='';qUltimas();

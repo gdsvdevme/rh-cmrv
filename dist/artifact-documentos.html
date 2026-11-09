@@ -171,8 +171,8 @@ input,select,textarea{border-radius:12px}
     <section class="prev">
       <div class="acoes">
         <button class="btn primary" id="docxBtn" type="button"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v12M7 11l5 5 5-5M4 20h16"/></svg>Baixar Word (.docx)</button>
-        <button class="btn primary" id="pdfaBtn" type="button" title="PDF/A-2u, formato aceito pelo Tribunal de Contas"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 3H6a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9zM14 3v6h6"/></svg>Baixar PDF/A (Tribunal de Contas)</button>
-        <button class="btn" id="pdfBtn" type="button"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 9V3h12v6M6 18H4v-8h16v8h-2M6 14h12v7H6z"/></svg>Imprimir / Salvar PDF</button>
+        <button class="btn primary" id="pdfaBtn" type="button" title="PDF/A-2u, formato aceito pelo Tribunal de Contas"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 3H6a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9zM14 3v6h6"/></svg>Baixar PDF/A</button>
+        <button class="btn" id="pdfBtn" type="button"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 9V3h12v6M6 18H4v-8h16v8h-2M6 14h12v7H6z"/></svg>Imprimir</button>
       </div>
       <div class="desk"><div id="fit"><div id="folha"></div></div></div>
       <p class="hint" style="margin-top:10px">Na janela de impressão, escolha <b>Salvar como PDF</b>, tamanho A4 e <b>sem margens</b>. A prévia é uma aproximação; o Word usa a fonte instalada no computador.</p>
@@ -477,7 +477,9 @@ const PB=(function(){
       if(!cs) throw erroSessao();
       const b=new Uint8Array(await blob.arrayBuffer());let bin='';
       for(let i=0;i<b.length;i+=8192) bin+=String.fromCharCode.apply(null,b.subarray(i,i+8192));
-      const r=await fetch(CENTI_BASE+'/api/pdfa',{method:'POST',headers:{'Content-Type':'application/json','x-centi-user':cs.user,'x-centi-token':cs.token},body:JSON.stringify({docx:btoa(bin)})});
+      const r=await fetch(CENTI_BASE+'/api/pdfa',{method:'POST',headers:{'Content-Type':'application/json','x-centi-user':cs.user,'x-centi-token':cs.token,'x-centi-refresh':cs.refreshToken||''},body:JSON.stringify({docx:btoa(bin)})});
+      const nt=r.headers.get('x-centi-token'),nr=r.headers.get('x-centi-refresh');
+      if(nt){cs.token=nt;if(nr)cs.refreshToken=nr;saveAuth();}
       if(!r.ok){let j=null;try{j=await r.json();}catch(e){}if(r.status===401) clearAuth();const err=new Error((j&&j.message)||('PDF/A: HTTP '+r.status));err.status=r.status;throw err;}
       return r.blob();
     },

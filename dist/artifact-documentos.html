@@ -171,6 +171,7 @@ input,select,textarea{border-radius:12px}
     <section class="prev">
       <div class="acoes">
         <button class="btn primary" id="docxBtn" type="button"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v12M7 11l5 5 5-5M4 20h16"/></svg>Baixar Word (.docx)</button>
+        <button class="btn primary" id="pdfaBtn" type="button" title="PDF/A-2u, formato aceito pelo Tribunal de Contas"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 3H6a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9zM14 3v6h6"/></svg>Baixar PDF/A (Tribunal de Contas)</button>
         <button class="btn" id="pdfBtn" type="button"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 9V3h12v6M6 18H4v-8h16v8h-2M6 14h12v7H6z"/></svg>Imprimir / Salvar PDF</button>
       </div>
       <div class="desk"><div id="fit"><div id="folha"></div></div></div>
@@ -471,6 +472,15 @@ const PB=(function(){
     /* CPF, nascimento, identidade e endereço de UM servidor (FP001 + DM017), pelo Id da busca -> {Nome,Cpf,DataNascimento,Identidade,Endereco}; nada é guardado */
     servidorDados(id){return centiCall('servidor-dados',{id});},
     licencaBusca(termo){return centiCall('licenca-busca',{termo});},
+    /* Converte um .docx (Blob) em PDF/A-2u no serviço pdfa -> Blob application/pdf */
+    async pdfa(blob){
+      if(!cs) throw erroSessao();
+      const b=new Uint8Array(await blob.arrayBuffer());let bin='';
+      for(let i=0;i<b.length;i+=8192) bin+=String.fromCharCode.apply(null,b.subarray(i,i+8192));
+      const r=await fetch(CENTI_BASE+'/api/pdfa',{method:'POST',headers:{'Content-Type':'application/json','x-centi-user':cs.user,'x-centi-token':cs.token},body:JSON.stringify({docx:btoa(bin)})});
+      if(!r.ok){let j=null;try{j=await r.json();}catch(e){}if(r.status===401) clearAuth();const err=new Error((j&&j.message)||('PDF/A: HTTP '+r.status));err.status=r.status;throw err;}
+      return r.blob();
+    },
     search(entity,filters,start,depth){
       return centiCall('restauth/searchentity',{Depth:depth||50,Entity:entity,Start:start==null?1:start,
         Filters:(filters||[]).map(f=>Object.assign({List:false,TypeFilter:0,between:''},f))});
@@ -1007,6 +1017,17 @@ $('#docxBtn').addEventListener('click',async()=>{
     const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=t.arquivo(valores)+'.docx';
     document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(a.href),4000);
   }catch(e){toast('Não foi possível gerar o Word: '+(e.message||e));}
+  b.disabled=false;
+});
+$('#pdfaBtn').addEventListener('click',async()=>{
+  const b=$('#pdfaBtn');b.disabled=true;
+  try{
+    if(!(await garantirSessao())) throw new Error('entre com o usuário do Centi.');
+    const t=TIPOS[tipoAtual];
+    const pdf=await PB.centi.pdfa(await gerarDocx(t.blocos(valores,cfg),t));
+    const a=document.createElement('a');a.href=URL.createObjectURL(pdf);a.download=t.arquivo(valores)+'.pdf';
+    document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(a.href),4000);
+  }catch(e){toast('Não foi possível gerar o PDF/A: '+(e.message||e));}
   b.disabled=false;
 });
 $('#pdfBtn').addEventListener('click',()=>{

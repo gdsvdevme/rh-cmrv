@@ -2,5 +2,5 @@
   "buildCommand": "",
   "outputDirectory": "site",
   "cleanUrls": true,
-  "functions": { "api/centi.js": { "maxDuration": 60 } }
+  "functions": { "api/centi.js": { "maxDuration": 60 }, "api/pdfa.js": { "maxDuration": 60 } }
 }

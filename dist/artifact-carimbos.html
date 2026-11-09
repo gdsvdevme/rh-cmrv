@@ -261,7 +261,7 @@ input,select,textarea{border-radius:12px}
 <section class="devwrap" id="abaDev" hidden>
   <section class="panel">
     <h2 style="margin-bottom:6px">Controle de devolução dos espelhos de ponto</h2>
-    <p class="muted" style="margin:0 0 10px">Marque, para cada setor ou gabinete, se devolveu o espelho de ponto do mês: <b>entregue</b>, <b>entregue com pendências</b> ou <b>não entregue</b>, com uma observação se precisar. Marque também quando o <b>RH entregou o espelho</b> ao setor, com o recibo assinado em PDF (opcional, guardado por 90 dias). As marcações ficam salvas no servidor, mês a mês.</p>
+    <p class="muted" style="margin:0 0 10px">Marque, para cada setor ou gabinete, se devolveu o espelho de ponto do mês: <b>devolvido ao RH</b>, <b>devolvido com pendências</b> ou <b>não devolvido</b>, com uma observação se precisar. Marque também quando o <b>RH entregou o espelho</b> ao setor, com o recibo assinado em PDF (opcional, guardado por 90 dias). As marcações ficam salvas no servidor, mês a mês.</p>
     <div class="row" style="align-items:center;gap:8px">
       <select id="dMes" aria-label="Mês"></select>
       <input id="dAno" type="number" min="2000" max="2100" aria-label="Ano" style="width:84px">
@@ -1093,7 +1093,7 @@ const ICONES_ESP={
 };
 const TELAS_ESP={
   carimbar:{nome:'Carimbar',desc:'Carimbe os espelhos de ponto em PDF e organize pela hierarquia, com uma capa para cada setor ou gabinete.'},
-  devolucao:{nome:'Controle de devolução',desc:'Acompanhe quais setores devolveram o espelho de ponto: entregue, entregue com pendências ou não entregue, com observação.'}
+  devolucao:{nome:'Controle de devolução',desc:'Acompanhe quais setores devolveram o espelho de ponto: devolvido ao RH, devolvido com pendências ou não devolvido, com observação.'}
 };
 function cartaoEsp(k,t){
   return `<a class="card2" href="#${k}"><span class="ic" aria-hidden="true"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">${ICONES_ESP[k]}</svg></span><b>${esc(t.nome)}</b><span class="d">${esc(t.desc)}</span><span class="go">Abrir<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg></span></a>`;
@@ -1113,7 +1113,8 @@ function telaEsp(){
 window.addEventListener('hashchange',()=>{telaEsp();window.scrollTo(0,0);});
 
 /* ---------- controle de devolução ---------- */
-const DST={nao:'Não entregue',ok:'Entregue',pend:'Entregue com pendências'};
+const DST={nao:'Não devolvido',ok:'Devolvido ao RH',pend:'Devolvido com pendências'};
+const DST_EM={ok:'devolvido ao RH',pend:'devolvido com pendências'};   // frase da linha do setor (não dá para só baixar as maiúsculas: "RH")
 let dev={itens:{}},devFiltro='todos',devBusca='',devT=null,devRef='',devPend=false;
 const devKey=()=>{const m=+$('#dMes').value,a=+$('#dAno').value;return(a>=2000&&a<=2100)?a+'-'+String(m).padStart(2,'0'):'';};
 const hoje=()=>{const d=new Date();return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');};
@@ -1147,9 +1148,9 @@ async function devCarregar(){
 function devLinha(g){
   const it=dev.itens[g.k]||{},s=it.s||'nao';
   return `<div class="drow ${s}" data-k="${esc(g.k)}">
-    <div class="nm"><b>${esc(g.nome)}</b><span>${g.n} servidor${g.n===1?'':'es'}${it.d?' · '+esc(DST[s].toLowerCase())+' em '+esc(brData(it.d)):''}</span></div>
+    <div class="nm"><b>${esc(g.nome)}</b><span>${g.n} servidor${g.n===1?'':'es'}${it.d?' · '+esc(DST_EM[s])+' em '+esc(brData(it.d)):''}</span></div>
     <div class="seg" role="group" aria-label="Situação de ${esc(g.nome)}">${['ok','pend','nao'].map(v=>`<button type="button" data-s="${v}" class="${s===v?'on':''}" aria-pressed="${s===v}">${DST[v]}</button>`).join('')}</div>
-    <div class="obs">${s!=='nao'?`<input type="date" data-f="d" value="${esc(it.d||'')}" aria-label="Data da entrega">`:''}<textarea data-f="o" rows="1" placeholder="${s==='pend'?'Descreva as pendências…':'Observação (opcional)'}" aria-label="Observação de ${esc(g.nome)}">${esc(it.o||'')}</textarea></div>
+    <div class="obs">${s!=='nao'?`<input type="date" data-f="d" value="${esc(it.d||'')}" aria-label="Data da devolução">`:''}<textarea data-f="o" rows="1" placeholder="${s==='pend'?'Descreva as pendências…':'Observação (opcional)'}" aria-label="Observação de ${esc(g.nome)}">${esc(it.o||'')}</textarea></div>
     ${devRh(it)}
   </div>`;
 }
@@ -1171,7 +1172,7 @@ function devRh(it){
 function devResumo(L){
   const c={ok:0,pend:0,nao:0};L.forEach(g=>c[devSit(g.k)]++);
   const bt=(v,t,n,cl)=>`<button type="button" class="${cl||''} ${devFiltro===v?'on':''}" data-flt="${v}"><small>${t}</small><b>${n}</b></button>`;
-  $('#dSum').innerHTML=bt('todos','Todos os setores',L.length,'')+bt('ok','Entregues',c.ok,'ok')+bt('pend','Com pendências',c.pend,'pend')+bt('nao','Não entregues',c.nao,'nao');
+  $('#dSum').innerHTML=bt('todos','Todos os setores',L.length,'')+bt('ok','Devolvidos ao RH',c.ok,'ok')+bt('pend','Com pendências',c.pend,'pend')+bt('nao','Não devolvidos',c.nao,'nao');
 }
 function devDesenhar(){
   const box=$('#dLista');

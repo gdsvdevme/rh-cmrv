@@ -583,15 +583,16 @@ const esc=s=>String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;'
 const svg=(k,n)=>`<svg width="${n||28}" height="${n||28}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${ICONS[k]||ICONS.grid}</svg>`;
 const uid=()=>'t'+Math.random().toString(36).slice(2,9);
 
+const ANTIGA_DESC_ESPELHOS='Carimbe os espelhos de ponto em PDF, organizados pela hierarquia, e acompanhe quais setores devolveram o espelho (entregue, com pendências ou não entregue).';
 function defaults(){
-  return {v:10,tiles:[
+  return {v:11,tiles:[
     {id:'t-fluxos',nome:'Fluxogramas e Manual do RH',desc:'Organograma, fluxogramas editáveis, competências, matriz de responsabilidades, manual de procedimentos e indicadores.',icone:'flow',hue:152,status:'ok',url:FLOW_URL},
     {id:'t-pessoal',nome:'Hierarquia de Pessoal',desc:'Quadro de pessoal organizado por hierarquia: setor administrativo e gabinetes dos vereadores.',icone:'org',hue:262,status:'ok',url:PESSOAL_URL},
     {id:'t-ponto',nome:'Ponto – Servidores Externos',desc:'Registro de ponto pelo celular com localização, assinatura digital e foto, e acompanhamento em tempo real pelo RH (simulação).',icone:'pin',hue:200,status:'ok',url:PONTO_URL},
     {id:'t-ferias',nome:'Férias',desc:'Quem está de férias, quem tem direito a gozar e quem está com férias vencidas, pelo período aquisitivo (dados do Centi).',icone:'calendar',hue:28,status:'ok',url:FERIAS_URL},
     {id:'t-licenca',nome:'Licença-prêmio',desc:'Períodos aquisitivos de cada servidor efetivo, prazos de gozo e de perda do direito, calculados pelo Estatuto (arts. 194 a 197) com os afastamentos do Centi.',icone:'award',hue:44,status:'ok',url:LICENCA_URL},
     {id:'t-tarefas',nome:'Tarefas do RH',desc:'Checklist em quadro (a fazer, em andamento, concluído) com tarefas da equipe ou privadas. As concluídas saem do quadro na virada do mês.',icone:'tasks',hue:212,status:'ok',url:TAREFAS_URL},
-    {id:'t-carimbos',nome:'Espelhos de ponto',desc:'Carimbe os espelhos de ponto em PDF, organizados pela hierarquia, e acompanhe quais setores devolveram o espelho (entregue, com pendências ou não entregue).',icone:'file',hue:340,status:'ok',url:CARIMBOS_URL},
+    {id:'t-carimbos',nome:'Espelhos de ponto',desc:'Carimbe os espelhos de ponto em PDF, organizados pela hierarquia, e acompanhe quais setores devolveram o espelho (devolvido ao RH, com pendências ou não devolvido).',icone:'file',hue:340,status:'ok',url:CARIMBOS_URL},
     {id:'t-documentos',nome:'Gerador de Documentos',desc:'Gera documentos oficiais no papel timbrado da Câmara, em Word e PDF. Começa pela declaração de abertura de conta; portarias e decretos virão depois.',icone:'file',hue:200,status:'ok',url:DOCUMENTOS_URL},
     {id:'t-freq',nome:'Frequência',desc:'Registro e conferência de frequência.',icone:'clock',hue:48,status:'plan',url:''},
   ]};
@@ -771,6 +772,11 @@ function migrar(){
     const nn=String((t&&t.nome)||'').toLowerCase().replace(/\s+/g,' ').trim();
     if(t&&(nn==='espelhos de ponto - carimbo'||nn==='espelhos de ponto – carimbo'||nn==='espelhos de ponto - carimbos')){t.nome=d.nome;t.desc=d.desc;}
     st.v=10;persist();
+  }
+  if(st.v<11){ // descrição do cartão: "entregue" passa a "devolvido ao RH" (só se ainda for a descrição anterior)
+    const t=st.tiles.find(x=>x.id==='t-carimbos');
+    if(t&&t.desc===ANTIGA_DESC_ESPELHOS) t.desc=defaults().tiles.find(x=>x.id==='t-carimbos').desc;
+    st.v=11;persist();
   }
 }
 (function init(){

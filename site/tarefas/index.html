@@ -453,7 +453,9 @@ const PB=(function(){
       if(!cs) throw erroSessao();
       const b=new Uint8Array(await blob.arrayBuffer());let bin='';
       for(let i=0;i<b.length;i+=8192) bin+=String.fromCharCode.apply(null,b.subarray(i,i+8192));
-      const r=await fetch(CENTI_BASE+'/api/pdfa',{method:'POST',headers:{'Content-Type':'application/json','x-centi-user':cs.user,'x-centi-token':cs.token},body:JSON.stringify({docx:btoa(bin)})});
+      const r=await fetch(CENTI_BASE+'/api/pdfa',{method:'POST',headers:{'Content-Type':'application/json','x-centi-user':cs.user,'x-centi-token':cs.token,'x-centi-refresh':cs.refreshToken||''},body:JSON.stringify({docx:btoa(bin)})});
+      const nt=r.headers.get('x-centi-token'),nr=r.headers.get('x-centi-refresh');
+      if(nt){cs.token=nt;if(nr)cs.refreshToken=nr;saveAuth();}
       if(!r.ok){let j=null;try{j=await r.json();}catch(e){}if(r.status===401) clearAuth();const err=new Error((j&&j.message)||('PDF/A: HTTP '+r.status));err.status=r.status;throw err;}
       return r.blob();
     },

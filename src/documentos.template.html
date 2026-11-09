@@ -146,6 +146,7 @@ body.carregando{overflow:hidden}
     <section class="prev">
       <div class="acoes">
         <button class="btn primary" id="docxBtn" type="button"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v12M7 11l5 5 5-5M4 20h16"/></svg>Baixar Word (.docx)</button>
+        <button class="btn primary" id="pdfaBtn" type="button" title="PDF/A-2u, formato aceito pelo Tribunal de Contas"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 3H6a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9zM14 3v6h6"/></svg>Baixar PDF/A (Tribunal de Contas)</button>
         <button class="btn" id="pdfBtn" type="button"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 9V3h12v6M6 18H4v-8h16v8h-2M6 14h12v7H6z"/></svg>Imprimir / Salvar PDF</button>
       </div>
       <div class="desk"><div id="fit"><div id="folha"></div></div></div>
@@ -566,6 +567,17 @@ $('#docxBtn').addEventListener('click',async()=>{
     const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=t.arquivo(valores)+'.docx';
     document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(a.href),4000);
   }catch(e){toast('Não foi possível gerar o Word: '+(e.message||e));}
+  b.disabled=false;
+});
+$('#pdfaBtn').addEventListener('click',async()=>{
+  const b=$('#pdfaBtn');b.disabled=true;
+  try{
+    if(!(await garantirSessao())) throw new Error('entre com o usuário do Centi.');
+    const t=TIPOS[tipoAtual];
+    const pdf=await PB.centi.pdfa(await gerarDocx(t.blocos(valores,cfg),t));
+    const a=document.createElement('a');a.href=URL.createObjectURL(pdf);a.download=t.arquivo(valores)+'.pdf';
+    document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(a.href),4000);
+  }catch(e){toast('Não foi possível gerar o PDF/A: '+(e.message||e));}
   b.disabled=false;
 });
 $('#pdfBtn').addEventListener('click',()=>{

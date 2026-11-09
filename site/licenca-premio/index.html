@@ -473,6 +473,15 @@ const PB=(function(){
     /* CPF, nascimento, identidade e endereço de UM servidor (FP001 + DM017), pelo Id da busca -> {Nome,Cpf,DataNascimento,Identidade,Endereco}; nada é guardado */
     servidorDados(id){return centiCall('servidor-dados',{id});},
     licencaBusca(termo){return centiCall('licenca-busca',{termo});},
+    /* Converte um .docx (Blob) em PDF/A-2u no serviço pdfa -> Blob application/pdf */
+    async pdfa(blob){
+      if(!cs) throw erroSessao();
+      const b=new Uint8Array(await blob.arrayBuffer());let bin='';
+      for(let i=0;i<b.length;i+=8192) bin+=String.fromCharCode.apply(null,b.subarray(i,i+8192));
+      const r=await fetch(CENTI_BASE+'/api/pdfa',{method:'POST',headers:{'Content-Type':'application/json','x-centi-user':cs.user,'x-centi-token':cs.token},body:JSON.stringify({docx:btoa(bin)})});
+      if(!r.ok){let j=null;try{j=await r.json();}catch(e){}if(r.status===401) clearAuth();const err=new Error((j&&j.message)||('PDF/A: HTTP '+r.status));err.status=r.status;throw err;}
+      return r.blob();
+    },
     search(entity,filters,start,depth){
       return centiCall('restauth/searchentity',{Depth:depth||50,Entity:entity,Start:start==null?1:start,
         Filters:(filters||[]).map(f=>Object.assign({List:false,TypeFilter:0,between:''},f))});

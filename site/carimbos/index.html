@@ -1313,14 +1313,14 @@ function devPendencias(g,it){
 /* entrega do espelho pelo RH ao setor: interruptor com data e com quem marcou (nome e matrícula) */
 function devRh(it){
   const e=it.e;
-  let h='<div class="rh" data-l="Entrega do RH ao setor"><label class="sw"><input type="checkbox" data-e="chk" aria-label="Espelho entregue pelo RH ao setor"'+(e?' checked':'')+'><span>'+(e?'Entregue':'Não entregue')+'</span></label>';
+  let h='<div class="rh" data-l="Entrega do RH ao setor"><label class="sw"><input type="checkbox" data-e="chk" aria-label="Espelho entregue pelo RH ao setor"'+(e?' checked':'')+'><span>'+(e?'Entregue ao setor':'Não entregue ao setor')+'</span></label>';
   if(e) h+=`<div class="rh2"><input type="date" data-e="d" value="${esc(e.d||'')}" aria-label="Data da entrega pelo RH"><span class="quem">registrado por ${esc(e.p&&e.p.n||'—')}${e.p&&e.p.m?' (mat. '+esc(e.p.m)+')':''}</span></div>`;
   return h+'</div>';
 }
 function devResumo(L){
   const c={ok:0,pend:0,nao:0,ent:0};L.forEach(g=>{c[devSit(g.k)]++;if(devEntregue(g.k)) c.ent++;});
   const bt=(v,t,n,cl)=>`<button type="button" class="${cl||''} ${devFiltro===v?'on':''}" data-flt="${v}"><small>${t}</small><b>${n}</b></button>`;
-  $('#dSum').innerHTML=bt('todos','Todos os setores',L.length,'')+bt('ent','Entregues pelo RH',c.ent,'ent')+bt('ok','Devolvidos ao RH',c.ok,'ok')+bt('pend','Com pendências',c.pend,'pend')+bt('nao','Não devolvidos',c.nao,'nao');
+  $('#dSum').innerHTML=bt('todos','Todos os setores',L.length,'')+bt('ent','Entregues ao setor',c.ent,'ent')+bt('ok','Devolvidos ao RH',c.ok,'ok')+bt('pend','Com pendências',c.pend,'pend')+bt('nao','Não devolvidos',c.nao,'nao');
 }
 function devDesenhar(){
   const box=$('#dLista');
@@ -1416,7 +1416,7 @@ window.addEventListener('pagehide',devSalvar);
 $('#dCsv').addEventListener('click',()=>{
   if(!GH.size){toast('A hierarquia de pessoal não está carregada.');return;}
   const c=v=>'"'+String(v==null?'':v).replace(/"/g,'""')+'"';
-  const rows=[['Setor','Servidores','Situação','Data','Observação','Entregue pelo RH','Data da entrega pelo RH','Registrado por','Servidores com pendência']].concat(devSetores().map(g=>{const it=dev.itens[g.k]||{},e=it.e||null;return [g.nome,
+  const rows=[['Setor','Servidores','Situação','Data','Observação','Espelho entregue ao setor pelo RH','Data da entrega ao setor','Registrado por','Servidores com pendência']].concat(devSetores().map(g=>{const it=dev.itens[g.k]||{},e=it.e||null;return [g.nome,
     g.n,DST[devSit(g.k)],brData(it.d),(it.o||'').replace(/\s*\n\s*/g,' '),e?'Sim':'Não',e?brData(e.d):'',e&&e.p?e.p.n+(e.p.m?' (mat. '+e.p.m+')':''):'',
     devSit(g.k)==='pend'?(it.ps||[]).map(x=>x.n+(x.m?' (mat. '+x.m+')':'')).join('; '):''];}));
   const csv='﻿'+rows.map(r=>r.map(c).join(';')).join('\r\n');

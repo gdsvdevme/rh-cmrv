@@ -131,32 +131,52 @@ main.sub .grid,main.sub .devwrap{margin-top:12px}
 .dsum button.on{border-color:var(--accent)}
 .dsum small{display:block;font-size:11px;font-weight:700;letter-spacing:.04em;text-transform:uppercase;color:var(--muted)}
 .dsum b{font-family:var(--f-display);font-size:1.3rem;font-variant-numeric:tabular-nums}
-.dsum .ok b{color:var(--ok)}.dsum .pend b{color:var(--warn)}.dsum .nao b{color:var(--danger)}
-.drow{display:grid;grid-template-columns:minmax(180px,1.1fr) auto minmax(180px,1.4fr);gap:10px 14px;align-items:start;padding:12px 14px;border-top:1px solid var(--line);
-  border-left:5px solid var(--danger)}
-.drow:first-child{border-top:0}
-.drow.ok{border-left-color:var(--ok)}.drow.pend{border-left-color:var(--warn)}
-.drow .nm b{font-family:var(--f-display);font-size:14.5px;line-height:1.25;display:block}
+.dsum .ent b{color:var(--blue)}.dsum .ok b{color:var(--ok)}.dsum .pend b{color:var(--warn)}.dsum .nao b{color:var(--danger)}
+/* lista do Controle de devolução: uma tabela de colunas fixas (setor, devolução, entrega do RH, observação) */
+.dlist{border:1px solid var(--line);border-radius:14px;overflow:hidden}
+.dhead,.drow{display:grid;grid-template-columns:minmax(190px,1.1fr) minmax(300px,auto) minmax(200px,.85fr) minmax(190px,1fr);gap:8px 18px;align-items:start;padding:12px 18px}
+.dhead{position:sticky;top:0;z-index:2;background:var(--soft);border-bottom:1px solid var(--line);padding-block:9px;font-size:11px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:var(--muted)}
+.drow{border-top:1px solid var(--line);box-shadow:inset 4px 0 0 var(--danger);transition:background .12s}
+.dhead+.drow{border-top:0}
+.drow:hover{background:var(--soft)}
+.drow.ok{box-shadow:inset 4px 0 0 var(--ok)}.drow.pend{box-shadow:inset 4px 0 0 var(--warn)}
+.drow .nm b{font-family:var(--f-display);font-size:14.5px;line-height:1.3;display:block}
 .drow .nm span{font-size:12.5px;color:var(--muted)}
-.seg{display:inline-flex;border:1px solid var(--line);border-radius:10px;overflow:hidden;flex-wrap:wrap}
-.seg button{border:0;background:var(--surface);padding:7px 11px;font-size:12.5px;font-weight:600;cursor:pointer;border-right:1px solid var(--line)}
+.drow .st{display:flex;flex-direction:column;gap:8px;align-items:flex-start}
+.seg{display:inline-flex;border:1px solid var(--line);border-radius:10px;overflow:hidden;background:var(--surface)}
+.seg button{border:0;background:transparent;padding:7px 12px;font-size:12.5px;font-weight:600;cursor:pointer;border-right:1px solid var(--line);white-space:nowrap}
 .seg button:last-child{border-right:0}
+.seg button:hover{background:var(--soft)}
 .seg button.on[data-s=ok]{background:var(--ok-bg);color:var(--ok)}
 .seg button.on[data-s=pend]{background:var(--warn-bg);color:var(--warn)}
 .seg button.on[data-s=nao]{background:var(--danger-bg);color:var(--danger)}
-.drow .obs{display:flex;flex-direction:column;gap:6px}
-.drow textarea{width:100%;min-height:36px;resize:vertical;background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:7px 10px;color:var(--fg);font:inherit;font-size:13.5px}
-.drow input[type=date]{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:5px 8px;color:var(--fg);font-size:13px;align-self:flex-start}
-.rh{grid-column:1/-1;display:flex;flex-wrap:wrap;align-items:center;gap:8px 12px;padding-top:10px;border-top:1px dashed var(--line);font-size:13px}
-.rh label.ck2{display:inline-flex;align-items:center;gap:8px;font-weight:600;cursor:pointer}
-.rh .quem{color:var(--muted)}
-.pendbox{grid-column:1/-1;display:flex;flex-wrap:wrap;align-items:center;gap:8px 10px;font-size:13px}
-.pendbox>b{font-family:var(--f-display)}
-.chip{display:inline-flex;align-items:center;gap:6px;background:var(--warn-bg);color:var(--warn);border-radius:99px;padding:3px 6px 3px 10px;font-weight:600}
-.chip button{border:0;background:transparent;color:inherit;cursor:pointer;font-size:16px;line-height:1;padding:0 4px}
-.pendbox select{max-width:340px}
-.dlist{border:1px solid var(--line);border-radius:12px;overflow:hidden}
-@media (max-width:760px){.drow{grid-template-columns:1fr}}
+.drow input[type=date]{background:var(--surface);border:1px solid var(--line);border-radius:9px;padding:4px 8px;color:var(--fg);font-size:12.5px}
+.drow .obs textarea{width:100%;min-height:38px;resize:vertical;background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:8px 10px;color:var(--fg);font:inherit;font-size:13.5px}
+.drow .rh{display:flex;flex-direction:column;gap:7px;align-items:flex-start;font-size:13px}
+.drow .rh2{display:flex;flex-wrap:wrap;align-items:center;gap:6px 10px}
+.rh .quem{color:var(--muted);font-size:12.5px}
+.sw{display:inline-flex;align-items:center;gap:9px;cursor:pointer;font-weight:600;font-size:13px}
+.sw input{appearance:none;-webkit-appearance:none;width:36px;height:21px;border-radius:99px;background:var(--line);position:relative;margin:0;cursor:pointer;flex:none;transition:background .15s}
+.sw input::after{content:"";position:absolute;top:2px;left:2px;width:17px;height:17px;border-radius:50%;background:#fff;box-shadow:0 1px 2px rgba(0,0,0,.35);transition:transform .15s}
+.sw input:checked{background:var(--ok)}.sw input:checked::after{transform:translateX(15px)}
+.sw input:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
+.pendbox{grid-column:1/-1;display:flex;flex-wrap:wrap;align-items:center;gap:8px 10px;font-size:13px;background:var(--warn-bg);border-radius:10px;padding:9px 12px}
+.pendbox>b{font-family:var(--f-display);color:var(--warn)}
+.pendbox .muted{color:var(--warn);opacity:.85}
+.chip{display:inline-flex;align-items:center;gap:6px;background:var(--surface);color:var(--fg);border:1px solid var(--line);border-radius:99px;padding:3px 6px 3px 11px;font-weight:600}
+.chip button{border:0;background:transparent;color:var(--muted);cursor:pointer;font-size:16px;line-height:1;padding:0 4px;border-radius:50%}
+.chip button:hover{color:var(--danger)}
+.pendbox select{max-width:340px;background:var(--surface)}
+.drow>*{min-width:0}
+@media (max-width:900px){
+  .dhead{display:none}
+  .drow{grid-template-columns:1fr;gap:10px;padding:14px 16px}
+  .drow .st,.drow .rh{align-items:stretch}
+  .seg{display:flex;width:100%}
+  .seg button{flex:1;white-space:normal;padding:8px 6px;line-height:1.25}
+  .pendbox select{max-width:100%}
+  .drow [data-l]::before{content:attr(data-l);display:block;font-size:11px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:var(--muted);margin-bottom:4px}
+}
 .grid{display:grid;grid-template-columns:minmax(300px,380px) minmax(0,1fr);gap:16px;margin-top:-20px;align-items:start}
 @media (max-width:920px){.grid{grid-template-columns:1fr}}
 @media (min-width:921px){.col:last-child>.panel{position:sticky;top:10px}}
@@ -1243,6 +1263,8 @@ function devSetores(){
   return devSetoresCache=[...GH.values()].sort((a,b)=>a.ramo-b.ramo||a.sort.localeCompare(b.sort)).map(g=>({k:g.k,nome:g.nome,n:cont.get(g.k)||0}));
 }
 const devSit=k=>(dev.itens[k]&&dev.itens[k].s)||'nao';
+const devEntregue=k=>!!(dev.itens[k]&&dev.itens[k].e);
+const devNoFiltro=k=>devFiltro==='todos'||(devFiltro==='ent'?devEntregue(k):devSit(k)===devFiltro);
 async function devSalvar(){
   clearTimeout(devT);if(!devPend||!devRef) return;devPend=false;
   const json=JSON.stringify(dev),ref=devRef;
@@ -1263,12 +1285,15 @@ async function devCarregar(){
 }
 function devLinha(g){
   const it=dev.itens[g.k]||{},s=it.s||'nao';
+  const btns=['ok','pend','nao'].map(v=>`<button type="button" data-s="${v}" class="${s===v?'on':''}" aria-pressed="${s===v}">${DST[v]}</button>`).join('');
+  const data=s!=='nao'?`<input type="date" data-f="d" value="${esc(it.d||'')}" aria-label="Data da devolução">`:'';
+  const ph=s==='pend'?'Descreva as pendências…':'Observação (opcional)';
   return `<div class="drow ${s}" data-k="${esc(g.k)}">
-    <div class="nm"><b>${esc(g.nome)}</b><span>${g.n} servidor${g.n===1?'':'es'}${it.d?' · '+esc(DST_EM[s])+' em '+esc(brData(it.d)):''}</span></div>
-    <div class="seg" role="group" aria-label="Situação de ${esc(g.nome)}">${['ok','pend','nao'].map(v=>`<button type="button" data-s="${v}" class="${s===v?'on':''}" aria-pressed="${s===v}">${DST[v]}</button>`).join('')}</div>
-    <div class="obs">${s!=='nao'?`<input type="date" data-f="d" value="${esc(it.d||'')}" aria-label="Data da devolução">`:''}<textarea data-f="o" rows="1" placeholder="${s==='pend'?'Descreva as pendências…':'Observação (opcional)'}" aria-label="Observação de ${esc(g.nome)}">${esc(it.o||'')}</textarea></div>
-    ${s==='pend'?devPendencias(g,it):''}
+    <div class="nm"><b>${esc(g.nome)}</b><span>${g.n} servidor${g.n===1?'':'es'}</span></div>
+    <div class="st" data-l="Devolução do setor"><div class="seg" role="group" aria-label="Situação de ${esc(g.nome)}">${btns}</div>${data}</div>
     ${devRh(it)}
+    <div class="obs" data-l="Observação"><textarea data-f="o" rows="1" placeholder="${ph}" aria-label="Observação de ${esc(g.nome)}">${esc(it.o||'')}</textarea></div>
+    ${s==='pend'?devPendencias(g,it):''}
   </div>`;
 }
 /* servidores com pendência: escolhidos entre os do setor/gabinete na Hierarquia de Pessoal (guarda matrícula e nome) */
@@ -1283,17 +1308,17 @@ function devPendencias(g,it){
   const sel=livres.length?`<select data-pend="add" aria-label="Adicionar servidor com pendência"><option value="">+ Adicionar servidor…</option>${livres.map(p=>`<option value="${esc(pessoaId(p))}">${esc(p.n)}${p.c?' — '+esc(p.c):''}</option>`).join('')}</select>`:(ps.length?'':'<span class="muted">Este setor não tem servidores na hierarquia.</span>');
   return `<div class="pendbox"><b>Servidores com pendência</b>${chips}${sel}</div>`;
 }
-/* entrega do espelho pelo RH ao setor: marca com data e com quem marcou (nome e matrícula) */
+/* entrega do espelho pelo RH ao setor: interruptor com data e com quem marcou (nome e matrícula) */
 function devRh(it){
   const e=it.e;
-  let h='<div class="rh"><label class="ck2"><input type="checkbox" data-e="chk"'+(e?' checked':'')+'> Espelho entregue pelo RH ao setor</label>';
-  if(e) h+=`<input type="date" data-e="d" value="${esc(e.d||'')}" aria-label="Data da entrega pelo RH"><span class="quem">registrado por ${esc(e.p&&e.p.n||'—')}${e.p&&e.p.m?' (mat. '+esc(e.p.m)+')':''}</span>`;
+  let h='<div class="rh" data-l="Entrega do RH ao setor"><label class="sw"><input type="checkbox" data-e="chk" aria-label="Espelho entregue pelo RH ao setor"'+(e?' checked':'')+'><span>'+(e?'Entregue ao setor':'Não entregue ao setor')+'</span></label>';
+  if(e) h+=`<div class="rh2"><input type="date" data-e="d" value="${esc(e.d||'')}" aria-label="Data da entrega pelo RH"><span class="quem">registrado por ${esc(e.p&&e.p.n||'—')}${e.p&&e.p.m?' (mat. '+esc(e.p.m)+')':''}</span></div>`;
   return h+'</div>';
 }
 function devResumo(L){
-  const c={ok:0,pend:0,nao:0};L.forEach(g=>c[devSit(g.k)]++);
+  const c={ok:0,pend:0,nao:0,ent:0};L.forEach(g=>{c[devSit(g.k)]++;if(devEntregue(g.k)) c.ent++;});
   const bt=(v,t,n,cl)=>`<button type="button" class="${cl||''} ${devFiltro===v?'on':''}" data-flt="${v}"><small>${t}</small><b>${n}</b></button>`;
-  $('#dSum').innerHTML=bt('todos','Todos os setores',L.length,'')+bt('ok','Devolvidos ao RH',c.ok,'ok')+bt('pend','Com pendências',c.pend,'pend')+bt('nao','Não devolvidos',c.nao,'nao');
+  $('#dSum').innerHTML=bt('todos','Todos os setores',L.length,'')+bt('ent','Entregues ao setor',c.ent,'ent')+bt('ok','Devolvidos ao RH',c.ok,'ok')+bt('pend','Com pendências',c.pend,'pend')+bt('nao','Não devolvidos',c.nao,'nao');
 }
 function devDesenhar(){
   const box=$('#dLista');
@@ -1302,8 +1327,9 @@ function devDesenhar(){
     return;}
   const L=devSetores();devResumo(L);
   const q=norm(devBusca);
-  const V=L.filter(g=>(devFiltro==='todos'||devSit(g.k)===devFiltro)&&(!q||norm(g.nome).includes(q)));
-  box.innerHTML=V.length?V.map(devLinha).join(''):'<p class="muted" style="padding:18px">Nenhum setor nesta lista.</p>';
+  const V=L.filter(g=>devNoFiltro(g.k)&&(!q||norm(g.nome).includes(q)));
+  const cab='<div class="dhead" aria-hidden="true"><span>Setor ou gabinete</span><span>Devolução do setor</span><span>Entrega do RH ao setor</span><span>Observação</span></div>';
+  box.innerHTML=V.length?cab+V.map(devLinha).join(''):'<p class="muted" style="padding:18px">Nenhum setor nesta lista.</p>';
 }
 function devMudar(k,campos){
   const it=Object.assign({},dev.itens[k]||{},campos);
@@ -1322,7 +1348,7 @@ $('#dLista').addEventListener('click',ev=>{
   const o=row.querySelector('textarea');
   devMudar(k,{s:b.dataset.s,o:o?o.value:''});
   const g=devSetores().find(x=>x.k===k);if(!g) return;
-  if(devFiltro!=='todos'&&devFiltro!==devSit(k)){devDesenhar();return;}     // saiu do filtro atual
+  if(!devNoFiltro(k)){devDesenhar();return;}     // saiu do filtro atual
   row.outerHTML=devLinha(g);devResumo(devSetores());
 });
 $('#dLista').addEventListener('input',ev=>{
@@ -1364,7 +1390,7 @@ $('#dLista').addEventListener('change',async ev=>{
       }else{
         devEntrega(k,()=>null);
       }
-      devRefaz(row,k);
+      if(!devNoFiltro(k)) devDesenhar();else devRefaz(row,k);
     }else if(f==='d'){
       if(t.value) devEntrega(k,e=>Object.assign(e,{d:t.value}));
     }
@@ -1388,7 +1414,7 @@ window.addEventListener('pagehide',devSalvar);
 $('#dCsv').addEventListener('click',()=>{
   if(!GH.size){toast('A hierarquia de pessoal não está carregada.');return;}
   const c=v=>'"'+String(v==null?'':v).replace(/"/g,'""')+'"';
-  const rows=[['Setor','Servidores','Situação','Data','Observação','Entregue pelo RH','Data da entrega pelo RH','Registrado por','Servidores com pendência']].concat(devSetores().map(g=>{const it=dev.itens[g.k]||{},e=it.e||null;return [g.nome,
+  const rows=[['Setor','Servidores','Situação','Data','Observação','Espelho entregue ao setor pelo RH','Data da entrega ao setor','Registrado por','Servidores com pendência']].concat(devSetores().map(g=>{const it=dev.itens[g.k]||{},e=it.e||null;return [g.nome,
     g.n,DST[devSit(g.k)],brData(it.d),(it.o||'').replace(/\s*\n\s*/g,' '),e?'Sim':'Não',e?brData(e.d):'',e&&e.p?e.p.n+(e.p.m?' (mat. '+e.p.m+')':''):'',
     devSit(g.k)==='pend'?(it.ps||[]).map(x=>x.n+(x.m?' (mat. '+x.m+')':'')).join('; '):''];}));
   const csv='﻿'+rows.map(r=>r.map(c).join(';')).join('\r\n');

@@ -137,7 +137,12 @@ main.sub .grid,main.sub .devwrap{margin-top:12px}
 .rrow input[type=date]{background:var(--surface);border:1px solid var(--line);border-radius:9px;padding:4px 8px;color:var(--fg);font-size:12.5px}
 .rrow .sw{flex:none;min-width:112px}
 .qult{margin-top:10px;font-size:13px}
-.qult b{font-family:var(--f-display);font-size:12px;letter-spacing:.04em;text-transform:uppercase;color:var(--muted)}
+.qult>summary{cursor:pointer;list-style:none;display:flex;align-items:center;gap:8px;font-family:var(--f-display);font-size:12px;font-weight:700;letter-spacing:.04em;text-transform:uppercase;color:var(--muted)}
+.qult>summary::-webkit-details-marker{display:none}
+.qult>summary::before{content:"▶";font-size:10px;transition:transform .15s}
+.qult[open]>summary::before{transform:rotate(90deg)}
+.qult>summary span{background:var(--soft);border-radius:99px;padding:1px 8px;font-size:11.5px}
+.qult>summary:focus-visible{outline:3px solid var(--accent);outline-offset:3px;border-radius:6px}
 .qult ul{list-style:none;margin:4px 0 0;padding:0}
 .qult li{display:flex;gap:8px;align-items:center;justify-content:space-between;padding:4px 0;border-top:1px solid var(--line)}
 .qult li:first-child{border-top:0}

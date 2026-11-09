@@ -39,7 +39,7 @@ module.exports = async (req, res) => {
   if ((cubo || ficha || ferias || espelho || quadro || afast) && !(mes >= 1 && mes <= 12 && ano >= 2000 && ano <= 2100)) return send(res, 400, { message: 'Referência inválida.' });
   if (ficha && !/^\d{1,12}$/.test(matricula)) return send(res, 400, { message: 'Matrícula inválida.' });
   const funcionario = String((body && body.funcionario) || '').trim();
-  if (afast && funcionario && !/^\d{1,12}$/.test(funcionario)) return send(res, 400, { message: 'Servidor inválido.' });
+  if ((afast || espelho) && funcionario && !/^\d{1,12}$/.test(funcionario)) return send(res, 400, { message: 'Servidor inválido.' });
   const idServidor = String((body && body.id) || '').trim();
   if (dados && !/^\d{1,12}$/.test(idServidor)) return send(res, 400, { message: 'Servidor inválido.' });
   const filtroBusca = busca ? buscaFiltro(body && body.termo) : null;
@@ -51,7 +51,11 @@ module.exports = async (req, res) => {
       /* o Centi monta o PDF (o espelho do órgão inteiro leva de 25 s a 1 min). Devolvemos o gzip dele sem reabrir: a Vercel limita a resposta a 4,5 MB */
       let e, usada = { mes, ano };
       let modKey = null;
-      if (espelho) { const pl = await tela('FP170', espelhoPayload(), h); modKey = pl.ModuleKey; e = await post('restauth/operation', pl, h); }
+      if (espelho) {
+        const pl = await tela('FP170', espelhoPayload(funcionario), h); modKey = pl.ModuleKey; e = await post('restauth/operation', pl, h);
+        /* se o Centi recusar o filtro por servidor, pede o órgão inteiro (a tela recorta as páginas da pessoa) */
+        if (funcionario && !(e.data && e.data.File && e.data.File.DataCompress)) { const pl2 = await tela('FP170', espelhoPayload(), h); e = await post('restauth/operation', pl2, h); }
+      }
       else {
         /* se a folha do mês pedido ainda não foi processada, o Centi recusa: tenta o mês anterior (e mais um) */
         for (const ref of referencias(mes, ano, 3)) {

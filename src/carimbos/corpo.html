@@ -18,8 +18,13 @@
         <select id="cMes" aria-label="Mês do espelho"></select>
         <input id="cAno" type="number" min="2000" max="2100" aria-label="Ano do espelho" style="width:84px">
       </div>
+      <label class="ck" style="margin-top:10px"><input type="checkbox" id="cUm"><span>Gerar só de <b>uma pessoa</b></span></label>
+      <div id="cPessoaBox" hidden style="margin-top:8px">
+        <div id="cEscolhida" class="muted" hidden style="display:flex;gap:8px;align-items:center;justify-content:space-between;background:var(--soft);border:1px solid var(--line);border-radius:10px;padding:7px 10px"><span id="cEscNome"></span><button class="btn sm" id="cTrocar" type="button">Trocar</button></div>
+        <div id="cBuscaBox"><input id="cBusca" type="search" placeholder="Nome (3+ letras) ou matrícula" aria-label="Buscar servidor" autocomplete="off" style="width:100%"><div id="cRes" class="tree" style="max-height:220px;margin-top:6px" hidden></div></div>
+      </div>
       <button class="btn primary" id="cGerar" type="button" style="width:100%;margin-top:10px">Gerar espelhos no Centi</button>
-      <p class="hint" style="margin:6px 0 12px;font-size:12.5px;color:var(--muted)">Usa a tela Espelho de ponto (FP170) com o órgão Câmara Municipal de Rio Verde. Leva cerca de 1 minuto.</p>
+      <p class="hint" style="margin:6px 0 12px;font-size:12.5px;color:var(--muted)">Usa a tela Espelho de ponto (FP170) com o órgão Câmara Municipal de Rio Verde. Leva cerca de 1 minuto para o órgão inteiro; marcando <b>Gerar só de uma pessoa</b> você busca por nome ou matrícula e carimba só o espelho dela.</p>
       <p class="hint" style="margin:0 0 6px;font-size:12.5px;color:var(--muted)">Ou, se preferir, anexe um PDF que você já gerou:</p>
       <label class="drop" id="drop" for="file" style="padding:10px 12px"><b style="font-size:14px">Escolher ou arrastar o PDF</b><span
         id="dropS">O PDF com todos os espelhos (uma página por servidor)</span></label>

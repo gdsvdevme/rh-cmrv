@@ -17,26 +17,74 @@ const MESES=['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agos
   $('#cMes').innerHTML=MESES.map((m,i)=>'<option value="'+(i+1)+'">'+m+'</option>').join('');
   $('#cMes').value=String(a.getMonth()+1);$('#cAno').value=a.getFullYear();
   $('#cGerar').addEventListener('click',gerarDoCenti);
+  $('#cUm').addEventListener('change',()=>{$('#cPessoaBox').hidden=!$('#cUm').checked;if(!$('#cUm').checked) pessoaUnica=null;rotuloGerar();if($('#cUm').checked&&!pessoaUnica) $('#cBusca').focus();});
+  $('#cTrocar').addEventListener('click',()=>{pessoaUnica=null;rotuloGerar();$('#cBusca').focus();});
+  let tb=null;
+  $('#cBusca').addEventListener('input',()=>{clearTimeout(tb);tb=setTimeout(buscarPessoa,450);});
+  $('#cRes').addEventListener('click',ev=>{const li=ev.target.closest('li[data-i]');if(!li) return;pessoaUnica=achados[+li.dataset.i];$('#cBusca').value='';$('#cRes').hidden=true;rotuloGerar();});
 })();
+/* ---------- gerar só de uma pessoa ---------- */
+let pessoaUnica=null,achados=[];
+function rotuloGerar(){
+  const p=pessoaUnica,um=$('#cUm').checked;
+  $('#cEscolhida').hidden=!p;$('#cBuscaBox').hidden=!!p;
+  if(p) $('#cEscNome').innerHTML='<b>'+esc(titulo(p.Nome))+'</b><br><span class="muted">mat. '+esc(p.Matricula)+(p.Cargo?' · '+esc(titulo(p.Cargo)):'')+'</span>';
+  $('#cGerar').textContent=um?(p?'Gerar espelho de '+titulo(p.Nome).split(' ')[0]+' no Centi':'Escolha a pessoa acima'):'Gerar espelhos no Centi';
+}
+async function buscarPessoa(){
+  const t=$('#cBusca').value.trim(),box=$('#cRes');
+  if(t.length<3&&!/^\d{1,12}$/.test(t)){box.hidden=true;return;}
+  try{
+    if(!PB.centi.user){const h=await PB.connect();if(h&&!dbh) dbh=h;}
+    if(!PB.centi.user) return;
+    const r=await PB.centi.licencaBusca(t);
+    if($('#cBusca').value.trim()!==t) return;                          // a pessoa já digitou outra coisa
+    achados=((r&&r.Data)||[]).slice(0,10);
+    box.innerHTML=achados.length?'<ul class="g-l">'+achados.map((x,i)=>`<li data-i="${i}" style="padding-left:12px"><div class="nm">${esc(titulo(x.Nome))}${/^ativo$/i.test(x.Situacao)?'':'<span class="tag nao" style="margin-left:6px;display:inline-block;width:auto">'+esc(x.Situacao||'inativo')+'</span>'}<span>mat. ${esc(x.Matricula)}${x.Cargo?' · '+esc(titulo(x.Cargo)):''}</span></div></li>`).join('')+'</ul>':'<div class="empty" style="padding:14px">Ninguém encontrado.</div>';
+    box.hidden=false;
+  }catch(e){toast('Não foi possível buscar: '+(e&&e.message||e));}
+}
+/* deixa só as páginas da pessoa (o Centi pode devolver o órgão inteiro); null se ela não tem espelho */
+async function soDaPessoa(pdf,p){
+  await iniciarPdfjs();
+  const doc=await pdfjsLib.getDocument({data:pdf.slice()}).promise,manter=[];let atual=false;
+  for(let i=1;i<=doc.numPages;i++){
+    const tc=await (await doc.getPage(i)).getTextContent();
+    const h=lerCabecalho(tc.items.map(x=>x.str).join(' ').replace(/\s+/g,' '));
+    if(h) atual=(!!digs(h.mat)&&digs(h.mat)===digs(p.Matricula))||norm(h.nome)===norm(p.Nome);
+    if(atual) manter.push(i-1);
+  }
+  if(!manter.length) return null;
+  if(manter.length===doc.numPages) return pdf;
+  const src=await PDFLib.PDFDocument.load(pdf,{ignoreEncryption:true}),out=await PDFLib.PDFDocument.create();
+  (await out.copyPages(src,manter)).forEach(pg=>out.addPage(pg));
+  return out.save();
+}
 async function gerarDoCenti(){
-  const mes=+$('#cMes').value,ano=+$('#cAno').value;
+  const mes=+$('#cMes').value,ano=+$('#cAno').value,um=$('#cUm').checked?pessoaUnica:null;
   if(!(ano>=2000&&ano<=2100)){toast('Informe um ano válido.');return;}
+  if($('#cUm').checked&&!um){toast('Escolha a pessoa na busca.');$('#cBusca').focus();return;}
   if(!PB.centi.user){const h=await PB.connect();if(h&&!dbh) dbh=h;}
   if(!PB.centi.user){toast('Entre com o acesso do Centi para gerar o espelho.');return;}
   $('#cGerar').disabled=true;
-  carga(true,'Gerando no Centi…','Espelho de ponto de '+MESES[mes-1]+'/'+ano+' (FP170). Leva cerca de 1 minuto.',0.15);
+  carga(true,'Gerando no Centi…','Espelho de ponto de '+(um?titulo(um.Nome)+' · ':'')+MESES[mes-1]+'/'+ano+' (FP170).'+(um?'':' Leva cerca de 1 minuto.'),0.15);
   try{
     let pdf;
-    try{pdf=await PB.centi.espelho(mes,ano);}
+    try{pdf=await PB.centi.espelho(mes,ano,um?um.Id:'');}
     catch(e){
       if(e.status!==502&&e.status!==504) throw e;                       // falha momentânea do servidor ou do Centi: tenta mais uma vez
       carga(true,'Gerando no Centi…','O servidor não respondeu; tentando de novo. Leva cerca de 1 minuto.',0.15);
-      pdf=await PB.centi.espelho(mes,ano);
+      pdf=await PB.centi.espelho(mes,ano,um?um.Id:'');
     }
-    const nome='Espelho-de-ponto-'+String(mes).padStart(2,'0')+'-'+ano+'.pdf';
+    if(um){
+      carga(true,null,'Separando as páginas de '+titulo(um.Nome)+'…',0.7);
+      pdf=await soDaPessoa(pdf,um);
+      if(!pdf){carga(false);toast(titulo(um.Nome)+' não tem espelho de '+MESES[mes-1]+'/'+ano+' no Centi.');return;}
+    }
+    const nome='Espelho-de-ponto-'+String(mes).padStart(2,'0')+'-'+ano+(um?'-'+nomeSeguro(um.Nome):'')+'.pdf';
     await iniciarPdfjs();
     const doc=await pdfjsLib.getDocument({data:pdf.slice()}).promise;
-    if(doc.numPages<2){carga(false);toast('O Centi ainda não tem o espelho de '+MESES[mes-1]+'/'+ano+' (veio sem servidores). Escolha outro mês.');return;}
+    if(!um&&doc.numPages<2){carga(false);toast('O Centi ainda não tem o espelho de '+MESES[mes-1]+'/'+ano+' (veio sem servidores). Escolha outro mês.');return;}
     carga(false);
     await abrirPdf(new File([pdf],nome,{type:'application/pdf'}));
   }catch(e){

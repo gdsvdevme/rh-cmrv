@@ -199,12 +199,14 @@ function fichaResumo(f) {
   };
 }
 
-/* Espelho de ponto (FP170) de todo o órgão. A referência (mês/ano) vai nos cabeçalhos da chamada, não aqui. */
+const umFuncionario = id => ({ Params: [{ Key: 'Tag', Value: '0' }, { Key: 'Array', Value: [String(id)] }] });
+/* Espelho de ponto (FP170) de todo o órgão (ou de um servidor, se vier o Id). A referência (mês/ano) vai nos cabeçalhos da chamada, não aqui. */
 const ESPELHO_MODULO = 121017;
-const espelhoPayload = () => ({
+const espelhoPayload = funcionario => ({
   ModuleKey: ESPELHO_MODULO, Guid: crypto.randomUUID(),
   Params: [
     { Key: 'Orgaos', Value: { Params: [{ Key: 'Tag', Value: '0' }, { Key: 'Array', Value: [process.env.CENTI_ORGAO || '1'] }] } },
+    ...(funcionario ? [{ Key: 'Funcionarios', Value: umFuncionario(funcionario) }, { Key: 'Funcionario', Value: umFuncionario(funcionario) }] : []),   // só um servidor (Id do cadastro); a tela confere o PDF recebido
     { Key: 'Fechamentos', Value: vazio() }, { Key: 'Lotacao', Value: vazio() }, { Key: 'IdHierarquia', Value: vazio() },
     { Key: 'OrdenarPor', Value: '0' }, { Key: 'AgruparPorLotacao', Value: '0' }, { Key: 'AgregarPorNivel', Value: '0' }, { Key: 'IdNivel', Value: '' },
     { Key: 'EmbeddedFonts', Value: '0' }, { Key: 'ImprimirQrCodeGenerico', Value: '0' }, { Key: 'ChaveEletronica', Value: '' },

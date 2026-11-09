@@ -531,7 +531,7 @@ const PB=(function(){
     /* Licença-prêmio: quadro de ativos (Cubo funcionário reduzido, FP245) -> {Pessoas:[{MATRICULA,NOME,SITUACAO,TIPOADMISSAO,DATAADMISSAO,LOTACAO,CARGO,TIPOAFASTAMENTO,DATAAFASTAMENTO}]} */
     licencaQuadro(mes,ano){return centiCall('licenca-quadro',{mes,ano});},
     /* Espelho de ponto (FP170) do órgão inteiro na referência mes/ano -> Uint8Array com o PDF (o Centi leva de 25 s a 1 min) */
-    espelho(mes,ano){return centiPdf('espelho-ponto',mes,ano);},
+    espelho(mes,ano,funcionario){return centiPdf('espelho-ponto',mes,ano,funcionario);},
     /* Relação de afastamentos (FP071), de 1990 até o fim da referência -> Uint8Array com o PDF; com o Id do servidor traz só ele */
     afastamentosPdf(mes,ano,funcionario){return centiPdf('afastamentos-pdf',mes,ano,funcionario);},
     /* Busca de servidor por nome (3+ letras) ou matrícula -> {Data:[{Id,Matricula,Nome,DataAdmissao,Situacao,TipoAdm,Cargo,Lotacao}]} (até 50) */

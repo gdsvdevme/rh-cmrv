@@ -209,6 +209,12 @@ main.sub .grid,main.sub .devwrap{margin-top:12px}
 .qrow .qn{min-width:0}.qrow .qn b{display:block}
 .qres small{color:var(--muted);display:block}
 .qrow .sw{flex:none}
+#dAviso{margin:0;font-size:13.5px}
+#dAviso a{color:inherit}
+#dAviso .mm{display:inline-flex;gap:6px;flex-wrap:wrap;margin-top:6px}
+#dAviso .mm button{border:1px solid currentColor;background:transparent;color:inherit;border-radius:99px;padding:2px 11px;font-weight:700;cursor:pointer}
+.bloqueado .panel{opacity:.5;pointer-events:none;user-select:none}
+.qres .off{font-size:11.5px;font-weight:700;color:var(--warn);background:var(--warn-bg);border-radius:99px;padding:2px 9px;white-space:nowrap}
 .rdet>summary{display:flex;align-items:center;gap:10px;flex-wrap:wrap;cursor:pointer;list-style:none}
 .rdet>summary::-webkit-details-marker{display:none}
 .rdet>summary::before{content:"▶";font-size:11px;color:var(--muted);transition:transform .15s}
@@ -440,7 +446,9 @@ input,select,textarea{border-radius:12px}
   <div class="row dmes"><span class="muted">Mês</span>
     <select id="dMes" aria-label="Mês"></select>
     <input id="dAno" type="number" min="2000" max="2100" aria-label="Ano" style="width:84px">
+    <span class="muted" id="dEmit"></span>
   </div>
+  <div class="banner" id="dAviso" hidden></div>
   <section class="panel qb">
     <h2>Baixa individual</h2>
     <input id="qBusca" type="search" placeholder="Nome ou matrícula de quem deixou o espelho…" aria-label="Servidor que deixou o espelho" autocomplete="off" style="width:100%">
@@ -1333,7 +1341,8 @@ async function baixar(k){
     const by=await gerar(lista,{p:v=>carga(true,null,'Carimbando e organizando páginas… '+Math.round(v*100)+'%',v)});
     carga(true,null,'Salvando…',1);
     baixarBlob(by,k?nomeSeguro(nomeArq)+'-'+nomeSeguro(lista[0].nome)+'.pdf':nomeSeguro(nomeArq)+'-carimbado.pdf');
-    carga(false);toast('PDF pronto: '+lista.reduce((s,g)=>s+ordemPaginas(g).length,0)+' páginas carimbadas.');
+    let extra='';try{extra=await emitDoPdf(lista);}catch(e){console.error(e);}   // libera a baixa no Controle de devolução
+    carga(false);toast('PDF pronto: '+lista.reduce((s,g)=>s+ordemPaginas(g).length,0)+' páginas carimbadas.'+extra);
   }catch(e){carga(false);console.error(e);toast('Não foi possível gerar o PDF: '+(e&&e.message||e));}
 }
 $('#saveAll').addEventListener('click',()=>baixar(null));
@@ -1381,6 +1390,37 @@ let dev={itens:{},baixas:{},retiradas:{}},devT=null,devRef='',devPend=false;
 const devKey=()=>{const m=+$('#dMes').value,a=+$('#dAno').value;return(a>=2000&&a<=2100)?a+'-'+String(m).padStart(2,'0'):'';};
 const hoje=()=>{const d=new Date();return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');};
 const brData=iso=>/^\d{4}-\d{2}-\d{2}$/.test(iso||'')?iso.slice(8)+'/'+iso.slice(5,7)+'/'+iso.slice(0,4):'';
+/* espelhos emitidos (carimbados e salvos em Carimbar), por mês do espelho: {'2026-11':{ids:[...],u,p}}; só eles liberam baixa e retirada */
+let emit={},emitOk=false;
+async function emitLer(){
+  let j=null;
+  try{if(dbh){const d=await dbh.doc('devolucao/emitidos').get();if(d.exists) j=d.data().json;}}catch(e){}
+  if(j==null){try{j=localStorage.getItem('rhcrv-emitidos');}catch(e){}}
+  try{const o=JSON.parse(j||'null');if(o&&typeof o==='object') return o;}catch(e){}
+  return {};
+}
+async function emitSalvar(o){
+  const json=JSON.stringify(o);
+  if(dbh){try{await dbh.doc('devolucao/emitidos').set({json});return;}catch(e){toast('Não foi possível registrar a emissão no servidor.');}}
+  try{localStorage.setItem('rhcrv-emitidos',json);}catch(e){}
+}
+function ymDoPdf(){                                                     // mês do espelho: o do período impresso no próprio PDF
+  const c=new Map();
+  entradas.forEach(e=>{const m=/^(\d{2})\/(\d{2})\/(\d{4})/.exec(e.periodo||'');if(m){const k=m[3]+'-'+m[2];c.set(k,(c.get(k)||0)+1);}});
+  const top=[...c.entries()].sort((a,b)=>b[1]-a[1])[0];
+  if(top) return top[0];
+  const a=+$('#cAno').value,m=+$('#cMes').value;return(a>=2000&&a<=2100&&m>=1&&m<=12)?a+'-'+String(m).padStart(2,'0'):'';
+}
+/* chamado ao salvar o PDF carimbado: libera a baixa dos servidores que estão nele (e só deles) no mês do espelho */
+async function emitDoPdf(lista){
+  const ym=ymDoPdf();if(!ym) return '';
+  const ids=[];
+  lista.forEach(g=>g.entradas.forEach(e=>{if(e.pessoa&&!e.pag.every(p=>over.get(p)==='skip')) ids.push(pessoaId(e.pessoa));}));
+  const cur=await emitLer(),r=cur[ym]||{ids:[]};
+  r.ids=[...new Set((r.ids||[]).concat(ids))];r.u=new Date().toISOString();r.p={n:PB.centi.nome||'',u:PB.centi.user||''};
+  cur[ym]=r;emit=cur;emitOk=true;await emitSalvar(cur);
+  return ' Espelho de '+MESES[+ym.slice(5)-1]+'/'+ym.slice(0,4)+' registrado como emitido: '+r.ids.length+' servidor'+(r.ids.length===1?'':'es')+' liberado'+(r.ids.length===1?'':'s')+' para baixa.';
+}
 let devSetoresCache=null;                       // zerado em montarHierarquia(), quando a hierarquia muda
 function devSetores(){
   if(devSetoresCache) return devSetoresCache;
@@ -1392,6 +1432,21 @@ const pessoaId=p=>p.m?String(p.m):'n:'+norm(p.n);
 function devPessoasDe(k){
   return ((pessoal&&pessoal.pessoas)||[]).filter(p=>p._k===k).sort((a,b)=>(a.o==null?1e6:a.o)-(b.o==null?1e6:b.o)||a.n.localeCompare(b.n));
 }
+const devEmitido=()=>emit[devRef]||null;
+const devLegado=()=>Object.keys(dev.baixas||{}).length+Object.keys(dev.retiradas||{}).length>0;   // mês já usado antes desta regra: segue liberado
+const devLiberado=()=>!!devEmitido()||devLegado();
+function devElegivel(p){const e=devEmitido();if(!e) return devLegado();return(e.ids||[]).includes(pessoaId(p));}
+const devMesNome=ym=>MESES[+ym.slice(5)-1]+'/'+ym.slice(0,4);
+function devAviso(){
+  const av=$('#dAviso'),lib=devLiberado(),e=devEmitido();
+  $('#abaDev').classList.toggle('bloqueado',!lib);
+  $('#dEmit').textContent=e?'Espelho emitido em '+new Date(e.u).toLocaleDateString('pt-BR')+' · '+(e.ids||[]).length+' servidores':'';
+  if(lib){av.hidden=true;return;}
+  const ms=Object.keys(emit).sort().reverse().slice(0,4);
+  av.innerHTML='O espelho de <b>'+esc(devRef?devMesNome(devRef):'este mês')+'</b> ainda não foi carimbado e salvo, então não dá para dar baixa nem marcar retirada. Faça isso em <a href="#carimbar"><b>Carimbar</b></a>.'+
+    (ms.length?'<div class="mm">Meses com espelho emitido: '+ms.map(m=>'<button type="button" data-ym="'+m+'">'+devMesNome(m)+'</button>').join('')+'</div>':'');
+  av.hidden=false;
+}
 /* as baixas ficam no registro do mês (devolucao/AAAA-MM, campo baixas); o resto do registro (campo itens, de versões anteriores) não é tocado */
 async function devSalvar(){
   clearTimeout(devT);if(!devPend||!devRef) return;devPend=false;
@@ -1402,6 +1457,11 @@ async function devSalvar(){
 function devAgendar(){devPend=true;clearTimeout(devT);devT=setTimeout(devSalvar,600);}
 async function devCarregar(){
   await devSalvar();
+  if(!emitOk){                                                           // 1ª vez: abre no último mês com espelho emitido (não no mês do calendário)
+    emit=await emitLer();emitOk=true;
+    const ms=Object.keys(emit).sort();
+    if(ms.length){const ym=ms[ms.length-1];$('#dMes').value=String(+ym.slice(5));$('#dAno').value=ym.slice(0,4);}
+  }
   devRef=devKey();dev={itens:{},baixas:{},retiradas:{}};
   if(!devRef){devDesenhar();return;}
   const ref=devRef;let j=null;
@@ -1447,7 +1507,7 @@ function devBaixar(p,emLote){
   devAgendar();
 }
 function devDesfazer(id){delete dev.baixas[id];devAgendar();}
-function devDesenhar(){qUltimas();hDesenhar();rDesenhar();}
+function devDesenhar(){devAviso();qUltimas();hDesenhar();rDesenhar();}
 
 /* ---------- bloco 1: baixa individual ---------- */
 let qNovo='',qLista=[],qSel=0,qUltAberto=false;                       // 'Últimas baixas' abre recolhida
@@ -1462,7 +1522,8 @@ function qDesenhar(){
   const box=$('#qRes');
   if(!qLista.length){box.hidden=true;return;}
   box.innerHTML=qLista.map((p,i)=>{const b=dev.baixas[pessoaId(p)],g=GH.get(p._k);
-    return `<div class="qrow${i===qSel?' on':''}" data-i="${i}"><span class="qn"><b>${esc(titulo(p.n))}</b><small>${p.m?'mat. '+esc(p.m)+' · ':''}${esc(g?g.nome:'')}</small></span><label class="sw"><input type="checkbox" data-qi="${i}"${b?' checked':''} aria-label="Dar baixa no ponto de ${esc(p.n)}"><span>${b?'Baixado '+esc(brData(b.d).slice(0,5)):'Dar baixa'}</span></label></div>`;}).join('');
+    const ok=devElegivel(p)||b;
+    return `<div class="qrow${i===qSel?' on':''}" data-i="${i}"><span class="qn"><b>${esc(titulo(p.n))}</b><small>${p.m?'mat. '+esc(p.m)+' · ':''}${esc(g?g.nome:'')}</small></span>${ok?'':'<span class="off">sem espelho carimbado neste mês</span>'}<label class="sw"${ok?'':' hidden'}><input type="checkbox" data-qi="${i}"${b?' checked':''} aria-label="Dar baixa no ponto de ${esc(p.n)}"><span>${b?'Baixado '+esc(brData(b.d).slice(0,5)):'Dar baixa'}</span></label></div>`;}).join('');
   box.hidden=false;
 }
 function qBuscar(){
@@ -1483,6 +1544,7 @@ async function qToggle(i,marcar){
     toast('Baixa desfeita: '+titulo(p.n));return;
   }
   if(dev.baixas[id]) return;
+  if(!devLiberado()||!devElegivel(p)){toast(titulo(p.n)+' não tem espelho carimbado neste mês.');qDesenhar();return;}
   await devPorGarantir();
   devBaixar(p);
   qNovo=id;qUltimas();hDesenhar();
@@ -1518,11 +1580,12 @@ function hDesenhar(){
     $('#hInfo').textContent='Abra a Hierarquia de Pessoal e clique em Atualizar do Centi.';$('#hBaixar').disabled=true;$('#hDesfazer').hidden=true;return;
   }
   sel.disabled=false;
-  sel.innerHTML='<option value="">Escolha a hierarquia…</option>'+L.map(g=>{const bx=devPessoasDe(g.k).filter(p=>dev.baixas[pessoaId(p)]).length;
-    return `<option value="${esc(g.k)}"${g.k===hK?' selected':''}>${esc(g.nome)} — ${bx} de ${g.n} baixados</option>`;}).join('');
-  const P=hK?devPessoasDe(hK):[],falta=P.filter(p=>!dev.baixas[pessoaId(p)]).length,feitas=P.length-falta;
-  $('#hInfo').innerHTML=!hK?'Escolha a hierarquia para dar baixa em todos os servidores dela de uma vez.':!P.length?'Esta hierarquia não tem servidores na Hierarquia de Pessoal.':
-    falta?`<b>${falta}</b> servidor${falta===1?'':'es'} sem baixa${feitas?` · ${feitas} já baixado${feitas===1?'':'s'}`:''}.`:'Todos os servidores desta hierarquia já têm baixa.';
+  const elegiveis=k=>devPessoasDe(k).filter(p=>devElegivel(p)||dev.baixas[pessoaId(p)]);
+  sel.innerHTML='<option value="">Escolha a hierarquia…</option>'+L.map(g=>{const E=elegiveis(g.k),bx=E.filter(p=>dev.baixas[pessoaId(p)]).length;
+    return `<option value="${esc(g.k)}"${g.k===hK?' selected':''}>${esc(g.nome)} — ${bx} de ${E.length} baixados</option>`;}).join('');
+  const T=hK?devPessoasDe(hK):[],P=hK?elegiveis(hK):[],falta=P.filter(p=>!dev.baixas[pessoaId(p)]).length,feitas=P.length-falta,semEsp=T.length-P.length;
+  $('#hInfo').innerHTML=!hK?'Escolha a hierarquia para dar baixa em todos os servidores dela de uma vez.':!T.length?'Esta hierarquia não tem servidores na Hierarquia de Pessoal.':!P.length?'Nenhum servidor desta hierarquia tem espelho carimbado neste mês.':
+    (falta?`<b>${falta}</b> servidor${falta===1?'':'es'} sem baixa${feitas?` · ${feitas} já baixado${feitas===1?'':'s'}`:''}.`:'Todos os servidores desta hierarquia já têm baixa.')+(semEsp?` ${semEsp} sem espelho carimbado neste mês (não entram).`:'');
   $('#hBaixar').disabled=!falta;
   $('#hBaixar').textContent=falta?'Dar baixa em todos ('+falta+')':'Dar baixa em todos';
   $('#hDesfazer').hidden=!feitas;
@@ -1530,7 +1593,8 @@ function hDesenhar(){
 $('#hSel').addEventListener('change',ev=>{hK=ev.target.value;hDesenhar();});
 $('#hBaixar').addEventListener('click',async()=>{
   const k=hK;if(!k) return;
-  const g=devSetores().find(x=>x.k===k),P=devPessoasDe(k).filter(p=>!dev.baixas[pessoaId(p)]);
+  if(!devLiberado()){toast('O espelho deste mês ainda não foi carimbado e salvo.');return;}
+  const g=devSetores().find(x=>x.k===k),P=devPessoasDe(k).filter(p=>devElegivel(p)&&!dev.baixas[pessoaId(p)]);
   if(!g||!P.length) return;
   if(!confirm('Dar baixa no ponto de '+P.length+' servidor'+(P.length===1?'':'es')+' de '+g.nome+'?')) return;
   await devPorGarantir();
@@ -1554,7 +1618,8 @@ function rDesenhar(){
   const L=devSetores(),R=dev.retiradas||{},feitos=L.filter(g=>R[g.k]).length;
   $('#rCont').innerHTML='<b>'+feitos+'</b> de '+L.length+' setores já retiraram o espelho.';
   box.innerHTML=L.map(g=>{const r=R[g.k];
-    return `<div class="rrow${r?' ok':''}" data-k="${esc(g.k)}"><span class="rn"><b>${esc(g.nome)}</b>${r&&r.p&&r.p.n?'<small>registrado por '+esc(titulo(r.p.n))+'</small>':''}</span>${r?`<input type="date" data-rd value="${esc(r.d||'')}" aria-label="Data da retirada de ${esc(g.nome)}">`:''}<label class="sw"><input type="checkbox" data-r${r?' checked':''} aria-label="${esc(g.nome)} retirou o espelho impresso"><span>${r?'Retirou':'Não retirou'}</span></label></div>`;}).join('');
+    const ok=!!r||devPessoasDe(g.k).some(devElegivel);
+    return `<div class="rrow${r?' ok':''}" data-k="${esc(g.k)}"><span class="rn"><b>${esc(g.nome)}</b>${r&&r.p&&r.p.n?'<small>registrado por '+esc(titulo(r.p.n))+'</small>':''}</span>${r?`<input type="date" data-rd value="${esc(r.d||'')}" aria-label="Data da retirada de ${esc(g.nome)}">`:''}<label class="sw"><input type="checkbox" data-r${r?' checked':''}${ok?'':' disabled'} aria-label="${esc(g.nome)} retirou o espelho impresso"><span>${r?'Retirou':ok?'Não retirou':'Sem espelho emitido'}</span></label></div>`;}).join('');
 }
 $('#rLista').addEventListener('change',async ev=>{
   const t=ev.target,row=t.closest('.rrow');if(!row) return;
@@ -1565,12 +1630,14 @@ $('#rLista').addEventListener('change',async ev=>{
   }
   if(t.dataset.r===undefined) return;
   if(t.checked){
+    if(!devLiberado()||!devPessoasDe(k).some(devElegivel)){t.checked=false;toast('Este setor não tem espelho carimbado neste mês.');return;}
     t.disabled=true;await devPorGarantir();
     dev.retiradas[k]={d:hoje(),u:new Date().toISOString(),p:devPorReg()};
     const g=devSetores().find(x=>x.k===k);toast('Retirada registrada: '+(g?g.nome:'setor')+'.');
   }else delete dev.retiradas[k];
   devAgendar();rDesenhar();
 });
+$('#dAviso').addEventListener('click',ev=>{const b=ev.target.closest('[data-ym]');if(!b) return;$('#dMes').value=String(+b.dataset.ym.slice(5));$('#dAno').value=b.dataset.ym.slice(0,4);devCarregar();});
 $('#dMes').addEventListener('change',devCarregar);$('#dAno').addEventListener('change',devCarregar);
 window.addEventListener('pagehide',devSalvar);
 (function(){

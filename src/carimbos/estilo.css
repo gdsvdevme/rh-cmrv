@@ -121,6 +121,12 @@ main.sub .grid,main.sub .devwrap{margin-top:12px}
 .qrow .qn{min-width:0}.qrow .qn b{display:block}
 .qres small{color:var(--muted);display:block}
 .qrow .sw{flex:none}
+#dAviso{margin:0;font-size:13.5px}
+#dAviso a{color:inherit}
+#dAviso .mm{display:inline-flex;gap:6px;flex-wrap:wrap;margin-top:6px}
+#dAviso .mm button{border:1px solid currentColor;background:transparent;color:inherit;border-radius:99px;padding:2px 11px;font-weight:700;cursor:pointer}
+.bloqueado .panel{opacity:.5;pointer-events:none;user-select:none}
+.qres .off{font-size:11.5px;font-weight:700;color:var(--warn);background:var(--warn-bg);border-radius:99px;padding:2px 9px;white-space:nowrap}
 .rdet>summary{display:flex;align-items:center;gap:10px;flex-wrap:wrap;cursor:pointer;list-style:none}
 .rdet>summary::-webkit-details-marker{display:none}
 .rdet>summary::before{content:"▶";font-size:11px;color:var(--muted);transition:transform .15s}

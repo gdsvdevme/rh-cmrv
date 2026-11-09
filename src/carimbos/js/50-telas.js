@@ -16,7 +16,8 @@ function telaEsp(){
   $('#abaCar').hidden=t!=='carimbar';$('#abaDev').hidden=t!=='devolucao';
   $('#mainEsp').classList.toggle('sub',!!t);
   if(!t){
-    $('#menuEsp').innerHTML='<div class="intro"><h2>O que você quer fazer?</h2><p>Escolha uma opção.</p></div><div class="cards">'+Object.entries(TELAS_ESP).map(([k,v])=>cartaoEsp(k,v)).join('')+'</div>';
+    $('#menuEsp').innerHTML='<div class="intro"><h2>O que você quer fazer?</h2><p>Escolha uma opção.</p></div><div class="cards">'+Object.entries(TELAS_ESP).map(([k,
+      v])=>cartaoEsp(k,v)).join('')+'</div>';
     return;
   }
   $('#crumbEsp').innerHTML='<a href="#">← Espelhos de ponto</a><h2>'+esc(TELAS_ESP[t].nome)+'</h2>';

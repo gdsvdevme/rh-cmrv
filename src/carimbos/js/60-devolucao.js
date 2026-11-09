@@ -62,7 +62,9 @@ function devResumo(L){
 }
 function devDesenhar(){
   const box=$('#dLista');
-  if(!pessoal||!GH.size){devResumo([]);box.innerHTML='<div class="empty" style="padding:24px"><h2>Hierarquia de pessoal não carregada</h2><p class="muted">Os setores vêm da Hierarquia de Pessoal. Abra-a e clique em <b>Atualizar do Centi</b> ao menos uma vez.</p></div>';return;}
+  if(!pessoal||!GH.size){devResumo([]);
+    box.innerHTML='<div class="empty" style="padding:24px"><h2>Hierarquia de pessoal não carregada</h2><p class="muted">Os setores vêm da Hierarquia de Pessoal. Abra-a e clique em <b>Atualizar do Centi</b> ao menos uma vez.</p></div>';
+    return;}
   const L=devSetores();devResumo(L);
   const q=norm(devBusca);
   const V=L.filter(g=>(devFiltro==='todos'||devSit(g.k)===devFiltro)&&(!q||norm(g.nome).includes(q)));
@@ -175,7 +177,10 @@ window.addEventListener('pagehide',devSalvar);
 $('#dCsv').addEventListener('click',()=>{
   if(!GH.size){toast('A hierarquia de pessoal não está carregada.');return;}
   const c=v=>'"'+String(v==null?'':v).replace(/"/g,'""')+'"';
-  const rows=[['Setor','Servidores','Situação','Data','Observação','Entregue pelo RH','Data da entrega pelo RH','Registrado por','Recibo anexado']].concat(devSetores().map(g=>{const it=dev.itens[g.k]||{},e=it.e||null,ag=new Date().toISOString();return [g.nome,g.n,DST[devSit(g.k)],brData(it.d),(it.o||'').replace(/\s*\n\s*/g,' '),e?'Sim':'Não',e?brData(e.d):'',e&&e.p?e.p.n+(e.p.m?' (mat. '+e.p.m+')':''):'',e&&e.r?(e.r.x>ag?'Sim':'Removido após '+DIAS_RECIBO+' dias'):''];}));
+  const rows=[['Setor','Servidores','Situação','Data','Observação','Entregue pelo RH','Data da entrega pelo RH','Registrado por',
+    'Recibo anexado']].concat(devSetores().map(g=>{const it=dev.itens[g.k]||{},e=it.e||null,ag=new Date().toISOString();return [g.nome,
+    g.n,DST[devSit(g.k)],brData(it.d),(it.o||'').replace(/\s*\n\s*/g,' '),e?'Sim':'Não',e?brData(e.d):'',e&&e.p?e.p.n+(e.p.m?' (mat. '+e.p.m+')':''):'',
+    e&&e.r?(e.r.x>ag?'Sim':'Removido após '+DIAS_RECIBO+' dias'):''];}));
   const csv='﻿'+rows.map(r=>r.map(c).join(';')).join('\r\n');
   const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([csv],{type:'text/csv;charset=utf-8'}));a.download='controle-devolucao-espelhos-'+(devRef||'mes')+'.csv';
   document.body.appendChild(a);a.click();setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove();},4000);

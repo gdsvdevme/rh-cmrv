@@ -71,7 +71,8 @@ import base64
 stamp = base64.b64encode(open(os.path.join(root, 'src/carimbo-padrao.png'), 'rb').read()).decode()
 carimbos = mod(rd('src/carimbos.template.html')).replace('/*PB_JS*/', pbjs).replace('/*STAMP_B64*/', stamp)
 
-documentos = mod(rd('src/documentos.template.html')).replace('/*PB_JS*/', pbjs).replace('/*EXTENSO_JS*/', rd('src/extenso.js').replace('</script>', '<\\/script>')).replace('/*TIMBRADO_B64*/', base64.b64encode(open(os.path.join(root, 'src/timbrado.docx'), 'rb').read()).decode())
+documentos = mod(rd('src/documentos.template.html')).replace('/*PB_JS*/', pbjs).replace('/*EXTENSO_JS*/', rd('src/extenso.js')
+    .replace('</script>', '<\\/script>')).replace('/*TIMBRADO_B64*/', base64.b64encode(open(os.path.join(root, 'src/timbrado.docx'), 'rb').read()).decode())
 
 head = ('<!doctype html>\n<html lang="pt-BR"><head><meta charset="utf-8">'
         '<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"></head>'
@@ -79,7 +80,9 @@ head = ('<!doctype html>\n<html lang="pt-BR"><head><meta charset="utf-8">'
 page = lambda frag: head + frag + '\n</body></html>\n'
 
 # site (hospedagem comum, ex.: Vercel)
-wr('site/index.html', page(launcher.replace('/*FLOW_URL*/', 'fluxogramas/').replace('/*PESSOAL_URL*/', 'pessoal/').replace('/*PONTO_URL*/', 'ponto/').replace('/*FERIAS_URL*/', 'ferias/').replace('/*LICENCA_URL*/', 'licenca-premio/').replace('/*TAREFAS_URL*/', 'tarefas/').replace('/*CARIMBOS_URL*/', 'carimbos/').replace('/*DOCUMENTOS_URL*/', 'documentos/')))
+wr('site/index.html', page(launcher.replace('/*FLOW_URL*/', 'fluxogramas/').replace('/*PESSOAL_URL*/', 'pessoal/').replace('/*PONTO_URL*/', 'ponto/')
+    .replace('/*FERIAS_URL*/', 'ferias/').replace('/*LICENCA_URL*/', 'licenca-premio/').replace('/*TAREFAS_URL*/', 'tarefas/')
+    .replace('/*CARIMBOS_URL*/', 'carimbos/').replace('/*DOCUMENTOS_URL*/', 'documentos/')))
 wr('site/documentos/index.html', page(documentos.replace('/*HOME_URL*/', '../')))
 wr('site/carimbos/index.html', page(carimbos.replace('/*HOME_URL*/', '../')))
 wr('site/ferias/index.html', page(ferias.replace('/*HOME_URL*/', '../')))
@@ -89,7 +92,10 @@ wr('site/ponto/index.html', page(ponto.replace('/*HOME_URL*/', '../')))
 wr('site/pessoal/index.html', page(pessoal.replace('/*HOME_URL*/', '../')))
 wr('site/fluxogramas/index.html', page(flow.replace('/*HOME_URL*/', '../')))
 # fragmentos de artefato
-wr('dist/artifact-launcher.html', launcher.replace('/*FLOW_URL*/', opt('--flow-url', 'fluxogramas/')).replace('/*PESSOAL_URL*/', opt('--pessoal-url', 'pessoal/')).replace('/*PONTO_URL*/', opt('--ponto-url', 'ponto/')).replace('/*FERIAS_URL*/', opt('--ferias-url', 'ferias/')).replace('/*LICENCA_URL*/', opt('--licenca-url', 'licenca-premio/')).replace('/*TAREFAS_URL*/', opt('--tarefas-url', 'tarefas/')).replace('/*CARIMBOS_URL*/', opt('--carimbos-url', 'carimbos/')).replace('/*DOCUMENTOS_URL*/', opt('--documentos-url', 'documentos/')))
+wr('dist/artifact-launcher.html', launcher.replace('/*FLOW_URL*/', opt('--flow-url', 'fluxogramas/'))
+    .replace('/*PESSOAL_URL*/', opt('--pessoal-url', 'pessoal/')).replace('/*PONTO_URL*/', opt('--ponto-url', 'ponto/'))
+    .replace('/*FERIAS_URL*/', opt('--ferias-url', 'ferias/')).replace('/*LICENCA_URL*/', opt('--licenca-url', 'licenca-premio/'))
+    .replace('/*TAREFAS_URL*/', opt('--tarefas-url', 'tarefas/')).replace('/*CARIMBOS_URL*/', opt('--carimbos-url', 'carimbos/')).replace('/*DOCUMENTOS_URL*/', opt('--documentos-url', 'documentos/')))
 wr('dist/artifact-documentos.html', documentos.replace('/*HOME_URL*/', opt('--home-url', '../')))
 wr('dist/artifact-carimbos.html', carimbos.replace('/*HOME_URL*/', opt('--home-url', '../')))
 wr('dist/artifact-tarefas.html', tarefas.replace('/*HOME_URL*/', opt('--home-url', '../')))

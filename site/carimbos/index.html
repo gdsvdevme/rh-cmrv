@@ -97,9 +97,11 @@ button,input,select{font:inherit;color:inherit}
 .inner{max-width:1360px;margin:0 auto}
 .hero{background:linear-gradient(135deg,var(--hero-a),var(--hero-b));color:#fff;padding-block:22px 40px}
 .top{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:22px}
-.home{color:#fff;text-decoration:none;font-weight:600;font-size:13.5px;display:inline-flex;align-items:center;gap:8px;padding:8px 12px;border-radius:10px;background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.28)}
+.home{color:#fff;text-decoration:none;font-weight:600;font-size:13.5px;display:inline-flex;align-items:center;gap:8px;padding:8px 12px;border-radius:10px;background:rgba(255,255,255,.12);
+  border:1px solid rgba(255,255,255,.28)}
 .home:hover,.themebtn:hover{background:rgba(255,255,255,.22)}
-.themebtn{margin-left:auto;display:inline-flex;align-items:center;gap:8px;border:1px solid rgba(255,255,255,.35);background:rgba(255,255,255,.12);color:#fff;border-radius:10px;padding:8px 12px;font-weight:600;font-size:13.5px;cursor:pointer}
+.themebtn{margin-left:auto;display:inline-flex;align-items:center;gap:8px;border:1px solid rgba(255,255,255,.35);background:rgba(255,255,255,.12);color:#fff;border-radius:10px;
+  padding:8px 12px;font-weight:600;font-size:13.5px;cursor:pointer}
 .goldrule{width:56px;height:4px;background:var(--gold);border-radius:2px;margin:0 0 14px}
 .hero h1{font-size:clamp(1.6rem,4.4vw,2.4rem);line-height:1.12}
 .hero p{margin:8px 0 0;opacity:.85}
@@ -107,13 +109,15 @@ main{padding-block:0 40px}
 .homewrap{margin-top:30px}
 .intro h2{font-size:1.35rem}.intro p{margin:4px 0 18px;color:var(--muted)}
 .cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,290px),1fr));gap:16px}
-.card2{position:relative;display:flex;flex-direction:column;gap:6px;padding:22px 22px 18px;background:var(--surface);border:1px solid var(--line);border-radius:18px;box-shadow:var(--shadow);text-decoration:none;color:inherit;overflow:hidden;min-height:190px;transition:transform .18s ease,box-shadow .18s ease,border-color .18s ease}
+.card2{position:relative;display:flex;flex-direction:column;gap:6px;padding:22px 22px 18px;background:var(--surface);border:1px solid var(--line);border-radius:18px;box-shadow:var(--shadow);
+  text-decoration:none;color:inherit;overflow:hidden;min-height:190px;transition:transform .18s ease,box-shadow .18s ease,border-color .18s ease}
 .card2::before{content:"";position:absolute;inset:0 0 auto 0;height:5px;background:linear-gradient(90deg,var(--accent),var(--gold))}
 .card2::after{content:"";position:absolute;right:-38px;bottom:-38px;width:130px;height:130px;border-radius:50%;background:var(--soft);z-index:0}
 .card2>*{position:relative;z-index:1}
 a.card2:hover{transform:translateY(-4px);border-color:var(--accent);box-shadow:0 12px 30px rgba(6,61,39,.18)}
 a.card2:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
-.card2 .ic{width:52px;height:52px;border-radius:14px;display:grid;place-items:center;background:linear-gradient(135deg,var(--hero-a),var(--hero-b));color:#fff;margin-bottom:8px;box-shadow:0 6px 14px rgba(6,61,39,.28)}
+.card2 .ic{width:52px;height:52px;border-radius:14px;display:grid;place-items:center;background:linear-gradient(135deg,var(--hero-a),var(--hero-b));color:#fff;margin-bottom:8px;
+  box-shadow:0 6px 14px rgba(6,61,39,.28)}
 .card2 b{font-family:var(--f-display);font-size:1.18rem;line-height:1.2}
 .card2 .d{color:var(--muted);font-size:14px;max-width:34ch}
 .card2 .go{margin-top:auto;padding-top:12px;font-weight:700;color:var(--accent);font-size:14px;display:inline-flex;align-items:center;gap:6px}
@@ -130,7 +134,8 @@ main.sub .grid,main.sub .devwrap{margin-top:12px}
 .dsum small{display:block;font-size:11px;font-weight:700;letter-spacing:.04em;text-transform:uppercase;color:var(--muted)}
 .dsum b{font-family:var(--f-display);font-size:1.3rem;font-variant-numeric:tabular-nums}
 .dsum .ok b{color:var(--ok)}.dsum .pend b{color:var(--warn)}.dsum .nao b{color:var(--danger)}
-.drow{display:grid;grid-template-columns:minmax(180px,1.1fr) auto minmax(180px,1.4fr);gap:10px 14px;align-items:start;padding:12px 14px;border-top:1px solid var(--line);border-left:5px solid var(--danger)}
+.drow{display:grid;grid-template-columns:minmax(180px,1.1fr) auto minmax(180px,1.4fr);gap:10px 14px;align-items:start;padding:12px 14px;border-top:1px solid var(--line);
+  border-left:5px solid var(--danger)}
 .drow:first-child{border-top:0}
 .drow.ok{border-left-color:var(--ok)}.drow.pend{border-left-color:var(--warn)}
 .drow .nm b{font-family:var(--f-display);font-size:14.5px;line-height:1.25;display:block}
@@ -159,7 +164,8 @@ main.sub .grid,main.sub .devwrap{margin-top:12px}
 .panel{background:var(--surface);border:1px solid var(--line);border-radius:14px;box-shadow:var(--shadow);padding:14px 16px;min-width:0}
 .panel>h2{font-size:1rem;display:flex;align-items:center;gap:10px;margin-bottom:10px}
 .panel>h2 .n{width:24px;height:24px;border-radius:50%;background:var(--accent);color:var(--accent-fg);display:inline-grid;place-items:center;font-size:13px;flex:none}
-.btn{border:1px solid var(--line);background:var(--surface);border-radius:10px;padding:9px 13px;cursor:pointer;font-weight:600;font-size:14px;display:inline-flex;align-items:center;justify-content:center;gap:8px}
+.btn{border:1px solid var(--line);background:var(--surface);border-radius:10px;padding:9px 13px;cursor:pointer;font-weight:600;font-size:14px;display:inline-flex;align-items:center;
+  justify-content:center;gap:8px}
 .btn:hover{border-color:var(--accent)}.btn.primary{background:var(--accent);color:var(--accent-fg);border-color:var(--accent)}.btn:disabled{opacity:.55;cursor:not-allowed}
 .btn.sm{padding:5px 9px;font-size:12.5px;border-radius:8px}
 .btn.danger{color:var(--danger)}
@@ -215,7 +221,8 @@ select,input[type=text],input[type=search],input[type=number]{background:var(--s
 .empty h2{color:var(--fg);margin-bottom:6px}
 .hint{font-size:13px;color:var(--muted)}
 .hint b{color:var(--fg)}
-#load{position:fixed;inset:0;z-index:9000;display:grid;place-items:center;padding:24px;background:radial-gradient(1200px 700px at 50% 30%,var(--hero-b),var(--hero-a)) var(--hero-a);color:#fff;text-align:center}
+#load{position:fixed;inset:0;z-index:9000;display:grid;place-items:center;padding:24px;background:radial-gradient(1200px 700px at 50% 30%,var(--hero-b),var(--hero-a)) var(--hero-a);
+  color:#fff;text-align:center}
 #load .ld-box{display:flex;flex-direction:column;align-items:center;gap:10px;max-width:420px}
 #load .ld-spin{width:56px;height:56px;border-radius:50%;border:5px solid rgba(255,255,255,.22);border-top-color:var(--gold);animation:ld-rot .9s linear infinite;margin-bottom:6px}
 #load b{font-family:var(--f-display);font-size:1.35rem;line-height:1.2}
@@ -230,7 +237,8 @@ dialog::backdrop{background:rgba(0,0,0,.5)}
 dialog form{padding:20px;display:flex;flex-direction:column;gap:12px;max-height:88vh;overflow:auto}
 dialog ul{margin:0;padding-left:18px;font-size:14px}
 dialog .row{justify-content:flex-end}
-#toast{position:fixed;left:50%;transform:translateX(-50%);bottom:max(18px,env(safe-area-inset-bottom,0px));background:var(--fg);color:var(--bg);padding:10px 16px;border-radius:10px;font-size:14px;z-index:9500;max-width:90vw}
+#toast{position:fixed;left:50%;transform:translateX(-50%);bottom:max(18px,env(safe-area-inset-bottom,0px));background:var(--fg);color:var(--bg);padding:10px 16px;border-radius:10px;
+  font-size:14px;z-index:9500;max-width:90vw}
 @media (pointer:coarse){input,select{font-size:16px}.btn{min-height:42px}}
 /* ===== visual moderno (compartilhado) ===== */
 body{background:radial-gradient(1100px 520px at 85% -120px,color-mix(in srgb,var(--accent) 12%,transparent),transparent 70%),var(--bg);background-attachment:fixed}
@@ -261,7 +269,8 @@ input,select,textarea{border-radius:12px}
 </style>
 
 <header class="hero wrap"><div class="inner">
-  <div class="top"><a class="home" href="../" target="_top"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 11l9-8 9 8M5 10v10h5v-6h4v6h5V10"/></svg>Sistema Interno do RH</a>
+  <div class="top"><a class="home" href="../" target="_top"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+    stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 11l9-8 9 8M5 10v10h5v-6h4v6h5V10"/></svg>Sistema Interno do RH</a>
   <button class="themebtn" id="themeBtn" type="button"></button></div>
   <div class="goldrule"></div>
   <h1>Espelhos de ponto</h1>
@@ -282,7 +291,8 @@ input,select,textarea{border-radius:12px}
       <button class="btn primary" id="cGerar" type="button" style="width:100%;margin-top:10px">Gerar espelhos no Centi</button>
       <p class="hint" style="margin:6px 0 12px;font-size:12.5px;color:var(--muted)">Usa a tela Espelho de ponto (FP170) com o órgão Câmara Municipal de Rio Verde. Leva cerca de 1 minuto.</p>
       <p class="hint" style="margin:0 0 6px;font-size:12.5px;color:var(--muted)">Ou, se preferir, anexe um PDF que você já gerou:</p>
-      <label class="drop" id="drop" for="file" style="padding:10px 12px"><b style="font-size:14px">Escolher ou arrastar o PDF</b><span id="dropS">O PDF com todos os espelhos (uma página por servidor)</span></label>
+      <label class="drop" id="drop" for="file" style="padding:10px 12px"><b style="font-size:14px">Escolher ou arrastar o PDF</b><span
+        id="dropS">O PDF com todos os espelhos (uma página por servidor)</span></label>
       <input id="file" type="file" accept="application/pdf,.pdf" hidden>
       <div id="resumo"></div>
     </section>
@@ -295,10 +305,12 @@ input,select,textarea{border-radius:12px}
     </section>
     <section class="panel">
       <h2><span class="n">3</span>Salvar o PDF carimbado</h2>
-      <label class="ck"><input type="checkbox" id="optCapas" checked><span>Incluir uma <b>capa</b> antes de cada hierarquia: página em branco só com o nome (ex.: Gabinete do Vereador Fulano)</span></label>
+      <label class="ck"><input type="checkbox" id="optCapas"
+        checked><span>Incluir uma <b>capa</b> antes de cada hierarquia: página em branco só com o nome (ex.: Gabinete do Vereador Fulano)</span></label>
       <label class="ck"><input type="checkbox" id="optFundo" checked><span>Fundo <b>branco</b> atrás do carimbo (esconde as linhas da tabela e deixa o texto legível)</span></label>
       <div class="row" style="margin-top:12px"><button class="btn primary" id="saveAll" type="button" disabled>Salvar PDF carimbado</button></div>
-      <p class="muted" style="margin:8px 0 0">Também dá para baixar só uma hierarquia, pelo botão <b>Baixar</b> ao lado do nome dela na lista abaixo. Tudo é feito no seu navegador: o PDF não é enviado a nenhum servidor.</p>
+      <p class="muted"
+        style="margin:8px 0 0">Também dá para baixar só uma hierarquia, pelo botão <b>Baixar</b> ao lado do nome dela na lista abaixo. Tudo é feito no seu navegador: o PDF não é enviado a nenhum servidor.</p>
     </section>
     <section class="panel" id="treePanel" hidden>
       <h2>Hierarquia</h2>
@@ -308,7 +320,8 @@ input,select,textarea{border-radius:12px}
   </div>
   <div class="col">
     <section class="panel view" id="viewPanel">
-      <div class="empty" id="vazio"><h2>Anexe o PDF para começar</h2><p>A página de cada servidor é reconhecida pela matrícula e pelo nome no topo do espelho.<br>Depois é só arrastar o carimbo até a posição certa.</p></div>
+      <div class="empty"
+        id="vazio"><h2>Anexe o PDF para começar</h2><p>A página de cada servidor é reconhecida pela matrícula e pelo nome no topo do espelho.<br>Depois é só arrastar o carimbo até a posição certa.</p></div>
       <div id="viewBox" hidden>
         <div class="bar">
           <button class="btn sm" id="prev" type="button" aria-label="Página anterior">◀</button>
@@ -319,7 +332,8 @@ input,select,textarea{border-radius:12px}
           <label class="muted" style="display:flex;align-items:center;gap:6px">Hierarquia desta página <select id="selGrupo" style="max-width:240px"></select></label>
         </div>
         <div class="hint" id="info" style="margin-top:8px"></div>
-        <div class="stagewrap" style="margin-top:8px"><div id="stage"><canvas id="cv"></canvas><div id="st" hidden><img id="stImg" alt="Carimbo"><i id="stHandle" title="Arraste para mudar o tamanho"></i></div></div></div>
+        <div class="stagewrap" style="margin-top:8px"><div id="stage"><canvas id="cv"></canvas><div id="st" hidden><img id="stImg" alt="Carimbo"><i
+          id="stHandle" title="Arraste para mudar o tamanho"></i></div></div></div>
         <div class="bar" style="margin-top:8px">
           <label class="muted" style="display:flex;align-items:center;gap:8px;flex:1 1 220px">Tamanho <input type="range" id="tam" min="8" max="90" step="1" style="flex:1"></label>
           <button class="btn sm" id="soEsta" type="button"></button>
@@ -346,7 +360,8 @@ input,select,textarea{border-radius:12px}
 </section>
 </div></main>
 <dialog id="dlg"></dialog>
-<div id="load" role="status" aria-live="polite" hidden><div class="ld-box"><div class="ld-spin" aria-hidden="true"></div><b id="ldT">Carregando…</b><span id="ldS"></span><div class="ld-bar" aria-hidden="true"><i id="ldB"></i></div></div></div>
+<div id="load" role="status" aria-live="polite" hidden><div class="ld-box"><div class="ld-spin" aria-hidden="true"></div><b
+  id="ldT">Carregando…</b><span id="ldS"></span><div class="ld-bar" aria-hidden="true"><i id="ldB"></i></div></div></div>
 <div id="toast" hidden></div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
@@ -755,7 +770,8 @@ const TEMA_KEY='rhcrv-tema';
 let TOAST_MS=4500;                                  // a página pode trocar: TOAST_MS=3500;
 const $=s=>document.querySelector(s);
 const esc=s=>String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
-const ICO2={sun:'<circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/>',moon:'<path d="M21 12.8A9 9 0 1111.2 3a7 7 0 009.8 9.8z"/>'};
+const ICO2={sun:'<circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/>',
+  moon:'<path d="M21 12.8A9 9 0 1111.2 3a7 7 0 009.8 9.8z"/>'};
 function isDark(){const m=/rgba?\((\d+),\s*(\d+),\s*(\d+)/.exec(getComputedStyle(document.body).backgroundColor);return m?(0.2126*m[1]+0.7152*m[2]+0.0722*m[3])/255<0.4:false;}
 function themeBtn(){
   const b=$('#themeBtn');if(!b) return;const d=isDark();
@@ -781,7 +797,8 @@ const PADRAO={id:'padrao',nome:'Atesto jornada 40h (padrão)',src:'data:image/pn
 const norm=s=>String(s||'').normalize('NFD').replace(/[̀-ͯ]/g,'').toLowerCase().replace(/\s+/g,' ').trim();
 const digs=s=>String(s||'').replace(/\D/g,'').replace(/^0+/,'');
 const MIN=new Set(['de','da','do','das','dos','e','a','o']),ROMAN=/^(i|ii|iii|iv|v|vi|vii|viii|ix|x)$/i;
-function titulo(s){return String(s||'').toLowerCase().replace(/\s+/g,' ').trim().split(' ').map((w,i)=>(i>0&&ROMAN.test(w))?w.toUpperCase():(i>0&&MIN.has(w))?w:w.replace(/(^|[-\/(])(\p{L})/gu,(m,a,b)=>a+b.toUpperCase())).join(' ');}
+function titulo(s){return String(s||'').toLowerCase().replace(/\s+/g,' ').trim().split(' ').map((w,i)=>(i>0&&ROMAN.test(w))?w.toUpperCase():(i>0&&MIN.has(w))?w:w.replace(/(^|[-\/(])(\p{L})/gu,
+  (m,a,b)=>a+b.toUpperCase())).join(' ');}
 /* mesma regra de grupos da Hierarquia de Pessoal */
 function grupoInfo(h){
   const n=norm(h);
@@ -1173,7 +1190,8 @@ $('#file').addEventListener('change',ev=>{const f=ev.target.files[0];ev.target.v
 ['dragenter','dragover'].forEach(t=>drop.addEventListener(t,ev=>{ev.preventDefault();drop.classList.add('over');}));
 ['dragleave','drop'].forEach(t=>drop.addEventListener(t,ev=>{ev.preventDefault();drop.classList.remove('over');}));
 drop.addEventListener('drop',ev=>{const f=ev.dataTransfer.files[0];if(f) abrirPdf(f);});
-try{matchMedia('(prefers-color-scheme: dark)').addEventListener('change',themeBtn);new MutationObserver(themeBtn).observe(document.documentElement,{attributes:true,attributeFilter:['data-theme']});}catch(e){}
+try{matchMedia('(prefers-color-scheme: dark)').addEventListener('change',themeBtn);new MutationObserver(themeBtn).observe(document.documentElement,{attributes:true,attributeFilter:['data-theme']});
+  }catch(e){}
 
 
 /* ---------- telas: menu inicial, Carimbar (#carimbar) e Controle de devolução (#devolucao) ---------- */
@@ -1194,7 +1212,8 @@ function telaEsp(){
   $('#abaCar').hidden=t!=='carimbar';$('#abaDev').hidden=t!=='devolucao';
   $('#mainEsp').classList.toggle('sub',!!t);
   if(!t){
-    $('#menuEsp').innerHTML='<div class="intro"><h2>O que você quer fazer?</h2><p>Escolha uma opção.</p></div><div class="cards">'+Object.entries(TELAS_ESP).map(([k,v])=>cartaoEsp(k,v)).join('')+'</div>';
+    $('#menuEsp').innerHTML='<div class="intro"><h2>O que você quer fazer?</h2><p>Escolha uma opção.</p></div><div class="cards">'+Object.entries(TELAS_ESP).map(([k,
+      v])=>cartaoEsp(k,v)).join('')+'</div>';
     return;
   }
   $('#crumbEsp').innerHTML='<a href="#">← Espelhos de ponto</a><h2>'+esc(TELAS_ESP[t].nome)+'</h2>';
@@ -1266,7 +1285,9 @@ function devResumo(L){
 }
 function devDesenhar(){
   const box=$('#dLista');
-  if(!pessoal||!GH.size){devResumo([]);box.innerHTML='<div class="empty" style="padding:24px"><h2>Hierarquia de pessoal não carregada</h2><p class="muted">Os setores vêm da Hierarquia de Pessoal. Abra-a e clique em <b>Atualizar do Centi</b> ao menos uma vez.</p></div>';return;}
+  if(!pessoal||!GH.size){devResumo([]);
+    box.innerHTML='<div class="empty" style="padding:24px"><h2>Hierarquia de pessoal não carregada</h2><p class="muted">Os setores vêm da Hierarquia de Pessoal. Abra-a e clique em <b>Atualizar do Centi</b> ao menos uma vez.</p></div>';
+    return;}
   const L=devSetores();devResumo(L);
   const q=norm(devBusca);
   const V=L.filter(g=>(devFiltro==='todos'||devSit(g.k)===devFiltro)&&(!q||norm(g.nome).includes(q)));
@@ -1379,7 +1400,10 @@ window.addEventListener('pagehide',devSalvar);
 $('#dCsv').addEventListener('click',()=>{
   if(!GH.size){toast('A hierarquia de pessoal não está carregada.');return;}
   const c=v=>'"'+String(v==null?'':v).replace(/"/g,'""')+'"';
-  const rows=[['Setor','Servidores','Situação','Data','Observação','Entregue pelo RH','Data da entrega pelo RH','Registrado por','Recibo anexado']].concat(devSetores().map(g=>{const it=dev.itens[g.k]||{},e=it.e||null,ag=new Date().toISOString();return [g.nome,g.n,DST[devSit(g.k)],brData(it.d),(it.o||'').replace(/\s*\n\s*/g,' '),e?'Sim':'Não',e?brData(e.d):'',e&&e.p?e.p.n+(e.p.m?' (mat. '+e.p.m+')':''):'',e&&e.r?(e.r.x>ag?'Sim':'Removido após '+DIAS_RECIBO+' dias'):''];}));
+  const rows=[['Setor','Servidores','Situação','Data','Observação','Entregue pelo RH','Data da entrega pelo RH','Registrado por',
+    'Recibo anexado']].concat(devSetores().map(g=>{const it=dev.itens[g.k]||{},e=it.e||null,ag=new Date().toISOString();return [g.nome,
+    g.n,DST[devSit(g.k)],brData(it.d),(it.o||'').replace(/\s*\n\s*/g,' '),e?'Sim':'Não',e?brData(e.d):'',e&&e.p?e.p.n+(e.p.m?' (mat. '+e.p.m+')':''):'',
+    e&&e.r?(e.r.x>ag?'Sim':'Removido após '+DIAS_RECIBO+' dias'):''];}));
   const csv='﻿'+rows.map(r=>r.map(c).join(';')).join('\r\n');
   const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([csv],{type:'text/csv;charset=utf-8'}));a.download='controle-devolucao-espelhos-'+(devRef||'mes')+'.csv';
   document.body.appendChild(a);a.click();setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove();},4000);

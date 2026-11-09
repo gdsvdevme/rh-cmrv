@@ -4,7 +4,8 @@ const PADRAO={id:'padrao',nome:'Atesto jornada 40h (padrão)',src:'data:image/pn
 const norm=s=>String(s||'').normalize('NFD').replace(/[̀-ͯ]/g,'').toLowerCase().replace(/\s+/g,' ').trim();
 const digs=s=>String(s||'').replace(/\D/g,'').replace(/^0+/,'');
 const MIN=new Set(['de','da','do','das','dos','e','a','o']),ROMAN=/^(i|ii|iii|iv|v|vi|vii|viii|ix|x)$/i;
-function titulo(s){return String(s||'').toLowerCase().replace(/\s+/g,' ').trim().split(' ').map((w,i)=>(i>0&&ROMAN.test(w))?w.toUpperCase():(i>0&&MIN.has(w))?w:w.replace(/(^|[-\/(])(\p{L})/gu,(m,a,b)=>a+b.toUpperCase())).join(' ');}
+function titulo(s){return String(s||'').toLowerCase().replace(/\s+/g,' ').trim().split(' ').map((w,i)=>(i>0&&ROMAN.test(w))?w.toUpperCase():(i>0&&MIN.has(w))?w:w.replace(/(^|[-\/(])(\p{L})/gu,
+  (m,a,b)=>a+b.toUpperCase())).join(' ');}
 /* mesma regra de grupos da Hierarquia de Pessoal */
 function grupoInfo(h){
   const n=norm(h);

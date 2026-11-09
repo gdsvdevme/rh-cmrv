@@ -1,5 +1,6 @@
 <header class="hero wrap"><div class="inner">
-  <div class="top"><a class="home" href="/*HOME_URL*/" target="_top"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 11l9-8 9 8M5 10v10h5v-6h4v6h5V10"/></svg>Sistema Interno do RH</a>
+  <div class="top"><a class="home" href="/*HOME_URL*/" target="_top"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+    stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 11l9-8 9 8M5 10v10h5v-6h4v6h5V10"/></svg>Sistema Interno do RH</a>
   <button class="themebtn" id="themeBtn" type="button"></button></div>
   <div class="goldrule"></div>
   <h1>Espelhos de ponto</h1>
@@ -20,7 +21,8 @@
       <button class="btn primary" id="cGerar" type="button" style="width:100%;margin-top:10px">Gerar espelhos no Centi</button>
       <p class="hint" style="margin:6px 0 12px;font-size:12.5px;color:var(--muted)">Usa a tela Espelho de ponto (FP170) com o órgão Câmara Municipal de Rio Verde. Leva cerca de 1 minuto.</p>
       <p class="hint" style="margin:0 0 6px;font-size:12.5px;color:var(--muted)">Ou, se preferir, anexe um PDF que você já gerou:</p>
-      <label class="drop" id="drop" for="file" style="padding:10px 12px"><b style="font-size:14px">Escolher ou arrastar o PDF</b><span id="dropS">O PDF com todos os espelhos (uma página por servidor)</span></label>
+      <label class="drop" id="drop" for="file" style="padding:10px 12px"><b style="font-size:14px">Escolher ou arrastar o PDF</b><span
+        id="dropS">O PDF com todos os espelhos (uma página por servidor)</span></label>
       <input id="file" type="file" accept="application/pdf,.pdf" hidden>
       <div id="resumo"></div>
     </section>
@@ -33,10 +35,12 @@
     </section>
     <section class="panel">
       <h2><span class="n">3</span>Salvar o PDF carimbado</h2>
-      <label class="ck"><input type="checkbox" id="optCapas" checked><span>Incluir uma <b>capa</b> antes de cada hierarquia: página em branco só com o nome (ex.: Gabinete do Vereador Fulano)</span></label>
+      <label class="ck"><input type="checkbox" id="optCapas"
+        checked><span>Incluir uma <b>capa</b> antes de cada hierarquia: página em branco só com o nome (ex.: Gabinete do Vereador Fulano)</span></label>
       <label class="ck"><input type="checkbox" id="optFundo" checked><span>Fundo <b>branco</b> atrás do carimbo (esconde as linhas da tabela e deixa o texto legível)</span></label>
       <div class="row" style="margin-top:12px"><button class="btn primary" id="saveAll" type="button" disabled>Salvar PDF carimbado</button></div>
-      <p class="muted" style="margin:8px 0 0">Também dá para baixar só uma hierarquia, pelo botão <b>Baixar</b> ao lado do nome dela na lista abaixo. Tudo é feito no seu navegador: o PDF não é enviado a nenhum servidor.</p>
+      <p class="muted"
+        style="margin:8px 0 0">Também dá para baixar só uma hierarquia, pelo botão <b>Baixar</b> ao lado do nome dela na lista abaixo. Tudo é feito no seu navegador: o PDF não é enviado a nenhum servidor.</p>
     </section>
     <section class="panel" id="treePanel" hidden>
       <h2>Hierarquia</h2>
@@ -46,7 +50,8 @@
   </div>
   <div class="col">
     <section class="panel view" id="viewPanel">
-      <div class="empty" id="vazio"><h2>Anexe o PDF para começar</h2><p>A página de cada servidor é reconhecida pela matrícula e pelo nome no topo do espelho.<br>Depois é só arrastar o carimbo até a posição certa.</p></div>
+      <div class="empty"
+        id="vazio"><h2>Anexe o PDF para começar</h2><p>A página de cada servidor é reconhecida pela matrícula e pelo nome no topo do espelho.<br>Depois é só arrastar o carimbo até a posição certa.</p></div>
       <div id="viewBox" hidden>
         <div class="bar">
           <button class="btn sm" id="prev" type="button" aria-label="Página anterior">◀</button>
@@ -57,7 +62,8 @@
           <label class="muted" style="display:flex;align-items:center;gap:6px">Hierarquia desta página <select id="selGrupo" style="max-width:240px"></select></label>
         </div>
         <div class="hint" id="info" style="margin-top:8px"></div>
-        <div class="stagewrap" style="margin-top:8px"><div id="stage"><canvas id="cv"></canvas><div id="st" hidden><img id="stImg" alt="Carimbo"><i id="stHandle" title="Arraste para mudar o tamanho"></i></div></div></div>
+        <div class="stagewrap" style="margin-top:8px"><div id="stage"><canvas id="cv"></canvas><div id="st" hidden><img id="stImg" alt="Carimbo"><i
+          id="stHandle" title="Arraste para mudar o tamanho"></i></div></div></div>
         <div class="bar" style="margin-top:8px">
           <label class="muted" style="display:flex;align-items:center;gap:8px;flex:1 1 220px">Tamanho <input type="range" id="tam" min="8" max="90" step="1" style="flex:1"></label>
           <button class="btn sm" id="soEsta" type="button"></button>
@@ -84,5 +90,6 @@
 </section>
 </div></main>
 <dialog id="dlg"></dialog>
-<div id="load" role="status" aria-live="polite" hidden><div class="ld-box"><div class="ld-spin" aria-hidden="true"></div><b id="ldT">Carregando…</b><span id="ldS"></span><div class="ld-bar" aria-hidden="true"><i id="ldB"></i></div></div></div>
+<div id="load" role="status" aria-live="polite" hidden><div class="ld-box"><div class="ld-spin" aria-hidden="true"></div><b
+  id="ldT">Carregando…</b><span id="ldS"></span><div class="ld-bar" aria-hidden="true"><i id="ldB"></i></div></div></div>
 <div id="toast" hidden></div>

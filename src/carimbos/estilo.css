@@ -121,6 +121,13 @@ main.sub .grid,main.sub .devwrap{margin-top:12px}
 .qrow .qn{min-width:0}.qrow .qn b{display:block}
 .qres small{color:var(--muted);display:block}
 .qrow .sw{flex:none}
+.rdet>summary{display:flex;align-items:center;gap:10px;flex-wrap:wrap;cursor:pointer;list-style:none}
+.rdet>summary::-webkit-details-marker{display:none}
+.rdet>summary::before{content:"▶";font-size:11px;color:var(--muted);transition:transform .15s}
+.rdet[open]>summary::before{transform:rotate(90deg)}
+.rdet>summary h2{font-size:1rem;margin:0}
+.rdet>summary .muted{margin-left:auto}
+.rdet>summary:focus-visible{outline:3px solid var(--accent);outline-offset:4px;border-radius:6px}
 .rlist{border:1px solid var(--line);border-radius:10px;overflow:hidden}
 .rrow{display:flex;gap:12px;align-items:center;justify-content:space-between;border-top:1px solid var(--line);padding:9px 12px;box-shadow:inset 4px 0 0 var(--line)}
 .rrow:first-child{border-top:0}

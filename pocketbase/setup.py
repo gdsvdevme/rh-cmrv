@@ -15,6 +15,7 @@ Coleções (acesso só para as contas permitidas; a coleção `users` não é al
   rhcmrv_docs     key (único) + data (json)   -> painel, estado dos fluxogramas, hierarquia de pessoal
   rhcmrv_versoes  vid (único), at, label, json -> cópias de segurança dos fluxogramas
   rhcmrv_tarefas  checklist do RH: compartilhadas (toda a equipe) ou privadas (só o dono), com regras próprias
+  rhcmrv_recibos  recibos em PDF da entrega dos espelhos de ponto (Controle de devolução); a tela apaga os vencidos (90 dias)
 O script é repetível: o que já existe é mantido.
 """
 import json, os, sys, urllib.request, urllib.error
@@ -154,6 +155,23 @@ if new_api:
                        txt('prioridade', max=20), txt('prazo', max=10), txt('criada_em', max=40), txt('concluido_em', max=10)] + RECORRENCIA,
             'indexes': ['CREATE INDEX idx_rhcmrv_tarefas_dono ON rhcmrv_tarefas (dono)']}, **regras))
         print('Coleção rhcmrv_tarefas criada.')
+
+# recibos de entrega dos espelhos de ponto (PDF protegido; a tela apaga os vencidos, 90 dias após o envio)
+if new_api:
+    AUTH_R = '@request.auth.collectionName = "rhcmrv_users"'
+    if call('GET', '/api/collections/rhcmrv_recibos', ok404=True):
+        call('PATCH', '/api/collections/rhcmrv_recibos', {k: AUTH_R for k in ('listRule', 'viewRule', 'createRule', 'updateRule', 'deleteRule')})
+        print('Coleção rhcmrv_recibos já existe (regras atualizadas).')
+    else:
+        t_ = lambda n, m, **k: dict({'name': n, 'type': 'text', 'required': False, 'max': m}, **k)
+        call('POST', '/api/collections', dict({'name': 'rhcmrv_recibos', 'type': 'base',
+            'fields': [t_('ref', 7, required=True), t_('setor', 200), t_('por_nome', 120), t_('por_matricula', 20), t_('por_user', 60),
+                       t_('criado_em', 40), t_('expira_em', 40),
+                       {'name': 'arquivo', 'type': 'file', 'required': True, 'maxSelect': 1, 'maxSize': 10 * 1024 * 1024,
+                        'mimeTypes': ['application/pdf'], 'protected': True}],
+            'indexes': ['CREATE INDEX idx_rhcmrv_recibos_ref ON rhcmrv_recibos (ref)', 'CREATE INDEX idx_rhcmrv_recibos_exp ON rhcmrv_recibos (expira_em)']},
+            **{k: AUTH_R for k in ('listRule', 'viewRule', 'createRule', 'updateRule', 'deleteRule')}))
+        print('Coleção rhcmrv_recibos criada.')
 
 app_email, app_pass = os.environ.get('PB_APP_EMAIL', ''), os.environ.get('PB_APP_PASSWORD', '')
 if app_email and app_pass:

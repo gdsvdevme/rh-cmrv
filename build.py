@@ -31,8 +31,13 @@ root = os.path.dirname(os.path.abspath(__file__))
 args = sys.argv[1:]
 opt = lambda k, d: args[args.index(k) + 1] if k in args else d
 rd = lambda p: open(os.path.join(root, p), encoding='utf-8').read()
+GERADO = '<!-- ARQUIVO GERADO por build.py a partir de src/. Não edite aqui: altere src/ e rode `python3 build.py`. -->\n'
 def wr(p, s):
     p = os.path.join(root, p); os.makedirs(os.path.dirname(p), exist_ok=True)
+    if s.startswith('<!doctype html>\n'):            # site/: o aviso vem logo depois do doctype (sem mudar o modo de renderização)
+        s = '<!doctype html>\n' + GERADO + s[len('<!doctype html>\n'):]
+    else:                                            # dist/ (fragmentos de artefato)
+        s = GERADO + s
     open(p, 'w', encoding='utf-8').write(s)
 
 hello = rd('src/hello.js'); mcss = rd('src/modern.css'); mflow = rd('src/modern-flow.css')

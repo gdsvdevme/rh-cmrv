@@ -1,0 +1,88 @@
+<header class="hero wrap"><div class="inner">
+  <div class="top"><a class="home" href="/*HOME_URL*/" target="_top"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 11l9-8 9 8M5 10v10h5v-6h4v6h5V10"/></svg>Sistema Interno do RH</a>
+  <button class="themebtn" id="themeBtn" type="button"></button></div>
+  <div class="goldrule"></div>
+  <h1>Espelhos de ponto</h1>
+  <p>Câmara Municipal de Rio Verde/GO · carimbe os espelhos de ponto de uma vez e acompanhe a devolução de cada setor</p>
+</div></header>
+
+<main class="wrap" id="mainEsp"><div class="inner">
+<div id="menuEsp" class="homewrap"></div>
+<div class="crumb" id="crumbEsp" hidden></div>
+<div id="abaCar" hidden><div class="grid">
+  <div class="col">
+    <section class="panel">
+      <h2><span class="n">1</span>Espelhos de ponto</h2>
+      <div class="row" style="align-items:center;gap:8px;flex-wrap:wrap">
+        <select id="cMes" aria-label="Mês do espelho"></select>
+        <input id="cAno" type="number" min="2000" max="2100" aria-label="Ano do espelho" style="width:84px">
+      </div>
+      <button class="btn primary" id="cGerar" type="button" style="width:100%;margin-top:10px">Gerar espelhos no Centi</button>
+      <p class="hint" style="margin:6px 0 12px;font-size:12.5px;color:var(--muted)">Usa a tela Espelho de ponto (FP170) com o órgão Câmara Municipal de Rio Verde. Leva cerca de 1 minuto.</p>
+      <p class="hint" style="margin:0 0 6px;font-size:12.5px;color:var(--muted)">Ou, se preferir, anexe um PDF que você já gerou:</p>
+      <label class="drop" id="drop" for="file" style="padding:10px 12px"><b style="font-size:14px">Escolher ou arrastar o PDF</b><span id="dropS">O PDF com todos os espelhos (uma página por servidor)</span></label>
+      <input id="file" type="file" accept="application/pdf,.pdf" hidden>
+      <div id="resumo"></div>
+    </section>
+    <section class="panel">
+      <h2><span class="n">2</span>Escolher o carimbo</h2>
+      <div class="stamps" id="stamps"></div>
+      <div class="row" style="margin-top:10px"><button class="btn sm" id="addStamp" type="button">+ Adicionar carimbo</button></div>
+      <input id="stampFile" type="file" accept="image/png,image/jpeg,image/webp" hidden>
+      <label class="ck"><input type="checkbox" id="semFundo" checked><span>Tornar o fundo branco transparente ao adicionar (recomendado para fotos ou digitalizações)</span></label>
+    </section>
+    <section class="panel">
+      <h2><span class="n">3</span>Salvar o PDF carimbado</h2>
+      <label class="ck"><input type="checkbox" id="optCapas" checked><span>Incluir uma <b>capa</b> antes de cada hierarquia: página em branco só com o nome (ex.: Gabinete do Vereador Fulano)</span></label>
+      <label class="ck"><input type="checkbox" id="optFundo" checked><span>Fundo <b>branco</b> atrás do carimbo (esconde as linhas da tabela e deixa o texto legível)</span></label>
+      <div class="row" style="margin-top:12px"><button class="btn primary" id="saveAll" type="button" disabled>Salvar PDF carimbado</button></div>
+      <p class="muted" style="margin:8px 0 0">Também dá para baixar só uma hierarquia, pelo botão <b>Baixar</b> ao lado do nome dela na lista abaixo. Tudo é feito no seu navegador: o PDF não é enviado a nenhum servidor.</p>
+    </section>
+    <section class="panel" id="treePanel" hidden>
+      <h2>Hierarquia</h2>
+      <input id="q" type="search" placeholder="Buscar servidor ou matrícula" aria-label="Buscar" autocomplete="off" style="width:100%">
+      <div class="tree" id="tree"></div>
+    </section>
+  </div>
+  <div class="col">
+    <section class="panel view" id="viewPanel">
+      <div class="empty" id="vazio"><h2>Anexe o PDF para começar</h2><p>A página de cada servidor é reconhecida pela matrícula e pelo nome no topo do espelho.<br>Depois é só arrastar o carimbo até a posição certa.</p></div>
+      <div id="viewBox" hidden>
+        <div class="bar">
+          <button class="btn sm" id="prev" type="button" aria-label="Página anterior">◀</button>
+          <input type="number" id="pgNum" min="1" value="1" aria-label="Página">
+          <span class="muted" id="pgTot"></span>
+          <button class="btn sm" id="next" type="button" aria-label="Próxima página">▶</button>
+          <span class="grow"></span>
+          <label class="muted" style="display:flex;align-items:center;gap:6px">Hierarquia desta página <select id="selGrupo" style="max-width:240px"></select></label>
+        </div>
+        <div class="hint" id="info" style="margin-top:8px"></div>
+        <div class="stagewrap" style="margin-top:8px"><div id="stage"><canvas id="cv"></canvas><div id="st" hidden><img id="stImg" alt="Carimbo"><i id="stHandle" title="Arraste para mudar o tamanho"></i></div></div></div>
+        <div class="bar" style="margin-top:8px">
+          <label class="muted" style="display:flex;align-items:center;gap:8px;flex:1 1 220px">Tamanho <input type="range" id="tam" min="8" max="90" step="1" style="flex:1"></label>
+          <button class="btn sm" id="soEsta" type="button"></button>
+          <button class="btn sm" id="semCar" type="button"></button>
+        </div>
+        <div class="hint" id="posHint" style="margin-top:6px"></div>
+      </div>
+    </section>
+  </div>
+</div></div>
+<section class="devwrap" id="abaDev" hidden>
+  <section class="panel">
+    <h2 style="margin-bottom:6px">Controle de devolução dos espelhos de ponto</h2>
+    <p class="muted" style="margin:0 0 10px">Marque, para cada setor ou gabinete, se devolveu o espelho de ponto do mês: <b>devolvido ao RH</b>, <b>devolvido com pendências</b> ou <b>não devolvido</b>, com uma observação se precisar. Marque também quando o <b>RH entregou o espelho</b> ao setor, com o recibo assinado em PDF (opcional, guardado por 90 dias). As marcações ficam salvas no servidor, mês a mês.</p>
+    <div class="row" style="align-items:center;gap:8px">
+      <select id="dMes" aria-label="Mês"></select>
+      <input id="dAno" type="number" min="2000" max="2100" aria-label="Ano" style="width:84px">
+      <input id="dBusca" type="search" placeholder="Buscar setor ou gabinete" aria-label="Buscar" autocomplete="off" style="flex:1 1 200px">
+      <button class="btn sm" id="dCsv" type="button">Baixar planilha (CSV)</button>
+    </div>
+    <div class="dsum" id="dSum" style="margin-top:12px"></div>
+  </section>
+  <div class="dlist panel" id="dLista" style="padding:0"></div>
+</section>
+</div></main>
+<dialog id="dlg"></dialog>
+<div id="load" role="status" aria-live="polite" hidden><div class="ld-box"><div class="ld-spin" aria-hidden="true"></div><b id="ldT">Carregando…</b><span id="ldS"></span><div class="ld-bar" aria-hidden="true"><i id="ldB"></i></div></div></div>
+<div id="toast" hidden></div>

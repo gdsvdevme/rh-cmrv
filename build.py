@@ -41,8 +41,18 @@ def wr(p, s):
     open(p, 'w', encoding='utf-8').write(s)
 
 import re
-# trechos compartilhados: um marcador /*SHARED:core,toast*/ no modelo vira o conteúdo de src/shared/core.js + toast.js
-shared = lambda t: re.sub(r'/\*SHARED:([\w,]+)\*/', lambda m: ''.join(rd('src/shared/' + n + '.js') for n in m.group(1).split(',')), t).replace('/*SHARED_CSS*/', rd('src/shared/tokens.css'))
+# trechos compartilhados e partes de um modelo, por marcadores dentro dele:
+#   /*SHARED:core,toast*/   junta src/shared/core.js + toast.js   (código comum a várias páginas)
+#   /*SHARED_CSS*/          cores e sombras comuns (src/shared/tokens.css)
+#   /*INCLUDE caminho*/     um arquivo de src/, ou, se for pasta, todos os arquivos dela em ordem alfabética (00-, 10-...)
+def incluir(m):
+    alvo = os.path.join(root, 'src', m.group(1))
+    nomes = sorted(glob.glob(os.path.join(alvo, '*'))) if os.path.isdir(alvo) else [alvo]
+    return '\n'.join(open(n, encoding='utf-8').read().removesuffix('\n') for n in nomes)
+def shared(t):
+    t = re.sub(r'/\*INCLUDE ([\w./-]+)\*/', incluir, t)
+    t = re.sub(r'/\*SHARED:([\w,]+)\*/', lambda m: ''.join(rd('src/shared/' + n + '.js') for n in m.group(1).split(',')), t)
+    return t.replace('/*SHARED_CSS*/', rd('src/shared/tokens.css'))
 hello = rd('src/hello.js'); mcss = rd('src/modern.css'); mflow = rd('src/modern-flow.css')
 mod = lambda t: shared(t).replace('/*MODERN_CSS*/', mcss).replace('/*MODERN_FLOW_CSS*/', mflow).replace('/*HELLO_JS*/', hello)
 css = rd('src/styles.css')

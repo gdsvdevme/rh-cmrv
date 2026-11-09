@@ -53,6 +53,18 @@ main.sub .grid,main.sub .devwrap{margin-top:12px}
 .drow:hover{background:var(--soft)}
 .drow.ok{box-shadow:inset 4px 0 0 var(--ok)}.drow.pend{box-shadow:inset 4px 0 0 var(--warn)}
 .drow .nm b{font-family:var(--f-display);font-size:14.5px;line-height:1.3;display:block}
+.nmbtn{display:flex;align-items:center;gap:7px;border:0;background:transparent;padding:0;color:inherit;font:inherit;cursor:pointer;text-align:left}
+.nmbtn .car{font-size:10px;color:var(--muted);transition:transform .15s}
+.nmbtn[aria-expanded=true] .car{transform:rotate(90deg)}
+.nmbtn:hover b{color:var(--accent);text-decoration:underline}
+.nmbtn:focus-visible{outline:3px solid var(--accent);outline-offset:3px;border-radius:6px}
+.srvs{grid-column:1/-1;background:var(--soft);border-radius:10px;padding:10px 14px;font-size:13px}
+.srvs>b{font-family:var(--f-display)}
+.srvs ul{columns:3 250px;column-gap:26px;list-style:none;margin:6px 0 0;padding:0}
+.srvs li{break-inside:avoid;padding:2px 0}
+.srvs li small{color:var(--muted)}
+.srvs li.pd{color:var(--warn);font-weight:600}
+.srvs li em{font-style:normal;font-size:11px;background:var(--warn-bg);color:var(--warn);border-radius:99px;padding:1px 7px;margin-left:4px}
 .drow .nm span{font-size:12.5px;color:var(--muted)}
 .drow .st{display:flex;flex-direction:column;gap:8px;align-items:flex-start}
 .seg{display:inline-flex;border:1px solid var(--line);border-radius:10px;overflow:hidden;background:var(--surface)}

@@ -1,6 +1,7 @@
 /* ---------- controle de devolução ---------- */
 const DST={nao:'Não devolvido',ok:'Devolvido ao RH',pend:'Devolvido com pendências'};
 const DST_EM={ok:'devolvido ao RH',pend:'devolvido com pendências'};   // frase da linha do setor (não dá para só baixar as maiúsculas: "RH")
+const devAberto=new Set();                       // setores com a lista de servidores aberta
 let dev={itens:{}},devFiltro='todos',devBusca='',devT=null,devRef='',devPend=false;
 const devKey=()=>{const m=+$('#dMes').value,a=+$('#dAno').value;return(a>=2000&&a<=2100)?a+'-'+String(m).padStart(2,'0'):'';};
 const hoje=()=>{const d=new Date();return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');};
@@ -37,14 +38,21 @@ function devLinha(g){
   const it=dev.itens[g.k]||{},s=it.s||'nao';
   const btns=['ok','pend','nao'].map(v=>`<button type="button" data-s="${v}" class="${s===v?'on':''}" aria-pressed="${s===v}">${DST[v]}</button>`).join('');
   const data=s!=='nao'?`<input type="date" data-f="d" value="${esc(it.d||'')}" aria-label="Data da devolução">`:'';
-  const ph=s==='pend'?'Descreva as pendências…':'Observação (opcional)';
+  const ph=s==='pend'?'Descreva as pendências…':'Observação (opcional)',aberto=devAberto.has(g.k);
   return `<div class="drow ${s}" data-k="${esc(g.k)}">
-    <div class="nm"><b>${esc(g.nome)}</b><span>${g.n} servidor${g.n===1?'':'es'}</span></div>
+    <div class="nm"><button type="button" class="nmbtn" data-open aria-expanded="${aberto}" title="Ver os servidores"><span class="car" aria-hidden="true">▶</span><b>${esc(g.nome)}</b></button><span>${g.n} servidor${g.n===1?'':'es'}</span></div>
     <div class="st" data-l="Devolução do setor"><div class="seg" role="group" aria-label="Situação de ${esc(g.nome)}">${btns}</div>${data}</div>
     ${devRh(it)}
     <div class="obs" data-l="Observação"><textarea data-f="o" rows="1" placeholder="${ph}" aria-label="Observação de ${esc(g.nome)}">${esc(it.o||'')}</textarea></div>
     ${s==='pend'?devPendencias(g,it):''}
+    ${aberto?devServidores(g,it):''}
   </div>`;
+}
+/* lista dos servidores do setor/gabinete (o que o clique no nome mostra); marca os que ficaram com pendência */
+function devServidores(g,it){
+  const pend=new Set(((it.s==='pend'&&it.ps)||[]).map(x=>x.i)),L=devPessoasDe(g.k);
+  if(!L.length) return '<div class="srvs"><b>Servidores</b><p class="muted" style="margin:4px 0 0">Nenhum servidor deste setor na Hierarquia de Pessoal.</p></div>';
+  return `<div class="srvs"><b>Servidores (${L.length})</b><ul>${L.map(p=>`<li${pend.has(pessoaId(p))?' class="pd"':''}>${esc(p.n)}${p.m?' <small>mat. '+esc(p.m)+'</small>':''}${p.c?' <small>· '+esc(p.c)+'</small>':''}${pend.has(pessoaId(p))?' <em>pendente</em>':''}</li>`).join('')}</ul></div>`;
 }
 /* servidores com pendência: escolhidos entre os do setor/gabinete na Hierarquia de Pessoal (guarda matrícula e nome) */
 const pessoaId=p=>p.m?String(p.m):'n:'+norm(p.n);
@@ -92,14 +100,25 @@ function devMudar(k,campos){
   if(it.s==='nao'&&!(it.o||'').trim()&&!it.e) delete dev.itens[k];else dev.itens[k]=it;
   devAgendar();
 }
-$('#dLista').addEventListener('click',ev=>{
+$('#dLista').addEventListener('click',async ev=>{
   const b=ev.target.closest('.seg button');if(!b) return;
-  const row=b.closest('.drow'),k=row.dataset.k;
+  const row=b.closest('.drow'),k=row.dataset.k,sit=b.dataset.s;
   const o=row.querySelector('textarea');
-  devMudar(k,{s:b.dataset.s,o:o?o.value:''});
-  const g=devSetores().find(x=>x.k===k);if(!g) return;
-  if(!devNoFiltro(k)){devDesenhar();return;}     // saiu do filtro atual
-  row.outerHTML=devLinha(g);devResumo(devSetores());
+  devMudar(k,{s:sit,o:o?o.value:''});
+  const marcarEntrega=sit!=='nao'&&!devEntregue(k);     // se o setor devolveu o espelho, é porque o RH entregou
+  devRedesenhaLinha(k);
+  if(!marcarEntrega) return;
+  let por=null;
+  try{por=await devQuemSou();}catch(e){toast((e.message||'Não foi possível identificar quem registrou.')+' A entrega foi marcada sem o nome de quem registrou.');}
+  if(devSit(k)==='nao'||devEntregue(k)) return;        // mudou de ideia enquanto isso
+  const e={d:hoje()};if(por) e.p={n:por.nome,m:por.mat,u:por.user};
+  devEntrega(k,()=>e);devRedesenhaLinha(k);
+});
+$('#dLista').addEventListener('click',ev=>{
+  const b=ev.target.closest('.nmbtn');if(!b) return;
+  const k=b.closest('.drow').dataset.k;
+  if(devAberto.has(k)) devAberto.delete(k);else devAberto.add(k);
+  devRedesenhaLinha(k);
 });
 $('#dLista').addEventListener('input',ev=>{
   const f=ev.target.dataset&&ev.target.dataset.f;if(!f) return;
@@ -125,6 +144,11 @@ async function devQuemSou(){
   }
   try{localStorage.setItem(chave,mat);}catch(e){}
   return {nome:titulo(nome),mat,user};
+}
+function devRedesenhaLinha(k){
+  if(!devNoFiltro(k)){devDesenhar();return;}                                    // saiu do filtro atual
+  const row=[...document.querySelectorAll('#dLista .drow')].find(r=>r.dataset.k===k),g=devSetores().find(x=>x.k===k);
+  if(row&&g){row.outerHTML=devLinha(g);devResumo(devSetores());}
 }
 function devRefaz(row,k){const g=devSetores().find(x=>x.k===k);if(g){row.outerHTML=devLinha(g);devResumo(devSetores());}}
 function devEntrega(k,fn){const it=Object.assign({},dev.itens[k]||{});const e=fn(Object.assign({},it.e||{}));it.e=e||null;devMudar(k,it);}

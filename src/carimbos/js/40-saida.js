@@ -7,7 +7,7 @@ async function gerar(lista,ctx){
   const out=await PDFDocument.create();
   const fn=await out.embedFont(StandardFonts.Helvetica),fb=await out.embedFont(StandardFonts.HelveticaBold);
   const sl=stampAtual(),emb=sl.src.startsWith('data:image/jpeg')?await out.embedJpg(sl.src):await out.embedPng(sl.src);
-  const ratio=emb.height/emb.width,fundo=$('#optFundo').checked,capas=$('#optCapas').checked;
+  const ratio=emb.height/emb.width,fundo=$('#optFundo').checked,capas=$('#optCapas').checked&&!origemUnica;   // espelho de uma pessoa só sai sem capa
   const total=lista.reduce((s,g)=>s+g.entradas.reduce((t,e)=>t+e.pag.length,0),0);let feitas=0;
   for(const g of lista){
     const idx=ordemPaginas(g),base=src.getPage(idx[0]).getSize();

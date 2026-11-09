@@ -210,12 +210,14 @@ main.sub .grid,main.sub .devwrap{margin-top:12px}
 .qres small{color:var(--muted);display:block}
 .qrow .sw{flex:none}
 /* relatório: aba na lateral direita que abre o relatório e recolhe os blocos de baixa */
-.reltab{position:fixed;right:0;top:200px;z-index:30;writing-mode:vertical-rl;background:var(--accent);color:var(--accent-fg);border:0;border-radius:12px 0 0 12px;padding:18px 10px;font-weight:700;font-size:14px;letter-spacing:.03em;cursor:pointer;box-shadow:var(--shadow)}
-.reltab:hover{filter:brightness(1.1)}
+.reltab{position:fixed;right:0;top:50%;transform:translate(8px,-50%);z-index:30;transition:transform .25s cubic-bezier(.2,.8,.2,1),filter .15s;animation:reltabIn .6s .15s cubic-bezier(.2,.8,.2,1) both;writing-mode:vertical-rl;background:var(--accent);color:var(--accent-fg);border:0;border-radius:12px 0 0 12px;padding:18px 10px;font-weight:700;font-size:14px;letter-spacing:.03em;cursor:pointer;box-shadow:var(--shadow)}
+.reltab:hover,.reltab:focus-visible{filter:brightness(1.1);transform:translate(0,-50%)}   /* fica meio escondida atrás da borda e desliza para fora ao passar o mouse */
+@keyframes reltabIn{from{transform:translate(110%,-50%)}to{transform:translate(8px,-50%)}}
+@media (prefers-reduced-motion:reduce){.reltab{animation:none;transition:none}}
 .reltab:focus-visible{outline:3px solid var(--gold);outline-offset:2px}
 #dBaixas{display:flex;flex-direction:column;gap:14px}
 @media (min-width:901px){#abaDev{padding-right:44px}}   /* espaço para a aba lateral não cobrir os cartões */
-@media (max-width:900px){.reltab{position:static;writing-mode:horizontal-tb;border-radius:10px;padding:8px 14px;margin-left:auto}}
+@media (max-width:900px){.reltab{position:static;transform:none!important;animation:none;writing-mode:horizontal-tb;border-radius:10px;padding:8px 14px;margin-left:auto}}
 .bloqueado .panel.rel{opacity:1;pointer-events:auto;user-select:auto}
 .relcards{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:8px;margin-top:12px}
 .relcards div{background:var(--soft);border:1px solid var(--line);border-radius:10px;padding:8px 12px}

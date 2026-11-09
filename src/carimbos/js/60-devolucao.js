@@ -20,10 +20,8 @@ async function devSalvar(){
   try{localStorage.setItem('rhcrv-devolucao-'+ref,json);}catch(e){}
 }
 function devAgendar(){devPend=true;clearTimeout(devT);devT=setTimeout(devSalvar,600);}
-let devLimpou=false;
 async function devCarregar(){
   await devSalvar();
-  if(!devLimpou){devLimpou=true;try{if(PB.recibos.ok) await PB.recibos.limparVencidos();}catch(e){}}
   devRef=devKey();dev={itens:{}};
   if(!devRef){devDesenhar();return;}
   const ref=devRef;let j=null;
@@ -42,19 +40,11 @@ function devLinha(g){
     ${devRh(it)}
   </div>`;
 }
-/* entrega do espelho pelo RH ao setor: marca com data, quem marcou (nome e matrícula) e o recibo em PDF (opcional, guardado por 90 dias) */
-const DIAS_RECIBO=90;
+/* entrega do espelho pelo RH ao setor: marca com data e com quem marcou (nome e matrícula) */
 function devRh(it){
-  const e=it.e,agora=new Date().toISOString();
+  const e=it.e;
   let h='<div class="rh"><label class="ck2"><input type="checkbox" data-e="chk"'+(e?' checked':'')+'> Espelho entregue pelo RH ao setor</label>';
-  if(e){
-    h+=`<input type="date" data-e="d" value="${esc(e.d||'')}" aria-label="Data da entrega pelo RH"><span class="quem">registrado por ${esc(e.p&&e.p.n||'—')}${e.p&&e.p.m?' (mat. '+esc(e.p.m)+')':''}</span>`;
-    const r=e.r;
-    if(r&&r.x>agora) h+=`<span class="rec"><a href="#" data-e="ver">Recibo (PDF)</a><small class="muted">guardado até ${esc(brData(r.x.slice(0,10)))}</small><button class="btn sm" type="button" data-e="anexar">Trocar</button><button class="btn sm danger" type="button" data-e="rem">Remover</button></span>`;
-    else if(r) h+=`<span class="rec exp">Recibo removido do servidor (prazo de ${DIAS_RECIBO} dias)</span><button class="btn sm" type="button" data-e="anexar">Anexar outro</button>`;
-    else h+='<button class="btn sm" type="button" data-e="anexar">Anexar recibo (PDF, opcional)</button>';
-    h+='<input type="file" accept="application/pdf,.pdf" data-e="file" hidden>';
-  }
+  if(e) h+=`<input type="date" data-e="d" value="${esc(e.d||'')}" aria-label="Data da entrega pelo RH"><span class="quem">registrado por ${esc(e.p&&e.p.n||'—')}${e.p&&e.p.m?' (mat. '+esc(e.p.m)+')':''}</span>`;
   return h+'</div>';
 }
 function devResumo(L){
@@ -129,48 +119,13 @@ $('#dLista').addEventListener('change',async ev=>{
         const p=await devQuemSou();
         devEntrega(k,()=>({d:hoje(),p:{n:p.nome,m:p.mat,u:p.user}}));
       }else{
-        if(it.e&&it.e.r&&it.e.r.x>new Date().toISOString()){
-          if(!confirm('Desmarcar a entrega também apaga o recibo anexado. Continuar?')){t.checked=true;return;}
-          try{await PB.recibos.apagar(it.e.r.id);}catch(e){toast('Não foi possível apagar o recibo do servidor.');t.checked=true;return;}
-        }
         devEntrega(k,()=>null);
       }
       devRefaz(row,k);
     }else if(f==='d'){
       if(t.value) devEntrega(k,e=>Object.assign(e,{d:t.value}));
-    }else if(f==='file'){
-      const file=t.files&&t.files[0];t.value='';if(!file) return;
-      if(!(/pdf$/i.test(file.name)||file.type==='application/pdf')){toast('Escolha um arquivo PDF.');return;}
-      if(file.size>10*1024*1024){toast('O PDF tem mais de 10 MB. Reduza o arquivo e tente de novo.');return;}
-      if(!PB.recibos.ok){toast('Para anexar o recibo é preciso estar conectado ao servidor.');return;}
-      const g=devSetores().find(x=>x.k===k),por=it.e&&it.e.p?{nome:it.e.p.n,mat:it.e.p.m,user:it.e.p.u}:await devQuemSou();
-      carga(true,'Enviando o recibo…',file.name,0.4);
-      try{
-        const r=await PB.recibos.enviar(devRef,g?g.nome:k,file,por,DIAS_RECIBO);
-        const antigo=it.e&&it.e.r;
-        devEntrega(k,e=>Object.assign(e,{r:{id:r.id,f:file.name,x:r.expira_em}}));
-        if(antigo&&antigo.id){try{await PB.recibos.apagar(antigo.id);}catch(e){}}
-        toast('Recibo anexado. Fica guardado por '+DIAS_RECIBO+' dias.');
-      }finally{carga(false);}
-      devRefaz(row,k);
     }
   }catch(e){toast(e.message||String(e));devRefaz(row,k);}
-});
-$('#dLista').addEventListener('click',async ev=>{
-  const b=ev.target.closest('[data-e]');if(!b||b.tagName==='INPUT') return;
-  const f=b.dataset.e,row=b.closest('.drow'),k=row.dataset.k,it=dev.itens[k]||{};
-  if(f==='anexar'){ev.preventDefault();row.querySelector('input[data-e=file]').click();return;}
-  if(f==='ver'){
-    ev.preventDefault();
-    try{const u=await PB.recibos.url(it.e.r);window.open(u,'_blank','noopener');}
-    catch(e){toast('Não foi possível abrir o recibo: '+(e.message||e));}
-    return;
-  }
-  if(f==='rem'){
-    ev.preventDefault();if(!confirm('Remover o recibo anexado?')) return;
-    try{await PB.recibos.apagar(it.e.r.id);}catch(e){toast('Não foi possível apagar o recibo do servidor.');return;}
-    devEntrega(k,e=>{delete e.r;return e;});devRefaz(row,k);
-  }
 });
 $('#dSum').addEventListener('click',ev=>{const b=ev.target.closest('[data-flt]');if(!b) return;devFiltro=b.dataset.flt;devDesenhar();});
 $('#dBusca').addEventListener('input',ev=>{devBusca=ev.target.value;devDesenhar();});
@@ -179,10 +134,8 @@ window.addEventListener('pagehide',devSalvar);
 $('#dCsv').addEventListener('click',()=>{
   if(!GH.size){toast('A hierarquia de pessoal não está carregada.');return;}
   const c=v=>'"'+String(v==null?'':v).replace(/"/g,'""')+'"';
-  const rows=[['Setor','Servidores','Situação','Data','Observação','Entregue pelo RH','Data da entrega pelo RH','Registrado por',
-    'Recibo anexado']].concat(devSetores().map(g=>{const it=dev.itens[g.k]||{},e=it.e||null,ag=new Date().toISOString();return [g.nome,
-    g.n,DST[devSit(g.k)],brData(it.d),(it.o||'').replace(/\s*\n\s*/g,' '),e?'Sim':'Não',e?brData(e.d):'',e&&e.p?e.p.n+(e.p.m?' (mat. '+e.p.m+')':''):'',
-    e&&e.r?(e.r.x>ag?'Sim':'Removido após '+DIAS_RECIBO+' dias'):''];}));
+  const rows=[['Setor','Servidores','Situação','Data','Observação','Entregue pelo RH','Data da entrega pelo RH','Registrado por']].concat(devSetores().map(g=>{const it=dev.itens[g.k]||{},e=it.e||null;return [g.nome,
+    g.n,DST[devSit(g.k)],brData(it.d),(it.o||'').replace(/\s*\n\s*/g,' '),e?'Sim':'Não',e?brData(e.d):'',e&&e.p?e.p.n+(e.p.m?' (mat. '+e.p.m+')':''):''];}));
   const csv='﻿'+rows.map(r=>r.map(c).join(';')).join('\r\n');
   const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([csv],{type:'text/csv;charset=utf-8'}));a.download='controle-devolucao-espelhos-'+(devRef||'mes')+'.csv';
   document.body.appendChild(a);a.click();setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove();},4000);

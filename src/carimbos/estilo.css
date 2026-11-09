@@ -62,9 +62,6 @@ main.sub .grid,main.sub .devwrap{margin-top:12px}
 .rh{grid-column:1/-1;display:flex;flex-wrap:wrap;align-items:center;gap:8px 12px;padding-top:10px;border-top:1px dashed var(--line);font-size:13px}
 .rh label.ck2{display:inline-flex;align-items:center;gap:8px;font-weight:600;cursor:pointer}
 .rh .quem{color:var(--muted)}
-.rh .rec{display:inline-flex;align-items:center;gap:8px;flex-wrap:wrap}
-.rh .rec a{color:var(--accent);font-weight:600}
-.rh .exp{color:var(--warn)}
 .dlist{border:1px solid var(--line);border-radius:12px;overflow:hidden}
 @media (max-width:760px){.drow{grid-template-columns:1fr}}
 .grid{display:grid;grid-template-columns:minmax(300px,380px) minmax(0,1fr);gap:16px;margin-top:-20px;align-items:start}

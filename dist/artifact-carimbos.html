@@ -352,6 +352,14 @@ input,select,textarea{border-radius:12px}
 @media print{.hello{display:none}}
 /* o conteúdo que sobe sobre o cabeçalho precisa ficar acima dele */
 .hero~main,.hero~.wrap,.stats,.layout,.grid{position:relative;z-index:2}
+/* cabeçalho compacto nas telas internas (o painel inicial mantém o grande) */
+.hero{padding-block:14px 44px!important;border-radius:0 0 26px 26px}
+.hero .top{margin-bottom:10px!important}
+.hero .goldrule{display:none}
+.hello{margin:0 0 4px;font-size:.92rem;padding:3px 12px 3px 8px}
+.hero h1{font-size:clamp(1.35rem,3.4vw,1.8rem)!important;line-height:1.15}
+.hero p:not(.hello){margin-top:4px!important;font-size:.92rem}
+.hero::before{width:220px;height:220px;bottom:-110px}
 
 </style>
 

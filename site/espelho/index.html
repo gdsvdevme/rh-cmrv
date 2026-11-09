@@ -227,7 +227,12 @@ main.sub .grid,main.sub .devwrap{margin-top:12px}
 .rrow input[type=date]{background:var(--surface);border:1px solid var(--line);border-radius:9px;padding:4px 8px;color:var(--fg);font-size:12.5px}
 .rrow .sw{flex:none;min-width:112px}
 .qult{margin-top:10px;font-size:13px}
-.qult b{font-family:var(--f-display);font-size:12px;letter-spacing:.04em;text-transform:uppercase;color:var(--muted)}
+.qult>summary{cursor:pointer;list-style:none;display:flex;align-items:center;gap:8px;font-family:var(--f-display);font-size:12px;font-weight:700;letter-spacing:.04em;text-transform:uppercase;color:var(--muted)}
+.qult>summary::-webkit-details-marker{display:none}
+.qult>summary::before{content:"▶";font-size:10px;transition:transform .15s}
+.qult[open]>summary::before{transform:rotate(90deg)}
+.qult>summary span{background:var(--soft);border-radius:99px;padding:1px 8px;font-size:11.5px}
+.qult>summary:focus-visible{outline:3px solid var(--accent);outline-offset:3px;border-radius:6px}
 .qult ul{list-style:none;margin:4px 0 0;padding:0}
 .qult li{display:flex;gap:8px;align-items:center;justify-content:space-between;padding:4px 0;border-top:1px solid var(--line)}
 .qult li:first-child{border-top:0}
@@ -1447,13 +1452,13 @@ function devDesfazer(id){delete dev.baixas[id];devAgendar();}
 function devDesenhar(){qUltimas();hDesenhar();rDesenhar();}
 
 /* ---------- bloco 1: baixa individual ---------- */
-let qNovo='',qLista=[],qSel=0;
+let qNovo='',qLista=[],qSel=0,qUltAberto=false;                       // 'Últimas baixas' abre recolhida
 function qUltimas(){
   const box=$('#qUlt');if(!box) return;
   const L=Object.entries(dev.baixas||{}).filter(([,b])=>!b.h).sort((a,b)=>(b[1].u||'').localeCompare(a[1].u||'')).slice(0,5);   // só as individuais (as em lote têm o próprio bloco)
   if(!L.length){box.innerHTML='';return;}
-  box.innerHTML='<div class="qult"><b>Últimas baixas</b><ul>'+L.map(([id,b])=>{const g=GH.get(b.k);
-    return `<li${qNovo===id?' class="novo"':''}><span>${esc(titulo(b.n))}<small> · ${esc(g?g.nome:'')} · ${esc(brData(b.d).slice(0,5))}</small></span><button type="button" class="btn sm" data-undo="${esc(id)}">Desfazer</button></li>`;}).join('')+'</ul></div>';
+  box.innerHTML='<details class="qult"'+(qUltAberto?' open':'')+'><summary>Últimas baixas <span>'+L.length+'</span></summary><ul>'+L.map(([id,b])=>{const g=GH.get(b.k);
+    return `<li${qNovo===id?' class="novo"':''}><span>${esc(titulo(b.n))}<small> · ${esc(g?g.nome:'')} · ${esc(brData(b.d).slice(0,5))}</small></span><button type="button" class="btn sm" data-undo="${esc(id)}">Desfazer</button></li>`;}).join('')+'</ul></details>';
 }
 function qDesenhar(){
   const box=$('#qRes');
@@ -1500,6 +1505,7 @@ $('#qBusca').addEventListener('keydown',ev=>{
   }
   else if(ev.key==='Escape'){$('#qBusca').value='';qLista=[];qDesenhar();}
 });
+$('#qUlt').addEventListener('toggle',ev=>{if(ev.target.tagName==='DETAILS') qUltAberto=ev.target.open;},true);
 $('#qUlt').addEventListener('click',ev=>{
   const b=ev.target.closest('[data-undo]');if(!b) return;
   devDesfazer(b.dataset.undo);qNovo='';qUltimas();hDesenhar();

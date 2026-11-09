@@ -72,13 +72,13 @@ function devDesfazer(id){delete dev.baixas[id];devAgendar();}
 function devDesenhar(){qUltimas();hDesenhar();rDesenhar();}
 
 /* ---------- bloco 1: baixa individual ---------- */
-let qNovo='',qLista=[],qSel=0;
+let qNovo='',qLista=[],qSel=0,qUltAberto=false;                       // 'Últimas baixas' abre recolhida
 function qUltimas(){
   const box=$('#qUlt');if(!box) return;
   const L=Object.entries(dev.baixas||{}).filter(([,b])=>!b.h).sort((a,b)=>(b[1].u||'').localeCompare(a[1].u||'')).slice(0,5);   // só as individuais (as em lote têm o próprio bloco)
   if(!L.length){box.innerHTML='';return;}
-  box.innerHTML='<div class="qult"><b>Últimas baixas</b><ul>'+L.map(([id,b])=>{const g=GH.get(b.k);
-    return `<li${qNovo===id?' class="novo"':''}><span>${esc(titulo(b.n))}<small> · ${esc(g?g.nome:'')} · ${esc(brData(b.d).slice(0,5))}</small></span><button type="button" class="btn sm" data-undo="${esc(id)}">Desfazer</button></li>`;}).join('')+'</ul></div>';
+  box.innerHTML='<details class="qult"'+(qUltAberto?' open':'')+'><summary>Últimas baixas <span>'+L.length+'</span></summary><ul>'+L.map(([id,b])=>{const g=GH.get(b.k);
+    return `<li${qNovo===id?' class="novo"':''}><span>${esc(titulo(b.n))}<small> · ${esc(g?g.nome:'')} · ${esc(brData(b.d).slice(0,5))}</small></span><button type="button" class="btn sm" data-undo="${esc(id)}">Desfazer</button></li>`;}).join('')+'</ul></details>';
 }
 function qDesenhar(){
   const box=$('#qRes');
@@ -125,6 +125,7 @@ $('#qBusca').addEventListener('keydown',ev=>{
   }
   else if(ev.key==='Escape'){$('#qBusca').value='';qLista=[];qDesenhar();}
 });
+$('#qUlt').addEventListener('toggle',ev=>{if(ev.target.tagName==='DETAILS') qUltAberto=ev.target.open;},true);
 $('#qUlt').addEventListener('click',ev=>{
   const b=ev.target.closest('[data-undo]');if(!b) return;
   devDesfazer(b.dataset.undo);qNovo='';qUltimas();hDesenhar();

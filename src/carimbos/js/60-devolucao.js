@@ -2,7 +2,7 @@
 const DST={nao:'Não devolvido',ok:'Devolvido ao RH',pend:'Devolvido com pendências'};
 const DST_EM={ok:'devolvido ao RH',pend:'devolvido com pendências'};   // frase da linha do setor (não dá para só baixar as maiúsculas: "RH")
 const devAberto=new Set();                       // setores com a lista de servidores aberta
-let dev={itens:{}},devFiltro='todos',devBusca='',devT=null,devRef='',devPend=false;
+let dev={itens:{},baixas:{}},devFiltro='todos',devBusca='',devT=null,devRef='',devPend=false;
 const devKey=()=>{const m=+$('#dMes').value,a=+$('#dAno').value;return(a>=2000&&a<=2100)?a+'-'+String(m).padStart(2,'0'):'';};
 const hoje=()=>{const d=new Date();return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');};
 const brData=iso=>/^\d{4}-\d{2}-\d{2}$/.test(iso||'')?iso.slice(8)+'/'+iso.slice(5,7)+'/'+iso.slice(0,4):'';
@@ -25,34 +25,42 @@ async function devSalvar(){
 function devAgendar(){devPend=true;clearTimeout(devT);devT=setTimeout(devSalvar,600);}
 async function devCarregar(){
   await devSalvar();
-  devRef=devKey();dev={itens:{}};
+  devRef=devKey();dev={itens:{},baixas:{}};
   if(!devRef){devDesenhar();return;}
   const ref=devRef;let j=null;
   try{if(dbh){const d=await dbh.doc('devolucao/'+ref).get();if(d.exists) j=d.data().json;}}catch(e){toast('Não foi possível ler as marcações do servidor.');}
   if(j==null){try{j=localStorage.getItem('rhcrv-devolucao-'+ref);}catch(e){}}
   if(ref!==devRef) return;                      // o mês mudou durante a leitura
   try{const o=JSON.parse(j||'null');if(o&&o.itens&&typeof o.itens==='object') dev=o;}catch(e){}
+  if(!dev.baixas||typeof dev.baixas!=='object') dev.baixas={};
   devDesenhar();
 }
 function devLinha(g){
-  const it=dev.itens[g.k]||{},s=it.s||'nao';
+  const it=dev.itens[g.k]||{},s=it.s||'nao',aberto=devAberto.has(g.k),L=devPessoasDe(g.k),bx=L.filter(p=>dev.baixas[pessoaId(p)]).length;
+  const prog=L.length?`<div class="prog" title="Servidores com baixa no ponto"><div class="bar"><i style="width:${Math.round(bx*100/L.length)}%"></i></div><span>${bx}/${L.length}</span></div>`:'<div class="prog"><span>sem servidores</span></div>';
   const btns=['ok','pend','nao'].map(v=>`<button type="button" data-s="${v}" class="${s===v?'on':''}" aria-pressed="${s===v}">${DST[v]}</button>`).join('');
   const data=s!=='nao'?`<input type="date" data-f="d" value="${esc(it.d||'')}" aria-label="Data da devolução">`:'';
-  const ph=s==='pend'?'Descreva as pendências…':'Observação (opcional)',aberto=devAberto.has(g.k);
-  return `<div class="drow ${s}" data-k="${esc(g.k)}">
-    <div class="nm"><button type="button" class="nmbtn" data-open aria-expanded="${aberto}" title="Ver os servidores"><span class="car" aria-hidden="true">▶</span><b>${esc(g.nome)}</b></button><span>${g.n} servidor${g.n===1?'':'es'}</span></div>
+  const ph=s==='pend'?'Descreva as pendências…':'Observação (opcional)';
+  const det=aberto?`<div class="ddet">
     <div class="st" data-l="Devolução do setor"><div class="seg" role="group" aria-label="Situação de ${esc(g.nome)}">${btns}</div>${data}</div>
     ${devRh(it)}
     <div class="obs" data-l="Observação"><textarea data-f="o" rows="1" placeholder="${ph}" aria-label="Observação de ${esc(g.nome)}">${esc(it.o||'')}</textarea></div>
     ${s==='pend'?devPendencias(g,it):''}
-    ${aberto?devServidores(g,it):''}
+    ${devServidores(g,it,L)}
+  </div>`:'';
+  return `<div class="drow ${s}" data-k="${esc(g.k)}">
+    <div class="dh"><div class="nm"><button type="button" class="nmbtn" data-open aria-expanded="${aberto}" title="Abrir o setor"><span class="car" aria-hidden="true">▶</span><b>${esc(g.nome)}</b></button></div>${prog}<span class="pill ${s}">${DST[s]}</span></div>
+    ${det}
   </div>`;
 }
-/* lista dos servidores do setor/gabinete (o que o clique no nome mostra); marca os que ficaram com pendência */
-function devServidores(g,it){
-  const pend=new Set(((it.s==='pend'&&it.ps)||[]).map(x=>x.i)),L=devPessoasDe(g.k);
+/* lista dos servidores do setor/gabinete: botão de baixa no ponto em cada um; marca os que ficaram com pendência */
+function devServidores(g,it,L){
+  const pend=new Set(((it.s==='pend'&&it.ps)||[]).map(x=>x.i));
   if(!L.length) return '<div class="srvs"><b>Servidores</b><p class="muted" style="margin:4px 0 0">Nenhum servidor deste setor na Hierarquia de Pessoal.</p></div>';
-  return `<div class="srvs"><b>Servidores (${L.length})</b><ul>${L.map(p=>`<li${pend.has(pessoaId(p))?' class="pd"':''}>${esc(p.n)}${p.m?' <small>mat. '+esc(p.m)+'</small>':''}${p.c?' <small>· '+esc(p.c)+'</small>':''}${pend.has(pessoaId(p))?' <em>pendente</em>':''}</li>`).join('')}</ul></div>`;
+  const bx=L.filter(p=>dev.baixas[pessoaId(p)]).length;
+  return `<div class="srvs"><b>Servidores — ${bx} de ${L.length} com baixa no ponto</b><ul>${L.map(p=>{const id=pessoaId(p),b=dev.baixas[id],pd=pend.has(id);
+    return `<li class="${b?'bx':''}${pd?' pd':''}"><span class="sn">${esc(p.n)}${p.m?' <small>mat. '+esc(p.m)+'</small>':''}${pd?' <em>pendente</em>':''}</span>`+
+      (b?`<button type="button" class="btn sm feito" data-baixa="${esc(id)}" title="Desfazer a baixa de ${esc(p.n)}">✓ ${esc(brData(b.d).slice(0,5))}</button>`:`<button type="button" class="btn sm" data-baixa="${esc(id)}">Dar baixa</button>`)+'</li>';}).join('')}</ul></div>`;
 }
 /* servidores com pendência: escolhidos entre os do setor/gabinete na Hierarquia de Pessoal (guarda matrícula e nome) */
 const pessoaId=p=>p.m?String(p.m):'n:'+norm(p.n);
@@ -75,19 +83,20 @@ function devRh(it){
 }
 function devResumo(L){
   const c={ok:0,pend:0,nao:0,ent:0};L.forEach(g=>{c[devSit(g.k)]++;if(devEntregue(g.k)) c.ent++;});
-  const bt=(v,t,n,cl)=>`<button type="button" class="${cl||''} ${devFiltro===v?'on':''}" data-flt="${v}"><small>${t}</small><b>${n}</b></button>`;
-  $('#dSum').innerHTML=bt('todos','Todos os setores',L.length,'')+bt('ent','Entregues ao setor',c.ent,'ent')+bt('ok','Devolvidos ao RH',c.ok,'ok')+bt('pend','Com pendências',c.pend,'pend')+bt('nao','Não devolvidos',c.nao,'nao');
+  const bt=(v,t,n)=>`<button type="button" class="${devFiltro===v?'on':''}" data-flt="${v}">${t} <b>${n}</b></button>`;
+  const todos=((pessoal&&pessoal.pessoas)||[]).filter(p=>p._k),feitas=todos.filter(p=>dev.baixas[pessoaId(p)]).length;
+  $('#dSum').innerHTML=bt('todos','Todos',L.length)+bt('nao','Não devolvidos',c.nao)+bt('pend','Com pendências',c.pend)+bt('ok','Devolvidos',c.ok)+bt('ent','Entregues ao setor',c.ent)+(todos.length?`<span class="tot">Baixas no ponto: <b>${feitas}</b> de ${todos.length}</span>`:'');
 }
 function devDesenhar(){
   const box=$('#dLista');
+  qUltimas();
   if(!pessoal||!GH.size){devResumo([]);
     box.innerHTML='<div class="empty" style="padding:24px"><h2>Hierarquia de pessoal não carregada</h2><p class="muted">Os setores vêm da Hierarquia de Pessoal. Abra-a e clique em <b>Atualizar do Centi</b> ao menos uma vez.</p></div>';
     return;}
   const L=devSetores();devResumo(L);
   const q=norm(devBusca);
   const V=L.filter(g=>devNoFiltro(g.k)&&(!q||norm(g.nome).includes(q)));
-  const cab='<div class="dhead" aria-hidden="true"><span>Setor ou gabinete</span><span>Devolução do setor</span><span>Entrega do RH ao setor</span><span>Observação</span></div>';
-  box.innerHTML=V.length?cab+V.map(devLinha).join(''):'<p class="muted" style="padding:18px">Nenhum setor nesta lista.</p>';
+  box.innerHTML=V.length?V.map(devLinha).join(''):'<p class="muted" style="padding:18px">Nenhum setor nesta lista.</p>';
 }
 function devMudar(k,campos){
   const it=Object.assign({},dev.itens[k]||{},campos);
@@ -181,6 +190,84 @@ $('#dLista').addEventListener('click',ev=>{
   const row=b.closest('.drow'),k=row.dataset.k;
   devMudar(k,{ps:((dev.itens[k]||{}).ps||[]).filter(x=>x.i!==b.dataset.i)});devRefaz(row,k);
 });
+/* ---------- baixa no ponto, por servidor ---------- */
+let devPor=null;                                                       // quem está registrando (guardado depois da 1ª vez)
+async function devPorGarantir(){
+  if(devPor) return devPor;
+  try{devPor=await devQuemSou();}catch(e){toast((e.message||'Não foi possível identificar quem registrou.')+' A baixa foi registrada sem o nome de quem registrou.');}
+  return devPor;
+}
+const devPorReg=()=>devPor?{n:devPor.nome,m:devPor.mat,u:devPor.user}:undefined;
+/* registra a baixa; devolve true se esta baixa completou o setor (e ele passou a "devolvido ao RH") */
+function devBaixar(p){
+  const id=pessoaId(p),k=p._k;
+  dev.baixas[id]={n:p.n,m:p.m?String(p.m):'',k,d:hoje(),u:new Date().toISOString(),p:devPorReg()};
+  devAgendar();
+  const L=devPessoasDe(k);
+  if(L.length&&L.every(x=>dev.baixas[pessoaId(x)])&&devSit(k)==='nao'){
+    devMudar(k,{s:'ok'});
+    if(!devEntregue(k)) devEntrega(k,()=>{const e={d:hoje()};const r=devPorReg();if(r) e.p=r;return e;});
+    return true;
+  }
+  return false;
+}
+function devDesfazer(id){delete dev.baixas[id];devAgendar();}
+const devPessoaPorId=id=>((pessoal&&pessoal.pessoas)||[]).find(p=>p._k&&pessoaId(p)===id);
+function qUltimas(){
+  const box=$('#qUlt');if(!box) return;
+  const L=Object.entries(dev.baixas||{}).sort((a,b)=>(b[1].u||'').localeCompare(a[1].u||'')).slice(0,5);
+  if(!L.length){box.innerHTML='';return;}
+  box.innerHTML='<div class="qult"><b>Últimas baixas</b><ul>'+L.map(([id,b],i)=>{const g=GH.get(b.k);
+    return `<li${qNovo===id?' class="novo"':''}><span>${esc(titulo(b.n))}<small> · ${esc(g?g.nome:'')} · ${esc(brData(b.d).slice(0,5))}</small></span><button type="button" class="btn sm" data-undo="${esc(id)}">Desfazer</button></li>`;}).join('')+'</ul></div>';
+}
+let qNovo='',qLista=[],qSel=0;
+function qDesenhar(){
+  const box=$('#qRes');
+  if(!qLista.length){box.hidden=true;return;}
+  box.innerHTML=qLista.map((p,i)=>{const b=dev.baixas[pessoaId(p)],g=GH.get(p._k);
+    return `<button type="button" role="option" data-i="${i}" class="${i===qSel?'on':''}"><span><b>${esc(titulo(p.n))}</b><small>${p.m?'mat. '+esc(p.m)+' · ':''}${esc(g?g.nome:'')}</small></span>${b?'<span class="ja">já baixado '+esc(brData(b.d).slice(0,5))+'</span>':''}</button>`;}).join('');
+  box.hidden=false;
+}
+function qBuscar(){
+  const t=norm($('#qBusca').value),dig=digs(t);
+  if(!pessoal){qLista=[];const box=$('#qRes');box.innerHTML='<p class="muted" style="padding:10px 12px;margin:0">Hierarquia de pessoal não carregada. Abra-a e clique em <b>Atualizar do Centi</b>.</p>';box.hidden=!t;return;}
+  if(t.length<2){qLista=[];qDesenhar();return;}
+  qLista=pessoal.pessoas.filter(p=>p._k&&(norm(p.n).includes(t)||(dig.length>=3&&p.m&&digs(p.m).includes(dig))))
+    .sort((a,b)=>(norm(b.n).startsWith(t)-norm(a.n).startsWith(t))||a.n.localeCompare(b.n,'pt-BR')).slice(0,6);
+  qSel=0;qDesenhar();
+}
+async function qConfirmar(p){
+  if(!p) return;
+  $('#qBusca').value='';qLista=[];qDesenhar();$('#qBusca').focus();
+  const b=dev.baixas[pessoaId(p)];
+  if(b){toast(titulo(p.n)+' já tinha baixa em '+brData(b.d)+'.');return;}
+  await devPorGarantir();
+  const completou=devBaixar(p);
+  qNovo=pessoaId(p);qUltimas();devRedesenhaLinha(p._k);devResumo(devSetores());
+  const g=GH.get(p._k);
+  toast('Baixa no ponto: '+titulo(p.n)+(completou?' · '+(g?g.nome:'setor')+' completo, devolvido ao RH':''));
+}
+$('#qBusca').addEventListener('input',qBuscar);
+$('#qBusca').addEventListener('keydown',ev=>{
+  if(ev.key==='ArrowDown'&&qLista.length){qSel=(qSel+1)%qLista.length;qDesenhar();ev.preventDefault();}
+  else if(ev.key==='ArrowUp'&&qLista.length){qSel=(qSel+qLista.length-1)%qLista.length;qDesenhar();ev.preventDefault();}
+  else if(ev.key==='Enter'){ev.preventDefault();qConfirmar(qLista[qSel]);}
+  else if(ev.key==='Escape'){$('#qBusca').value='';qLista=[];qDesenhar();}
+});
+$('#qRes').addEventListener('click',ev=>{const b=ev.target.closest('button[data-i]');if(b) qConfirmar(qLista[+b.dataset.i]);});
+$('#qUlt').addEventListener('click',ev=>{
+  const b=ev.target.closest('[data-undo]');if(!b) return;
+  const id=b.dataset.undo,reg=dev.baixas[id];devDesfazer(id);qNovo='';qUltimas();
+  if(reg) devRedesenhaLinha(reg.k);devResumo(devSetores());
+});
+/* botão de baixa dentro do setor aberto */
+$('#dLista').addEventListener('click',async ev=>{
+  const b=ev.target.closest('[data-baixa]');if(!b) return;
+  const row=b.closest('.drow'),k=row.dataset.k,id=b.dataset.baixa;
+  if(dev.baixas[id]){devDesfazer(id);}
+  else{const p=devPessoasDe(k).find(x=>pessoaId(x)===id);if(!p) return;await devPorGarantir();qNovo=id;if(devBaixar(p)) toast('Setor completo: devolvido ao RH.');}
+  qUltimas();devRedesenhaLinha(k);devResumo(devSetores());
+});
 $('#dSum').addEventListener('click',ev=>{const b=ev.target.closest('[data-flt]');if(!b) return;devFiltro=b.dataset.flt;devDesenhar();});
 $('#dBusca').addEventListener('input',ev=>{devBusca=ev.target.value;devDesenhar();});
 $('#dMes').addEventListener('change',devCarregar);$('#dAno').addEventListener('change',devCarregar);
@@ -188,9 +275,11 @@ window.addEventListener('pagehide',devSalvar);
 $('#dCsv').addEventListener('click',()=>{
   if(!GH.size){toast('A hierarquia de pessoal não está carregada.');return;}
   const c=v=>'"'+String(v==null?'':v).replace(/"/g,'""')+'"';
-  const rows=[['Setor','Servidores','Situação','Data','Observação','Espelho entregue ao setor pelo RH','Data da entrega ao setor','Registrado por','Servidores com pendência']].concat(devSetores().map(g=>{const it=dev.itens[g.k]||{},e=it.e||null;return [g.nome,
+  const rows=[['Setor','Servidores','Situação','Data','Observação','Espelho entregue ao setor pelo RH','Data da entrega ao setor','Registrado por','Servidores com pendência','Baixas no ponto','Servidores sem baixa']].concat(devSetores().map(g=>{const it=dev.itens[g.k]||{},e=it.e||null;return [g.nome,
     g.n,DST[devSit(g.k)],brData(it.d),(it.o||'').replace(/\s*\n\s*/g,' '),e?'Sim':'Não',e?brData(e.d):'',e&&e.p?e.p.n+(e.p.m?' (mat. '+e.p.m+')':''):'',
-    devSit(g.k)==='pend'?(it.ps||[]).map(x=>x.n+(x.m?' (mat. '+x.m+')':'')).join('; '):''];}));
+    devSit(g.k)==='pend'?(it.ps||[]).map(x=>x.n+(x.m?' (mat. '+x.m+')':'')).join('; '):'',
+    (()=>{const L=devPessoasDe(g.k);return L.filter(x=>dev.baixas[pessoaId(x)]).length+' de '+L.length;})(),
+    devPessoasDe(g.k).filter(x=>!dev.baixas[pessoaId(x)]).map(x=>x.n+(x.m?' (mat. '+x.m+')':'')).join('; ')];}));
   const csv='﻿'+rows.map(r=>r.map(c).join(';')).join('\r\n');
   const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([csv],{type:'text/csv;charset=utf-8'}));a.download='controle-devolucao-espelhos-'+(devRef||'mes')+'.csv';
   document.body.appendChild(a);a.click();setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove();},4000);

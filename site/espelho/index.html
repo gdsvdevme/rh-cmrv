@@ -128,20 +128,24 @@ a.card2:hover .go svg{transform:translateX(4px)}.card2 .go svg{transition:transf
 .crumb h2{font-size:1.25rem}
 main.sub .grid,main.sub .devwrap{margin-top:12px}
 .devwrap{margin-top:-20px;display:flex;flex-direction:column;gap:14px}
-.dsum{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:8px}
-.dsum button{text-align:left;border-radius:10px;padding:8px 12px;background:var(--soft);border:2px solid var(--line);cursor:pointer}
-.dsum button.on{border-color:var(--accent)}
-.dsum small{display:block;font-size:11px;font-weight:700;letter-spacing:.04em;text-transform:uppercase;color:var(--muted)}
-.dsum b{font-family:var(--f-display);font-size:1.3rem;font-variant-numeric:tabular-nums}
-.dsum .ent b{color:var(--blue)}.dsum .ok b{color:var(--ok)}.dsum .pend b{color:var(--warn)}.dsum .nao b{color:var(--danger)}
-/* lista do Controle de devolução: uma tabela de colunas fixas (setor, devolução, entrega do RH, observação) */
+/* lista do Controle de devolução: uma linha enxuta por setor (nome, progresso das baixas, situação); o resto aparece ao abrir */
 .dlist{border:1px solid var(--line);border-radius:14px;overflow:hidden}
-.dhead,.drow{display:grid;grid-template-columns:minmax(190px,1.1fr) minmax(300px,auto) minmax(200px,.85fr) minmax(190px,1fr);gap:8px 18px;align-items:start;padding:12px 18px}
-.dhead{position:sticky;top:0;z-index:2;background:var(--soft);border-bottom:1px solid var(--line);padding-block:9px;font-size:11px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:var(--muted)}
 .drow{border-top:1px solid var(--line);box-shadow:inset 4px 0 0 var(--danger);transition:background .12s}
-.dhead+.drow{border-top:0}
-.drow:hover{background:var(--soft)}
+.drow:first-child{border-top:0}
 .drow.ok{box-shadow:inset 4px 0 0 var(--ok)}.drow.pend{box-shadow:inset 4px 0 0 var(--warn)}
+.dh{display:grid;grid-template-columns:minmax(0,1fr) minmax(120px,220px) auto;gap:8px 18px;align-items:center;padding:11px 18px}
+.dh:hover{background:var(--soft)}
+.prog{display:flex;align-items:center;gap:9px;font-size:12.5px;color:var(--muted);font-variant-numeric:tabular-nums;white-space:nowrap}
+.prog .bar{flex:1;height:7px;border-radius:99px;background:var(--line);overflow:hidden;min-width:60px}
+.prog .bar i{display:block;height:100%;background:var(--ok);border-radius:99px}
+.pill{font-size:12px;font-weight:700;padding:3px 10px;border-radius:99px;white-space:nowrap}
+.pill.ok{background:var(--ok-bg);color:var(--ok)}.pill.pend{background:var(--warn-bg);color:var(--warn)}.pill.nao{background:var(--danger-bg);color:var(--danger)}
+.ddet{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,290px),1fr));gap:12px 18px;padding:4px 18px 16px 34px;align-items:start}
+.ddet>.srvs,.ddet>.pendbox{grid-column:1/-1}
+.ddet .seg{display:flex;width:100%}
+.ddet .seg button{flex:1;white-space:normal;padding:8px 6px;line-height:1.25}
+.ddet .st{align-items:stretch}
+.drow .nm{min-width:0}
 .drow .nm b{font-family:var(--f-display);font-size:14.5px;line-height:1.3;display:block}
 .nmbtn{display:flex;align-items:center;gap:7px;border:0;background:transparent;padding:0;color:inherit;font:inherit;cursor:pointer;text-align:left}
 .nmbtn .car{font-size:10px;color:var(--muted);transition:transform .15s}
@@ -150,8 +154,12 @@ main.sub .grid,main.sub .devwrap{margin-top:12px}
 .nmbtn:focus-visible{outline:3px solid var(--accent);outline-offset:3px;border-radius:6px}
 .srvs{grid-column:1/-1;background:var(--soft);border-radius:10px;padding:10px 14px;font-size:13px}
 .srvs>b{font-family:var(--f-display)}
-.srvs ul{columns:3 250px;column-gap:26px;list-style:none;margin:6px 0 0;padding:0}
-.srvs li{break-inside:avoid;padding:2px 0}
+.srvs ul{columns:2 300px;column-gap:26px;list-style:none;margin:6px 0 0;padding:0}
+.srvs li{break-inside:avoid;padding:3px 0;display:flex;align-items:center;gap:8px;justify-content:space-between}
+.srvs li .sn{min-width:0}
+.srvs li.bx .sn{color:var(--ok)}
+.srvs .btn.sm{padding:3px 9px;font-size:12px}
+.srvs .btn.feito{background:var(--ok-bg);color:var(--ok);border-color:transparent}
 .srvs li small{color:var(--muted)}
 .srvs li.pd{color:var(--warn);font-weight:600}
 .srvs li em{font-style:normal;font-size:11px;background:var(--warn-bg);color:var(--warn);border-radius:99px;padding:1px 7px;margin-left:4px}
@@ -183,14 +191,40 @@ main.sub .grid,main.sub .devwrap{margin-top:12px}
 .pendbox select{max-width:340px;background:var(--surface)}
 .drow>*{min-width:0}
 @media (max-width:900px){
-  .dhead{display:none}
-  .drow{grid-template-columns:1fr;gap:10px;padding:14px 16px}
+  .dh{grid-template-columns:1fr auto;padding:12px 14px}
+  .dh .prog{grid-column:1/-1;order:3}
+  .ddet{padding:4px 14px 14px;grid-template-columns:1fr}
   .drow .st,.drow .rh{align-items:stretch}
   .seg{display:flex;width:100%}
   .seg button{flex:1;white-space:normal;padding:8px 6px;line-height:1.25}
   .pendbox select{max-width:100%}
   .drow [data-l]::before{content:attr(data-l);display:block;font-size:11px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:var(--muted);margin-bottom:4px}
 }
+/* baixa rápida */
+.qb{border-color:var(--accent)}
+.qb h2{font-size:1rem;margin-bottom:8px}
+#qBusca{font-size:16px;padding:12px 14px}
+.qres{margin-top:6px;border:1px solid var(--line);border-radius:10px;overflow:hidden}
+.qres button{display:flex;width:100%;gap:10px;align-items:center;justify-content:space-between;text-align:left;border:0;border-top:1px solid var(--line);background:var(--surface);padding:10px 12px;cursor:pointer;font:inherit}
+.qres button:first-child{border-top:0}
+.qres button:hover,.qres button.on{background:var(--soft)}
+.qres small{color:var(--muted);display:block}
+.qres .ja{font-size:11.5px;font-weight:700;color:var(--ok);background:var(--ok-bg);border-radius:99px;padding:2px 9px;white-space:nowrap}
+.qult{margin-top:10px;font-size:13px}
+.qult b{font-family:var(--f-display);font-size:12px;letter-spacing:.04em;text-transform:uppercase;color:var(--muted)}
+.qult ul{list-style:none;margin:4px 0 0;padding:0}
+.qult li{display:flex;gap:8px;align-items:center;justify-content:space-between;padding:4px 0;border-top:1px solid var(--line)}
+.qult li:first-child{border-top:0}
+.qult li small{color:var(--muted)}
+.qult li.novo{animation:pisca 1.2s ease-out}
+@keyframes pisca{from{background:var(--ok-bg)}to{background:transparent}}
+.dsum{display:flex;flex-wrap:wrap;gap:6px}
+.dsum button{border-radius:99px;padding:5px 13px;background:var(--soft);border:2px solid var(--line);cursor:pointer;font-size:13px;font-weight:600;display:inline-flex;gap:7px;align-items:baseline}
+.dsum button b{font-variant-numeric:tabular-nums}
+.dsum button.on{border-color:var(--accent)}
+.dsum .tot{margin-left:auto;align-self:center;color:var(--muted);font-size:13px}
+details.ajuda{margin-top:10px;font-size:13px}
+details.ajuda summary{cursor:pointer;color:var(--muted);font-weight:600}
 .grid{display:grid;grid-template-columns:minmax(300px,380px) minmax(0,1fr);gap:16px;margin-top:-20px;align-items:start}
 @media (max-width:920px){.grid{grid-template-columns:1fr}}
 @media (min-width:921px){.col:last-child>.panel{position:sticky;top:10px}}
@@ -384,16 +418,22 @@ input,select,textarea{border-radius:12px}
   </div>
 </div></div>
 <section class="devwrap" id="abaDev" hidden>
+  <section class="panel qb">
+    <h2>Dar baixa no ponto</h2>
+    <input id="qBusca" type="search" placeholder="Nome ou matrícula de quem deixou o espelho…" aria-label="Servidor que deixou o espelho" autocomplete="off" style="width:100%">
+    <div id="qRes" class="qres" role="listbox" hidden></div>
+    <div id="qUlt"></div>
+  </section>
   <section class="panel">
-    <h2 style="margin-bottom:6px">Controle de devolução dos espelhos de ponto</h2>
-    <p class="muted" style="margin:0 0 10px">Marque, para cada setor ou gabinete, se devolveu o espelho de ponto do mês: <b>devolvido ao RH</b>, <b>devolvido com pendências</b> ou <b>não devolvido</b>, com uma observação se precisar. Em <b>devolvido com pendências</b>, escolha quais servidores do setor ficaram pendentes. Marque também quando o <b>RH entregou o espelho</b> ao setor. As marcações ficam salvas no servidor, mês a mês.</p>
     <div class="row" style="align-items:center;gap:8px">
+      <h2 style="margin:0;flex:1 1 220px">Devolução por setor</h2>
       <select id="dMes" aria-label="Mês"></select>
       <input id="dAno" type="number" min="2000" max="2100" aria-label="Ano" style="width:84px">
-      <input id="dBusca" type="search" placeholder="Buscar setor ou gabinete" aria-label="Buscar" autocomplete="off" style="flex:1 1 200px">
-      <button class="btn sm" id="dCsv" type="button">Baixar planilha (CSV)</button>
+      <input id="dBusca" type="search" placeholder="Buscar setor" aria-label="Buscar setor" autocomplete="off" style="flex:1 1 160px;max-width:260px">
+      <button class="btn sm" id="dCsv" type="button">Planilha (CSV)</button>
     </div>
     <div class="dsum" id="dSum" style="margin-top:12px"></div>
+    <details class="ajuda"><summary>Como funciona</summary><p class="muted" style="margin:6px 0 0">Use <b>Dar baixa no ponto</b> quando o servidor deixar o espelho: digite o nome ou a matrícula e tecle Enter. Ao baixar o último servidor de um setor, ele passa a <b>devolvido ao RH</b>. Clique no nome do setor para ver os servidores, marcar a situação (<b>devolvido ao RH</b>, <b>com pendências</b> ou <b>não devolvido</b>), a entrega do RH ao setor e observações. As marcações ficam salvas no servidor, mês a mês.</p></details>
   </section>
   <div class="dlist panel" id="dLista" style="padding:0"></div>
 </section>
@@ -1319,7 +1359,7 @@ window.addEventListener('hashchange',()=>{telaEsp();window.scrollTo(0,0);});
 const DST={nao:'Não devolvido',ok:'Devolvido ao RH',pend:'Devolvido com pendências'};
 const DST_EM={ok:'devolvido ao RH',pend:'devolvido com pendências'};   // frase da linha do setor (não dá para só baixar as maiúsculas: "RH")
 const devAberto=new Set();                       // setores com a lista de servidores aberta
-let dev={itens:{}},devFiltro='todos',devBusca='',devT=null,devRef='',devPend=false;
+let dev={itens:{},baixas:{}},devFiltro='todos',devBusca='',devT=null,devRef='',devPend=false;
 const devKey=()=>{const m=+$('#dMes').value,a=+$('#dAno').value;return(a>=2000&&a<=2100)?a+'-'+String(m).padStart(2,'0'):'';};
 const hoje=()=>{const d=new Date();return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');};
 const brData=iso=>/^\d{4}-\d{2}-\d{2}$/.test(iso||'')?iso.slice(8)+'/'+iso.slice(5,7)+'/'+iso.slice(0,4):'';
@@ -1342,34 +1382,42 @@ async function devSalvar(){
 function devAgendar(){devPend=true;clearTimeout(devT);devT=setTimeout(devSalvar,600);}
 async function devCarregar(){
   await devSalvar();
-  devRef=devKey();dev={itens:{}};
+  devRef=devKey();dev={itens:{},baixas:{}};
   if(!devRef){devDesenhar();return;}
   const ref=devRef;let j=null;
   try{if(dbh){const d=await dbh.doc('devolucao/'+ref).get();if(d.exists) j=d.data().json;}}catch(e){toast('Não foi possível ler as marcações do servidor.');}
   if(j==null){try{j=localStorage.getItem('rhcrv-devolucao-'+ref);}catch(e){}}
   if(ref!==devRef) return;                      // o mês mudou durante a leitura
   try{const o=JSON.parse(j||'null');if(o&&o.itens&&typeof o.itens==='object') dev=o;}catch(e){}
+  if(!dev.baixas||typeof dev.baixas!=='object') dev.baixas={};
   devDesenhar();
 }
 function devLinha(g){
-  const it=dev.itens[g.k]||{},s=it.s||'nao';
+  const it=dev.itens[g.k]||{},s=it.s||'nao',aberto=devAberto.has(g.k),L=devPessoasDe(g.k),bx=L.filter(p=>dev.baixas[pessoaId(p)]).length;
+  const prog=L.length?`<div class="prog" title="Servidores com baixa no ponto"><div class="bar"><i style="width:${Math.round(bx*100/L.length)}%"></i></div><span>${bx}/${L.length}</span></div>`:'<div class="prog"><span>sem servidores</span></div>';
   const btns=['ok','pend','nao'].map(v=>`<button type="button" data-s="${v}" class="${s===v?'on':''}" aria-pressed="${s===v}">${DST[v]}</button>`).join('');
   const data=s!=='nao'?`<input type="date" data-f="d" value="${esc(it.d||'')}" aria-label="Data da devolução">`:'';
-  const ph=s==='pend'?'Descreva as pendências…':'Observação (opcional)',aberto=devAberto.has(g.k);
-  return `<div class="drow ${s}" data-k="${esc(g.k)}">
-    <div class="nm"><button type="button" class="nmbtn" data-open aria-expanded="${aberto}" title="Ver os servidores"><span class="car" aria-hidden="true">▶</span><b>${esc(g.nome)}</b></button><span>${g.n} servidor${g.n===1?'':'es'}</span></div>
+  const ph=s==='pend'?'Descreva as pendências…':'Observação (opcional)';
+  const det=aberto?`<div class="ddet">
     <div class="st" data-l="Devolução do setor"><div class="seg" role="group" aria-label="Situação de ${esc(g.nome)}">${btns}</div>${data}</div>
     ${devRh(it)}
     <div class="obs" data-l="Observação"><textarea data-f="o" rows="1" placeholder="${ph}" aria-label="Observação de ${esc(g.nome)}">${esc(it.o||'')}</textarea></div>
     ${s==='pend'?devPendencias(g,it):''}
-    ${aberto?devServidores(g,it):''}
+    ${devServidores(g,it,L)}
+  </div>`:'';
+  return `<div class="drow ${s}" data-k="${esc(g.k)}">
+    <div class="dh"><div class="nm"><button type="button" class="nmbtn" data-open aria-expanded="${aberto}" title="Abrir o setor"><span class="car" aria-hidden="true">▶</span><b>${esc(g.nome)}</b></button></div>${prog}<span class="pill ${s}">${DST[s]}</span></div>
+    ${det}
   </div>`;
 }
-/* lista dos servidores do setor/gabinete (o que o clique no nome mostra); marca os que ficaram com pendência */
-function devServidores(g,it){
-  const pend=new Set(((it.s==='pend'&&it.ps)||[]).map(x=>x.i)),L=devPessoasDe(g.k);
+/* lista dos servidores do setor/gabinete: botão de baixa no ponto em cada um; marca os que ficaram com pendência */
+function devServidores(g,it,L){
+  const pend=new Set(((it.s==='pend'&&it.ps)||[]).map(x=>x.i));
   if(!L.length) return '<div class="srvs"><b>Servidores</b><p class="muted" style="margin:4px 0 0">Nenhum servidor deste setor na Hierarquia de Pessoal.</p></div>';
-  return `<div class="srvs"><b>Servidores (${L.length})</b><ul>${L.map(p=>`<li${pend.has(pessoaId(p))?' class="pd"':''}>${esc(p.n)}${p.m?' <small>mat. '+esc(p.m)+'</small>':''}${p.c?' <small>· '+esc(p.c)+'</small>':''}${pend.has(pessoaId(p))?' <em>pendente</em>':''}</li>`).join('')}</ul></div>`;
+  const bx=L.filter(p=>dev.baixas[pessoaId(p)]).length;
+  return `<div class="srvs"><b>Servidores — ${bx} de ${L.length} com baixa no ponto</b><ul>${L.map(p=>{const id=pessoaId(p),b=dev.baixas[id],pd=pend.has(id);
+    return `<li class="${b?'bx':''}${pd?' pd':''}"><span class="sn">${esc(p.n)}${p.m?' <small>mat. '+esc(p.m)+'</small>':''}${pd?' <em>pendente</em>':''}</span>`+
+      (b?`<button type="button" class="btn sm feito" data-baixa="${esc(id)}" title="Desfazer a baixa de ${esc(p.n)}">✓ ${esc(brData(b.d).slice(0,5))}</button>`:`<button type="button" class="btn sm" data-baixa="${esc(id)}">Dar baixa</button>`)+'</li>';}).join('')}</ul></div>`;
 }
 /* servidores com pendência: escolhidos entre os do setor/gabinete na Hierarquia de Pessoal (guarda matrícula e nome) */
 const pessoaId=p=>p.m?String(p.m):'n:'+norm(p.n);
@@ -1392,19 +1440,20 @@ function devRh(it){
 }
 function devResumo(L){
   const c={ok:0,pend:0,nao:0,ent:0};L.forEach(g=>{c[devSit(g.k)]++;if(devEntregue(g.k)) c.ent++;});
-  const bt=(v,t,n,cl)=>`<button type="button" class="${cl||''} ${devFiltro===v?'on':''}" data-flt="${v}"><small>${t}</small><b>${n}</b></button>`;
-  $('#dSum').innerHTML=bt('todos','Todos os setores',L.length,'')+bt('ent','Entregues ao setor',c.ent,'ent')+bt('ok','Devolvidos ao RH',c.ok,'ok')+bt('pend','Com pendências',c.pend,'pend')+bt('nao','Não devolvidos',c.nao,'nao');
+  const bt=(v,t,n)=>`<button type="button" class="${devFiltro===v?'on':''}" data-flt="${v}">${t} <b>${n}</b></button>`;
+  const todos=((pessoal&&pessoal.pessoas)||[]).filter(p=>p._k),feitas=todos.filter(p=>dev.baixas[pessoaId(p)]).length;
+  $('#dSum').innerHTML=bt('todos','Todos',L.length)+bt('nao','Não devolvidos',c.nao)+bt('pend','Com pendências',c.pend)+bt('ok','Devolvidos',c.ok)+bt('ent','Entregues ao setor',c.ent)+(todos.length?`<span class="tot">Baixas no ponto: <b>${feitas}</b> de ${todos.length}</span>`:'');
 }
 function devDesenhar(){
   const box=$('#dLista');
+  qUltimas();
   if(!pessoal||!GH.size){devResumo([]);
     box.innerHTML='<div class="empty" style="padding:24px"><h2>Hierarquia de pessoal não carregada</h2><p class="muted">Os setores vêm da Hierarquia de Pessoal. Abra-a e clique em <b>Atualizar do Centi</b> ao menos uma vez.</p></div>';
     return;}
   const L=devSetores();devResumo(L);
   const q=norm(devBusca);
   const V=L.filter(g=>devNoFiltro(g.k)&&(!q||norm(g.nome).includes(q)));
-  const cab='<div class="dhead" aria-hidden="true"><span>Setor ou gabinete</span><span>Devolução do setor</span><span>Entrega do RH ao setor</span><span>Observação</span></div>';
-  box.innerHTML=V.length?cab+V.map(devLinha).join(''):'<p class="muted" style="padding:18px">Nenhum setor nesta lista.</p>';
+  box.innerHTML=V.length?V.map(devLinha).join(''):'<p class="muted" style="padding:18px">Nenhum setor nesta lista.</p>';
 }
 function devMudar(k,campos){
   const it=Object.assign({},dev.itens[k]||{},campos);
@@ -1498,6 +1547,84 @@ $('#dLista').addEventListener('click',ev=>{
   const row=b.closest('.drow'),k=row.dataset.k;
   devMudar(k,{ps:((dev.itens[k]||{}).ps||[]).filter(x=>x.i!==b.dataset.i)});devRefaz(row,k);
 });
+/* ---------- baixa no ponto, por servidor ---------- */
+let devPor=null;                                                       // quem está registrando (guardado depois da 1ª vez)
+async function devPorGarantir(){
+  if(devPor) return devPor;
+  try{devPor=await devQuemSou();}catch(e){toast((e.message||'Não foi possível identificar quem registrou.')+' A baixa foi registrada sem o nome de quem registrou.');}
+  return devPor;
+}
+const devPorReg=()=>devPor?{n:devPor.nome,m:devPor.mat,u:devPor.user}:undefined;
+/* registra a baixa; devolve true se esta baixa completou o setor (e ele passou a "devolvido ao RH") */
+function devBaixar(p){
+  const id=pessoaId(p),k=p._k;
+  dev.baixas[id]={n:p.n,m:p.m?String(p.m):'',k,d:hoje(),u:new Date().toISOString(),p:devPorReg()};
+  devAgendar();
+  const L=devPessoasDe(k);
+  if(L.length&&L.every(x=>dev.baixas[pessoaId(x)])&&devSit(k)==='nao'){
+    devMudar(k,{s:'ok'});
+    if(!devEntregue(k)) devEntrega(k,()=>{const e={d:hoje()};const r=devPorReg();if(r) e.p=r;return e;});
+    return true;
+  }
+  return false;
+}
+function devDesfazer(id){delete dev.baixas[id];devAgendar();}
+const devPessoaPorId=id=>((pessoal&&pessoal.pessoas)||[]).find(p=>p._k&&pessoaId(p)===id);
+function qUltimas(){
+  const box=$('#qUlt');if(!box) return;
+  const L=Object.entries(dev.baixas||{}).sort((a,b)=>(b[1].u||'').localeCompare(a[1].u||'')).slice(0,5);
+  if(!L.length){box.innerHTML='';return;}
+  box.innerHTML='<div class="qult"><b>Últimas baixas</b><ul>'+L.map(([id,b],i)=>{const g=GH.get(b.k);
+    return `<li${qNovo===id?' class="novo"':''}><span>${esc(titulo(b.n))}<small> · ${esc(g?g.nome:'')} · ${esc(brData(b.d).slice(0,5))}</small></span><button type="button" class="btn sm" data-undo="${esc(id)}">Desfazer</button></li>`;}).join('')+'</ul></div>';
+}
+let qNovo='',qLista=[],qSel=0;
+function qDesenhar(){
+  const box=$('#qRes');
+  if(!qLista.length){box.hidden=true;return;}
+  box.innerHTML=qLista.map((p,i)=>{const b=dev.baixas[pessoaId(p)],g=GH.get(p._k);
+    return `<button type="button" role="option" data-i="${i}" class="${i===qSel?'on':''}"><span><b>${esc(titulo(p.n))}</b><small>${p.m?'mat. '+esc(p.m)+' · ':''}${esc(g?g.nome:'')}</small></span>${b?'<span class="ja">já baixado '+esc(brData(b.d).slice(0,5))+'</span>':''}</button>`;}).join('');
+  box.hidden=false;
+}
+function qBuscar(){
+  const t=norm($('#qBusca').value),dig=digs(t);
+  if(!pessoal){qLista=[];const box=$('#qRes');box.innerHTML='<p class="muted" style="padding:10px 12px;margin:0">Hierarquia de pessoal não carregada. Abra-a e clique em <b>Atualizar do Centi</b>.</p>';box.hidden=!t;return;}
+  if(t.length<2){qLista=[];qDesenhar();return;}
+  qLista=pessoal.pessoas.filter(p=>p._k&&(norm(p.n).includes(t)||(dig.length>=3&&p.m&&digs(p.m).includes(dig))))
+    .sort((a,b)=>(norm(b.n).startsWith(t)-norm(a.n).startsWith(t))||a.n.localeCompare(b.n,'pt-BR')).slice(0,6);
+  qSel=0;qDesenhar();
+}
+async function qConfirmar(p){
+  if(!p) return;
+  $('#qBusca').value='';qLista=[];qDesenhar();$('#qBusca').focus();
+  const b=dev.baixas[pessoaId(p)];
+  if(b){toast(titulo(p.n)+' já tinha baixa em '+brData(b.d)+'.');return;}
+  await devPorGarantir();
+  const completou=devBaixar(p);
+  qNovo=pessoaId(p);qUltimas();devRedesenhaLinha(p._k);devResumo(devSetores());
+  const g=GH.get(p._k);
+  toast('Baixa no ponto: '+titulo(p.n)+(completou?' · '+(g?g.nome:'setor')+' completo, devolvido ao RH':''));
+}
+$('#qBusca').addEventListener('input',qBuscar);
+$('#qBusca').addEventListener('keydown',ev=>{
+  if(ev.key==='ArrowDown'&&qLista.length){qSel=(qSel+1)%qLista.length;qDesenhar();ev.preventDefault();}
+  else if(ev.key==='ArrowUp'&&qLista.length){qSel=(qSel+qLista.length-1)%qLista.length;qDesenhar();ev.preventDefault();}
+  else if(ev.key==='Enter'){ev.preventDefault();qConfirmar(qLista[qSel]);}
+  else if(ev.key==='Escape'){$('#qBusca').value='';qLista=[];qDesenhar();}
+});
+$('#qRes').addEventListener('click',ev=>{const b=ev.target.closest('button[data-i]');if(b) qConfirmar(qLista[+b.dataset.i]);});
+$('#qUlt').addEventListener('click',ev=>{
+  const b=ev.target.closest('[data-undo]');if(!b) return;
+  const id=b.dataset.undo,reg=dev.baixas[id];devDesfazer(id);qNovo='';qUltimas();
+  if(reg) devRedesenhaLinha(reg.k);devResumo(devSetores());
+});
+/* botão de baixa dentro do setor aberto */
+$('#dLista').addEventListener('click',async ev=>{
+  const b=ev.target.closest('[data-baixa]');if(!b) return;
+  const row=b.closest('.drow'),k=row.dataset.k,id=b.dataset.baixa;
+  if(dev.baixas[id]){devDesfazer(id);}
+  else{const p=devPessoasDe(k).find(x=>pessoaId(x)===id);if(!p) return;await devPorGarantir();qNovo=id;if(devBaixar(p)) toast('Setor completo: devolvido ao RH.');}
+  qUltimas();devRedesenhaLinha(k);devResumo(devSetores());
+});
 $('#dSum').addEventListener('click',ev=>{const b=ev.target.closest('[data-flt]');if(!b) return;devFiltro=b.dataset.flt;devDesenhar();});
 $('#dBusca').addEventListener('input',ev=>{devBusca=ev.target.value;devDesenhar();});
 $('#dMes').addEventListener('change',devCarregar);$('#dAno').addEventListener('change',devCarregar);
@@ -1505,9 +1632,11 @@ window.addEventListener('pagehide',devSalvar);
 $('#dCsv').addEventListener('click',()=>{
   if(!GH.size){toast('A hierarquia de pessoal não está carregada.');return;}
   const c=v=>'"'+String(v==null?'':v).replace(/"/g,'""')+'"';
-  const rows=[['Setor','Servidores','Situação','Data','Observação','Espelho entregue ao setor pelo RH','Data da entrega ao setor','Registrado por','Servidores com pendência']].concat(devSetores().map(g=>{const it=dev.itens[g.k]||{},e=it.e||null;return [g.nome,
+  const rows=[['Setor','Servidores','Situação','Data','Observação','Espelho entregue ao setor pelo RH','Data da entrega ao setor','Registrado por','Servidores com pendência','Baixas no ponto','Servidores sem baixa']].concat(devSetores().map(g=>{const it=dev.itens[g.k]||{},e=it.e||null;return [g.nome,
     g.n,DST[devSit(g.k)],brData(it.d),(it.o||'').replace(/\s*\n\s*/g,' '),e?'Sim':'Não',e?brData(e.d):'',e&&e.p?e.p.n+(e.p.m?' (mat. '+e.p.m+')':''):'',
-    devSit(g.k)==='pend'?(it.ps||[]).map(x=>x.n+(x.m?' (mat. '+x.m+')':'')).join('; '):''];}));
+    devSit(g.k)==='pend'?(it.ps||[]).map(x=>x.n+(x.m?' (mat. '+x.m+')':'')).join('; '):'',
+    (()=>{const L=devPessoasDe(g.k);return L.filter(x=>dev.baixas[pessoaId(x)]).length+' de '+L.length;})(),
+    devPessoasDe(g.k).filter(x=>!dev.baixas[pessoaId(x)]).map(x=>x.n+(x.m?' (mat. '+x.m+')':'')).join('; ')];}));
   const csv='﻿'+rows.map(r=>r.map(c).join(';')).join('\r\n');
   const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([csv],{type:'text/csv;charset=utf-8'}));a.download='controle-devolucao-espelhos-'+(devRef||'mes')+'.csv';
   document.body.appendChild(a);a.click();setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove();},4000);

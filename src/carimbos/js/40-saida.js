@@ -54,7 +54,8 @@ async function baixar(k){
     const by=await gerar(lista,{p:v=>carga(true,null,'Carimbando e organizando páginas… '+Math.round(v*100)+'%',v)});
     carga(true,null,'Salvando…',1);
     baixarBlob(by,k?nomeSeguro(nomeArq)+'-'+nomeSeguro(lista[0].nome)+'.pdf':nomeSeguro(nomeArq)+'-carimbado.pdf');
-    carga(false);toast('PDF pronto: '+lista.reduce((s,g)=>s+ordemPaginas(g).length,0)+' páginas carimbadas.');
+    let extra='';try{extra=await emitDoPdf(lista);}catch(e){console.error(e);}   // libera a baixa no Controle de devolução
+    carga(false);toast('PDF pronto: '+lista.reduce((s,g)=>s+ordemPaginas(g).length,0)+' páginas carimbadas.'+extra);
   }catch(e){carga(false);console.error(e);toast('Não foi possível gerar o PDF: '+(e&&e.message||e));}
 }
 $('#saveAll').addEventListener('click',()=>baixar(null));

@@ -8,7 +8,7 @@
   site/ferias/index.html        férias: quem está de férias e quem tem direito (período aquisitivo)
   site/licenca-premio/index.html licença-prêmio: períodos aquisitivos, prazos de gozo e controle dos efetivos (Estatuto, arts. 194 a 197)
   site/tarefas/index.html       tarefas do RH: checklist em quadro (kanban), equipe ou privadas
-  site/carimbos/index.html      carimbos em PDF: posiciona o carimbo nas páginas e organiza por hierarquia
+  site/espelho/index.html       espelhos de ponto: carimbar (posiciona o carimbo e organiza por hierarquia) e controle de devolução
   site/documentos/index.html    gerador de documentos: abertura de conta (e, no futuro, portarias e decretos) no papel timbrado, em Word e PDF
   dist/artifact-*.html          fragmentos para publicar como artefato
 
@@ -23,7 +23,7 @@ Uso: python3 build.py [--flow-url URL] [--home-url URL]
   --ferias-url  endereço do sistema de Férias usado no painel (artefato)
   --licenca-url  endereço do sistema de Licença-prêmio usado no painel (artefato)
   --tarefas-url  endereço do sistema de Tarefas usado no painel (artefato)
-  --carimbos-url  endereço do sistema de Carimbos usado no painel (artefato)
+  --carimbos-url  endereço do sistema de Espelhos de ponto usado no painel (artefato)
   --documentos-url  endereço do Gerador de Documentos usado no painel (artefato)
 """
 import glob, os, sys
@@ -84,9 +84,9 @@ page = lambda frag: head + frag + '\n</body></html>\n'
 # site (hospedagem comum, ex.: Vercel)
 wr('site/index.html', page(launcher.replace('/*FLOW_URL*/', 'fluxogramas/').replace('/*PESSOAL_URL*/', 'pessoal/').replace('/*PONTO_URL*/', 'ponto/')
     .replace('/*FERIAS_URL*/', 'ferias/').replace('/*LICENCA_URL*/', 'licenca-premio/').replace('/*TAREFAS_URL*/', 'tarefas/')
-    .replace('/*CARIMBOS_URL*/', 'carimbos/').replace('/*DOCUMENTOS_URL*/', 'documentos/')))
+    .replace('/*CARIMBOS_URL*/', 'espelho/').replace('/*DOCUMENTOS_URL*/', 'documentos/')))
 wr('site/documentos/index.html', page(documentos.replace('/*HOME_URL*/', '../')))
-wr('site/carimbos/index.html', page(carimbos.replace('/*HOME_URL*/', '../')))
+wr('site/espelho/index.html', page(carimbos.replace('/*HOME_URL*/', '../')))
 wr('site/ferias/index.html', page(ferias.replace('/*HOME_URL*/', '../')))
 wr('site/licenca-premio/index.html', page(licenca.replace('/*HOME_URL*/', '../')))
 wr('site/tarefas/index.html', page(tarefas.replace('/*HOME_URL*/', '../')))
@@ -97,7 +97,7 @@ wr('site/fluxogramas/index.html', page(flow.replace('/*HOME_URL*/', '../')))
 wr('dist/artifact-launcher.html', launcher.replace('/*FLOW_URL*/', opt('--flow-url', 'fluxogramas/'))
     .replace('/*PESSOAL_URL*/', opt('--pessoal-url', 'pessoal/')).replace('/*PONTO_URL*/', opt('--ponto-url', 'ponto/'))
     .replace('/*FERIAS_URL*/', opt('--ferias-url', 'ferias/')).replace('/*LICENCA_URL*/', opt('--licenca-url', 'licenca-premio/'))
-    .replace('/*TAREFAS_URL*/', opt('--tarefas-url', 'tarefas/')).replace('/*CARIMBOS_URL*/', opt('--carimbos-url', 'carimbos/')).replace('/*DOCUMENTOS_URL*/', opt('--documentos-url', 'documentos/')))
+    .replace('/*TAREFAS_URL*/', opt('--tarefas-url', 'tarefas/')).replace('/*CARIMBOS_URL*/', opt('--carimbos-url', 'espelho/')).replace('/*DOCUMENTOS_URL*/', opt('--documentos-url', 'documentos/')))
 wr('dist/artifact-documentos.html', documentos.replace('/*HOME_URL*/', opt('--home-url', '../')))
 wr('dist/artifact-carimbos.html', carimbos.replace('/*HOME_URL*/', opt('--home-url', '../')))
 wr('dist/artifact-tarefas.html', tarefas.replace('/*HOME_URL*/', opt('--home-url', '../')))

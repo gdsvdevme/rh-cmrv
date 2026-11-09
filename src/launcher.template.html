@@ -178,7 +178,7 @@ const uid=()=>'t'+Math.random().toString(36).slice(2,9);
 
 const ANTIGA_DESC_ESPELHOS='Carimbe os espelhos de ponto em PDF, organizados pela hierarquia, e acompanhe quais setores devolveram o espelho (entregue, com pendências ou não entregue).';
 function defaults(){
-  return {v:11,tiles:[
+  return {v:12,tiles:[
     {id:'t-fluxos',nome:'Fluxogramas e Manual do RH',desc:'Organograma, fluxogramas editáveis, competências, matriz de responsabilidades, manual de procedimentos e indicadores.',icone:'flow',hue:152,status:'ok',url:FLOW_URL},
     {id:'t-pessoal',nome:'Hierarquia de Pessoal',desc:'Quadro de pessoal organizado por hierarquia: setor administrativo e gabinetes dos vereadores.',icone:'org',hue:262,status:'ok',url:PESSOAL_URL},
     {id:'t-ponto',nome:'Ponto – Servidores Externos',desc:'Registro de ponto pelo celular com localização, assinatura digital e foto, e acompanhamento em tempo real pelo RH (simulação).',icone:'pin',hue:200,status:'ok',url:PONTO_URL},
@@ -369,6 +369,11 @@ function migrar(){
     const t=st.tiles.find(x=>x.id==='t-carimbos');
     if(t&&t.desc===ANTIGA_DESC_ESPELHOS) t.desc=defaults().tiles.find(x=>x.id==='t-carimbos').desc;
     st.v=11;persist();
+  }
+  if(st.v<12){ // a pasta de Espelhos de ponto passou de carimbos/ para espelho/ (quem já tinha o endereço antigo salvo no painel)
+    const t=st.tiles.find(x=>x.id==='t-carimbos');
+    if(t&&/^\/?carimbos\/?$/.test(String(t.url||''))) t.url='espelho/';
+    st.v=12;persist();
   }
 }
 (function init(){

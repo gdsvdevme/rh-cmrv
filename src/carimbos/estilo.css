@@ -62,6 +62,11 @@ main.sub .grid,main.sub .devwrap{margin-top:12px}
 .rh{grid-column:1/-1;display:flex;flex-wrap:wrap;align-items:center;gap:8px 12px;padding-top:10px;border-top:1px dashed var(--line);font-size:13px}
 .rh label.ck2{display:inline-flex;align-items:center;gap:8px;font-weight:600;cursor:pointer}
 .rh .quem{color:var(--muted)}
+.pendbox{grid-column:1/-1;display:flex;flex-wrap:wrap;align-items:center;gap:8px 10px;font-size:13px}
+.pendbox>b{font-family:var(--f-display)}
+.chip{display:inline-flex;align-items:center;gap:6px;background:var(--warn-bg);color:var(--warn);border-radius:99px;padding:3px 6px 3px 10px;font-weight:600}
+.chip button{border:0;background:transparent;color:inherit;cursor:pointer;font-size:16px;line-height:1;padding:0 4px}
+.pendbox select{max-width:340px}
 .dlist{border:1px solid var(--line);border-radius:12px;overflow:hidden}
 @media (max-width:760px){.drow{grid-template-columns:1fr}}
 .grid{display:grid;grid-template-columns:minmax(300px,380px) minmax(0,1fr);gap:16px;margin-top:-20px;align-items:start}

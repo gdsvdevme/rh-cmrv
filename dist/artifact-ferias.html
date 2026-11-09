@@ -3,20 +3,86 @@
 <meta name="claude:viewport-fit-sides" content="cover">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Libre+Franklin:wght@500;600;700&family=Public+Sans:wght@400;500;600&display=swap">
 <style>
+/* Cores e sombras comuns a todas as páginas (o build.py injeta onde o modelo tem o marcador SHARED_CSS). Cada página mantém só as suas variáveis próprias. */
 :root{
-  --bg:#eef4f0;--surface:#fff;--fg:#12281d;--muted:#4f665a;--line:#d1ddd6;--accent:#0a6b3d;--accent-fg:#fff;--soft:#e3efe8;
-  --hero-a:#063d27;--hero-b:#0b7a49;--gold:#d4aa4a;--shadow:0 1px 2px rgba(6,61,39,.09),0 6px 20px rgba(6,61,39,.07);
-  --warn:#8a5a00;--warn-bg:#fdf0d5;--danger:#b3261e;--danger-bg:#fbe3e0;--blue:#2f6fb5;--blue-bg:#e2edf9;--ok:#0a6b3d;--ok-bg:#dff3e7;--violet:#6f4aa8;--violet-bg:#eee6f8;
-  --f-display:"Libre Franklin",system-ui,sans-serif;--f-body:"Public Sans",system-ui,sans-serif;
+  --bg:#eef4f0;
+  --surface:#fff;
+  --fg:#12281d;
+  --muted:#4f665a;
+  --line:#d1ddd6;
+  --accent:#0a6b3d;
+  --accent-fg:#fff;
+  --soft:#e3efe8;
+  --hero-a:#063d27;
+  --hero-b:#0b7a49;
+  --gold:#d4aa4a;
+  --shadow:0 1px 2px rgba(6,61,39,.09),0 6px 20px rgba(6,61,39,.07);
+  --warn:#8a5a00;
+  --warn-bg:#fdf0d5;
+  --danger:#b3261e;
+  --f-display:"Libre Franklin",system-ui,sans-serif;
+  --f-body:"Public Sans",system-ui,sans-serif;
 }
 @media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
-  --bg:#08130e;--surface:#0f1e17;--fg:#e3f1ea;--muted:#90b0a0;--line:#234034;--accent:#52c98a;--accent-fg:#04210f;--soft:#15291f;
-  --hero-a:#04150d;--hero-b:#0b4d31;--gold:#d8b45e;--shadow:0 1px 2px rgba(0,0,0,.4),0 6px 20px rgba(0,0,0,.3);
-  --warn:#f0c26a;--warn-bg:#3a2d10;--danger:#ff8a80;--danger-bg:#3d1a17;--blue:#7fb2ee;--blue-bg:#14273d;--ok:#52c98a;--ok-bg:#12382a;--violet:#b99be8;--violet-bg:#2a1f3d;color-scheme:dark}}
+  --bg:#08130e;
+  --surface:#0f1e17;
+  --fg:#e3f1ea;
+  --muted:#90b0a0;
+  --line:#234034;
+  --accent:#52c98a;
+  --accent-fg:#04210f;
+  --soft:#15291f;
+  --hero-a:#04150d;
+  --hero-b:#0b4d31;
+  --gold:#d8b45e;
+  --shadow:0 1px 2px rgba(0,0,0,.4),0 6px 20px rgba(0,0,0,.3);
+  --warn:#f0c26a;
+  --warn-bg:#3a2d10;
+  --danger:#ff8a80;
+  color-scheme:dark;}}
 :root[data-theme="dark"]{
-  --bg:#08130e;--surface:#0f1e17;--fg:#e3f1ea;--muted:#90b0a0;--line:#234034;--accent:#52c98a;--accent-fg:#04210f;--soft:#15291f;
-  --hero-a:#04150d;--hero-b:#0b4d31;--gold:#d8b45e;--shadow:0 1px 2px rgba(0,0,0,.4),0 6px 20px rgba(0,0,0,.3);
-  --warn:#f0c26a;--warn-bg:#3a2d10;--danger:#ff8a80;--danger-bg:#3d1a17;--blue:#7fb2ee;--blue-bg:#14273d;--ok:#52c98a;--ok-bg:#12382a;--violet:#b99be8;--violet-bg:#2a1f3d;color-scheme:dark}
+  --bg:#08130e;
+  --surface:#0f1e17;
+  --fg:#e3f1ea;
+  --muted:#90b0a0;
+  --line:#234034;
+  --accent:#52c98a;
+  --accent-fg:#04210f;
+  --soft:#15291f;
+  --hero-a:#04150d;
+  --hero-b:#0b4d31;
+  --gold:#d8b45e;
+  --shadow:0 1px 2px rgba(0,0,0,.4),0 6px 20px rgba(0,0,0,.3);
+  --warn:#f0c26a;
+  --warn-bg:#3a2d10;
+  --danger:#ff8a80;
+  color-scheme:dark;}
+
+:root{
+  --danger-bg:#fbe3e0;
+  --blue:#2f6fb5;
+  --blue-bg:#e2edf9;
+  --ok:#0a6b3d;
+  --ok-bg:#dff3e7;
+  --violet:#6f4aa8;
+  --violet-bg:#eee6f8;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --danger-bg:#3d1a17;
+  --blue:#7fb2ee;
+  --blue-bg:#14273d;
+  --ok:#52c98a;
+  --ok-bg:#12382a;
+  --violet:#b99be8;
+  --violet-bg:#2a1f3d;}}
+:root[data-theme="dark"]{
+  --danger-bg:#3d1a17;
+  --blue:#7fb2ee;
+  --blue-bg:#14273d;
+  --ok:#52c98a;
+  --ok-bg:#12382a;
+  --violet:#b99be8;
+  --violet-bg:#2a1f3d;}
 [hidden]{display:none!important}
 *{box-sizing:border-box}
 body{margin:0;background:var(--bg);color:var(--fg);font-family:var(--f-body);font-size:15px;line-height:1.5}
@@ -560,19 +626,39 @@ const PB=(function(){
 })();
 
 const HOME_URL="../";
-const TEMA_KEY='rhcrv-tema',CFG_LS='rhcrv-ferias-cfg-v1';
+/* Núcleo compartilhado por todas as páginas (o build.py injeta onde o modelo tem o marcador SHARED:core). Mudou aqui, mudou em todas. */
+const TEMA_KEY='rhcrv-tema';
+let TOAST_MS=4500;                                  // a página pode trocar: TOAST_MS=3500;
 const $=s=>document.querySelector(s);
 const esc=s=>String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const ICO2={sun:'<circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/>',moon:'<path d="M21 12.8A9 9 0 1111.2 3a7 7 0 009.8 9.8z"/>'};
+function isDark(){const m=/rgba?\((\d+),\s*(\d+),\s*(\d+)/.exec(getComputedStyle(document.body).backgroundColor);return m?(0.2126*m[1]+0.7152*m[2]+0.0722*m[3])/255<0.4:false;}
+function themeBtn(){
+  const b=$('#themeBtn');if(!b) return;const d=isDark();
+  b.innerHTML=`<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${ICO2[d?'sun':'moon']}</svg>${d?'Modo claro':'Modo escuro'}`;
+  b.setAttribute('aria-label',d?'Mudar para o modo claro':'Mudar para o modo escuro');
+}
+/* liga o botão de tema; `depois` roda após a troca (ex.: redesenhar um gráfico) */
+function ligarTema(depois){
+  $('#themeBtn').addEventListener('click',()=>{
+    const n=isDark()?'light':'dark';document.documentElement.setAttribute('data-theme',n);
+    try{localStorage.setItem(TEMA_KEY,n);}catch(e){}
+    themeBtn();if(depois) depois();
+  });
+}
+try{const s=localStorage.getItem(TEMA_KEY);document.documentElement.setAttribute('data-theme',s==='dark'?'dark':'light');}catch(e){document.documentElement.setAttribute('data-theme','light');}
+/* Aviso rápido (#toast), compartilhado (marcador SHARED:toast). A duração vem de TOAST_MS, definido no núcleo. */
+function toast(m){const t=$('#toast');t.textContent=m;t.hidden=false;clearTimeout(toast.t);toast.t=setTimeout(()=>t.hidden=true,TOAST_MS);}
+/* Tela de carregamento (#load) simples, compartilhada (marcador SHARED:carga). */
+function carga(on,msg){const l=$('#load');if(!l) return;l.hidden=!on;document.body.classList.toggle('carregando',!!on);if(msg) $('#ldS').textContent=msg;}
+/* Texto sem acento, minúsculo e aparado (para comparar nomes), compartilhado (marcador SHARED:norm). */
 const norm=s=>String(s||'').normalize('NFD').replace(/[̀-ͯ]/g,'').toLowerCase().trim();
+
+const CFG_LS='rhcrv-ferias-cfg-v1';
 let dbh=null,dados=null,pessoas=[],filtro='',cfg={dias:30,concessivo:12,aviso:60};
 
 /* ---------- tema ---------- */
-const ICO2={sun:'<circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/>',moon:'<path d="M21 12.8A9 9 0 1111.2 3a7 7 0 009.8 9.8z"/>'};
-function isDark(){const m=/rgba?\((\d+),\s*(\d+),\s*(\d+)/.exec(getComputedStyle(document.body).backgroundColor);return m?(0.2126*m[1]+0.7152*m[2]+0.0722*m[3])/255<0.4:false;}
-function themeBtn(){const d=isDark();$('#themeBtn').innerHTML=`<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${ICO2[d?'sun':'moon']}</svg>${d?'Modo claro':'Modo escuro'}`;}
-$('#themeBtn').addEventListener('click',()=>{const n=isDark()?'light':'dark';document.documentElement.setAttribute('data-theme',n);try{localStorage.setItem(TEMA_KEY,n);}catch(e){}themeBtn();});
-try{const s=localStorage.getItem(TEMA_KEY);document.documentElement.setAttribute('data-theme',s==='dark'?'dark':'light');}catch(e){document.documentElement.setAttribute('data-theme','light');}
-function toast(m){const t=$('#toast');t.textContent=m;t.hidden=false;clearTimeout(toast.t);toast.t=setTimeout(()=>t.hidden=true,4500);}
+ligarTema();
 
 /* ---------- datas (sempre em UTC, sem horário) ---------- */
 const DAY=864e5,MIN=new Set(['de','da','do','das','dos','e','a','o']);
@@ -635,11 +721,6 @@ function analisar(p,gz,hoje){
 
 /* ---------- carga ---------- */
 /* tela cheia de carregamento: fica até os dados chegarem (ou a busca falhar) */
-function carga(on,msg){
-  const l=$('#load');if(!l) return;
-  l.hidden=!on;document.body.classList.toggle('carregando',!!on);
-  if(msg) $('#ldS').textContent=msg;
-}
 function montar(r){
   const hoje=hojeMs(),gz=new Map();
   (r.Gozos||[]).forEach(g=>{const k=String(g.MATRICULA);if(!gz.has(k)) gz.set(k,[]);gz.get(k).push(g);});

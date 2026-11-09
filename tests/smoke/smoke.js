@@ -6,6 +6,7 @@
 const { chromium } = require('playwright');
 const fs = require('fs'), path = require('path');
 const raiz = path.resolve(__dirname, '../..');
+const SITE = process.env.SITE_DIR || path.join(raiz, 'site');      // SITE_DIR=/outra/copia/site compara outra versão
 const PAGINAS = ['index.html', 'fluxogramas/index.html', 'pessoal/index.html', 'ponto/index.html', 'ferias/index.html',
   'licenca-premio/index.html', 'tarefas/index.html', 'carimbos/index.html', 'documentos/index.html'];
 
@@ -20,10 +21,11 @@ async function coleta(browser, pagina) {
   p.on('pageerror', e => erros.push('pageerror: ' + e.message));
   p.on('console', m => { if (m.type() === 'error' && !/Failed to load resource|net::ERR|ERR_FAILED/.test(m.text())) erros.push('console: ' + m.text()); });
   await p.addInitScript(bancoFalso);
+  await p.emulateMedia({ colorScheme: 'light' });
   await p.route('**/*', r => r.request().url().startsWith('file:') ? r.continue() : r.abort());
-  await p.goto('file://' + path.join(raiz, 'site', pagina));
+  await p.goto('file://' + path.join(SITE, pagina));
   await p.waitForTimeout(1800);
-  const vars = await p.evaluate(() => {
+  const lerVars = () => {
     const nomes = new Set();
     for (const ss of document.styleSheets) { let rs; try { rs = ss.cssRules; } catch (e) { continue; } const anda = rs => { for (const r of rs) { if (r.style) for (const n of r.style) if (n.startsWith('--')) nomes.add(n); if (r.cssRules) anda(r.cssRules); } }; anda(rs); }
     const out = {};
@@ -34,7 +36,12 @@ async function coleta(browser, pagina) {
       out[tema]['color-scheme'] = cs.colorScheme;
     }
     return out;
-  });
+  };
+  const vars = await p.evaluate(lerVars);
+  await p.emulateMedia({ colorScheme: 'dark' });
+  vars['media-dark'] = await p.evaluate(() => { document.documentElement.removeAttribute('data-theme'); const nomes = new Set();
+    for (const ss of document.styleSheets) { let rs; try { rs = ss.cssRules; } catch (e) { continue; } const anda = rs => { for (const r of rs) { if (r.style) for (const n of r.style) if (n.startsWith('--')) nomes.add(n); if (r.cssRules) anda(r.cssRules); } }; anda(rs); }
+    const cs = getComputedStyle(document.documentElement); const o = Object.fromEntries([...nomes].sort().map(n => [n, cs.getPropertyValue(n).trim()])); o['color-scheme'] = cs.colorScheme; return o; });
   const titulo = await p.title();
   await p.close();
   return { titulo, erros, vars };
@@ -52,7 +59,7 @@ async function coleta(browser, pagina) {
       const a = antes[pg], d = res[pg], dif = [];
       if (a.titulo !== d.titulo) dif.push('título: ' + a.titulo + ' → ' + d.titulo);
       if (JSON.stringify(a.erros) !== JSON.stringify(d.erros)) dif.push('erros: ' + JSON.stringify(a.erros) + ' → ' + JSON.stringify(d.erros));
-      for (const t of ['light', 'dark']) { const ks = new Set([...Object.keys(a.vars[t]), ...Object.keys(d.vars[t])]); for (const k of ks) if (a.vars[t][k] !== d.vars[t][k]) dif.push(t + ' ' + k + ': ' + a.vars[t][k] + ' → ' + d.vars[t][k]); }
+      for (const t of ['light', 'dark', 'media-dark']) { const ks = new Set([...Object.keys(a.vars[t]), ...Object.keys(d.vars[t])]); for (const k of ks) if (a.vars[t][k] !== d.vars[t][k]) dif.push(t + ' ' + k + ': ' + a.vars[t][k] + ' → ' + d.vars[t][k]); }
       console.log((dif.length ? 'DIFERE ' : 'igual  ') + pg + (d.erros.length ? '  (erros de console: ' + d.erros.length + ')' : ''));
       dif.slice(0, 12).forEach(x => console.log('    ' + x)); if (dif.length) ruim++;
     }

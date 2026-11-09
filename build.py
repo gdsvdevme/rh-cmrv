@@ -40,15 +40,18 @@ def wr(p, s):
         s = GERADO + s
     open(p, 'w', encoding='utf-8').write(s)
 
+import re
+# trechos compartilhados: um marcador /*SHARED:core,toast*/ no modelo vira o conteúdo de src/shared/core.js + toast.js
+shared = lambda t: re.sub(r'/\*SHARED:([\w,]+)\*/', lambda m: ''.join(rd('src/shared/' + n + '.js') for n in m.group(1).split(',')), t).replace('/*SHARED_CSS*/', rd('src/shared/tokens.css'))
 hello = rd('src/hello.js'); mcss = rd('src/modern.css'); mflow = rd('src/modern-flow.css')
-mod = lambda t: t.replace('/*MODERN_CSS*/', mcss).replace('/*MODERN_FLOW_CSS*/', mflow).replace('/*HELLO_JS*/', hello)
+mod = lambda t: shared(t).replace('/*MODERN_CSS*/', mcss).replace('/*MODERN_FLOW_CSS*/', mflow).replace('/*HELLO_JS*/', hello)
 css = rd('src/styles.css')
 js = '\n'.join(open(f, encoding='utf-8').read() for f in sorted(glob.glob(os.path.join(root, 'src/js/*.js'))))
 js = js.replace('/*VOLUME_CSS*/', rd('src/volume.css').replace('`', '\\`'))
 pbjs = rd('src/pb.js').replace('/*PB_URL*/', opt('--pb-url', 'https://pb.devgabriel.app.br')).replace('/*CENTI_URL*/', opt('--centi-url', ''))
 js = js.replace('</script>', '<\\/script>')
 flow = mod(rd('src/index.template.html')).replace('/*CSS*/', css).replace('/*PB_JS*/', pbjs).replace('/*JS*/', js)
-launcher = rd('src/launcher.template.html').replace('/*PB_JS*/', pbjs)
+launcher = shared(rd('src/launcher.template.html')).replace('/*PB_JS*/', pbjs)
 pessoal = mod(rd('src/pessoal.template.html')).replace('/*PB_JS*/', pbjs)
 ponto = mod(rd('src/ponto.template.html'))
 ferias = mod(rd('src/ferias.template.html')).replace('/*PB_JS*/', pbjs)

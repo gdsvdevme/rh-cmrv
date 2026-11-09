@@ -84,8 +84,10 @@
     <select id="dMes" aria-label="Mês"></select>
     <input id="dAno" type="number" min="2000" max="2100" aria-label="Ano" style="width:84px">
     <span class="muted" id="dEmit"></span>
+    <button type="button" class="reltab" id="relBtn" aria-expanded="false" aria-controls="dRel">Ver relatório</button>
   </div>
   <div class="banner" id="dAviso" hidden></div>
+  <div id="dBaixas">
   <section class="panel qb">
     <h2>Baixa individual</h2>
     <input id="qBusca" type="search" placeholder="Nome ou matrícula de quem deixou o espelho…" aria-label="Servidor que deixou o espelho" autocomplete="off" style="width:100%">
@@ -102,6 +104,13 @@
     <summary><h2>Retirada do espelho impresso</h2><span class="muted" id="rCont"></span></summary>
     <div class="rlist" id="rLista" style="margin-top:10px"></div>
   </details>
+  </div>
+  <section class="panel rel" id="dRel" hidden>
+    <div class="row" style="align-items:center;gap:8px"><h2 style="margin:0;flex:1 1 200px">Relatório do mês</h2><button class="btn sm" id="relCsv" type="button">Baixar planilha (CSV)</button></div>
+    <div class="relcards" id="relCards"></div>
+    <div class="row" style="margin:12px 0 8px;gap:8px"><div class="dsum" id="relFlt" style="flex:1 1 300px"></div><input id="relBusca" type="search" placeholder="Buscar setor" aria-label="Buscar setor" autocomplete="off" style="flex:1 1 160px;max-width:240px"></div>
+    <div class="rellist" id="relLista"></div>
+  </section>
 </section>
 </div></main>
 <dialog id="dlg"></dialog>

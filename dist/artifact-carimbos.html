@@ -209,6 +209,32 @@ main.sub .grid,main.sub .devwrap{margin-top:12px}
 .qrow .qn{min-width:0}.qrow .qn b{display:block}
 .qres small{color:var(--muted);display:block}
 .qrow .sw{flex:none}
+/* relatório: aba na lateral direita que abre o relatório e recolhe os blocos de baixa */
+.reltab{position:fixed;right:0;top:200px;z-index:30;writing-mode:vertical-rl;background:var(--accent);color:var(--accent-fg);border:0;border-radius:12px 0 0 12px;padding:18px 10px;font-weight:700;font-size:14px;letter-spacing:.03em;cursor:pointer;box-shadow:var(--shadow)}
+.reltab:hover{filter:brightness(1.1)}
+.reltab:focus-visible{outline:3px solid var(--gold);outline-offset:2px}
+#dBaixas{display:flex;flex-direction:column;gap:14px}
+@media (min-width:901px){#abaDev{padding-right:44px}}   /* espaço para a aba lateral não cobrir os cartões */
+@media (max-width:900px){.reltab{position:static;writing-mode:horizontal-tb;border-radius:10px;padding:8px 14px;margin-left:auto}}
+.bloqueado .panel.rel{opacity:1;pointer-events:auto;user-select:auto}
+.relcards{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:8px;margin-top:12px}
+.relcards div{background:var(--soft);border:1px solid var(--line);border-radius:10px;padding:8px 12px}
+.relcards small{display:block;font-size:11px;font-weight:700;letter-spacing:.04em;text-transform:uppercase;color:var(--muted)}
+.relcards b{font-family:var(--f-display);font-size:1.35rem;font-variant-numeric:tabular-nums}
+.relcards .ok b{color:var(--ok)}.relcards .pend b{color:var(--warn)}
+.rellist{border:1px solid var(--line);border-radius:10px;overflow:hidden}
+.relrow{border-top:1px solid var(--line)}
+.relrow:first-child{border-top:0}
+.relh{display:grid;grid-template-columns:minmax(0,1fr) minmax(110px,200px) auto auto;gap:6px 16px;align-items:center;padding:10px 14px;cursor:pointer;width:100%;border:0;background:transparent;text-align:left;font:inherit;color:inherit}
+.relh:hover{background:var(--soft)}
+.relh .rn{font-family:var(--f-display);font-weight:600;font-size:14px;display:flex;gap:8px;align-items:center;min-width:0}
+.relh .rn::before{content:"▶";font-size:10px;color:var(--muted);transition:transform .15s}
+.relrow.aberto .relh .rn::before{transform:rotate(90deg)}
+.reldet{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:10px 24px;padding:4px 14px 14px 32px;font-size:13px}
+.reldet b{font-family:var(--f-display);font-size:12px;text-transform:uppercase;letter-spacing:.04em;color:var(--muted)}
+.reldet ul{list-style:none;margin:4px 0 0;padding:0;columns:1}
+.reldet li{padding:2px 0}.reldet li small{color:var(--muted)}
+@media (max-width:900px){.relh{grid-template-columns:1fr auto}.relh .prog{grid-column:1/-1;order:3}}
 #dAviso{margin:0;font-size:13.5px}
 #dAviso a{color:inherit}
 #dAviso .mm{display:inline-flex;gap:6px;flex-wrap:wrap;margin-top:6px}
@@ -455,8 +481,10 @@ input,select,textarea{border-radius:12px}
     <select id="dMes" aria-label="Mês"></select>
     <input id="dAno" type="number" min="2000" max="2100" aria-label="Ano" style="width:84px">
     <span class="muted" id="dEmit"></span>
+    <button type="button" class="reltab" id="relBtn" aria-expanded="false" aria-controls="dRel">Ver relatório</button>
   </div>
   <div class="banner" id="dAviso" hidden></div>
+  <div id="dBaixas">
   <section class="panel qb">
     <h2>Baixa individual</h2>
     <input id="qBusca" type="search" placeholder="Nome ou matrícula de quem deixou o espelho…" aria-label="Servidor que deixou o espelho" autocomplete="off" style="width:100%">
@@ -473,6 +501,13 @@ input,select,textarea{border-radius:12px}
     <summary><h2>Retirada do espelho impresso</h2><span class="muted" id="rCont"></span></summary>
     <div class="rlist" id="rLista" style="margin-top:10px"></div>
   </details>
+  </div>
+  <section class="panel rel" id="dRel" hidden>
+    <div class="row" style="align-items:center;gap:8px"><h2 style="margin:0;flex:1 1 200px">Relatório do mês</h2><button class="btn sm" id="relCsv" type="button">Baixar planilha (CSV)</button></div>
+    <div class="relcards" id="relCards"></div>
+    <div class="row" style="margin:12px 0 8px;gap:8px"><div class="dsum" id="relFlt" style="flex:1 1 300px"></div><input id="relBusca" type="search" placeholder="Buscar setor" aria-label="Buscar setor" autocomplete="off" style="flex:1 1 160px;max-width:240px"></div>
+    <div class="rellist" id="relLista"></div>
+  </section>
 </section>
 </div></main>
 <dialog id="dlg"></dialog>
@@ -1515,7 +1550,7 @@ function devBaixar(p,emLote){
   devAgendar();
 }
 function devDesfazer(id){delete dev.baixas[id];devAgendar();}
-function devDesenhar(){devAviso();qUltimas();hDesenhar();rDesenhar();}
+function devDesenhar(){devAviso();qUltimas();hDesenhar();rDesenhar();if(!$('#dRel').hidden) relDesenhar();}
 
 /* ---------- bloco 1: baixa individual ---------- */
 let qNovo='',qLista=[],qSel=0,qUltAberto=false;                       // 'Últimas baixas' abre recolhida
@@ -1644,6 +1679,50 @@ $('#rLista').addEventListener('change',async ev=>{
     const g=devSetores().find(x=>x.k===k);toast('Retirada registrada: '+(g?g.nome:'setor')+'.');
   }else delete dev.retiradas[k];
   devAgendar();rDesenhar();
+});
+/* ---------- relatório do mês (aba lateral): abre o relatório e recolhe os blocos de baixa ---------- */
+let relFiltro='todos',relBusca='';const relAberto=new Set();
+function relDados(){
+  const R=dev.retiradas||{},B=dev.baixas||{};
+  return devSetores().map(g=>{
+    const E=devPessoasDe(g.k).filter(p=>devElegivel(p)||B[pessoaId(p)]);
+    const feitos=E.filter(p=>B[pessoaId(p)]),falta=E.filter(p=>!B[pessoaId(p)]);
+    return {g,E,feitos,falta,ret:R[g.k]||null};
+  }).filter(x=>x.E.length||x.ret);
+}
+function relDesenhar(){
+  const D=relDados();
+  const tot=D.reduce((s,x)=>s+x.E.length,0),bx=D.reduce((s,x)=>s+x.feitos.length,0),ret=D.filter(x=>x.ret).length;
+  const mes=devRef?devMesNome(devRef):'';
+  $('#relCards').innerHTML=`<div><small>Espelhos emitidos</small><b>${tot}</b></div><div class="ok"><small>Com baixa</small><b>${bx}</b></div><div class="pend"><small>Sem baixa</small><b>${tot-bx}</b></div><div><small>Setores que retiraram</small><b>${ret}</b> <span class="muted">de ${D.length}</span></div>`;
+  const bt=(v,t,n)=>`<button type="button" class="${relFiltro===v?'on':''}" data-rf="${v}">${t} <b>${n}</b></button>`;
+  $('#relFlt').innerHTML=bt('todos','Todos',D.length)+bt('falta','Faltam baixas',D.filter(x=>x.falta.length).length)+bt('semret','Não retiraram',D.filter(x=>!x.ret).length)+bt('ok','Completos',D.filter(x=>!x.falta.length&&x.ret).length);
+  const q=norm(relBusca);
+  const V=D.filter(x=>(relFiltro==='todos'||(relFiltro==='falta'?x.falta.length:relFiltro==='semret'?!x.ret:(!x.falta.length&&x.ret)))&&(!q||norm(x.g.nome).includes(q)));
+  $('#relLista').innerHTML=!D.length?`<p class="muted" style="padding:16px;margin:0">${mes?'Nenhum espelho emitido em '+esc(mes)+' ainda.':'Escolha o mês.'}</p>`:
+    V.length?V.map(x=>{const k=x.g.k,aberto=relAberto.has(k),pc=x.E.length?Math.round(x.feitos.length*100/x.E.length):0;
+      return `<div class="relrow${aberto?' aberto':''}" data-k="${esc(k)}"><button type="button" class="relh" aria-expanded="${aberto}"><span class="rn">${esc(x.g.nome)}</span><div class="prog"><div class="bar"><i style="width:${pc}%"></i></div><span>${x.feitos.length}/${x.E.length}</span></div><span class="pill ${x.falta.length?'pend':'ok'}">${x.falta.length?x.falta.length+' sem baixa':'Baixas completas'}</span><span class="pill ${x.ret?'ok':'nao'}">${x.ret?'Retirou '+esc(brData(x.ret.d).slice(0,5)):'Não retirou'}</span></button>`+
+        (aberto?`<div class="reldet"><div><b>Sem baixa (${x.falta.length})</b><ul>${x.falta.map(p=>`<li>${esc(titulo(p.n))}${p.m?' <small>mat. '+esc(p.m)+'</small>':''}</li>`).join('')||'<li class="muted">Ninguém.</li>'}</ul></div><div><b>Com baixa (${x.feitos.length})</b><ul>${x.feitos.map(p=>{const b=dev.baixas[pessoaId(p)];return `<li>${esc(titulo(p.n))} <small>${esc(brData(b.d).slice(0,5))}${b.p&&b.p.n?' · '+esc(titulo(b.p.n)):''}</small></li>`;}).join('')||'<li class="muted">Ninguém.</li>'}</ul></div></div>`:'')+'</div>';}).join(''):'<p class="muted" style="padding:16px;margin:0">Nenhum setor nesta lista.</p>';
+}
+function relAlternar(ligar){
+  const rel=$('#dRel'),btn=$('#relBtn');
+  const on=ligar==null?rel.hidden:ligar;
+  rel.hidden=!on;$('#dBaixas').hidden=on;                                // abre o relatório e recolhe as baixas (e vice-versa)
+  btn.textContent=on?'Voltar às baixas':'Ver relatório';btn.setAttribute('aria-expanded',on?'true':'false');
+  if(on) relDesenhar();
+}
+$('#relBtn').addEventListener('click',()=>relAlternar());
+$('#relFlt').addEventListener('click',ev=>{const b=ev.target.closest('[data-rf]');if(!b) return;relFiltro=b.dataset.rf;relDesenhar();});
+$('#relBusca').addEventListener('input',ev=>{relBusca=ev.target.value;relDesenhar();});
+$('#relLista').addEventListener('click',ev=>{const h=ev.target.closest('.relh');if(!h) return;const k=h.closest('.relrow').dataset.k;if(relAberto.has(k)) relAberto.delete(k);else relAberto.add(k);relDesenhar();});
+$('#relCsv').addEventListener('click',()=>{
+  const D=relDados();if(!D.length){toast('Não há espelhos emitidos neste mês.');return;}
+  const c=v=>'"'+String(v==null?'':v).replace(/"/g,'""')+'"';
+  const rows=[['Setor ou gabinete','Servidor','Matrícula','Cargo','Baixa no ponto','Data da baixa','Baixa registrada por','Setor retirou o espelho impresso','Data da retirada']];
+  D.forEach(x=>x.E.forEach(p=>{const b=dev.baixas[pessoaId(p)];rows.push([x.g.nome,titulo(p.n),p.m||'',p.c?titulo(p.c):'',b?'Sim':'Não',b?brData(b.d):'',b&&b.p&&b.p.n?titulo(b.p.n):'',x.ret?'Sim':'Não',x.ret?brData(x.ret.d):'']);}));
+  const csv='﻿'+rows.map(r=>r.map(c).join(';')).join('\r\n');
+  const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([csv],{type:'text/csv;charset=utf-8'}));a.download='relatorio-devolucao-espelhos-'+(devRef||'mes')+'.csv';
+  document.body.appendChild(a);a.click();setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove();},4000);
 });
 $('#dAviso').addEventListener('click',ev=>{const b=ev.target.closest('[data-ym]');if(!b) return;$('#dMes').value=String(+b.dataset.ym.slice(5));$('#dAno').value=b.dataset.ym.slice(0,4);devCarregar();});
 $('#dMes').addEventListener('change',devCarregar);$('#dAno').addEventListener('change',devCarregar);

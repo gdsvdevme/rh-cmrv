@@ -2,5 +2,9 @@
   "buildCommand": "",
   "outputDirectory": "site",
   "cleanUrls": true,
+  "redirects": [
+    { "source": "/carimbos", "destination": "/espelho/", "permanent": false },
+    { "source": "/carimbos/", "destination": "/espelho/", "permanent": false }
+  ],
   "functions": { "api/centi.js": { "maxDuration": 60 }, "api/pdfa.js": { "maxDuration": 60 } }
 }

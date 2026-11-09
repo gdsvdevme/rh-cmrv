@@ -547,7 +547,7 @@ const svg=(k,n)=>`<svg width="${n||28}" height="${n||28}" viewBox="0 0 24 24" fi
 const uid=()=>'t'+Math.random().toString(36).slice(2,9);
 
 function defaults(){
-  return {v:9,tiles:[
+  return {v:10,tiles:[
     {id:'t-fluxos',nome:'Fluxogramas e Manual do RH',desc:'Organograma, fluxogramas editáveis, competências, matriz de responsabilidades, manual de procedimentos e indicadores.',icone:'flow',hue:152,status:'ok',url:FLOW_URL},
     {id:'t-pessoal',nome:'Hierarquia de Pessoal',desc:'Quadro de pessoal organizado por hierarquia: setor administrativo e gabinetes dos vereadores.',icone:'org',hue:262,status:'ok',url:PESSOAL_URL},
     {id:'t-ponto',nome:'Ponto – Servidores Externos',desc:'Registro de ponto pelo celular com localização, assinatura digital e foto, e acompanhamento em tempo real pelo RH (simulação).',icone:'pin',hue:200,status:'ok',url:PONTO_URL},
@@ -728,6 +728,12 @@ function migrar(){
     const t=st.tiles.find(x=>x.id==='t-carimbos'),d=defaults().tiles.find(x=>x.id==='t-carimbos');
     if(t&&t.nome==='Carimbos em PDF'){t.nome=d.nome;t.desc=d.desc;}
     st.v=9;persist();
+  }
+  if(st.v<10){ // painéis que já tinham o nome "Espelhos de Ponto - Carimbo" (editado à mão) também passam a "Espelhos de ponto"
+    const t=st.tiles.find(x=>x.id==='t-carimbos'),d=defaults().tiles.find(x=>x.id==='t-carimbos');
+    const nn=String((t&&t.nome)||'').toLowerCase().replace(/\s+/g,' ').trim();
+    if(t&&(nn==='espelhos de ponto - carimbo'||nn==='espelhos de ponto – carimbo'||nn==='espelhos de ponto - carimbos')){t.nome=d.nome;t.desc=d.desc;}
+    st.v=10;persist();
   }
 }
 (function init(){

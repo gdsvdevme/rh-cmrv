@@ -7,6 +7,7 @@
   site/ponto/index.html         ponto de servidores externos (simulação)
   site/ferias/index.html        férias: quem está de férias e quem tem direito (período aquisitivo)
   site/licenca-premio/index.html licença-prêmio: períodos aquisitivos, prazos de gozo e controle dos efetivos (Estatuto, arts. 194 a 197)
+  site/sentencas/index.html     sentenças judiciais: quanto já foi descontado e quanto falta (penhora, pensão), lido da ficha financeira do Centi
   site/tarefas/index.html       tarefas do RH: checklist em quadro (kanban), equipe ou privadas
   site/espelho/index.html       espelhos de ponto: carimbar (posiciona o carimbo e organiza por hierarquia) e controle de devolução
   site/documentos/index.html    gerador de documentos: abertura de conta (e, no futuro, portarias e decretos) no papel timbrado, em Word e PDF
@@ -22,6 +23,7 @@ Uso: python3 build.py [--flow-url URL] [--home-url URL]
   --pessoal-url  endereço da Hierarquia de Pessoal usado no painel (artefato)
   --ferias-url  endereço do sistema de Férias usado no painel (artefato)
   --licenca-url  endereço do sistema de Licença-prêmio usado no painel (artefato)
+  --sentencas-url  endereço do sistema de Sentenças judiciais usado no painel (artefato)
   --tarefas-url  endereço do sistema de Tarefas usado no painel (artefato)
   --carimbos-url  endereço do sistema de Espelhos de ponto usado no painel (artefato)
   --documentos-url  endereço do Gerador de Documentos usado no painel (artefato)
@@ -71,6 +73,7 @@ tarefas = mod(rd('src/tarefas.template.html')).replace('/*PB_JS*/', pbjs)
 licenca = mod(rd('src/licenca.template.html')).replace('/*PB_JS*/', pbjs).replace('/*ENGINE_JS*/', rd('src/licenca-engine.js').replace('</script>', '<\\/script>'))
 import base64
 stamp = base64.b64encode(open(os.path.join(root, 'src/carimbo-padrao.png'), 'rb').read()).decode()
+sentencas = mod(rd('src/sentencas.template.html')).replace('/*PB_JS*/', pbjs).replace('/*ENGINE_JS*/', rd('src/sentencas-engine.js').replace('</script>', '<\\/script>'))
 carimbos = mod(rd('src/carimbos.template.html')).replace('/*PB_JS*/', pbjs).replace('/*STAMP_B64*/', stamp)
 
 documentos = mod(rd('src/documentos.template.html')).replace('/*PB_JS*/', pbjs).replace('/*EXTENSO_JS*/', rd('src/extenso.js')
@@ -83,12 +86,13 @@ page = lambda frag: head + frag + '\n</body></html>\n'
 
 # site (hospedagem comum, ex.: Vercel)
 wr('site/index.html', page(launcher.replace('/*FLOW_URL*/', 'fluxogramas/').replace('/*PESSOAL_URL*/', 'pessoal/').replace('/*PONTO_URL*/', 'ponto/')
-    .replace('/*FERIAS_URL*/', 'ferias/').replace('/*LICENCA_URL*/', 'licenca-premio/').replace('/*TAREFAS_URL*/', 'tarefas/')
+    .replace('/*FERIAS_URL*/', 'ferias/').replace('/*LICENCA_URL*/', 'licenca-premio/').replace('/*TAREFAS_URL*/', 'tarefas/').replace('/*SENTENCAS_URL*/', 'sentencas/')
     .replace('/*CARIMBOS_URL*/', 'espelho/').replace('/*DOCUMENTOS_URL*/', 'documentos/')))
 wr('site/documentos/index.html', page(documentos.replace('/*HOME_URL*/', '../')))
 wr('site/espelho/index.html', page(carimbos.replace('/*HOME_URL*/', '../')))
 wr('site/ferias/index.html', page(ferias.replace('/*HOME_URL*/', '../')))
 wr('site/licenca-premio/index.html', page(licenca.replace('/*HOME_URL*/', '../')))
+wr('site/sentencas/index.html', page(sentencas.replace('/*HOME_URL*/', '../')))
 wr('site/tarefas/index.html', page(tarefas.replace('/*HOME_URL*/', '../')))
 wr('site/ponto/index.html', page(ponto.replace('/*HOME_URL*/', '../')))
 wr('site/pessoal/index.html', page(pessoal.replace('/*HOME_URL*/', '../')))
@@ -97,9 +101,10 @@ wr('site/fluxogramas/index.html', page(flow.replace('/*HOME_URL*/', '../')))
 wr('dist/artifact-launcher.html', launcher.replace('/*FLOW_URL*/', opt('--flow-url', 'fluxogramas/'))
     .replace('/*PESSOAL_URL*/', opt('--pessoal-url', 'pessoal/')).replace('/*PONTO_URL*/', opt('--ponto-url', 'ponto/'))
     .replace('/*FERIAS_URL*/', opt('--ferias-url', 'ferias/')).replace('/*LICENCA_URL*/', opt('--licenca-url', 'licenca-premio/'))
-    .replace('/*TAREFAS_URL*/', opt('--tarefas-url', 'tarefas/')).replace('/*CARIMBOS_URL*/', opt('--carimbos-url', 'espelho/')).replace('/*DOCUMENTOS_URL*/', opt('--documentos-url', 'documentos/')))
+    .replace('/*TAREFAS_URL*/', opt('--tarefas-url', 'tarefas/')).replace('/*SENTENCAS_URL*/', opt('--sentencas-url', 'sentencas/')).replace('/*CARIMBOS_URL*/', opt('--carimbos-url', 'espelho/')).replace('/*DOCUMENTOS_URL*/', opt('--documentos-url', 'documentos/')))
 wr('dist/artifact-documentos.html', documentos.replace('/*HOME_URL*/', opt('--home-url', '../')))
 wr('dist/artifact-carimbos.html', carimbos.replace('/*HOME_URL*/', opt('--home-url', '../')))
+wr('dist/artifact-sentencas.html', sentencas.replace('/*HOME_URL*/', opt('--home-url', '../')))
 wr('dist/artifact-tarefas.html', tarefas.replace('/*HOME_URL*/', opt('--home-url', '../')))
 wr('dist/artifact-licenca.html', licenca.replace('/*HOME_URL*/', opt('--home-url', '../')))
 wr('dist/artifact-ferias.html', ferias.replace('/*HOME_URL*/', opt('--home-url', '../')))

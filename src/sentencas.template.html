@@ -1,0 +1,439 @@
+<title>Sentenças judiciais</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Libre+Franklin:wght@500;600;700&family=Public+Sans:wght@400;500;600&display=swap">
+<style>
+/*SHARED_CSS*/
+:root{
+  --danger-bg:#fbe3e0;
+  --blue:#2f6fb5;
+  --blue-bg:#e2edf9;
+  --ok:#0a6b3d;
+  --ok-bg:#dff3e7;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --danger-bg:#3d1a17;
+  --blue:#7fb2ee;
+  --blue-bg:#14273d;
+  --ok:#52c98a;
+  --ok-bg:#12382a;}}
+:root[data-theme="dark"]{
+  --danger-bg:#3d1a17;
+  --blue:#7fb2ee;
+  --blue-bg:#14273d;
+  --ok:#52c98a;
+  --ok-bg:#12382a;}
+[hidden]{display:none!important}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--fg);font-family:var(--f-body);font-size:15px;line-height:1.5}
+h1,h2,h3,h4{font-family:var(--f-display);margin:0;text-wrap:balance}
+button,input,select,textarea{font:inherit;color:inherit}
+.wrap{padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+.inner{max-width:1180px;margin:0 auto}
+.hero{background:linear-gradient(135deg,var(--hero-a),var(--hero-b));color:#fff;padding-block:22px 54px}
+.top{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:22px}
+.home{color:#fff;text-decoration:none;font-weight:600;font-size:13.5px;display:inline-flex;align-items:center;gap:8px;padding:8px 12px;border-radius:10px;background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.28)}
+.home:hover,.themebtn:hover{background:rgba(255,255,255,.22)}
+.themebtn{margin-left:auto;display:inline-flex;align-items:center;gap:8px;border:1px solid rgba(255,255,255,.35);background:rgba(255,255,255,.12);color:#fff;border-radius:10px;padding:8px 12px;font-weight:600;font-size:13.5px;cursor:pointer}
+.goldrule{width:56px;height:4px;background:var(--gold);border-radius:2px;margin:0 0 14px}
+.hero h1{font-size:clamp(1.6rem,4.4vw,2.4rem);line-height:1.12}
+.hero p{margin:8px 0 0;opacity:.85}
+main{padding-block:0 40px}
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,160px),1fr));gap:12px;margin-top:-30px}
+.stat{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:14px 16px;box-shadow:var(--shadow);text-align:left;cursor:pointer;display:block;width:100%}
+.stat:hover{border-color:var(--accent)}.stat.on{outline:2px solid var(--accent);outline-offset:-1px}
+.stat b{font-family:var(--f-display);font-size:1.7rem;display:block;line-height:1.1;font-variant-numeric:tabular-nums}
+.stat span{color:var(--muted);font-size:13px}
+.stat.k-and b{color:var(--blue)}.stat.k-fin b{color:var(--warn)}.stat.k-ate b{color:var(--danger)}.stat.k-qui b{color:var(--ok)}
+.bar{display:flex;flex-wrap:wrap;gap:10px;align-items:center;margin-top:18px}
+.search{flex:1 1 260px;display:flex;align-items:center;gap:10px;background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:0 14px;box-shadow:var(--shadow);min-width:0}
+.search input{border:0;background:transparent;outline:0;padding:12px 0;flex:1;min-width:0}
+.search:focus-within{border-color:var(--accent)}
+select,input[type=month]{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:10px 12px}
+.btn{border:1px solid var(--line);background:var(--surface);border-radius:10px;padding:10px 14px;cursor:pointer;font-weight:600;font-size:14px;display:inline-flex;align-items:center;gap:8px;box-shadow:var(--shadow)}
+.btn:hover{border-color:var(--accent)}.btn.primary{background:var(--accent);color:var(--accent-fg);border-color:var(--accent)}.btn:disabled{opacity:.6;cursor:wait}
+.btn.sm{padding:6px 10px;font-size:13px;box-shadow:none}.btn.del{color:var(--danger)}
+.banner{margin-top:14px;border-radius:12px;padding:12px 16px;font-size:13.5px;background:var(--warn-bg);color:var(--warn)}
+.panel{margin-top:16px;background:var(--surface);border:1px solid var(--line);border-radius:14px;box-shadow:var(--shadow);padding:14px 16px}
+.panel h2{font-size:1rem;display:flex;align-items:center;gap:8px;margin-bottom:8px}
+.panel h2 span{margin-left:auto;font-family:var(--f-body);font-size:12.5px;color:var(--muted);font-weight:600}
+.tblwrap{margin-top:16px;background:var(--surface);border:1px solid var(--line);border-radius:14px;box-shadow:var(--shadow);overflow:auto}
+.panel .tblwrap{margin-top:0;box-shadow:none}
+table.lst{width:100%;border-collapse:collapse;font-size:14px;min-width:860px}
+.lst th{background:var(--soft);color:var(--muted);font-size:11.5px;letter-spacing:.05em;text-transform:uppercase;padding:10px 12px;text-align:left;white-space:nowrap}
+.lst td{padding:10px 12px;border-top:1px solid var(--line);vertical-align:middle}
+.lst tbody tr[data-i]{cursor:pointer}.lst tbody tr[data-i]:hover td{background:var(--soft)}
+.lst td.n b{display:block;font-weight:600;line-height:1.25}.lst td.n span{color:var(--muted);font-size:12.5px}
+.lst td.num{text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap}
+.tag{display:inline-block;font-size:11px;font-weight:700;padding:2px 8px;border-radius:99px;white-space:nowrap;background:var(--soft);color:var(--muted)}
+.tag.andamento{background:var(--blue-bg);color:var(--blue)}.tag.final{background:var(--warn-bg);color:var(--warn)}
+.tag.atencao{background:var(--danger-bg);color:var(--danger)}.tag.quitada{background:var(--ok-bg);color:var(--ok)}
+.prog{height:8px;border-radius:99px;background:var(--soft);overflow:hidden;min-width:90px;border:1px solid var(--line)}
+.prog i{display:block;height:100%;background:var(--accent);border-radius:99px}
+.prog.atencao i{background:var(--danger)}.prog.final i{background:var(--warn)}
+.pct{font-size:12px;color:var(--muted);font-variant-numeric:tabular-nums}
+.empty{margin-top:24px;text-align:center;padding:38px 20px;background:var(--surface);border:2px dashed var(--line);border-radius:16px;color:var(--muted)}
+.empty h2{color:var(--fg);margin-bottom:6px}
+.none{color:var(--muted);font-size:14px;padding:8px 2px}
+.note{margin-top:18px;font-size:12.8px;color:var(--muted)}
+dialog{border:1px solid var(--line);border-radius:16px;padding:0;background:var(--surface);color:var(--fg);width:min(760px,96vw);box-shadow:0 20px 60px rgba(0,0,0,.4)}
+dialog::backdrop{background:rgba(0,0,0,.5)}
+dialog form,dialog .dbox{padding:20px;display:flex;flex-direction:column;gap:12px;max-height:88vh;overflow:auto}
+dialog .dbox>*,dialog form>*{flex-shrink:0}
+dialog h3{font-size:1.15rem}
+dialog label{display:flex;flex-direction:column;gap:4px;font-size:13px;color:var(--muted);font-weight:600}
+dialog input,dialog select,dialog textarea{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:10px 12px;color:var(--fg);font-weight:400}
+dialog .row{display:flex;gap:8px;justify-content:flex-end;flex-wrap:wrap}
+dialog p{margin:0;font-size:14px}
+.sub{color:var(--muted);font-size:12.5px;margin:0}
+.fr{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:10px;align-items:end}
+.ck{flex-direction:row!important;align-items:center;gap:8px!important;color:var(--fg)!important;font-weight:500!important}
+.ck input{width:auto}
+dl.ficha{margin:0;display:grid;grid-template-columns:max-content 1fr;gap:6px 14px;font-size:14px}
+dl.ficha dt{color:var(--muted);font-weight:600}dl.ficha dd{margin:0;overflow-wrap:anywhere}
+.sum{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.sum div{border-radius:12px;padding:9px 12px;background:var(--soft);border:1px solid var(--line)}
+.sum small{display:block;font-size:11.5px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:var(--muted)}
+.sum b{font-family:var(--f-display);font-size:1.25rem;font-variant-numeric:tabular-nums}
+.sum .ok b{color:var(--ok)}.sum .fal b{color:var(--blue)}
+.alertas{display:flex;flex-direction:column;gap:6px}
+.al{border-radius:10px;padding:8px 12px;font-size:13.5px;background:var(--soft);color:var(--muted)}
+.al.aviso{background:var(--warn-bg);color:var(--warn)}.al.erro{background:var(--danger-bg);color:var(--danger)}.al.ok{background:var(--ok-bg);color:var(--ok)}
+.pw{overflow:auto;border:1px solid var(--line);border-radius:12px;max-height:300px}
+table.per{width:100%;border-collapse:collapse;font-size:13.5px}
+.per th{background:var(--soft);color:var(--muted);font-size:11.5px;letter-spacing:.05em;text-transform:uppercase;padding:8px 10px;text-align:left;white-space:nowrap;position:sticky;top:0}
+.per td{padding:7px 10px;border-top:1px solid var(--line)}
+.per td.num{text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap}
+.per small{color:var(--muted)}
+#load{position:fixed;inset:0;z-index:9000;display:grid;place-items:center;padding:24px;background:radial-gradient(1200px 700px at 50% 30%,var(--hero-b),var(--hero-a)) var(--hero-a);color:#fff;text-align:center}
+#load .ld-box{display:flex;flex-direction:column;align-items:center;gap:10px;max-width:420px}
+#load .ld-spin{width:56px;height:56px;border-radius:50%;border:5px solid rgba(255,255,255,.22);border-top-color:var(--gold);animation:ld-rot .9s linear infinite;margin-bottom:6px}
+#load b{font-family:var(--f-display);font-size:1.35rem;line-height:1.2}
+#load span{opacity:.88;font-size:14.5px;min-height:22px}
+@keyframes ld-rot{to{transform:rotate(360deg)}}
+@media (prefers-reduced-motion:reduce){#load .ld-spin{animation-duration:3s}}
+body.carregando{overflow:hidden}
+#toast{position:fixed;left:50%;transform:translateX(-50%);bottom:max(18px,env(safe-area-inset-bottom,0px));background:var(--fg);color:var(--bg);padding:10px 16px;border-radius:10px;font-size:14px;z-index:60;max-width:90vw}
+@media (max-width:560px){.sum{grid-template-columns:1fr}}
+@media (pointer:coarse){input,select,textarea{font-size:16px}.btn{min-height:42px}}
+/*MODERN_CSS*/
+</style>
+
+<header class="hero wrap"><div class="inner">
+  <div class="top"><a class="home" href="/*HOME_URL*/" target="_top"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 11l9-8 9 8M5 10v10h5v-6h4v6h5V10"/></svg>Sistema Interno do RH</a>
+  <button class="themebtn" id="themeBtn" type="button"></button></div>
+  <div class="goldrule"></div>
+  <h1>Sentenças judiciais</h1>
+  <p>Câmara Municipal de Rio Verde/GO · acompanhe quanto já foi descontado e quanto falta, direto da ficha financeira do Centi (FP024)</p>
+</div></header>
+
+<main class="wrap"><div class="inner">
+  <div class="stats" id="stats"></div>
+  <form class="bar" id="buscaF" role="search">
+    <label class="search"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></svg><input id="q" type="search" placeholder="Novo acompanhamento: buscar servidor por nome (3 letras ou mais) ou matrícula" aria-label="Buscar servidor" autocomplete="off"></label>
+    <button class="btn primary" id="buscaBtn" type="submit">Buscar</button>
+    <button class="btn" id="atuBtn" type="button" title="Lê de novo a ficha financeira de todos os acompanhamentos em andamento">Atualizar todos</button>
+  </form>
+  <div id="achados"></div>
+  <div id="view"></div>
+  <p class="note" id="foot"></p>
+</div></main>
+<dialog id="dlg"></dialog>
+<div id="load" role="status" aria-live="polite"><div class="ld-box"><div class="ld-spin" aria-hidden="true"></div><b>Sentenças judiciais</b><span id="ldS">Abrindo o sistema</span></div></div>
+<div id="toast" hidden></div>
+
+<script>
+/*PB_JS*/
+/*ENGINE_JS*/
+const HOME_URL="/*HOME_URL*/";
+/*SHARED:core,toast,carga*/
+const LS_KEY='rhcrv-sentencas-v1',DOC='sentencas/lista';
+const {r2,key,parseKey,somaMes,fmtKey,meses,valorDoEvento,calcular}=window.SP;
+const uid=()=>'s'+Date.now().toString(36)+Math.random().toString(36).slice(2,6);
+const brl=n=>'R$ '+Number(n||0).toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2});
+const hojeKey=()=>{const d=new Date();return key(d.getFullYear(),d.getMonth()+1);};
+const ROMAN=/^(i|ii|iii|iv|v|vi|vii|viii|ix|x)$/i,MIN=new Set(['de','da','do','das','dos','e','a','o']);
+const titulo=s=>String(s||'').toLowerCase().replace(/\s+/g,' ').trim().split(' ').map((w,i)=>(i>0&&ROMAN.test(w))?w.toUpperCase():(i>0&&MIN.has(w))?w:w.replace(/(^|[-\/(])(\p{L})/gu,(m,a,b)=>a+b.toUpperCase())).join(' ');
+const SIT={andamento:'Em andamento',final:'Reta final',atencao:'Atenção',quitada:'Quitada',livre:'Sem total'};
+let dbh=null,itens=[],filtro='',achados=null;
+ligarTema();
+
+/* ---------- guardado no servidor (cópia local só como reserva) ---------- */
+const lerLS=()=>{try{const j=JSON.parse(localStorage.getItem(LS_KEY)||'null');return j&&Array.isArray(j.itens)?j.itens:null;}catch(e){return null;}};
+const gravaLS=()=>{try{localStorage.setItem(LS_KEY,JSON.stringify({v:1,itens}));}catch(e){}};
+async function lerServidor(){
+  const s=await dbh.doc(DOC).get();
+  if(!s.exists) return [];
+  const j=JSON.parse(s.data().json);return j&&Array.isArray(j.itens)?j.itens:[];
+}
+/* Toda alteração relê a lista do servidor, troca só o item mexido e grava: duas pessoas mexendo em itens diferentes não se sobrescrevem. */
+let fila=Promise.resolve();
+function gravar(id,novo){   // novo = item atualizado, ou null para excluir
+  const f=fila.then(async()=>{
+    let base=itens;
+    if(dbh){try{base=await lerServidor();}catch(e){base=itens;}}
+    const i=base.findIndex(x=>x.id===id);
+    if(novo){if(i>=0) base[i]=novo;else base.push(novo);}else if(i>=0) base.splice(i,1);
+    itens=base;gravaLS();
+    if(dbh) await dbh.doc(DOC).set({json:JSON.stringify({v:1,itens})});
+    else toast('Salvo só neste navegador: sem conexão com o servidor.');
+  });
+  fila=f.catch(()=>{});
+  return f;
+}
+async function garantirSessao(){
+  if(PB.centi.user) return true;
+  const h=await PB.connect();if(h&&!dbh) dbh=h;
+  return !!PB.centi.user;
+}
+const msgErro=e=>e.status===401?'A sessão do Centi expirou. Entre de novo e repita.':(e.message||String(e));
+
+/* ---------- leitura da ficha financeira ---------- */
+const mesAnoDe=k=>{const p=parseKey(k);return [p.mes,p.ano];};
+async function fichasDoMes(mat,k){const [m,a]=mesAnoDe(k);const r=await PB.centi.ficha(mat,m,a);return (r&&r.Fichas)||[];}
+/* lê as competências que faltam (e relê as duas últimas, que o Centi ainda pode reprocessar). tudo=true relê desde o início. Devolve {lidos,erro} */
+async function atualizarItem(it,tudo,andamento){
+  const hoje=hojeKey();
+  it.hist=it.hist||{};
+  const todos=meses(it.desde,hoje),ultimos=Object.keys(it.hist).sort().slice(-2);
+  const fila_=todos.filter(k=>tudo||!(k in it.hist)||ultimos.includes(k));
+  let lidos=0,erro=null,feitos=0;
+  const lote=3;
+  for(let i=0;i<fila_.length&&!erro;i+=lote){
+    await Promise.all(fila_.slice(i,i+lote).map(async k=>{
+      try{
+        const fs=await fichasDoMes(it.mat,k);
+        if(fs.length){const v=valorDoEvento(fs,it.evento.id);it.hist[k]={v:v.valor,f:fs.length};lidos++;}
+      }catch(e){erro=erro||e;}
+      feitos++;if(andamento) andamento(feitos,fila_.length);
+    }));
+  }
+  if(!erro){it.lidoEm=new Date().toISOString();}
+  return {lidos,erro};
+}
+
+/* ---------- busca de servidor ---------- */
+async function buscar(termo){
+  termo=String(termo||'').trim();
+  if(!(/^\d{3,12}$/.test(termo)||termo.replace(/[%_]/g,'').length>=3)){toast('Digite ao menos 3 letras do nome ou a matrícula.');return;}
+  const b=$('#buscaBtn');b.disabled=true;b.textContent='Buscando…';
+  try{
+    if(!(await garantirSessao())){toast('Entre com o acesso do Centi para buscar.');return;}
+    const r=await PB.centi.licencaBusca(termo);
+    achados={termo,lista:r.Data||[]};renderAchados();
+  }catch(e){toast('Não foi possível buscar no Centi: '+msgErro(e));}
+  finally{b.disabled=false;b.textContent='Buscar';}
+}
+function renderAchados(){
+  const box=$('#achados');
+  if(!achados){box.innerHTML='';return;}
+  const l=achados.lista;
+  box.innerHTML='<div class="panel"><h2>Resultado da busca <span>'+l.length+' servidor(es) · <a href="#" data-fecha>fechar</a></span></h2>'+
+    (l.length?'<div class="tblwrap"><table class="lst" style="min-width:600px"><thead><tr><th>Servidor</th><th>Matrícula</th><th>Cargo</th><th>Situação</th><th></th></tr></thead><tbody>'+
+      l.map((f,i)=>'<tr><td class="n"><b>'+esc(titulo(f.Nome))+'</b></td><td>'+esc(f.Matricula)+'</td><td>'+esc(titulo(f.Cargo))+'</td><td>'+esc(f.Situacao)+'</td><td><button class="btn sm primary" type="button" data-novo="'+i+'">Acompanhar sentença</button></td></tr>').join('')+
+      '</tbody></table></div>':'<p class="none">Nenhum servidor encontrado para "'+esc(achados.termo)+'".</p>')+'</div>';
+}
+
+/* ---------- cadastro (novo / editar) ---------- */
+const num=s=>{s=String(s==null?'':s).replace(/[^\d,.\-]/g,'');if(!s) return 0;if(s.includes(',')) s=s.replace(/\./g,'').replace(',','.');const n=Number(s);return isFinite(n)?n:0;};
+const val=n=>n?String(n).replace('.',','):'';
+const JUDICIAL=/penhora|judic|pens[aã]o|aliment|senten|bloqueio|execu/i;
+async function eventosRecentes(mat){   // eventos de desconto da ficha mais recente (hoje ou até 3 meses atrás)
+  let k=hojeKey();
+  for(let i=0;i<4;i++,k=somaMes(k,-1)){
+    const fs=await fichasDoMes(mat,k);
+    if(fs.length){
+      const m=new Map();
+      fs.forEach(f=>(f.Eventos||[]).forEach(e=>{if(Number(e.Desconto)>0) m.set(String(e.Id),{id:String(e.Id),nome:e.Nome,v:(m.get(String(e.Id))||{v:0}).v+Number(e.Desconto)});}));
+      return {ref:k,lista:[...m.values()].sort((a,b)=>(JUDICIAL.test(b.nome)-JUDICIAL.test(a.nome))||a.nome.localeCompare(b.nome,'pt-BR'))};
+    }
+  }
+  return {ref:null,lista:[]};
+}
+async function dlgForm(base,serv){
+  carga(true,'Lendo a ficha financeira de '+titulo(serv.Nome)+'…');
+  let ev={ref:null,lista:[]},falhou='';
+  try{if(!(await garantirSessao())) falhou='Entre com o acesso do Centi para ler a ficha.';else ev=await eventosRecentes(serv.Matricula);}
+  catch(e){falhou='Não foi possível ler a ficha financeira: '+msgErro(e);}
+  finally{carga(false);}
+  const it=base||{modo:'valor',desde:hojeKey(),evento:{id:'',nome:''}};
+  const lista=ev.lista.slice();
+  if(it.evento.id&&!lista.some(x=>x.id===String(it.evento.id))) lista.unshift({id:String(it.evento.id),nome:it.evento.nome,v:0});
+  const dlg=$('#dlg');
+  dlg.innerHTML='<form method="dialog"><h3>'+(base?'Editar acompanhamento':'Novo acompanhamento')+'</h3>'+
+    '<p><b>'+esc(titulo(serv.Nome))+'</b> · matrícula '+esc(serv.Matricula)+(serv.Cargo?' · '+esc(titulo(serv.Cargo)):'')+'</p>'+
+    (falhou?'<div class="al aviso">'+esc(falhou)+' Você ainda pode digitar o código do evento.</div>':(ev.ref?'<p class="sub">Eventos de desconto da ficha de '+fmtKey(ev.ref)+'. Escolha o da sentença.</p>':'<div class="al aviso">Não achei ficha financeira recente deste servidor. Digite o código do evento.</div>'))+
+    '<div class="fr"><label>Evento da sentença<select name="ev">'+lista.map(x=>'<option value="'+esc(x.id)+'" data-nome="'+esc(x.nome)+'"'+(String(it.evento.id)===x.id?' selected':'')+'>'+esc(x.id+' · '+x.nome+(x.v?' ('+brl(x.v)+')':''))+'</option>').join('')+'<option value="">Outro (digitar o código)…</option></select></label>'+
+    '<label data-outro hidden>Código do evento<input name="evc" inputmode="numeric" placeholder="ex.: 913"></label></div>'+
+    '<label>Descrição / processo (opcional)<input name="desc" maxlength="200" placeholder="ex.: Processo nº 0000000-00.2026.8.09.0137 · pensão alimentícia" value="'+esc(it.descricao||'')+'"></label>'+
+    '<label>Como acompanhar o fim da sentença<select name="modo"><option value="valor"'+(it.modo!=='parcelas'?' selected':'')+'>Pelo valor total devido (R$)</option><option value="parcelas"'+(it.modo==='parcelas'?' selected':'')+'>Pelo número de parcelas</option></select></label>'+
+    '<div class="fr" data-m="valor"><label>Valor total da sentença (R$)<input name="total" inputmode="decimal" placeholder="ex.: 25.000,00" value="'+esc(val(it.total))+'"></label>'+
+    '<label>Já descontado antes (R$)<input name="antes" inputmode="decimal" placeholder="0,00" value="'+esc(val(it.antes))+'"></label></div>'+
+    '<div class="fr" data-m="parcelas" hidden><label>Número de parcelas<input name="parc" inputmode="numeric" placeholder="ex.: 24" value="'+esc(it.parcelas||'')+'"></label>'+
+    '<label>Parcelas já pagas antes<input name="parcAntes" inputmode="numeric" placeholder="0" value="'+esc(it.parcelasAntes||'')+'"></label></div>'+
+    '<label>Contar os descontos da ficha a partir de<input name="desde" type="month" required value="'+esc(it.desde)+'"></label>'+
+    '<p class="sub">Dica: se a sentença já vinha sendo descontada, informe em "Já descontado antes" o que foi pago até o mês anterior a esta data, ou escolha um mês de início mais antigo para o sistema ler as fichas passadas.</p>'+
+    '<div class="row"><button class="btn" type="button" data-fechar>Cancelar</button><button class="btn primary" type="submit" value="ok">Salvar e ler a ficha</button></div></form>';
+  const f=dlg.querySelector('form');
+  const sync=()=>{
+    f.querySelectorAll('[data-m]').forEach(x=>{x.hidden=x.dataset.m!==f.modo.value;});
+    f.querySelector('[data-outro]').hidden=f.ev.value!=='';
+    if(!f.ev.value) f.evc.required=true;else f.evc.required=false;
+  };
+  f.addEventListener('change',sync);sync();
+  f.querySelector('[data-fechar]').addEventListener('click',()=>dlg.close());
+  f.addEventListener('submit',async e=>{
+    e.preventDefault();
+    const eid=(f.ev.value||f.evc.value).replace(/\D/g,'');
+    if(!eid){toast('Informe o evento.');return;}
+    const opt=f.ev.selectedOptions[0];
+    const novo=Object.assign({},it,{
+      id:it.id||uid(),mat:String(serv.Matricula),funcId:String(serv.Id||it.funcId||''),nome:titulo(serv.Nome),cargo:titulo(serv.Cargo||''),
+      evento:{id:eid,nome:f.ev.value?opt.dataset.nome:(it.evento.id===eid?it.evento.nome:'Evento '+eid)},
+      descricao:f.desc.value.trim(),modo:f.modo.value,total:r2(num(f.total.value)),antes:r2(num(f.antes.value)),
+      parcelas:Math.round(num(f.parc.value)),parcelasAntes:Math.round(num(f.parcAntes.value)),desde:f.desde.value,
+      hist:it.hist||{},criado:it.criado||new Date().toISOString(),por:it.por||PB.centi.nome||''
+    });
+    if(!parseKey(novo.desde)){toast('Informe o mês de início.');return;}
+    if(novo.modo==='valor'&&!(novo.total>0)){toast('Informe o valor total da sentença.');return;}
+    if(novo.modo==='parcelas'&&!(novo.parcelas>0)){toast('Informe o número de parcelas.');return;}
+    if(base&&(base.evento.id!==novo.evento.id||base.desde!==novo.desde||base.mat!==novo.mat)) novo.hist={};   // mudou o que se lê: relê tudo
+    dlg.close();
+    await lerESalvar(novo,true);
+  });
+  dlg.showModal();
+}
+async function lerESalvar(it,tudo){
+  carga(true,'Lendo as fichas financeiras…');
+  try{
+    if(!(await garantirSessao())) toast('Sem acesso ao Centi: o acompanhamento foi salvo, mas a ficha não foi lida.');
+    else{
+      const r=await atualizarItem(it,tudo,(a,b)=>carga(true,'Lendo as fichas financeiras ('+a+' de '+b+')…'));
+      if(r.erro) toast('Salvei, mas a leitura parou: '+msgErro(r.erro));
+    }
+    await gravar(it.id,it);
+  }catch(e){toast('Não foi possível salvar: '+(e.message||e));}
+  finally{carga(false);}
+  achados=null;renderAchados();render();
+}
+
+/* ---------- lista ---------- */
+const ordem={atencao:0,final:1,andamento:2,livre:3,quitada:4};
+function calcItens(){const h=hojeKey();return itens.map(it=>({it,r:calcular(it,h)}));}
+function render(){
+  const todos=calcItens(),h=hojeKey();
+  const n=s=>todos.filter(x=>x.r.situacao===s).length;
+  const faltaTotal=r2(todos.filter(x=>!x.r.quitada&&x.r.falta!=null).reduce((s,x)=>s+x.r.falta,0));
+  const cards=[['','k-all',todos.length,'Acompanhamentos'],['andamento','k-and',n('andamento'),'Em andamento'],['final','k-fin',n('final'),'Reta final (até 2 meses)'],['atencao','k-ate',n('atencao'),'Precisam de atenção'],['quitada','k-qui',n('quitada'),'Quitadas']];
+  $('#stats').innerHTML=cards.map(c=>'<button type="button" class="stat '+c[1]+(filtro===c[0]&&c[0]?' on':'')+'" data-f="'+c[0]+'"><b>'+c[2]+'</b><span>'+c[3]+'</span></button>').join('')+
+    '<div class="stat" style="cursor:default"><b style="font-size:1.25rem;padding-top:5px">'+brl(faltaTotal)+'</b><span>Ainda a descontar (em andamento)</span></div>';
+  const lista=todos.filter(x=>!filtro||x.r.situacao===filtro).sort((a,b)=>(ordem[a.r.situacao]-ordem[b.r.situacao])||String(a.r.termino||'9').localeCompare(String(b.r.termino||'9'))||a.it.nome.localeCompare(b.it.nome,'pt-BR'));
+  if(!todos.length){$('#view').innerHTML='<div class="empty"><h2>Nenhuma sentença acompanhada ainda</h2><p>Busque o servidor acima, escolha o evento da sentença (ex.: 913 PENHORA SALARIAL) e informe o valor total. O sistema lê a ficha financeira do Centi todo mês e mostra quanto falta.</p></div>';}
+  else $('#view').innerHTML='<div class="tblwrap"><table class="lst"><thead><tr><th>Servidor</th><th>Evento</th><th class="num">Total</th><th class="num">Descontado</th><th class="num">Falta</th><th>Progresso</th><th class="num">Parcela</th><th>Término previsto</th><th>Situação</th></tr></thead><tbody>'+
+    (lista.length?lista.map(({it,r})=>{
+      const i=itens.indexOf(it),tot=r.modo==='valor'?brl(it.total):r.modo==='parcelas'?it.parcelas+' parc.':'—';
+      const falta=r.quitada?'—':r.modo==='parcelas'?r.faltaParcelas+' parc.'+(r.falta!=null?' ('+brl(r.falta)+')':''):r.falta!=null?brl(r.falta):'—';
+      const term=r.quitada?'Quitada'+(r.quitadaEm?' em '+fmtKey(r.quitadaEm):''):r.termino?fmtKey(r.termino)+' <span class="pct">('+r.mesesRest+' '+(r.mesesRest===1?'mês':'meses')+')</span>':'—';
+      return '<tr data-i="'+i+'"><td class="n"><b>'+esc(it.nome)+'</b><span>Mat. '+esc(it.mat)+'</span></td><td class="n"><b>'+esc(it.evento.id)+' · '+esc(titulo(it.evento.nome))+'</b><span>'+esc(it.descricao||'')+'</span></td>'+
+        '<td class="num">'+tot+'</td><td class="num">'+brl(r.pago)+(r.modo==='parcelas'?'<br><span class="pct">'+r.parcelasPagas+' parc.</span>':'')+'</td><td class="num">'+falta+'</td>'+
+        '<td>'+(r.pct==null?'<span class="pct">—</span>':'<div class="prog '+r.situacao+'"><i style="width:'+r.pct.toFixed(1)+'%"></i></div><span class="pct">'+Math.floor(r.pct)+'%</span>')+'</td>'+
+        '<td class="num">'+(r.parcela?brl(r.parcela):'—')+'</td><td>'+term+'</td><td><span class="tag '+r.situacao+'">'+SIT[r.situacao]+'</span></td></tr>';
+    }).join(''):'<tr><td colspan="9" class="none">Nada neste filtro.</td></tr>')+'</tbody></table></div>';
+  $('#foot').textContent='O valor de cada mês é o que o evento descontou na ficha financeira (FP024), somando todas as folhas do mês. A previsão de término usa o valor do último desconto. Mês corrente: '+fmtKey(h)+'.';
+}
+
+/* ---------- detalhe ---------- */
+function dlgItem(i){
+  const it=itens[i];if(!it) return;
+  const h=hojeKey(),r=calcular(it,h),dlg=$('#dlg');
+  const al=[];
+  if(r.quitada&&r.excedeu>0) al.push(['erro','O total descontado passou do valor da sentença em '+brl(r.excedeu)+'. Confira com o jurídico e suspenda o evento no Centi.']);
+  else if(r.quitada) al.push(['ok','Sentença quitada'+(r.quitadaEm?' em '+fmtKey(r.quitadaEm):'')+'. Lembre de encerrar o evento '+it.evento.id+' no cadastro do servidor.']);
+  if(r.semDesconto) al.push(['erro','O evento '+it.evento.id+' não descontou na ficha de '+fmtKey(r.ultimo)+', mas a sentença ainda não foi quitada.']);
+  if(!r.quitada&&r.mesesRest!=null&&r.mesesRest<=2) al.push(['aviso','Reta final: faltam '+r.mesesRest+' '+(r.mesesRest===1?'mês':'meses')+'. A última parcela pode ser menor que a anterior.']);
+  const pend=r.pendentes.filter(k=>k!==h);
+  if(pend.length) al.push(['aviso','Sem ficha lida em: '+pend.map(fmtKey).join(', ')+'. Se a folha já foi processada, use "Reler tudo".']);
+  const ks=meses(it.desde,h).reverse();
+  dlg.innerHTML='<div class="dbox"><h3>'+esc(it.nome)+'</h3>'+
+    '<dl class="ficha"><dt>Matrícula</dt><dd>'+esc(it.mat)+(it.cargo?' · '+esc(it.cargo):'')+'</dd><dt>Evento</dt><dd>'+esc(it.evento.id)+' · '+esc(titulo(it.evento.nome))+'</dd>'+
+    (it.descricao?'<dt>Processo</dt><dd>'+esc(it.descricao)+'</dd>':'')+
+    '<dt>Controle</dt><dd>'+(r.modo==='valor'?'Valor total '+brl(it.total)+(it.antes?' (já descontado antes: '+brl(it.antes)+')':''):r.modo==='parcelas'?it.parcelas+' parcelas'+(it.parcelasAntes?' ('+it.parcelasAntes+' já pagas antes)':''):'Sem total: só soma os descontos')+' · desde '+fmtKey(it.desde)+'</dd>'+
+    '<dt>Última leitura</dt><dd>'+(it.lidoEm?new Date(it.lidoEm).toLocaleString('pt-BR'):'nunca')+'</dd></dl>'+
+    '<div class="sum"><div><small>Descontado</small><b>'+brl(r.pago)+'</b></div><div class="fal"><small>'+(r.modo==='parcelas'?'Faltam':'Falta')+'</small><b>'+(r.quitada?'Quitada':r.modo==='parcelas'?r.faltaParcelas+' parc.':r.falta!=null?brl(r.falta):'—')+'</b></div><div class="ok"><small>Término previsto</small><b>'+(r.quitada?(r.quitadaEm?fmtKey(r.quitadaEm):'—'):r.termino?fmtKey(r.termino):'—')+'</b></div></div>'+
+    (r.pct==null?'':'<div class="prog '+r.situacao+'" style="height:12px"><i style="width:'+r.pct.toFixed(1)+'%"></i></div>')+
+    (al.length?'<div class="alertas">'+al.map(a=>'<div class="al '+a[0]+'">'+esc(a[1])+'</div>').join('')+'</div>':'')+
+    '<div class="pw"><table class="per"><thead><tr><th>Competência</th><th class="num">Descontado no mês</th><th></th></tr></thead><tbody>'+
+    ks.map(k=>{const x=it.hist&&it.hist[k];return '<tr><td>'+fmtKey(k)+'</td><td class="num">'+(x?brl(x.v):'—')+'</td><td><small>'+(x?(x.v>0?(x.f>1?x.f+' folhas':''):'sem desconto neste mês'):(k===h?'aguardando a folha':'sem ficha lida'))+'</small></td></tr>';}).join('')+'</tbody></table></div>'+
+    '<div class="row"><button class="btn del sm" type="button" data-del="'+i+'">Excluir</button><button class="btn sm" type="button" data-edit="'+i+'">Editar</button><button class="btn sm" type="button" data-reler="'+i+'">Reler tudo</button><button class="btn primary sm" type="button" data-atu="'+i+'">Atualizar da ficha</button><button class="btn sm" type="button" data-fechar>Fechar</button></div></div>';
+  dlg.showModal();
+}
+async function atualizar(it,tudo){
+  carga(true,'Lendo a ficha financeira de '+it.nome+'…');
+  try{
+    if(!(await garantirSessao())){toast('Entre com o acesso do Centi.');return;}
+    const r=await atualizarItem(it,tudo,(a,b)=>carga(true,'Lendo as fichas financeiras ('+a+' de '+b+')…'));
+    await gravar(it.id,it);
+    toast(r.erro?'A leitura parou: '+msgErro(r.erro):'Ficha atualizada.');
+  }catch(e){toast('Não foi possível atualizar: '+msgErro(e));}
+  finally{carga(false);}
+  render();
+}
+async function atualizarTodos(){
+  const ativos=itens.filter(it=>!calcular(it,hojeKey()).quitada);
+  if(!ativos.length){toast('Não há acompanhamentos em andamento.');return;}
+  const b=$('#atuBtn');b.disabled=true;
+  try{
+    if(!(await garantirSessao())){toast('Entre com o acesso do Centi.');return;}
+    let falhas=0;
+    for(let n=0;n<ativos.length;n++){
+      carga(true,'Atualizando '+(n+1)+' de '+ativos.length+': '+ativos[n].nome+'…');
+      const r=await atualizarItem(ativos[n],false);
+      if(r.erro) falhas++;
+      await gravar(ativos[n].id,ativos[n]);
+    }
+    toast(falhas?'Atualizei, mas '+falhas+' acompanhamento(s) tiveram erro de leitura.':'Todos os acompanhamentos foram atualizados.');
+  }catch(e){toast('Não foi possível atualizar: '+msgErro(e));}
+  finally{carga(false);b.disabled=false;render();}
+}
+
+/* ---------- eventos ---------- */
+$('#buscaF').addEventListener('submit',e=>{e.preventDefault();buscar($('#q').value);});
+$('#atuBtn').addEventListener('click',atualizarTodos);
+$('#dlg').addEventListener('click',async e=>{
+  const t=e.target;
+  if(t.closest('[data-fechar]')){$('#dlg').close();return;}
+  const ed=t.closest('[data-edit]'),de=t.closest('[data-del]'),at=t.closest('[data-atu]'),re=t.closest('[data-reler]');
+  if(ed){const it=itens[+ed.dataset.edit];$('#dlg').close();await dlgForm(it,{Id:it.funcId,Nome:it.nome,Matricula:it.mat,Cargo:it.cargo});return;}
+  if(at){const it=itens[+at.dataset.atu];$('#dlg').close();await atualizar(it,false);dlgItem(itens.indexOf(it));return;}
+  if(re){const it=itens[+re.dataset.reler];$('#dlg').close();await atualizar(it,true);dlgItem(itens.indexOf(it));return;}
+  if(de){
+    const it=itens[+de.dataset.del];
+    if(!confirm('Excluir o acompanhamento de '+it.nome+' (evento '+it.evento.id+')? O histórico lido será apagado deste sistema; nada muda no Centi.')) return;
+    $('#dlg').close();
+    try{await gravar(it.id,null);toast('Acompanhamento excluído.');}catch(err){toast('Não foi possível excluir: '+(err.message||err));}
+    render();
+  }
+});
+document.addEventListener('click',e=>{
+  if(e.target.closest('[data-fecha]')){e.preventDefault();achados=null;renderAchados();return;}
+  const nv=e.target.closest('[data-novo]');if(nv&&achados){dlgForm(null,achados.lista[+nv.dataset.novo]);return;}
+  const st=e.target.closest('.stat[data-f]');if(st){filtro=filtro===st.dataset.f?'':st.dataset.f;render();return;}
+  const r=e.target.closest('#view tr[data-i]');if(r) dlgItem(+r.dataset.i);
+});
+observarTema();
+
+(function init(){
+  itens=lerLS()||[];
+  themeBtn();render();carga(true,'Conectando ao servidor…');
+  (async()=>{
+    try{
+      if(window.claude&&window.claude.use) dbh=await window.claude.use('db');
+      if(!dbh) dbh=await PB.connect();
+      if(dbh){itens=await lerServidor();gravaLS();render();}
+    }catch(e){dbh=null;}
+    finally{carga(false);}
+  })();
+})();
+</script>
+<script>
+/*HELLO_JS*/
+</script>

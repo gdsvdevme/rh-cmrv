@@ -79,8 +79,12 @@ carimbos = mod(rd('src/carimbos.template.html')).replace('/*PB_JS*/', pbjs).repl
 documentos = mod(rd('src/documentos.template.html')).replace('/*PB_JS*/', pbjs).replace('/*EXTENSO_JS*/', rd('src/extenso.js')
     .replace('</script>', '<\\/script>')).replace('/*TIMBRADO_B64*/', base64.b64encode(open(os.path.join(root, 'src/timbrado.docx'), 'rb').read()).decode())
 
+import urllib.parse
+fav = rd('src/favicon.svg').strip()
+favlink = '<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,' + urllib.parse.quote(fav, safe="/:=,;' ") .replace(' ', '%20') + '">'
 head = ('<!doctype html>\n<html lang="pt-BR"><head><meta charset="utf-8">'
-        '<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"></head>'
+        '<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">'
+        '<meta name="theme-color" content="#0a6b3d">' + favlink + '</head>'
         '<body style="margin:0">\n')
 page = lambda frag: head + frag + '\n</body></html>\n'
 

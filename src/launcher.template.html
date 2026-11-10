@@ -78,6 +78,15 @@ footer{padding-block:0 28px;color:var(--muted);font-size:12.5px}
 .hues button[aria-pressed="true"]{outline:2px solid var(--fg)}
 .actions{display:flex;gap:8px;justify-content:flex-end;flex-wrap:wrap;margin-top:4px}
 #toast{position:fixed;left:50%;transform:translateX(-50%);bottom:max(18px,env(safe-area-inset-bottom,0px));background:var(--fg);color:var(--bg);padding:10px 16px;border-radius:10px;font-size:14px;z-index:60;max-width:90vw}
+.asent{margin-top:22px;background:var(--surface);border:1px solid var(--line);border-left:5px solid var(--warn);border-radius:14px;box-shadow:var(--shadow);padding:14px 16px}
+.asent.crit{border-left-color:var(--danger)}
+.asent h2{font-size:1rem;display:flex;align-items:center;gap:8px;flex-wrap:wrap}.asent h2 a{margin-left:auto;font-family:var(--f-body);font-size:13px;font-weight:600;color:var(--accent);text-decoration:none}
+.asent ul{list-style:none;margin:8px 0 0;padding:0}
+.asent li{display:flex;gap:10px;align-items:center;flex-wrap:wrap;padding:8px 0;border-top:1px solid var(--line);font-size:14px}.asent li:first-child{border-top:0}
+.asent li b{font-weight:600}.asent li .qt{margin-left:auto;text-align:right;font-variant-numeric:tabular-nums}
+.asent .tg{font-size:11px;font-weight:700;padding:2px 8px;border-radius:99px;background:var(--soft);color:var(--muted);white-space:nowrap}
+.asent .tg.final{background:var(--warn-bg);color:var(--warn)}.asent .tg.atencao{background:var(--danger-bg,#fbe3e0);color:var(--danger)}
+.asent small{color:var(--muted);display:block;font-size:12.5px;margin-top:6px}
 .edit-banner{margin-top:14px;background:var(--warn-bg);color:var(--warn);border-radius:10px;padding:10px 14px;font-size:13.5px}
 @media (pointer:coarse){input,select,textarea{font-size:16px}.btn{min-height:42px}.btn.sm{min-height:38px}}
 /* ===== visual moderno ===== */
@@ -129,6 +138,7 @@ a.tile:hover::before{opacity:1}
     <button class="btn" id="editBtn" type="button"></button>
   </div>
   <div id="editInfo"></div>
+  <div id="alertaSent"></div>
   <div class="sec"><h2>Sistemas</h2><span id="count"></span></div>
   <div class="grid" id="grid"></div>
 </div></main>
@@ -138,6 +148,7 @@ a.tile:hover::before{opacity:1}
 
 <script>
 /*PB_JS*/
+/*SENTENCAS_ENGINE_JS*/
 const FLOW_URL="/*FLOW_URL*/";
 const PESSOAL_URL="/*PESSOAL_URL*/";
 const PONTO_URL="/*PONTO_URL*/";
@@ -229,6 +240,29 @@ function saudacao(){
   $('#helloTxt').textContent='Olá, '+n;h.hidden=false;
 }
 
+/* alerta das sentenças judiciais: usa o que o sistema de Sentenças já leu da ficha financeira (não consulta o Centi aqui) */
+let sentencas=null;
+function renderAlertaSent(){
+  const box=$('#alertaSent');if(!box) return;
+  if(!sentencas||!window.SP){box.innerHTML='';return;}
+  const d=new Date(),hoje=window.SP.key(d.getFullYear(),d.getMonth()+1),brl=n=>'R$ '+Number(n||0).toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2});
+  const ord={atencao:0,final:1,andamento:2,livre:3};
+  const l=sentencas.map(it=>({it,r:window.SP.calcular(it,hoje)})).filter(x=>!x.r.quitada&&x.r.modo!=='livre').sort((a,b)=>(ord[a.r.situacao]-ord[b.r.situacao])||String(a.r.termino||'9').localeCompare(String(b.r.termino||'9')));
+  if(!l.length){box.innerHTML='';return;}
+  const crit=l.some(x=>x.r.situacao==='atencao'),mostra=l.slice(0,6);
+  const lido=sentencas.map(i=>i.lidoEm).filter(Boolean).sort().pop();
+  box.innerHTML='<div class="asent'+(crit?' crit':'')+'" role="status"><h2>⚖️ Sentenças judiciais: quanto falta para acabar <span class="tg">'+l.length+' em andamento</span>'+(SENTENCAS_URL?'<a href="'+esc(SENTENCAS_URL)+'" target="_top">Ver todas ›</a>':'')+'</h2><ul>'+
+    mostra.map(({it,r})=>{
+      const falta=r.modo==='parcelas'?r.faltaParcelas+(r.faltaParcelas===1?' parcela':' parcelas'):brl(r.falta);
+      const tg=r.situacao==='atencao'?'<span class="tg atencao">Atenção</span>':r.situacao==='final'?'<span class="tg final">Reta final</span>':'';
+      return '<li><span><b>'+esc(it.nome)+'</b> · evento '+esc(it.evento.id)+'</span>'+tg+'<span class="qt">Falta <b>'+esc(falta)+'</b>'+(r.mesesRest!=null?' · '+r.mesesRest+(r.mesesRest===1?' mês':' meses')+' (até '+window.SP.fmtKey(r.termino)+')':'')+'</span></li>';
+    }).join('')+'</ul>'+(l.length>mostra.length?'<small>Mais '+(l.length-mostra.length)+' em andamento no sistema de Sentenças.</small>':'')+
+    (lido?'<small>Valores da última leitura da ficha financeira, em '+new Date(lido).toLocaleDateString('pt-BR')+'. Para atualizar, abra Sentenças judiciais e use "Atualizar todos".</small>':'')+'</div>';
+}
+async function carregarSentencas(){
+  try{const s=await dbh.doc('sentencas/lista').get();if(s.exists){const j=JSON.parse(s.data().json);sentencas=j&&Array.isArray(j.itens)?j.itens:null;}}catch(e){sentencas=null;}
+  renderAlertaSent();
+}
 function render(){
   if(carregando){
     $('#count').textContent='';$('#editBtn').hidden=true;$('#editInfo').innerHTML='';
@@ -401,6 +435,7 @@ function migrar(){
       if(dbh){
         $('#storeNote').textContent=podeEditar()?'As alterações deste painel ficam salvas no servidor.':'O painel é editado pelos administradores.';
         render();
+        carregarSentencas();
         const s=await dbh.doc('painel/tiles').get();
         if(s.exists){try{const d=JSON.parse(s.data().json);if(d&&Array.isArray(d.tiles)){st=d;carregando=false;migrar();guardarCache();render();}}catch(e){}}
         else if(load()&&podeEditar()){

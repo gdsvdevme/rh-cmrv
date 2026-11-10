@@ -135,6 +135,15 @@ footer{padding-block:0 28px;color:var(--muted);font-size:12.5px}
 .hues button[aria-pressed="true"]{outline:2px solid var(--fg)}
 .actions{display:flex;gap:8px;justify-content:flex-end;flex-wrap:wrap;margin-top:4px}
 #toast{position:fixed;left:50%;transform:translateX(-50%);bottom:max(18px,env(safe-area-inset-bottom,0px));background:var(--fg);color:var(--bg);padding:10px 16px;border-radius:10px;font-size:14px;z-index:60;max-width:90vw}
+.asent{margin-top:22px;background:var(--surface);border:1px solid var(--line);border-left:5px solid var(--warn);border-radius:14px;box-shadow:var(--shadow);padding:14px 16px}
+.asent.crit{border-left-color:var(--danger)}
+.asent h2{font-size:1rem;display:flex;align-items:center;gap:8px;flex-wrap:wrap}.asent h2 a{margin-left:auto;font-family:var(--f-body);font-size:13px;font-weight:600;color:var(--accent);text-decoration:none}
+.asent ul{list-style:none;margin:8px 0 0;padding:0}
+.asent li{display:flex;gap:10px;align-items:center;flex-wrap:wrap;padding:8px 0;border-top:1px solid var(--line);font-size:14px}.asent li:first-child{border-top:0}
+.asent li b{font-weight:600}.asent li .qt{margin-left:auto;text-align:right;font-variant-numeric:tabular-nums}
+.asent .tg{font-size:11px;font-weight:700;padding:2px 8px;border-radius:99px;background:var(--soft);color:var(--muted);white-space:nowrap}
+.asent .tg.final{background:var(--warn-bg);color:var(--warn)}.asent .tg.atencao{background:var(--danger-bg,#fbe3e0);color:var(--danger)}
+.asent small{color:var(--muted);display:block;font-size:12.5px;margin-top:6px}
 .edit-banner{margin-top:14px;background:var(--warn-bg);color:var(--warn);border-radius:10px;padding:10px 14px;font-size:13.5px}
 @media (pointer:coarse){input,select,textarea{font-size:16px}.btn{min-height:42px}.btn.sm{min-height:38px}}
 /* ===== visual moderno ===== */
@@ -186,6 +195,7 @@ a.tile:hover::before{opacity:1}
     <button class="btn" id="editBtn" type="button"></button>
   </div>
   <div id="editInfo"></div>
+  <div id="alertaSent"></div>
   <div class="sec"><h2>Sistemas</h2><span id="count"></span></div>
   <div class="grid" id="grid"></div>
 </div></main>
@@ -591,6 +601,68 @@ const PB=(function(){
   return {connect,centi,recibos,logout,get email(){return email;},get nome(){return centi.nome;},get admin(){return centi.admin;},get userId(){return userId();},url:URL_BASE};
 })();
 
+/* Motor de cálculo do acompanhamento de sentenças judiciais (penhora salarial, pensão, consignações por ordem judicial).
+   Cada acompanhamento = um servidor + um evento da folha (ex.: 913 PENHORA SALARIAL) + o total devido (em R$ ou em parcelas).
+   Todo mês o sistema lê a ficha financeira (FP024) e guarda quanto o evento descontou naquele mês; o saldo é
+   "total - tudo que já foi descontado". Não depende de tela nem de rede: é inserido na página pelo build.py e carregado
+   pelos testes (tests/sentencas.test.js). Competências são textos "AAAA-MM". */
+(function(root){
+const r2=n=>Math.round((Number(n)||0)*100)/100;
+const key=(ano,mes)=>ano+'-'+String(mes).padStart(2,'0');
+const parseKey=k=>{const m=/^(\d{4})-(\d{2})$/.exec(String(k||''));return m?{ano:+m[1],mes:+m[2]}:null;};
+const somaMes=(k,n)=>{const p=parseKey(k);if(!p) return null;const t=p.ano*12+(p.mes-1)+n;return key(Math.floor(t/12),t%12+1);};
+const fmtKey=k=>{const p=parseKey(k);return p?String(p.mes).padStart(2,'0')+'/'+p.ano:'';};
+/* de..ate inclusive (limite de 600 meses por segurança) */
+const meses=(de,ate)=>{const out=[];if(!parseKey(de)||!parseKey(ate)) return out;for(let k=de;k<=ate&&out.length<600;k=somaMes(k,1)) out.push(k);return out;};
+
+/* quanto o evento descontou nas fichas do mês (pode haver mais de uma folha: mensal, 13º, complementar...).
+   -> {valor, achou}; achou=false quando o evento nem aparece na ficha (o mês não teve desconto) */
+function valorDoEvento(fichas,eventoId){
+  let v=0,n=0;
+  (fichas||[]).forEach(f=>(f.Eventos||[]).forEach(e=>{if(String(e.Id)===String(eventoId)){v+=Number(e.Desconto)||0;n++;}}));
+  return {valor:r2(v),achou:n>0};
+}
+
+/* it: {modo:'valor'|'parcelas'|'livre', total, antes, parcelas, parcelasAntes, desde:'AAAA-MM', hist:{'AAAA-MM':{v}}}
+   hoje: 'AAAA-MM' do mês corrente. */
+function calcular(it,hoje){
+  const hist=it.hist||{};
+  const todos=Object.keys(hist).filter(k=>k>=(it.desde||'0000-00')&&k<=hoje).sort();
+  const pagos=todos.filter(k=>Number(hist[k].v)>0);
+  const pagoMeses=r2(pagos.reduce((s,k)=>s+Number(hist[k].v),0));
+  const pago=r2((Number(it.antes)||0)+pagoMeses);
+  const parcelasPagas=(Number(it.parcelasAntes)||0)+pagos.length;
+  const ultimo=todos.length?todos[todos.length-1]:null;                 // último mês com ficha lida
+  const ultimoPago=pagos.length?pagos[pagos.length-1]:null;
+  const parcela=ultimoPago?r2(hist[ultimoPago].v):0;                    // valor do último desconto
+  const pendentes=it.desde?meses(it.desde,hoje).filter(k=>!(k in hist)):[];
+  const o={pago,parcelasPagas,ultimo,ultimoPago,parcela,pendentes,modo:it.modo||'livre',pct:null,falta:null,faltaParcelas:null,
+    mesesRest:null,termino:null,quitada:false,quitadaEm:null,excedeu:0,semDesconto:false,situacao:'livre'};
+  if(o.modo==='valor'&&Number(it.total)>0){
+    const total=r2(it.total);
+    o.falta=Math.max(0,r2(total-pago));o.pct=Math.min(100,pago/total*100);
+    o.quitada=o.falta<0.005;o.excedeu=pago>total+0.005?r2(pago-total):0;
+    if(o.quitada){   // em que mês o saldo chegou a zero
+      let acc=Number(it.antes)||0;if(acc>=total-0.005) o.quitadaEm=it.desde;
+      else for(const k of pagos){acc+=Number(hist[k].v);if(acc>=total-0.005){o.quitadaEm=k;break;}}
+    }else if(parcela>0){o.mesesRest=Math.ceil(o.falta/parcela-1e-9);o.termino=ultimo?somaMes(ultimo,o.mesesRest):null;}
+  }else if(o.modo==='parcelas'&&Number(it.parcelas)>0){
+    const tot=Number(it.parcelas);
+    o.faltaParcelas=Math.max(0,tot-parcelasPagas);o.pct=Math.min(100,parcelasPagas/tot*100);
+    o.quitada=o.faltaParcelas===0;o.falta=parcela?r2(o.faltaParcelas*parcela):null;
+    if(o.quitada){const need=tot-(Number(it.parcelasAntes)||0);o.quitadaEm=need<=0?it.desde:(pagos[need-1]||null);}
+    else{o.mesesRest=o.faltaParcelas;o.termino=ultimo?somaMes(ultimo,o.faltaParcelas):null;}
+  }else o.modo='livre';
+  o.semDesconto=!o.quitada&&o.modo!=='livre'&&!!ultimo&&!(Number(hist[ultimo].v)>0);   // o evento parou de descontar antes de quitar
+  o.situacao=o.modo==='livre'?'livre':o.quitada?(o.excedeu>0?'atencao':'quitada'):(o.semDesconto?'atencao':(o.mesesRest!=null&&o.mesesRest<=2?'final':'andamento'));
+  return o;
+}
+
+const API={r2,key,parseKey,somaMes,fmtKey,meses,valorDoEvento,calcular};
+if(typeof module!=='undefined'&&module.exports) module.exports=API;
+else root.SP=API;
+})(typeof window!=='undefined'?window:globalThis);
+
 const FLOW_URL="fluxogramas/";
 const PESSOAL_URL="pessoal/";
 const PONTO_URL="ponto/";
@@ -711,6 +783,29 @@ function saudacao(){
   $('#helloTxt').textContent='Olá, '+n;h.hidden=false;
 }
 
+/* alerta das sentenças judiciais: usa o que o sistema de Sentenças já leu da ficha financeira (não consulta o Centi aqui) */
+let sentencas=null;
+function renderAlertaSent(){
+  const box=$('#alertaSent');if(!box) return;
+  if(!sentencas||!window.SP){box.innerHTML='';return;}
+  const d=new Date(),hoje=window.SP.key(d.getFullYear(),d.getMonth()+1),brl=n=>'R$ '+Number(n||0).toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2});
+  const ord={atencao:0,final:1,andamento:2,livre:3};
+  const l=sentencas.map(it=>({it,r:window.SP.calcular(it,hoje)})).filter(x=>!x.r.quitada&&x.r.modo!=='livre').sort((a,b)=>(ord[a.r.situacao]-ord[b.r.situacao])||String(a.r.termino||'9').localeCompare(String(b.r.termino||'9')));
+  if(!l.length){box.innerHTML='';return;}
+  const crit=l.some(x=>x.r.situacao==='atencao'),mostra=l.slice(0,6);
+  const lido=sentencas.map(i=>i.lidoEm).filter(Boolean).sort().pop();
+  box.innerHTML='<div class="asent'+(crit?' crit':'')+'" role="status"><h2>⚖️ Sentenças judiciais: quanto falta para acabar <span class="tg">'+l.length+' em andamento</span>'+(SENTENCAS_URL?'<a href="'+esc(SENTENCAS_URL)+'" target="_top">Ver todas ›</a>':'')+'</h2><ul>'+
+    mostra.map(({it,r})=>{
+      const falta=r.modo==='parcelas'?r.faltaParcelas+(r.faltaParcelas===1?' parcela':' parcelas'):brl(r.falta);
+      const tg=r.situacao==='atencao'?'<span class="tg atencao">Atenção</span>':r.situacao==='final'?'<span class="tg final">Reta final</span>':'';
+      return '<li><span><b>'+esc(it.nome)+'</b> · evento '+esc(it.evento.id)+'</span>'+tg+'<span class="qt">Falta <b>'+esc(falta)+'</b>'+(r.mesesRest!=null?' · '+r.mesesRest+(r.mesesRest===1?' mês':' meses')+' (até '+window.SP.fmtKey(r.termino)+')':'')+'</span></li>';
+    }).join('')+'</ul>'+(l.length>mostra.length?'<small>Mais '+(l.length-mostra.length)+' em andamento no sistema de Sentenças.</small>':'')+
+    (lido?'<small>Valores da última leitura da ficha financeira, em '+new Date(lido).toLocaleDateString('pt-BR')+'. Para atualizar, abra Sentenças judiciais e use "Atualizar todos".</small>':'')+'</div>';
+}
+async function carregarSentencas(){
+  try{const s=await dbh.doc('sentencas/lista').get();if(s.exists){const j=JSON.parse(s.data().json);sentencas=j&&Array.isArray(j.itens)?j.itens:null;}}catch(e){sentencas=null;}
+  renderAlertaSent();
+}
 function render(){
   if(carregando){
     $('#count').textContent='';$('#editBtn').hidden=true;$('#editInfo').innerHTML='';
@@ -883,6 +978,7 @@ function migrar(){
       if(dbh){
         $('#storeNote').textContent=podeEditar()?'As alterações deste painel ficam salvas no servidor.':'O painel é editado pelos administradores.';
         render();
+        carregarSentencas();
         const s=await dbh.doc('painel/tiles').get();
         if(s.exists){try{const d=JSON.parse(s.data().json);if(d&&Array.isArray(d.tiles)){st=d;carregando=false;migrar();guardarCache();render();}}catch(e){}}
         else if(load()&&podeEditar()){

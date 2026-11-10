@@ -61,6 +61,7 @@ select,input[type=month]{background:var(--surface);border:1px solid var(--line);
 table.lst{width:100%;border-collapse:collapse;font-size:14px;min-width:860px}
 .lst th{background:var(--soft);color:var(--muted);font-size:11.5px;letter-spacing:.05em;text-transform:uppercase;padding:10px 12px;text-align:left;white-space:nowrap}
 .lst td{padding:10px 12px;border-top:1px solid var(--line);vertical-align:middle}
+.lst tr.inativo td{background:color-mix(in srgb,var(--danger-bg) 55%,transparent)}.lst tr.inativo td.n b{color:var(--danger)}
 .lst tbody tr[data-i]{cursor:pointer}.lst tbody tr[data-i]:hover td{background:var(--soft)}
 .lst td.n b{display:block;font-weight:600;line-height:1.25}.lst td.n span{color:var(--muted);font-size:12.5px}
 .lst td.num{text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap}
@@ -223,13 +224,15 @@ async function buscar(termo){
   }catch(e){toast('Não foi possível buscar no Centi: '+msgErro(e));}
   finally{b.disabled=false;b.textContent='Buscar';}
 }
+/* situação do cadastro no Centi: quem não está ativo (ex.: rescindido) aparece em vermelho */
+const sitTag=t=>/^ativo$/i.test(String(t||'').trim())?esc(t):'<span class="tag atencao">'+esc(t||'—')+'</span>';
 function renderAchados(){
   const box=$('#achados');
   if(!achados){box.innerHTML='';return;}
   const l=achados.lista;
   box.innerHTML='<div class="panel"><h2>Resultado da busca <span>'+l.length+' servidor(es) · <a href="#" data-fecha>fechar</a></span></h2>'+
     (l.length?'<div class="tblwrap"><table class="lst" style="min-width:600px"><thead><tr><th>Servidor</th><th>Matrícula</th><th>Cargo</th><th>Situação</th><th></th></tr></thead><tbody>'+
-      l.map((f,i)=>'<tr><td class="n"><b>'+esc(titulo(f.Nome))+'</b></td><td>'+esc(f.Matricula)+'</td><td>'+esc(titulo(f.Cargo))+'</td><td>'+esc(f.Situacao)+'</td><td><button class="btn sm primary" type="button" data-novo="'+i+'">Acompanhar sentença</button></td></tr>').join('')+
+      l.map((f,i)=>'<tr'+(/^ativo$/i.test(String(f.Situacao||'').trim())?'':' class="inativo"')+'><td class="n"><b>'+esc(titulo(f.Nome))+'</b></td><td>'+esc(f.Matricula)+'</td><td>'+esc(titulo(f.Cargo))+'</td><td>'+sitTag(f.Situacao)+'</td><td><button class="btn sm primary" type="button" data-novo="'+i+'">Acompanhar sentença</button></td></tr>').join('')+
       '</tbody></table></div>':'<p class="none">Nenhum servidor encontrado para "'+esc(achados.termo)+'".</p>')+'</div>';
 }
 

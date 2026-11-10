@@ -3,7 +3,7 @@ const path = require('path');
 const raiz = path.resolve(__dirname, '../..');
 const SITE = process.env.SITE_DIR || path.join(raiz, 'site');      // SITE_DIR=/outra/copia/site compara outra versão
 const PAGINAS = ['index.html', 'fluxogramas/index.html', 'pessoal/index.html', 'ponto/index.html', 'ferias/index.html',
-  'licenca-premio/index.html', 'tarefas/index.html', 'espelho/index.html', 'documentos/index.html'];
+  'licenca-premio/index.html', 'sentencas/index.html', 'tarefas/index.html', 'espelho/index.html', 'documentos/index.html'];
 
 /* roda dentro da página: um banco de documentos em memória no lugar do servidor */
 const bancoFalso = () => {

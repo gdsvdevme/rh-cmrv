@@ -55,7 +55,29 @@ function calcular(it,hoje){
   return o;
 }
 
-const API={r2,key,parseKey,somaMes,fmtKey,meses,valorDoEvento,calcular};
+/* Lê as fichas que faltam e guarda em it.hist o que o evento descontou em cada mês. Lê as competências sem ficha lida
+   e relê as duas últimas (o Centi ainda pode reprocessar); tudo=true relê desde o início.
+   buscar(matricula, 'AAAA-MM') -> Promise<fichas[]> (vazio = folha ainda não existe). Devolve {lidos, erro}. */
+async function lerFichas(it,hoje,buscar,opc){
+  opc=opc||{};
+  it.hist=it.hist||{};
+  const ultimos=Object.keys(it.hist).sort().slice(-2);
+  const fila=meses(it.desde,hoje).filter(k=>opc.tudo||!(k in it.hist)||ultimos.includes(k));
+  let lidos=0,erro=null,feitos=0;
+  for(let i=0;i<fila.length&&!erro;i+=3){
+    await Promise.all(fila.slice(i,i+3).map(async k=>{
+      try{
+        const fs=await buscar(it.mat,k);
+        if(fs&&fs.length){const v=valorDoEvento(fs,it.evento.id);it.hist[k]={v:v.valor,f:fs.length};lidos++;}
+      }catch(e){erro=erro||e;}
+      feitos++;if(opc.andamento) opc.andamento(feitos,fila.length);
+    }));
+  }
+  if(!erro) it.lidoEm=new Date().toISOString();
+  return {lidos,erro};
+}
+
+const API={lerFichas,r2,key,parseKey,somaMes,fmtKey,meses,valorDoEvento,calcular};
 if(typeof module!=='undefined'&&module.exports) module.exports=API;
 else root.SP=API;
 })(typeof window!=='undefined'?window:globalThis);

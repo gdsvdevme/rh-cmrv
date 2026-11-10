@@ -191,26 +191,8 @@ const msgErro=e=>e.status===401?'A sessão do Centi expirou. Entre de novo e rep
 /* ---------- leitura da ficha financeira ---------- */
 const mesAnoDe=k=>{const p=parseKey(k);return [p.mes,p.ano];};
 async function fichasDoMes(mat,k){const [m,a]=mesAnoDe(k);const r=await PB.centi.ficha(mat,m,a);return (r&&r.Fichas)||[];}
-/* lê as competências que faltam (e relê as duas últimas, que o Centi ainda pode reprocessar). tudo=true relê desde o início. Devolve {lidos,erro} */
-async function atualizarItem(it,tudo,andamento){
-  const hoje=hojeKey();
-  it.hist=it.hist||{};
-  const todos=meses(it.desde,hoje),ultimos=Object.keys(it.hist).sort().slice(-2);
-  const fila_=todos.filter(k=>tudo||!(k in it.hist)||ultimos.includes(k));
-  let lidos=0,erro=null,feitos=0;
-  const lote=3;
-  for(let i=0;i<fila_.length&&!erro;i+=lote){
-    await Promise.all(fila_.slice(i,i+lote).map(async k=>{
-      try{
-        const fs=await fichasDoMes(it.mat,k);
-        if(fs.length){const v=valorDoEvento(fs,it.evento.id);it.hist[k]={v:v.valor,f:fs.length};lidos++;}
-      }catch(e){erro=erro||e;}
-      feitos++;if(andamento) andamento(feitos,fila_.length);
-    }));
-  }
-  if(!erro){it.lidoEm=new Date().toISOString();}
-  return {lidos,erro};
-}
+/* lê as competências que faltam (e relê as duas últimas); tudo=true relê desde o início. Devolve {lidos,erro} */
+const atualizarItem=(it,tudo,andamento)=>window.SP.lerFichas(it,hojeKey(),fichasDoMes,{tudo,andamento});
 
 /* ---------- busca de servidor ---------- */
 async function buscar(termo){

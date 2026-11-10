@@ -88,3 +88,23 @@ test('meses antes do início ou depois de hoje não entram na soma',()=>{
   const r=S.calcular({modo:'valor',total:1000,desde:'2026-09',hist:h({'2026-07':999,'2026-09':100,'2026-12':999})},'2026-10');
   assert.equal(r.pago,100);
 });
+
+test('lerFichas: lê só o que falta (e relê os dois últimos) e guarda o valor do evento',async()=>{
+  const it={mat:'1',evento:{id:'913'},desde:'2026-07',hist:h({'2026-07':100,'2026-08':100,'2026-09':100})};
+  const lidos=[];
+  const buscar=async(mat,k)=>{lidos.push(k);return k==='2026-11'?[]:[{Eventos:[{Id:913,Desconto:150}]}];};
+  const r=await S.lerFichas(it,'2026-11',buscar);
+  assert.deepEqual(lidos.sort(),['2026-08','2026-09','2026-10','2026-11']);   // 07 já estava lido e não é um dos dois últimos
+  assert.equal(r.lidos,3);assert.equal(r.erro,null);
+  assert.equal(it.hist['2026-10'].v,150);
+  assert.equal(it.hist['2026-07'].v,100);
+  assert.ok(!('2026-11' in it.hist));   // folha ainda não existe
+  assert.ok(it.lidoEm);
+});
+
+test('lerFichas: erro de leitura para e não marca a hora da leitura',async()=>{
+  const it={mat:'1',evento:{id:'913'},desde:'2026-10',hist:{}};
+  const r=await S.lerFichas(it,'2026-11',async()=>{throw new Error('Centi fora');});
+  assert.equal(r.erro.message,'Centi fora');
+  assert.equal(it.lidoEm,undefined);
+});

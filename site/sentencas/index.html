@@ -122,6 +122,8 @@ table.lst{width:100%;border-collapse:collapse;font-size:14px;min-width:860px}
 .lst tr.inativo td{background:color-mix(in srgb,var(--danger-bg) 55%,transparent)}.lst tr.inativo td.n b{color:var(--danger)}
 .lst tbody tr[data-i]{cursor:pointer}.lst tbody tr[data-i]:hover td{background:var(--soft)}
 .lst td.n b{display:block;font-weight:600;line-height:1.25}.lst td.n span{color:var(--muted);font-size:12.5px}
+.vl{display:inline-block;padding:3px 9px;border-radius:8px;font-weight:600}
+.vl.tot{background:var(--blue-bg);color:var(--blue)}.vl.des{background:var(--danger-bg);color:var(--danger)}
 .lst td.num{text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap}
 .tag{display:inline-block;font-size:11px;font-weight:700;padding:2px 8px;border-radius:99px;white-space:nowrap;background:var(--soft);color:var(--muted)}
 .tag.andamento{background:var(--blue-bg);color:var(--blue)}.tag.final{background:var(--warn-bg);color:var(--warn)}
@@ -154,6 +156,7 @@ dl.ficha dt{color:var(--muted);font-weight:600}dl.ficha dd{margin:0;overflow-wra
 .sum div{border-radius:12px;padding:9px 12px;background:var(--soft);border:1px solid var(--line)}
 .sum small{display:block;font-size:11.5px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:var(--muted)}
 .sum b{font-family:var(--f-display);font-size:1.25rem;font-variant-numeric:tabular-nums}
+.sum .des{background:var(--danger-bg)}.sum .des b{color:var(--danger)}
 .sum .ok b{color:var(--ok)}.sum .fal b{color:var(--blue)}
 .alertas{display:flex;flex-direction:column;gap:6px}
 .al{border-radius:10px;padding:8px 12px;font-size:13.5px;background:var(--soft);color:var(--muted)}
@@ -951,7 +954,7 @@ function render(){
       const falta=r.quitada?'—':r.modo==='parcelas'?r.faltaParcelas+' parc.'+(r.falta!=null?' ('+brl(r.falta)+')':''):r.falta!=null?brl(r.falta):'—';
       const term=r.quitada?'Quitada'+(r.quitadaEm?' em '+fmtKey(r.quitadaEm):''):r.termino?fmtKey(r.termino)+' <span class="pct">('+r.mesesRest+' '+(r.mesesRest===1?'mês':'meses')+')</span>':'—';
       return '<tr data-i="'+i+'"><td class="n"><b>'+esc(it.nome)+'</b><span>Mat. '+esc(it.mat)+'</span></td><td class="n"><b>'+rotEvAtual(it)+'</b><span>'+esc(it.descricao||'')+'</span></td>'+
-        '<td class="num">'+tot+'</td><td class="num">'+brl(r.pago)+(r.modo==='parcelas'?'<br><span class="pct">'+r.parcelasPagas+' parc.</span>':'')+'</td><td class="num">'+falta+'</td>'+
+        '<td class="num"><span class="vl tot">'+tot+'</span></td><td class="num"><span class="vl des">'+brl(r.pago)+'</span>'+(r.modo==='parcelas'?'<br><span class="pct">'+r.parcelasPagas+' parc.</span>':'')+'</td><td class="num">'+falta+'</td>'+
         '<td>'+(r.pct==null?'<span class="pct">—</span>':'<div class="prog '+r.situacao+'"><i style="width:'+r.pct.toFixed(1)+'%"></i></div><span class="pct">'+Math.floor(r.pct)+'%</span>')+'</td>'+
         '<td class="num">'+(r.parcela?brl(r.parcela):'—')+'</td><td>'+term+'</td><td><span class="tag '+r.situacao+'">'+SIT[r.situacao]+'</span></td></tr>';
     }).join(''):'<tr><td colspan="9" class="none">Nada neste filtro.</td></tr>')+'</tbody></table></div>';
@@ -975,7 +978,7 @@ function dlgItem(i){
     (it.descricao?'<dt>Processo</dt><dd>'+esc(it.descricao)+'</dd>':'')+
     '<dt>Controle</dt><dd>'+(r.modo==='valor'?'Valor total '+brl(it.total)+(it.antes?' (já descontado antes: '+brl(it.antes)+')':''):r.modo==='parcelas'?it.parcelas+' parcelas'+(it.parcelasAntes?' ('+it.parcelasAntes+' já pagas antes)':''):'Sem total: só soma os descontos')+' · desde '+fmtKey(it.desde)+'</dd>'+
     '<dt>Última leitura</dt><dd>'+(it.lidoEm?new Date(it.lidoEm).toLocaleString('pt-BR'):'nunca')+'</dd></dl>'+
-    '<div class="sum"><div><small>Descontado</small><b>'+brl(r.pago)+'</b></div><div class="fal"><small>'+(r.modo==='parcelas'?'Faltam':'Falta')+'</small><b>'+(r.quitada?'Quitada':r.modo==='parcelas'?r.faltaParcelas+' parc.':r.falta!=null?brl(r.falta):'—')+'</b></div><div class="ok"><small>Término previsto</small><b>'+(r.quitada?(r.quitadaEm?fmtKey(r.quitadaEm):'—'):r.termino?fmtKey(r.termino):'—')+'</b></div></div>'+
+    '<div class="sum"><div class="des"><small>Descontado</small><b>'+brl(r.pago)+'</b></div><div class="fal"><small>'+(r.modo==='parcelas'?'Faltam':'Falta')+'</small><b>'+(r.quitada?'Quitada':r.modo==='parcelas'?r.faltaParcelas+' parc.':r.falta!=null?brl(r.falta):'—')+'</b></div><div class="ok"><small>Término previsto</small><b>'+(r.quitada?(r.quitadaEm?fmtKey(r.quitadaEm):'—'):r.termino?fmtKey(r.termino):'—')+'</b></div></div>'+
     (r.pct==null?'':'<div class="prog '+r.situacao+'" style="height:12px"><i style="width:'+r.pct.toFixed(1)+'%"></i></div>')+
     (al.length?'<div class="alertas">'+al.map(a=>'<div class="al '+a[0]+'">'+esc(a[1])+'</div>').join('')+'</div>':'')+
     '<div class="pw"><table class="per"><thead><tr><th>Competência</th><th class="num">Descontado no mês</th><th></th></tr></thead><tbody>'+

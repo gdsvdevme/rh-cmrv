@@ -18,11 +18,11 @@ async function emitSalvar(o){
   if(dbh){try{await dbh.doc('devolucao/emitidos').set({json});return;}catch(e){toast('Não foi possível registrar a emissão no servidor.');}}
   try{localStorage.setItem('rhcrv-emitidos',json);}catch(e){}
 }
-function ymDoPdf(){                                                     // mês do espelho: o do período impresso no próprio PDF
-  const c=new Map();
-  entradas.forEach(e=>{const m=/^(\d{2})\/(\d{2})\/(\d{4})/.exec(e.periodo||'');if(m){const k=m[3]+'-'+m[2];c.set(k,(c.get(k)||0)+1);}});
-  const top=[...c.entries()].sort((a,b)=>b[1]-a[1])[0];
-  if(top) return top[0];
+const maisComum=L=>{const c=new Map();L.filter(Boolean).forEach(k=>c.set(k,(c.get(k)||0)+1));const t=[...c.entries()].sort((a,b)=>b[1]-a[1])[0];return t?t[0]:'';};
+/* referência do espelho = o mês impresso no topo do PDF (é o que se escolhe no Centi e no Controle de devolução); sem ele, o mês do período, depois o escolhido na tela */
+function ymDoPdf(){
+  const ref=maisComum(entradas.map(e=>e.ref));if(ref) return ref;
+  const per=maisComum(entradas.map(e=>{const m=/^(\d{2})\/(\d{2})\/(\d{4})/.exec(e.periodo||'');return m?m[3]+'-'+m[2]:'';}));if(per) return per;
   const a=+$('#cAno').value,m=+$('#cMes').value;return(a>=2000&&a<=2100&&m>=1&&m<=12)?a+'-'+String(m).padStart(2,'0'):'';
 }
 /* chamado ao salvar o PDF carimbado: libera a baixa dos servidores que estão nele (e só deles) no mês do espelho */
@@ -32,8 +32,9 @@ async function emitDoPdf(lista){
   lista.forEach(g=>g.entradas.forEach(e=>{if(e.pessoa&&!e.pag.every(p=>over.get(p)==='skip')) ids.push(pessoaId(e.pessoa));}));
   const cur=await emitLer(),r=cur[ym]||{ids:[]};
   r.ids=[...new Set((r.ids||[]).concat(ids))];r.u=new Date().toISOString();r.p={n:PB.centi.nome||'',u:PB.centi.user||''};
+  const per=maisComum(entradas.map(e=>e.periodo));if(per) r.per=per;                      // período impresso (informativo)
   cur[ym]=r;emit=cur;emitOk=true;await emitSalvar(cur);
-  return ' Espelho de '+MESES[+ym.slice(5)-1]+'/'+ym.slice(0,4)+' registrado como emitido: '+r.ids.length+' servidor'+(r.ids.length===1?'':'es')+' liberado'+(r.ids.length===1?'':'s')+' para baixa.';
+  return ' Espelho de '+MESES[+ym.slice(5)-1]+'/'+ym.slice(0,4)+(r.per?' (período '+r.per+')':'')+' registrado como emitido: '+r.ids.length+' servidor'+(r.ids.length===1?'':'es')+' liberado'+(r.ids.length===1?'':'s')+' para baixa.';
 }
 let devSetoresCache=null;                       // zerado em montarHierarquia(), quando a hierarquia muda
 function devSetores(){
@@ -268,8 +269,8 @@ function rfAtualizar(){
   if(!ym){box.className='aviso';box.textContent='Informe um ano válido.';$('#rfOk').disabled=true;return;}
   $('#rfOk').disabled=false;
   const outro=ult&&ult!==ym?` O último espelho emitido foi o de <b>${esc(devMesNome(ult))}</b>.`:'';
-  if(e){box.className='ok';box.innerHTML='Espelho de <b>'+esc(devMesNome(ym))+'</b> emitido em '+esc(new Date(e.u).toLocaleDateString('pt-BR'))+' · '+(e.ids||[]).length+' servidores.'+outro;}
-  else{box.className='aviso';box.innerHTML='O espelho de <b>'+esc(devMesNome(ym))+'</b> ainda não foi carimbado e salvo (ou o mês é antigo, de antes deste controle). Se for um mês novo, não será possível dar baixa.'+outro;}
+  if(e){box.className='ok';box.innerHTML='Espelho de <b>'+esc(devMesNome(ym))+'</b>'+(e.per?' (período '+esc(e.per)+')':'')+' emitido em '+esc(new Date(e.u).toLocaleDateString('pt-BR'))+' · '+(e.ids||[]).length+' servidores.'+outro;}
+  else{box.className='aviso';box.innerHTML='O espelho de <b>'+esc(devMesNome(ym))+'</b> ainda não foi carimbado e salvo, então não será possível dar baixa.'+outro+(ult&&!e?'<div style="margin-top:8px"><button type="button" class="btn sm" id="rfMover" data-de="'+ult+'" data-para="'+ym+'">Já emiti este: mover o registro de '+esc(devMesNome(ult))+' para '+esc(devMesNome(ym))+'</button></div>':'');}
 }
 function devPedirReferencia(){
   const d=$('#dlgRef');if(d.open) return;
@@ -277,6 +278,16 @@ function devPedirReferencia(){
   $('#rfMes').value=$('#dMes').value;$('#rfAno').value=$('#dAno').value;
   rfAtualizar();d.showModal();
 }
+/* corrige um registro feito pelo mês do período (regra antiga): passa os servidores liberados de um mês para o outro */
+$('#rfInfo').addEventListener('click',async ev=>{
+  const b=ev.target.closest('#rfMover');if(!b) return;
+  const de=b.dataset.de,para=b.dataset.para;
+  if(!confirm('Mover o espelho emitido registrado como '+devMesNome(de)+' para '+devMesNome(para)+'?\n\nUse só se o espelho que você já carimbou e salvou é o de '+devMesNome(para)+'.')) return;
+  const cur=await emitLer();if(!cur[de]) return;
+  const r=cur[para]||{ids:[]};r.ids=[...new Set((r.ids||[]).concat(cur[de].ids||[]))];r.u=cur[de].u;r.p=cur[de].p;if(cur[de].per) r.per=cur[de].per;
+  cur[para]=r;delete cur[de];emit=cur;await emitSalvar(cur);rfAtualizar();
+  toast('Registro movido: o espelho agora consta como '+devMesNome(para)+'.');
+});
 $('#rfMes').addEventListener('change',rfAtualizar);$('#rfAno').addEventListener('input',rfAtualizar);
 $('#rfOk').addEventListener('click',async()=>{
   const a=+$('#rfAno').value,m=$('#rfMes').value;if(!(a>=2000&&a<=2100)) return;

@@ -8,7 +8,8 @@ async function iniciarPdfjs(){
 function lerCabecalho(txt){
   const m=/\b(\d{4,})\s+-\s+(.+?)\s+CPF:/.exec(txt);if(!m) return null;
   const cargo=/Cargo:\s*(.+?)(?:\s+(?:Órgão|Lotação|Horário|Período|Dossiê):|$)/.exec(txt),per=/Período:\s*(\d{2}\/\d{2}\/\d{4})\s+a\s+(\d{2}\/\d{2}\/\d{4})/.exec(txt);
-  return {mat:m[1],nome:titulo(m[2]),cargo:cargo?titulo(cargo[1]):'',periodo:per?per[1]+' a '+per[2]:''};
+  const rf=/Espelho de ponto\s+(\d{2})\/(\d{4})/.exec(txt);                       // referência: o mês impresso no topo (ex.: 11/2026); o período pode ser do mês anterior
+  return {mat:m[1],nome:titulo(m[2]),cargo:cargo?titulo(cargo[1]):'',periodo:per?per[1]+' a '+per[2]:'',ref:rf?rf[2]+'-'+rf[1]:''};
 }
 /* ---------- gerar o espelho direto do Centi (FP170) ---------- */
 const MESES=['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'];

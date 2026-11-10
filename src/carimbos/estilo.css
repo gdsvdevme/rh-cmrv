@@ -158,6 +158,8 @@ main.sub .grid,main.sub .devwrap{margin-top:12px}
 .refbig{justify-content:flex-start!important;gap:10px}
 .refbig select,.refbig input{font-size:1.25rem;font-weight:700;padding:8px 12px}
 .refbig input{width:110px}
+#rfPontos{font-size:14px;font-weight:600}
+#rfPontos span{color:var(--muted);font-weight:400}
 #rfInfo{font-size:13.5px;border-radius:10px;padding:9px 12px}
 #rfInfo.ok{background:var(--ok-bg);color:var(--ok)}
 #rfInfo.aviso{background:var(--warn-bg);color:var(--warn)}

@@ -52,11 +52,13 @@ const devLegado=()=>Object.keys(dev.baixas||{}).length+Object.keys(dev.retiradas
 const devLiberado=()=>!!devEmitido()||devLegado();
 function devElegivel(p){const e=devEmitido();if(!e) return devLegado();return(e.ids||[]).includes(pessoaId(p));}
 const devMesNome=ym=>MESES[+ym.slice(5)-1]+'/'+ym.slice(0,4);
+/* a folha fecha no mês seguinte: a referência 11/2026 traz os pontos de outubro */
+const devMesPontos=ym=>{let a=+ym.slice(0,4),m=+ym.slice(5)-1;if(m<1){m=12;a--;}return a+'-'+String(m).padStart(2,'0');};
 function devAviso(){
   const av=$('#dAviso'),lib=devLiberado(),e=devEmitido();
   $('#abaDev').classList.toggle('bloqueado',!lib);$('#abaDev').classList.toggle('semref',!devOk);
   const cf=$('#dConf');cf.className='refconf '+(devOk?'ok':'nao');cf.textContent=devOk?'✓ Referência confirmada':'Confirmar referência';cf.onclick=devOk?null:devPedirReferencia;
-  $('#dEmit').textContent=e?'Espelho emitido em '+new Date(e.u).toLocaleDateString('pt-BR')+' · '+(e.ids||[]).length+' servidores':'';
+  $('#dEmit').textContent=(devRef?'Pontos de '+devMesNome(devMesPontos(devRef))+' · ':'')+(e?'espelho emitido em '+new Date(e.u).toLocaleDateString('pt-BR')+' · '+(e.ids||[]).length+' servidores':'espelho não emitido');
   if(lib){av.hidden=true;return;}
   const ms=Object.keys(emit).sort().reverse().slice(0,4);
   av.innerHTML='O espelho de <b>'+esc(devRef?devMesNome(devRef):'este mês')+'</b> ainda não foi carimbado e salvo, então não dá para dar baixa nem marcar retirada. Faça isso em <a href="#carimbar"><b>Carimbar</b></a>.'+
@@ -266,8 +268,9 @@ function devGuardaRef(){
 function rfAtualizar(){
   const a=+$('#rfAno').value,m=+$('#rfMes').value,box=$('#rfInfo');
   const ym=(a>=2000&&a<=2100)?a+'-'+String(m).padStart(2,'0'):'',e=ym?emit[ym]:null,ms=Object.keys(emit).sort(),ult=ms[ms.length-1];
-  if(!ym){box.className='aviso';box.textContent='Informe um ano válido.';$('#rfOk').disabled=true;return;}
+  if(!ym){box.className='aviso';box.textContent='Informe um ano válido.';$('#rfPontos').textContent='';$('#rfOk').disabled=true;return;}
   $('#rfOk').disabled=false;
+  $('#rfPontos').innerHTML='Referência <b>'+esc(devMesNome(ym))+'</b> → pontos de <b>'+esc(devMesNome(devMesPontos(ym)))+'</b> <span>(a folha fecha no mês seguinte)</span>';
   const outro=ult&&ult!==ym?` O último espelho emitido foi o de <b>${esc(devMesNome(ult))}</b>.`:'';
   if(e){box.className='ok';box.innerHTML='Espelho de <b>'+esc(devMesNome(ym))+'</b>'+(e.per?' (período '+esc(e.per)+')':'')+' emitido em '+esc(new Date(e.u).toLocaleDateString('pt-BR'))+' · '+(e.ids||[]).length+' servidores.'+outro;}
   else{box.className='aviso';box.innerHTML='O espelho de <b>'+esc(devMesNome(ym))+'</b> ainda não foi carimbado e salvo, então não será possível dar baixa.'+outro+(ult&&!e?'<div style="margin-top:8px"><button type="button" class="btn sm" id="rfMover" data-de="'+ult+'" data-para="'+ym+'">Já emiti este: mover o registro de '+esc(devMesNome(ult))+' para '+esc(devMesNome(ym))+'</button></div>':'');}

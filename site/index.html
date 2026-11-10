@@ -163,14 +163,14 @@ body{background:var(--bg)}
 .sec h2{font-size:.78rem;letter-spacing:.09em;text-transform:uppercase;color:var(--muted);font-weight:600}
 .sec span{background:none;padding:0;font-size:12.5px}
 .grid{grid-template-columns:repeat(auto-fill,minmax(min(100%,270px),1fr));gap:10px}
-.tile{flex-direction:row;align-items:center;gap:12px;padding:12px 14px;border-radius:12px;box-shadow:none;transition:border-color .15s,background .15s}
+.tile{min-height:68px;flex-direction:row;align-items:center;gap:12px;padding:12px 14px;border-radius:12px;box-shadow:none;transition:border-color .15s,background .15s}
 .tile::before,.tile::after{display:none}
 a.tile:hover{transform:none;box-shadow:none;border-color:var(--accent);background:color-mix(in srgb,var(--surface) 92%,var(--accent))}
 .ico{width:38px;height:38px;border-radius:10px;box-shadow:none}
 .ico svg{width:20px;height:20px}
 .tx{min-width:0;flex:1}
 .tile h3{font-size:.95rem;font-weight:600;line-height:1.25}
-.tile p{font-size:12.5px;line-height:1.35;margin:1px 0 0;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.tile p{font-size:12.5px;line-height:1.35;margin:1px 0 0;display:-webkit-box;-webkit-line-clamp:1;-webkit-box-orient:vertical;overflow:hidden}
 .go{color:var(--muted);flex:none;opacity:.55;transition:transform .15s,opacity .15s}
 a.tile:hover .go{opacity:1;transform:translateX(2px);color:var(--accent)}
 .pill{font-size:10.5px;padding:2px 8px;flex:none}
@@ -180,7 +180,13 @@ a.tile:hover .go{opacity:1;transform:translateX(2px);color:var(--accent)}
 .tile.add{flex-direction:column;justify-content:center;min-height:62px;padding:10px}
 .asent{margin-top:16px;border:1px solid var(--line);border-left:3px solid var(--warn);border-radius:12px;box-shadow:none;padding:10px 14px}
 .asent.crit{border-left-color:var(--danger)}
-.asent h2{font-size:.9rem}
+.asent{padding:0}
+.asent>summary{list-style:none;cursor:pointer;display:flex;align-items:center;gap:8px;flex-wrap:wrap;padding:10px 14px;font-family:var(--f-display);font-weight:600;font-size:.9rem}
+.asent>summary::-webkit-details-marker{display:none}
+.asent>summary::after{content:"";margin-left:2px;width:7px;height:7px;border-right:2px solid var(--muted);border-bottom:2px solid var(--muted);transform:rotate(45deg) translateY(-2px);transition:transform .15s;order:3}
+.asent[open]>summary::after{transform:rotate(-135deg)}
+.asent>summary a{margin-left:auto;order:2;font-family:var(--f-body);font-size:13px;font-weight:600;color:var(--accent);text-decoration:none}
+.asent .corpo{padding:0 14px 12px;border-top:1px solid var(--line)}
 .sec h2,.asent h2{font-family:var(--f-display)}
 .modal{border-radius:16px}
 @media (prefers-reduced-motion:reduce){*{transition:none!important}}
@@ -838,13 +844,16 @@ function renderAlertaSent(){
   if(!l.length){box.innerHTML='';return;}
   const crit=l.some(x=>x.r.situacao==='atencao'),mostra=l.slice(0,6);
   const lido=sentencas.map(i=>i.lidoEm).filter(Boolean).sort().pop();
-  box.innerHTML='<div class="asent'+(crit?' crit':'')+'" role="status"><h2>⚖️ Sentenças judiciais: quanto falta para acabar <span class="tg">'+l.length+' em andamento</span>'+(SENTENCAS_URL?'<a href="'+esc(SENTENCAS_URL)+'" target="_top">Ver todas ›</a>':'')+'</h2><ul>'+
+  const aberto=box.querySelector('details')?box.querySelector('details').open:!!renderAlertaSent.aberto;
+  const atn=l.filter(x=>x.r.situacao==='atencao').length;
+  box.innerHTML='<details class="asent'+(crit?' crit':'')+'"'+(aberto?' open':'')+'><summary>⚖️ '+l.length+(l.length===1?' sentença em andamento':' sentenças em andamento')+(atn?' <span class="tg atencao">'+atn+(atn===1?' pede atenção':' pedem atenção')+'</span>':'')+(SENTENCAS_URL?'<a href="'+esc(SENTENCAS_URL)+'" target="_top">Ver todas ›</a>':'')+'</summary><div class="corpo"><ul>'+
     mostra.map(({it,r})=>{
       const falta=r.modo==='parcelas'?r.faltaParcelas+(r.faltaParcelas===1?' parcela':' parcelas'):brl(r.falta);
       const tg=r.situacao==='atencao'?'<span class="tg atencao">Atenção</span>':r.situacao==='final'?'<span class="tg final">Reta final</span>':'';
-      return '<li><span><b>'+esc(it.nome)+'</b> · evento '+esc(window.SP.rotuloEventos(it))+'</span>'+tg+'<span class="qt">Falta <b>'+esc(falta)+'</b>'+(r.mesesRest!=null?' · '+r.mesesRest+(r.mesesRest===1?' mês':' meses')+' (até '+window.SP.fmtKey(r.termino)+')':'')+'</span></li>';
+      return '<li><span><b>'+esc(it.nome)+'</b> · evento '+esc(it.evento.id)+'</span>'+tg+'<span class="qt">Falta <b>'+esc(falta)+'</b>'+(r.mesesRest!=null?' · '+r.mesesRest+(r.mesesRest===1?' mês':' meses')+' (até '+window.SP.fmtKey(r.termino)+')':'')+'</span></li>';
     }).join('')+'</ul>'+(l.length>mostra.length?'<small>Mais '+(l.length-mostra.length)+' em andamento no sistema de Sentenças.</small>':'')+
-    (lido?'<small>Valores da última leitura da ficha financeira, em '+new Date(lido).toLocaleDateString('pt-BR')+'. Ela é atualizada pelo Centi quando alguém abre a sentença no sistema de Sentenças judiciais.</small>':'')+'</div>';
+    (lido?'<small>Valores da última leitura da ficha financeira, em '+new Date(lido).toLocaleDateString('pt-BR')+'. Ela é atualizada pelo Centi quando alguém abre a sentença no sistema de Sentenças judiciais.</small>':'')+'</div></details>';
+  box.querySelector('details').addEventListener('toggle',e=>{renderAlertaSent.aberto=e.target.open;});
 }
 async function carregarSentencas(){
   try{const s=await dbh.doc('sentencas/lista').get();if(s.exists){const j=JSON.parse(s.data().json);sentencas=j&&Array.isArray(j.itens)?j.itens:null;}}catch(e){sentencas=null;}
@@ -1020,7 +1029,7 @@ function migrar(){
       if(!dbh) dbh=await PB.connect();
       saudacao();
       if(dbh){
-        $('#storeNote').textContent=podeEditar()?'As alterações deste painel ficam salvas no servidor.':'O painel é editado pelos administradores.';
+        $('#storeNote').textContent=podeEditar()?'As alterações deste painel ficam salvas no servidor.':'';
         render();
         carregarSentencas();
         const s=await dbh.doc('painel/tiles').get();

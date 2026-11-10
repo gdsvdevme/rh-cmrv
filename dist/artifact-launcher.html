@@ -820,39 +820,11 @@ function renderAlertaSent(){
       const tg=r.situacao==='atencao'?'<span class="tg atencao">Atenção</span>':r.situacao==='final'?'<span class="tg final">Reta final</span>':'';
       return '<li><span><b>'+esc(it.nome)+'</b> · evento '+esc(it.evento.id)+'</span>'+tg+'<span class="qt">Falta <b>'+esc(falta)+'</b>'+(r.mesesRest!=null?' · '+r.mesesRest+(r.mesesRest===1?' mês':' meses')+' (até '+window.SP.fmtKey(r.termino)+')':'')+'</span></li>';
     }).join('')+'</ul>'+(l.length>mostra.length?'<small>Mais '+(l.length-mostra.length)+' em andamento no sistema de Sentenças.</small>':'')+
-    (lido?'<small>Valores da última leitura da ficha financeira, em '+new Date(lido).toLocaleDateString('pt-BR')+'. Ela é atualizada pelo Centi a cada acesso.</small>':'')+'</div>';
+    (lido?'<small>Valores da última leitura da ficha financeira, em '+new Date(lido).toLocaleDateString('pt-BR')+'. Ela é atualizada pelo Centi quando alguém abre a sentença no sistema de Sentenças judiciais.</small>':'')+'</div>';
 }
-let atualizandoSent=false;
 async function carregarSentencas(){
   try{const s=await dbh.doc('sentencas/lista').get();if(s.exists){const j=JSON.parse(s.data().json);sentencas=j&&Array.isArray(j.itens)?j.itens:null;}}catch(e){sentencas=null;}
   renderAlertaSent();
-  atualizarSentencas();
-}
-/* a cada acesso, relê da ficha financeira (FP024) as sentenças em andamento (pula as lidas há menos de 10 minutos) e atualiza o alerta.
-   Cada uma é gravada relendo a lista do servidor e trocando só aquele item, para não apagar o que outra pessoa mexeu. */
-async function atualizarSentencas(){
-  if(atualizandoSent||!sentencas||!window.SP||!PB.centi.user) return;
-  const hoje=window.SP.key(new Date().getFullYear(),new Date().getMonth()+1);
-  const fila=sentencas.filter(it=>!window.SP.calcular(it,hoje).quitada&&!(it.lidoEm&&Date.now()-new Date(it.lidoEm).getTime()<10*60e3));
-  if(!fila.length) return;
-  atualizandoSent=true;
-  const info=$('#alertaSent');
-  try{
-    for(let n=0;n<fila.length;n++){
-      const it=fila[n];
-      const marca=info&&info.querySelector('.asent h2');if(marca&&!marca.querySelector('.atu')){marca.insertAdjacentHTML('beforeend','<span class="tg atu">Atualizando pelo Centi…</span>');}
-      const r=await window.SP.lerFichas(it,hoje,async(mat,k)=>{const p=window.SP.parseKey(k);const x=await PB.centi.ficha(mat,p.mes,p.ano);return (x&&x.Fichas)||[];});
-      if(r.erro) break;   // sessão vencida ou Centi fora do ar: fica com o que já estava guardado
-      try{
-        const s=await dbh.doc('sentencas/lista').get();
-        const base=s.exists?(JSON.parse(s.data().json).itens||[]):[];
-        const i=base.findIndex(x=>x.id===it.id);
-        if(i>=0&&base[i].evento.id===it.evento.id&&base[i].desde===it.desde&&base[i].mat===it.mat){base[i].hist=it.hist;base[i].lidoEm=it.lidoEm;await dbh.doc('sentencas/lista').set({json:JSON.stringify({v:1,itens:base})});}
-      }catch(e){}
-      renderAlertaSent();
-    }
-  }catch(e){}
-  atualizandoSent=false;renderAlertaSent();
 }
 function render(){
   if(carregando){

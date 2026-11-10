@@ -948,6 +948,23 @@ function dlgItem(i){
     '<div class="row"><button class="btn del sm" type="button" data-del="'+i+'">Excluir</button><button class="btn sm" type="button" data-edit="'+i+'">Editar</button><button class="btn sm" type="button" data-reler="'+i+'">Reler tudo</button><button class="btn primary sm" type="button" data-atu="'+i+'">Atualizar da ficha</button><button class="btn sm" type="button" data-fechar>Fechar</button></div></div>';
   dlg.showModal();
 }
+/* ao abrir uma sentença, busca as atualizações na ficha financeira (mês atual e os dois últimos, mais o que ainda não foi lido) e mostra */
+async function abrirItem(i){
+  const it=itens[i];if(!it) return;
+  if(PB.centi.user||dbh){
+    carga(true,'Buscando atualizações de '+it.nome+'…');
+    try{
+      if(await garantirSessao()){
+        const r=await atualizarItem(it,false);
+        if(r.erro) toast('Não consegui atualizar pelo Centi: '+msgErro(r.erro)+' Mostrando o que já estava guardado.');
+        else await gravar(it.id,it);
+      }else toast('Sem acesso ao Centi: mostrando o que já estava guardado.');
+    }catch(e){toast('Não consegui atualizar pelo Centi: '+msgErro(e));}
+    finally{carga(false);}
+    render();
+  }
+  dlgItem(itens.indexOf(it));
+}
 async function atualizar(it,tudo){
   carga(true,'Lendo a ficha financeira de '+it.nome+'…');
   try{
@@ -999,7 +1016,7 @@ document.addEventListener('click',e=>{
   if(e.target.closest('[data-fecha]')){e.preventDefault();achados=null;renderAchados();return;}
   const nv=e.target.closest('[data-novo]');if(nv&&achados){dlgForm(null,achados.lista[+nv.dataset.novo]);return;}
   const st=e.target.closest('.stat[data-f]');if(st){filtro=filtro===st.dataset.f?'':st.dataset.f;render();return;}
-  const r=e.target.closest('#view tr[data-i]');if(r) dlgItem(+r.dataset.i);
+  const r=e.target.closest('#view tr[data-i]');if(r) abrirItem(+r.dataset.i);
 });
 observarTema();
 

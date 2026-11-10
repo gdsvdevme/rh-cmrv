@@ -602,7 +602,8 @@ const PB=(function(){
 })();
 
 /* Motor de cálculo do acompanhamento de sentenças judiciais (penhora salarial, pensão, consignações por ordem judicial).
-   Cada acompanhamento = um servidor + um evento da folha (ex.: 913 PENHORA SALARIAL) + o total devido (em R$ ou em parcelas).
+   Cada acompanhamento = um servidor + um ou mais eventos da folha (ex.: 913 PENHORA SALARIAL; se o evento mudar no meio
+   da sentença, ex.: 644 até 10/2026 e 936 depois, informam-se os dois e o sistema soma o que cada mês descontou) + o total devido (em R$ ou em parcelas).
    Todo mês o sistema lê a ficha financeira (FP024) e guarda quanto o evento descontou naquele mês; o saldo é
    "total - tudo que já foi descontado". Não depende de tela nem de rede: é inserido na página pelo build.py e carregado
    pelos testes (tests/sentencas.test.js). Competências são textos "AAAA-MM". */
@@ -658,6 +659,17 @@ function calcular(it,hoje){
   return o;
 }
 
+/* eventos de um acompanhamento: it.eventos [{id,nome}], ou o antigo it.evento único */
+const eventosDe=it=>((it&&it.eventos&&it.eventos.length)?it.eventos:(it&&it.evento&&it.evento.id?[it.evento]:[]));
+const rotuloEventos=it=>eventosDe(it).map(e=>e.id).join(' + ');
+/* soma o que os eventos descontaram nas fichas do mês -> {valor, achou, por:{id:valor}, nomes:{id:nome}} */
+function valorDosEventos(fichas,ids){
+  const por={},nomes={};let achou=false;
+  (ids||[]).forEach(id=>{por[String(id)]=0;});
+  (fichas||[]).forEach(f=>(f.Eventos||[]).forEach(e=>{const id=String(e.Id);if(id in por){por[id]=r2(por[id]+(Number(e.Desconto)||0));achou=true;if(e.Nome) nomes[id]=e.Nome;}}));
+  return {valor:r2(Object.values(por).reduce((s,v)=>s+v,0)),achou,por,nomes};
+}
+
 /* Lê as fichas que faltam e guarda em it.hist o que o evento descontou em cada mês. Lê as competências sem ficha lida
    e relê as duas últimas (o Centi ainda pode reprocessar); tudo=true relê desde o início.
    buscar(matricula, 'AAAA-MM') -> Promise<fichas[]> (vazio = folha ainda não existe). Devolve {lidos, erro}. */
@@ -671,7 +683,11 @@ async function lerFichas(it,hoje,buscar,opc){
     await Promise.all(fila.slice(i,i+3).map(async k=>{
       try{
         const fs=await buscar(it.mat,k);
-        if(fs&&fs.length){const v=valorDoEvento(fs,it.evento.id);it.hist[k]={v:v.valor,f:fs.length};lidos++;}
+        if(fs&&fs.length){
+          const v=valorDosEventos(fs,eventosDe(it).map(e=>e.id));
+          it.hist[k]={v:v.valor,f:fs.length,e:v.por};lidos++;
+          eventosDe(it).forEach(e=>{if(v.nomes[e.id]&&(!e.nome||/^Evento \d+$/.test(e.nome))) e.nome=v.nomes[e.id];});   // descobre o nome de código digitado à mão
+        }
       }catch(e){erro=erro||e;}
       feitos++;if(opc.andamento) opc.andamento(feitos,fila.length);
     }));
@@ -680,7 +696,7 @@ async function lerFichas(it,hoje,buscar,opc){
   return {lidos,erro};
 }
 
-const API={lerFichas,r2,key,parseKey,somaMes,fmtKey,meses,valorDoEvento,calcular};
+const API={eventosDe,rotuloEventos,valorDosEventos,lerFichas,r2,key,parseKey,somaMes,fmtKey,meses,valorDoEvento,calcular};
 if(typeof module!=='undefined'&&module.exports) module.exports=API;
 else root.SP=API;
 })(typeof window!=='undefined'?window:globalThis);
@@ -820,7 +836,7 @@ function renderAlertaSent(){
     mostra.map(({it,r})=>{
       const falta=r.modo==='parcelas'?r.faltaParcelas+(r.faltaParcelas===1?' parcela':' parcelas'):brl(r.falta);
       const tg=r.situacao==='atencao'?'<span class="tg atencao">Atenção</span>':r.situacao==='final'?'<span class="tg final">Reta final</span>':'';
-      return '<li><span><b>'+esc(it.nome)+'</b> · evento '+esc(it.evento.id)+'</span>'+tg+'<span class="qt">Falta <b>'+esc(falta)+'</b>'+(r.mesesRest!=null?' · '+r.mesesRest+(r.mesesRest===1?' mês':' meses')+' (até '+window.SP.fmtKey(r.termino)+')':'')+'</span></li>';
+      return '<li><span><b>'+esc(it.nome)+'</b> · evento '+esc(window.SP.rotuloEventos(it))+'</span>'+tg+'<span class="qt">Falta <b>'+esc(falta)+'</b>'+(r.mesesRest!=null?' · '+r.mesesRest+(r.mesesRest===1?' mês':' meses')+' (até '+window.SP.fmtKey(r.termino)+')':'')+'</span></li>';
     }).join('')+'</ul>'+(l.length>mostra.length?'<small>Mais '+(l.length-mostra.length)+' em andamento no sistema de Sentenças.</small>':'')+
     (lido?'<small>Valores da última leitura da ficha financeira, em '+new Date(lido).toLocaleDateString('pt-BR')+'. Ela é atualizada pelo Centi quando alguém abre a sentença no sistema de Sentenças judiciais.</small>':'')+'</div>';
 }

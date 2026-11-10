@@ -142,6 +142,7 @@ dialog label{display:flex;flex-direction:column;gap:4px;font-size:13px;color:var
 dialog input,dialog select,dialog textarea{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:10px 12px;color:var(--fg);font-weight:400}
 dialog .row{display:flex;gap:8px;justify-content:flex-end;flex-wrap:wrap}
 dialog p{margin:0;font-size:14px}
+.evs{border:1px solid var(--line);border-radius:12px;padding:10px 12px;display:flex;flex-direction:column;gap:8px;margin:0}.evs legend{font-size:13px;font-weight:600;color:var(--muted);padding:0 6px}
 .sub{color:var(--muted);font-size:12.5px;margin:0}
 .fr{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:10px;align-items:end}
 .ck{flex-direction:row!important;align-items:center;gap:8px!important;color:var(--fg)!important;font-weight:500!important}
@@ -631,7 +632,8 @@ const PB=(function(){
 })();
 
 /* Motor de cálculo do acompanhamento de sentenças judiciais (penhora salarial, pensão, consignações por ordem judicial).
-   Cada acompanhamento = um servidor + um evento da folha (ex.: 913 PENHORA SALARIAL) + o total devido (em R$ ou em parcelas).
+   Cada acompanhamento = um servidor + um ou mais eventos da folha (ex.: 913 PENHORA SALARIAL; se o evento mudar no meio
+   da sentença, ex.: 644 até 10/2026 e 936 depois, informam-se os dois e o sistema soma o que cada mês descontou) + o total devido (em R$ ou em parcelas).
    Todo mês o sistema lê a ficha financeira (FP024) e guarda quanto o evento descontou naquele mês; o saldo é
    "total - tudo que já foi descontado". Não depende de tela nem de rede: é inserido na página pelo build.py e carregado
    pelos testes (tests/sentencas.test.js). Competências são textos "AAAA-MM". */
@@ -687,6 +689,17 @@ function calcular(it,hoje){
   return o;
 }
 
+/* eventos de um acompanhamento: it.eventos [{id,nome}], ou o antigo it.evento único */
+const eventosDe=it=>((it&&it.eventos&&it.eventos.length)?it.eventos:(it&&it.evento&&it.evento.id?[it.evento]:[]));
+const rotuloEventos=it=>eventosDe(it).map(e=>e.id).join(' + ');
+/* soma o que os eventos descontaram nas fichas do mês -> {valor, achou, por:{id:valor}, nomes:{id:nome}} */
+function valorDosEventos(fichas,ids){
+  const por={},nomes={};let achou=false;
+  (ids||[]).forEach(id=>{por[String(id)]=0;});
+  (fichas||[]).forEach(f=>(f.Eventos||[]).forEach(e=>{const id=String(e.Id);if(id in por){por[id]=r2(por[id]+(Number(e.Desconto)||0));achou=true;if(e.Nome) nomes[id]=e.Nome;}}));
+  return {valor:r2(Object.values(por).reduce((s,v)=>s+v,0)),achou,por,nomes};
+}
+
 /* Lê as fichas que faltam e guarda em it.hist o que o evento descontou em cada mês. Lê as competências sem ficha lida
    e relê as duas últimas (o Centi ainda pode reprocessar); tudo=true relê desde o início.
    buscar(matricula, 'AAAA-MM') -> Promise<fichas[]> (vazio = folha ainda não existe). Devolve {lidos, erro}. */
@@ -700,7 +713,11 @@ async function lerFichas(it,hoje,buscar,opc){
     await Promise.all(fila.slice(i,i+3).map(async k=>{
       try{
         const fs=await buscar(it.mat,k);
-        if(fs&&fs.length){const v=valorDoEvento(fs,it.evento.id);it.hist[k]={v:v.valor,f:fs.length};lidos++;}
+        if(fs&&fs.length){
+          const v=valorDosEventos(fs,eventosDe(it).map(e=>e.id));
+          it.hist[k]={v:v.valor,f:fs.length,e:v.por};lidos++;
+          eventosDe(it).forEach(e=>{if(v.nomes[e.id]&&(!e.nome||/^Evento \d+$/.test(e.nome))) e.nome=v.nomes[e.id];});   // descobre o nome de código digitado à mão
+        }
       }catch(e){erro=erro||e;}
       feitos++;if(opc.andamento) opc.andamento(feitos,fila.length);
     }));
@@ -709,7 +726,7 @@ async function lerFichas(it,hoje,buscar,opc){
   return {lidos,erro};
 }
 
-const API={lerFichas,r2,key,parseKey,somaMes,fmtKey,meses,valorDoEvento,calcular};
+const API={eventosDe,rotuloEventos,valorDosEventos,lerFichas,r2,key,parseKey,somaMes,fmtKey,meses,valorDoEvento,calcular};
 if(typeof module!=='undefined'&&module.exports) module.exports=API;
 else root.SP=API;
 })(typeof window!=='undefined'?window:globalThis);
@@ -748,12 +765,13 @@ function toast(m){const t=$('#toast');t.textContent=m;t.hidden=false;clearTimeou
 function carga(on,msg){const l=$('#load');if(!l) return;l.hidden=!on;document.body.classList.toggle('carregando',!!on);if(msg) $('#ldS').textContent=msg;}
 
 const LS_KEY='rhcrv-sentencas-v1',DOC='sentencas/lista';
-const {r2,key,parseKey,somaMes,fmtKey,meses,valorDoEvento,calcular}=window.SP;
+const {r2,key,parseKey,somaMes,fmtKey,meses,valorDoEvento,calcular,eventosDe,rotuloEventos}=window.SP;
 const uid=()=>'s'+Date.now().toString(36)+Math.random().toString(36).slice(2,6);
 const brl=n=>'R$ '+Number(n||0).toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2});
 const hojeKey=()=>{const d=new Date();return key(d.getFullYear(),d.getMonth()+1);};
 const ROMAN=/^(i|ii|iii|iv|v|vi|vii|viii|ix|x)$/i,MIN=new Set(['de','da','do','das','dos','e','a','o']);
 const titulo=s=>String(s||'').toLowerCase().replace(/\s+/g,' ').trim().split(' ').map((w,i)=>(i>0&&ROMAN.test(w))?w.toUpperCase():(i>0&&MIN.has(w))?w:w.replace(/(^|[-\/(])(\p{L})/gu,(m,a,b)=>a+b.toUpperCase())).join(' ');
+const rotEv=it=>eventosDe(it).map(e=>esc(e.id)+' · '+esc(titulo(e.nome))).join('<br>');
 const SIT={andamento:'Em andamento',final:'Reta final',atencao:'Atenção',quitada:'Quitada',livre:'Sem total'};
 let dbh=null,itens=[],filtro='',achados=null;
 ligarTema();
@@ -820,6 +838,7 @@ function renderAchados(){
 
 /* ---------- cadastro (novo / editar) ---------- */
 const num=s=>{s=String(s==null?'':s).replace(/[^\d,.\-]/g,'');if(!s) return 0;if(s.includes(',')) s=s.replace(/\./g,'').replace(',','.');const n=Number(s);return isFinite(n)?n:0;};
+const MESES=['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'];
 const lerMes=t=>{t=String(t||'').trim();let m=/^(\d{1,2})\s*[\/\-.]\s*(\d{4})$/.exec(t);if(m) return key(+m[2],+m[1]);m=/^(\d{4})\s*[\/\-.]\s*(\d{1,2})$/.exec(t);return m?key(+m[1],+m[2]):'';};
 const val=n=>n?String(n).replace('.',','):'';
 const JUDICIAL=/penhora|judic|pens[aã]o|aliment|senten|bloqueio|execu/i;
@@ -841,46 +860,48 @@ async function dlgForm(base,serv){
   try{if(!(await garantirSessao())) falhou='Entre com o acesso do Centi para ler a ficha.';else ev=await eventosRecentes(serv.Matricula);}
   catch(e){falhou='Não foi possível ler a ficha financeira: '+msgErro(e);}
   finally{carga(false);}
-  const it=base||{modo:'valor',desde:hojeKey(),evento:{id:'',nome:''}};
-  const lista=ev.lista.slice();
-  if(it.evento.id&&!lista.some(x=>x.id===String(it.evento.id))) lista.unshift({id:String(it.evento.id),nome:it.evento.nome,v:0});
+  const it=base||{modo:'valor',desde:hojeKey(),eventos:[]};
+  const atuais=eventosDe(it),lista=ev.lista.slice();
+  atuais.forEach(e=>{if(!lista.some(x=>x.id===String(e.id))) lista.unshift({id:String(e.id),nome:e.nome,v:0});});
+  const dp=parseKey(it.desde)||parseKey(hojeKey()),anoAtual=new Date().getFullYear(),anos=[];
+  for(let a=anoAtual+1;a>=Math.min(2005,dp.ano);a--) anos.push(a);
   const dlg=$('#dlg');
   dlg.innerHTML='<form method="dialog"><h3>'+(base?'Editar acompanhamento':'Novo acompanhamento')+'</h3>'+
     '<p><b>'+esc(titulo(serv.Nome))+'</b> · matrícula '+esc(serv.Matricula)+(serv.Cargo?' · '+esc(titulo(serv.Cargo)):'')+'</p>'+
-    (falhou?'<div class="al aviso">'+esc(falhou)+' Você ainda pode digitar o código do evento.</div>':(ev.ref?'<p class="sub">Eventos de desconto da ficha de '+fmtKey(ev.ref)+'. Escolha o da sentença.</p>':'<div class="al aviso">Não achei ficha financeira recente deste servidor. Digite o código do evento.</div>'))+
-    '<div class="fr"><label>Evento da sentença<select name="ev">'+lista.map(x=>'<option value="'+esc(x.id)+'" data-nome="'+esc(x.nome)+'"'+(String(it.evento.id)===x.id?' selected':'')+'>'+esc(x.id+' · '+x.nome+(x.v?' ('+brl(x.v)+')':''))+'</option>').join('')+'<option value="">Outro (digitar o código)…</option></select></label>'+
-    '<label data-outro hidden>Código do evento<input name="evc" inputmode="numeric" placeholder="ex.: 913"></label></div>'+
+    (falhou?'<div class="al aviso">'+esc(falhou)+' Você ainda pode digitar os códigos dos eventos.</div>':(ev.ref?'<p class="sub">Eventos de desconto da ficha de '+fmtKey(ev.ref)+'. Marque o da sentença; se o evento mudar durante a sentença, marque ou digite todos.</p>':'<div class="al aviso">Não achei ficha financeira recente deste servidor. Digite os códigos dos eventos.</div>'))+
+    '<fieldset class="evs"><legend>Eventos da sentença</legend>'+lista.map(x=>'<label class="ck"><input type="checkbox" name="evx" value="'+esc(x.id)+'" data-nome="'+esc(x.nome)+'"'+(atuais.some(e=>String(e.id)===x.id)?' checked':'')+'>'+esc(x.id+' · '+x.nome+(x.v?' ('+brl(x.v)+')':''))+'</label>').join('')+
+    '<label>Outros códigos (separe por vírgula)<input name="evc" inputmode="numeric" placeholder="ex.: 936 (evento novo que ainda não está na ficha)"></label>'+
+    '<p class="sub">Com mais de um evento, o sistema soma o que todos descontaram em cada mês. Ex.: 644 até 10/2026 e 936 de 11/2026 em diante.</p></fieldset>'+
     '<label>Descrição / processo (opcional)<input name="desc" maxlength="200" placeholder="ex.: Processo nº 0000000-00.2026.8.09.0137 · pensão alimentícia" value="'+esc(it.descricao||'')+'"></label>'+
     '<label>Como acompanhar o fim da sentença<select name="modo"><option value="valor"'+(it.modo!=='parcelas'?' selected':'')+'>Pelo valor total devido (R$)</option><option value="parcelas"'+(it.modo==='parcelas'?' selected':'')+'>Pelo número de parcelas</option></select></label>'+
     '<div class="fr" data-m="valor"><label>Valor total da sentença (R$)<input name="total" inputmode="decimal" placeholder="ex.: 25.000,00" value="'+esc(val(it.total))+'"></label></div>'+
     '<div class="fr" data-m="parcelas" hidden><label>Número de parcelas<input name="parc" inputmode="numeric" placeholder="ex.: 24" value="'+esc(it.parcelas||'')+'"></label></div>'+
-    '<label>Contar os descontos da ficha a partir de (mês/ano)<input name="desde" required inputmode="numeric" placeholder="MM/AAAA, ex.: 01/2020" value="'+esc(it.desde?fmtKey(it.desde):'')+'"></label>'+
+    '<div class="fr"><label>Contar os descontos da ficha a partir de: mês<select name="dMes">'+MESES.map((m,i)=>'<option value="'+(i+1)+'"'+(i+1===dp.mes?' selected':'')+'>'+m+'</option>').join('')+'</select></label>'+
+    '<label>Ano<select name="dAno">'+anos.map(a=>'<option value="'+a+'"'+(a===dp.ano?' selected':'')+'>'+a+'</option>').join('')+'</select></label></div>'+
     '<p class="sub">Informe o mês em que a sentença começou a ser descontada: o sistema lê a ficha financeira de cada mês desde então e calcula o que já foi pago. Quanto mais antigo o mês, mais demora a primeira leitura.</p>'+
     '<div class="row"><button class="btn" type="button" data-fechar>Cancelar</button><button class="btn primary" type="submit" value="ok">Salvar e ler a ficha</button></div></form>';
   const f=dlg.querySelector('form');
   const sync=()=>{
     f.querySelectorAll('[data-m]').forEach(x=>{x.hidden=x.dataset.m!==f.modo.value;});
-    f.querySelector('[data-outro]').hidden=f.ev.value!=='';
-    if(!f.ev.value) f.evc.required=true;else f.evc.required=false;
   };
   f.addEventListener('change',sync);sync();
   f.querySelector('[data-fechar]').addEventListener('click',()=>dlg.close());
   f.addEventListener('submit',async e=>{
     e.preventDefault();
-    const eid=(f.ev.value||f.evc.value).replace(/\D/g,'');
-    if(!eid){toast('Informe o evento.');return;}
-    const opt=f.ev.selectedOptions[0];
+    const marcados=[...f.querySelectorAll('input[name=evx]:checked')].map(x=>({id:x.value,nome:x.dataset.nome}));
+    (f.evc.value.match(/\d+/g)||[]).forEach(id=>{if(!marcados.some(e=>e.id===id)){const ant=atuais.find(e=>String(e.id)===id);marcados.push({id,nome:ant?ant.nome:'Evento '+id});}});
+    if(!marcados.length){toast('Informe ao menos um evento.');return;}
     const novo=Object.assign({},it,{
       id:it.id||uid(),mat:String(serv.Matricula),funcId:String(serv.Id||it.funcId||''),nome:titulo(serv.Nome),cargo:titulo(serv.Cargo||''),
-      evento:{id:eid,nome:f.ev.value?opt.dataset.nome:(it.evento.id===eid?it.evento.nome:'Evento '+eid)},
+      evento:marcados[0],eventos:marcados,
       descricao:f.desc.value.trim(),modo:f.modo.value,total:r2(num(f.total.value)),
-      parcelas:Math.round(num(f.parc.value)),desde:lerMes(f.desde.value),
+      parcelas:Math.round(num(f.parc.value)),desde:key(+f.dAno.value,+f.dMes.value),
       hist:it.hist||{},criado:it.criado||new Date().toISOString(),por:it.por||PB.centi.nome||''
     });
     if(!parseKey(novo.desde)){toast('Informe o mês de início.');return;}
     if(novo.modo==='valor'&&!(novo.total>0)){toast('Informe o valor total da sentença.');return;}
     if(novo.modo==='parcelas'&&!(novo.parcelas>0)){toast('Informe o número de parcelas.');return;}
-    if(base&&(base.evento.id!==novo.evento.id||base.desde!==novo.desde||base.mat!==novo.mat)) novo.hist={};   // mudou o que se lê: relê tudo
+    if(base&&(rotuloEventos(base)!==rotuloEventos(novo)||base.desde!==novo.desde||base.mat!==novo.mat)) novo.hist={};   // mudou o que se lê: relê tudo
     dlg.close();
     await lerESalvar(novo,true);
   });
@@ -917,7 +938,7 @@ function render(){
       const i=itens.indexOf(it),tot=r.modo==='valor'?brl(it.total):r.modo==='parcelas'?it.parcelas+' parc.':'—';
       const falta=r.quitada?'—':r.modo==='parcelas'?r.faltaParcelas+' parc.'+(r.falta!=null?' ('+brl(r.falta)+')':''):r.falta!=null?brl(r.falta):'—';
       const term=r.quitada?'Quitada'+(r.quitadaEm?' em '+fmtKey(r.quitadaEm):''):r.termino?fmtKey(r.termino)+' <span class="pct">('+r.mesesRest+' '+(r.mesesRest===1?'mês':'meses')+')</span>':'—';
-      return '<tr data-i="'+i+'"><td class="n"><b>'+esc(it.nome)+'</b><span>Mat. '+esc(it.mat)+'</span></td><td class="n"><b>'+esc(it.evento.id)+' · '+esc(titulo(it.evento.nome))+'</b><span>'+esc(it.descricao||'')+'</span></td>'+
+      return '<tr data-i="'+i+'"><td class="n"><b>'+esc(it.nome)+'</b><span>Mat. '+esc(it.mat)+'</span></td><td class="n"><b>'+rotEv(it)+'</b><span>'+esc(it.descricao||'')+'</span></td>'+
         '<td class="num">'+tot+'</td><td class="num">'+brl(r.pago)+(r.modo==='parcelas'?'<br><span class="pct">'+r.parcelasPagas+' parc.</span>':'')+'</td><td class="num">'+falta+'</td>'+
         '<td>'+(r.pct==null?'<span class="pct">—</span>':'<div class="prog '+r.situacao+'"><i style="width:'+r.pct.toFixed(1)+'%"></i></div><span class="pct">'+Math.floor(r.pct)+'%</span>')+'</td>'+
         '<td class="num">'+(r.parcela?brl(r.parcela):'—')+'</td><td>'+term+'</td><td><span class="tag '+r.situacao+'">'+SIT[r.situacao]+'</span></td></tr>';
@@ -931,14 +952,14 @@ function dlgItem(i){
   const h=hojeKey(),r=calcular(it,h),dlg=$('#dlg');
   const al=[];
   if(r.quitada&&r.excedeu>0) al.push(['erro','O total descontado passou do valor da sentença em '+brl(r.excedeu)+'. Confira com o jurídico e suspenda o evento no Centi.']);
-  else if(r.quitada) al.push(['ok','Sentença quitada'+(r.quitadaEm?' em '+fmtKey(r.quitadaEm):'')+'. Lembre de encerrar o evento '+it.evento.id+' no cadastro do servidor.']);
-  if(r.semDesconto) al.push(['erro','O evento '+it.evento.id+' não descontou na ficha de '+fmtKey(r.ultimo)+', mas a sentença ainda não foi quitada.']);
+  else if(r.quitada) al.push(['ok','Sentença quitada'+(r.quitadaEm?' em '+fmtKey(r.quitadaEm):'')+'. Lembre de encerrar o evento '+rotuloEventos(it)+' no cadastro do servidor.']);
+  if(r.semDesconto) al.push(['erro','O(s) evento(s) '+rotuloEventos(it)+' não descontou(aram) na ficha de '+fmtKey(r.ultimo)+', mas a sentença ainda não foi quitada.']);
   if(!r.quitada&&r.mesesRest!=null&&r.mesesRest<=2) al.push(['aviso','Reta final: faltam '+r.mesesRest+' '+(r.mesesRest===1?'mês':'meses')+'. A última parcela pode ser menor que a anterior.']);
   const pend=r.pendentes.filter(k=>k!==h);
   if(pend.length) al.push(['aviso','Sem ficha lida em: '+pend.map(fmtKey).join(', ')+'. Se a folha já foi processada, use "Reler tudo".']);
   const ks=meses(it.desde,h).reverse();
   dlg.innerHTML='<div class="dbox"><h3>'+esc(it.nome)+'</h3>'+
-    '<dl class="ficha"><dt>Matrícula</dt><dd>'+esc(it.mat)+(it.cargo?' · '+esc(it.cargo):'')+'</dd><dt>Evento</dt><dd>'+esc(it.evento.id)+' · '+esc(titulo(it.evento.nome))+'</dd>'+
+    '<dl class="ficha"><dt>Matrícula</dt><dd>'+esc(it.mat)+(it.cargo?' · '+esc(it.cargo):'')+'</dd><dt>'+(eventosDe(it).length>1?'Eventos':'Evento')+'</dt><dd>'+rotEv(it)+'</dd>'+
     (it.descricao?'<dt>Processo</dt><dd>'+esc(it.descricao)+'</dd>':'')+
     '<dt>Controle</dt><dd>'+(r.modo==='valor'?'Valor total '+brl(it.total)+(it.antes?' (já descontado antes: '+brl(it.antes)+')':''):r.modo==='parcelas'?it.parcelas+' parcelas'+(it.parcelasAntes?' ('+it.parcelasAntes+' já pagas antes)':''):'Sem total: só soma os descontos')+' · desde '+fmtKey(it.desde)+'</dd>'+
     '<dt>Última leitura</dt><dd>'+(it.lidoEm?new Date(it.lidoEm).toLocaleString('pt-BR'):'nunca')+'</dd></dl>'+
@@ -946,7 +967,7 @@ function dlgItem(i){
     (r.pct==null?'':'<div class="prog '+r.situacao+'" style="height:12px"><i style="width:'+r.pct.toFixed(1)+'%"></i></div>')+
     (al.length?'<div class="alertas">'+al.map(a=>'<div class="al '+a[0]+'">'+esc(a[1])+'</div>').join('')+'</div>':'')+
     '<div class="pw"><table class="per"><thead><tr><th>Competência</th><th class="num">Descontado no mês</th><th></th></tr></thead><tbody>'+
-    ks.map(k=>{const x=it.hist&&it.hist[k];return '<tr><td>'+fmtKey(k)+'</td><td class="num">'+(x?brl(x.v):'—')+'</td><td><small>'+(x?(x.v>0?(x.f>1?x.f+' folhas':''):'sem desconto neste mês'):(k===h?'aguardando a folha':'sem ficha lida'))+'</small></td></tr>';}).join('')+'</tbody></table></div>'+
+    ks.map(k=>{const x=it.hist&&it.hist[k];return '<tr><td>'+fmtKey(k)+'</td><td class="num">'+(x?brl(x.v):'—')+'</td><td><small>'+(x?(x.v>0?(x.e&&Object.keys(x.e).length>1?Object.entries(x.e).filter(([,v])=>v>0).map(([id,v])=>'evento '+id+': '+brl(v)).join(' · '):(x.f>1?x.f+' folhas':'')):'sem desconto neste mês'):(k===h?'aguardando a folha':'sem ficha lida'))+'</small></td></tr>';}).join('')+'</tbody></table></div>'+
     '<div class="row"><button class="btn del sm" type="button" data-del="'+i+'">Excluir</button><button class="btn sm" type="button" data-edit="'+i+'">Editar</button><button class="btn sm" type="button" data-reler="'+i+'">Reler tudo</button><button class="btn primary sm" type="button" data-atu="'+i+'">Atualizar da ficha</button><button class="btn sm" type="button" data-fechar>Fechar</button></div></div>';
   dlg.showModal();
 }
@@ -1008,7 +1029,7 @@ $('#dlg').addEventListener('click',async e=>{
   if(re){const it=itens[+re.dataset.reler];$('#dlg').close();await atualizar(it,true);dlgItem(itens.indexOf(it));return;}
   if(de){
     const it=itens[+de.dataset.del];
-    if(!confirm('Excluir o acompanhamento de '+it.nome+' (evento '+it.evento.id+')? O histórico lido será apagado deste sistema; nada muda no Centi.')) return;
+    if(!confirm('Excluir o acompanhamento de '+it.nome+' (evento '+rotuloEventos(it)+')? O histórico lido será apagado deste sistema; nada muda no Centi.')) return;
     $('#dlg').close();
     try{await gravar(it.id,null);toast('Acompanhamento excluído.');}catch(err){toast('Não foi possível excluir: '+(err.message||err));}
     render();

@@ -255,7 +255,7 @@ function renderAlertaSent(){
     mostra.map(({it,r})=>{
       const falta=r.modo==='parcelas'?r.faltaParcelas+(r.faltaParcelas===1?' parcela':' parcelas'):brl(r.falta);
       const tg=r.situacao==='atencao'?'<span class="tg atencao">Atenção</span>':r.situacao==='final'?'<span class="tg final">Reta final</span>':'';
-      return '<li><span><b>'+esc(it.nome)+'</b> · evento '+esc(it.evento.id)+'</span>'+tg+'<span class="qt">Falta <b>'+esc(falta)+'</b>'+(r.mesesRest!=null?' · '+r.mesesRest+(r.mesesRest===1?' mês':' meses')+' (até '+window.SP.fmtKey(r.termino)+')':'')+'</span></li>';
+      return '<li><span><b>'+esc(it.nome)+'</b> · evento '+esc(window.SP.rotuloEventos(it))+'</span>'+tg+'<span class="qt">Falta <b>'+esc(falta)+'</b>'+(r.mesesRest!=null?' · '+r.mesesRest+(r.mesesRest===1?' mês':' meses')+' (até '+window.SP.fmtKey(r.termino)+')':'')+'</span></li>';
     }).join('')+'</ul>'+(l.length>mostra.length?'<small>Mais '+(l.length-mostra.length)+' em andamento no sistema de Sentenças.</small>':'')+
     (lido?'<small>Valores da última leitura da ficha financeira, em '+new Date(lido).toLocaleDateString('pt-BR')+'. Ela é atualizada pelo Centi quando alguém abre a sentença no sistema de Sentenças judiciais.</small>':'')+'</div>';
 }

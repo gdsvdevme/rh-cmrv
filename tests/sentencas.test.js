@@ -108,3 +108,21 @@ test('lerFichas: erro de leitura para e não marca a hora da leitura',async()=>{
   assert.equal(r.erro.message,'Centi fora');
   assert.equal(it.lidoEm,undefined);
 });
+
+test('vários eventos: 644 até 10/2026 e 936 depois somam no mês certo',async()=>{
+  const it={mat:'1',evento:{id:'644',nome:'Evento 644'},eventos:[{id:'644',nome:'Evento 644'},{id:'936',nome:'Evento 936'}],modo:'valor',total:1000,desde:'2026-10',hist:{}};
+  const buscar=async(mat,k)=>[{Eventos:k==='2026-10'?[{Id:644,Nome:'INDENIZAÇÃO',Desconto:455.4}]:[{Id:936,Nome:'NOVO EVENTO',Desconto:455.4},{Id:52,Desconto:900}]}];
+  await S.lerFichas(it,'2026-11',buscar);
+  assert.equal(it.hist['2026-10'].v,455.4);
+  assert.equal(it.hist['2026-11'].v,455.4);
+  assert.deepEqual(it.hist['2026-11'].e,{644:0,936:455.4});
+  assert.equal(it.eventos[1].nome,'NOVO EVENTO');   // nome descoberto na ficha
+  assert.equal(S.rotuloEventos(it),'644 + 936');
+  const r=S.calcular(it,'2026-11');
+  assert.equal(r.pago,910.8);assert.equal(r.falta,89.2);
+});
+
+test('acompanhamento antigo (um só evento) continua valendo',()=>{
+  assert.deepEqual(S.eventosDe({evento:{id:'913',nome:'P'}}),[{id:'913',nome:'P'}]);
+  assert.equal(S.rotuloEventos({evento:{id:'913'}}),'913');
+});

@@ -40,29 +40,56 @@ function ymDoPdf(){
 /* chamado ao salvar o PDF carimbado: libera a baixa dos servidores que estão nele (e só deles) no mês do espelho */
 async function emitDoPdf(lista){
   const ym=ymDoPdf();if(!ym) return '';
-  const ids=[];
-  lista.forEach(g=>g.entradas.forEach(e=>{if(e.pessoa&&!e.pag.every(p=>over.get(p)==='skip')) ids.push(pessoaId(e.pessoa));}));
+  /* a lista exata do espelho carimbado, com a hierarquia como saiu em Carimbar (inclusive os movidos à mão e os não identificados) */
+  const servs=[],gs={};
+  lista.forEach(g=>{gs[g.k]={nome:g.nome,ramo:g.ramo,sort:g.sort};
+    g.entradas.forEach((e,i)=>{
+      if(e.pag.every(p=>over.get(p)==='skip')) return;
+      servs.push({n:e.nome,m:(e.pessoa&&e.pessoa.m)?String(e.pessoa.m):(e.mat||''),c:(e.pessoa&&e.pessoa.c)||e.cargo||'',k:g.k,o:i});
+    });});
   const cur=await emitLer(),r=cur[ym]||{ids:[]};
-  r.ids=[...new Set((r.ids||[]).concat(ids))];r.u=new Date().toISOString();r.p={n:PB.centi.nome||'',u:PB.centi.user||''};
+  const mapa=new Map((r.servs||[]).map(s=>[pessoaId(s),s]));                             // salvar de novo (ou por hierarquia) atualiza só quem está no PDF
+  servs.forEach(s=>mapa.set(pessoaId(s),s));
+  r.servs=[...mapa.values()];r.gs=Object.assign({},r.gs||{},gs);
+  r.ids=[...new Set((r.ids||[]).concat(servs.map(pessoaId)))];r.u=new Date().toISOString();r.p={n:PB.centi.nome||'',u:PB.centi.user||''};
   r.ref=1;                                                                               // registro feito pela referência do Centi
   cur[ym]=r;emit=cur;emitOk=true;await emitSalvar(cur);
+  $('#dMes').value=String(+ym.slice(5));$('#dAno').value=ym.slice(0,4);                // o Controle passa a apontar para o espelho que acabou de ser emitido
   return ' Espelho de '+MESES[+ym.slice(5)-1]+'/'+ym.slice(0,4)+' registrado como emitido: '+r.ids.length+' servidor'+(r.ids.length===1?'':'es')+' liberado'+(r.ids.length===1?'':'s')+' para baixa.';
 }
-let devSetoresCache=null;                       // zerado em montarHierarquia(), quando a hierarquia muda
+let devSetoresCache=null;                       // (herdado) zerado em montarHierarquia()
+/* O Controle trabalha com o MESMO espelho carimbado do mês: os servidores e a hierarquia gravados por Carimbar (devolucao/emitidos).
+   Registros antigos (só com os ids) são completados pela Hierarquia de Pessoal; mês antigo com baixas e sem registro usa a hierarquia inteira. */
+let devBaseCache={k:'',v:[]};
+function devBase(){
+  const e=devEmitido(),key=devRef+'|'+(e?(e.u||'')+'|'+(e.servs?e.servs.length:'-')+'|'+(e.ids||[]).length:(devLegado()?'L':'-'))+'|'+(pessoal?pessoal.pessoas.length:0);
+  if(devBaseCache.k===key) return devBaseCache.v;
+  let L=[];
+  if(e){
+    const vistos=new Set();
+    (e.servs||[]).forEach(s=>{const p={n:s.n,m:s.m||'',c:s.c||'',_k:s.k,o:s.o};vistos.add(pessoaId(p));L.push(p);});
+    const ids=new Set(e.ids||[]);
+    if(ids.size&&pessoal) pessoal.pessoas.forEach(p=>{if(p._k&&ids.has(pessoaId(p))&&!vistos.has(pessoaId(p))) L.push(p);});
+  }else if(devLegado()&&pessoal) L=pessoal.pessoas.filter(p=>p._k);
+  devBaseCache={k:key,v:L};return L;
+}
+function devGrupoMeta(k){
+  const e=devEmitido(),m=e&&e.gs&&e.gs[k];if(m) return m;
+  const g=GH.get(k);return g?{nome:g.nome,ramo:g.ramo,sort:g.sort}:(k==='nao'?{nome:'Não identificados na hierarquia',ramo:9,sort:'z'}:null);
+}
 function devSetores(){
-  if(devSetoresCache) return devSetoresCache;
-  const cont=new Map();
-  ((pessoal&&pessoal.pessoas)||[]).forEach(p=>{if(p._k) cont.set(p._k,(cont.get(p._k)||0)+1);});
-  return devSetoresCache=[...GH.values()].sort((a,b)=>a.ramo-b.ramo||a.sort.localeCompare(b.sort)).map(g=>({k:g.k,nome:g.nome,n:cont.get(g.k)||0}));
+  const cont=new Map();devBase().forEach(p=>cont.set(p._k,(cont.get(p._k)||0)+1));
+  return [...cont.entries()].map(([k,n])=>{const m=devGrupoMeta(k)||{nome:k,ramo:5,sort:k};return {k,nome:m.nome,n,ramo:m.ramo,sort:String(m.sort)};})
+    .sort((a,b)=>a.ramo-b.ramo||a.sort.localeCompare(b.sort));
 }
 const pessoaId=p=>p.m?String(p.m):'n:'+norm(p.n);
 function devPessoasDe(k){
-  return ((pessoal&&pessoal.pessoas)||[]).filter(p=>p._k===k).sort((a,b)=>(a.o==null?1e6:a.o)-(b.o==null?1e6:b.o)||a.n.localeCompare(b.n));
+  return devBase().filter(p=>p._k===k).sort((a,b)=>(a.o==null?1e6:a.o)-(b.o==null?1e6:b.o)||a.n.localeCompare(b.n));
 }
 const devEmitido=()=>emit[devRef]||null;
 const devLegado=()=>Object.keys(dev.baixas||{}).length+Object.keys(dev.retiradas||{}).length>0;   // mês já usado antes desta regra: segue liberado
 const devLiberado=()=>!!devEmitido()||devLegado();
-function devElegivel(p){const e=devEmitido();if(!e) return devLegado();return(e.ids||[]).includes(pessoaId(p));}
+function devElegivel(p){return true;}                                  // a base do mês já é só quem está no espelho carimbado
 const devMesNome=ym=>MESES[+ym.slice(5)-1]+'/'+ym.slice(0,4);
 function devAviso(){
   const av=$('#dAviso'),lib=devLiberado(),e=devEmitido();
@@ -143,22 +170,23 @@ function qUltimas(){
   const box=$('#qUlt');if(!box) return;
   const L=Object.entries(dev.baixas||{}).filter(([,b])=>!b.h).sort((a,b)=>(b[1].u||'').localeCompare(a[1].u||'')).slice(0,5);   // só as individuais (as em lote têm o próprio bloco)
   if(!L.length){box.innerHTML='';return;}
-  box.innerHTML='<details class="qult"'+(qUltAberto?' open':'')+'><summary>Últimas baixas <span>'+L.length+'</span></summary><ul>'+L.map(([id,b])=>{const g=GH.get(b.k);
+  box.innerHTML='<details class="qult"'+(qUltAberto?' open':'')+'><summary>Últimas baixas <span>'+L.length+'</span></summary><ul>'+L.map(([id,b])=>{const g=devGrupoMeta(b.k);
     return `<li${qNovo===id?' class="novo"':''}><span>${esc(titulo(b.n))}<small> · ${esc(g?g.nome:'')} · ${esc(brData(b.d).slice(0,5))}</small></span><button type="button" class="btn sm" data-undo="${esc(id)}">Desfazer</button></li>`;}).join('')+'</ul></details>';
 }
 function qDesenhar(){
   const box=$('#qRes');
   if(!qLista.length){box.hidden=true;return;}
-  box.innerHTML=qLista.map((p,i)=>{const b=dev.baixas[pessoaId(p)],g=GH.get(p._k);
+  box.innerHTML=qLista.map((p,i)=>{const b=dev.baixas[pessoaId(p)],g=devGrupoMeta(p._k);
     const ok=devElegivel(p)||b;
     return `<div class="qrow${i===qSel?' on':''}" data-i="${i}"><span class="qn"><b>${esc(titulo(p.n))}</b><small>${p.m?'mat. '+esc(p.m)+' · ':''}${esc(g?g.nome:'')}</small></span>${ok?'':'<span class="off">sem espelho carimbado neste mês</span>'}<label class="sw"${ok?'':' hidden'}><input type="checkbox" data-qi="${i}"${b?' checked':''} aria-label="Dar baixa no ponto de ${esc(p.n)}"><span>${b?'Baixado '+esc(brData(b.d).slice(0,5)):'Dar baixa'}</span></label></div>`;}).join('');
   box.hidden=false;
 }
 function qBuscar(){
   const t=norm($('#qBusca').value),dig=digs(t);
-  if(!pessoal){qLista=[];const box=$('#qRes');box.innerHTML='<p class="muted" style="padding:10px 12px;margin:0">Hierarquia de pessoal não carregada. Abra-a e clique em <b>Atualizar do Centi</b>.</p>';box.hidden=!t;return;}
+  const base=devBase();
+  if(!base.length){qLista=[];const box=$('#qRes');box.innerHTML='<p class="muted" style="padding:10px 12px;margin:0">Nenhum servidor com espelho carimbado neste mês.</p>';box.hidden=!t;return;}
   if(t.length<2){qLista=[];qDesenhar();return;}
-  qLista=pessoal.pessoas.filter(p=>p._k&&(norm(p.n).includes(t)||(dig.length>=3&&p.m&&digs(p.m).includes(dig))))
+  qLista=base.filter(p=>(norm(p.n).includes(t)||(dig.length>=3&&p.m&&digs(p.m).includes(dig))))
     .sort((a,b)=>(norm(b.n).startsWith(t)-norm(a.n).startsWith(t))||a.n.localeCompare(b.n,'pt-BR')).slice(0,6);
   qSel=0;qDesenhar();
 }
@@ -205,9 +233,9 @@ $('#qUlt').addEventListener('click',ev=>{
 let hK='';
 function hDesenhar(){
   const sel=$('#hSel'),L=devSetores();
-  if(!pessoal||!GH.size){
-    sel.innerHTML='<option value="">Hierarquia de pessoal não carregada</option>';sel.disabled=true;
-    $('#hInfo').textContent='Abra a Hierarquia de Pessoal e clique em Atualizar do Centi.';$('#hBaixar').disabled=true;$('#hDesfazer').hidden=true;return;
+  if(!devBase().length){
+    sel.innerHTML='<option value="">Nenhum espelho carimbado neste mês</option>';sel.disabled=true;
+    $('#hInfo').textContent='Carime e salve o espelho deste mês em Carimbar para liberar as baixas.';$('#hBaixar').disabled=true;$('#hDesfazer').hidden=true;return;
   }
   sel.disabled=false;
   const elegiveis=k=>devPessoasDe(k).filter(p=>devElegivel(p)||dev.baixas[pessoaId(p)]);
@@ -246,7 +274,7 @@ $('#hDesfazer').addEventListener('click',()=>{
 /* ---------- bloco 3: retirada do espelho impresso (qual setor veio buscar) ---------- */
 function rDesenhar(){
   const box=$('#rLista');if(!box) return;
-  if(!pessoal||!GH.size){$('#rCont').textContent='';box.innerHTML='<p class="muted" style="margin:0">Os setores vêm da Hierarquia de Pessoal. Abra-a e clique em <b>Atualizar do Centi</b>.</p>';return;}
+  if(!devBase().length){$('#rCont').textContent='';box.innerHTML='<p class="muted" style="margin:0">Os setores vêm do espelho carimbado do mês. Carime e salve o espelho em Carimbar.</p>';return;}
   const L=devSetores(),R=dev.retiradas||{},feitos=L.filter(g=>R[g.k]).length;
   $('#rCont').innerHTML='<b>'+feitos+'</b> de '+L.length+' setores já retiraram o espelho.';
   box.innerHTML=L.map(g=>{const r=R[g.k];
@@ -293,10 +321,9 @@ function devPedirReferencia(){
 $('#rfMes').addEventListener('change',rfAtualizar);$('#rfAno').addEventListener('input',rfAtualizar);
 $('#rfOk').addEventListener('click',async()=>{
   const a=+$('#rfAno').value,m=$('#rfMes').value;if(!(a>=2000&&a<=2100)) return;
-  const mudou=$('#dMes').value!==m||+$('#dAno').value!==a;
   $('#dMes').value=m;$('#dAno').value=a;
   $('#dlgRef').close();
-  if(mudou) await devCarregar();
+  if(devKey()!==devRef) await devCarregar();                                // carrega o mês escolhido se ainda não é o carregado
   devOk=true;devDesenhar();
   toast('Referência confirmada: '+MESES[+m-1]+'/'+a+'.');
 });

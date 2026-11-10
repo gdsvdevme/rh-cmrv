@@ -813,6 +813,7 @@ function renderAchados(){
 
 /* ---------- cadastro (novo / editar) ---------- */
 const num=s=>{s=String(s==null?'':s).replace(/[^\d,.\-]/g,'');if(!s) return 0;if(s.includes(',')) s=s.replace(/\./g,'').replace(',','.');const n=Number(s);return isFinite(n)?n:0;};
+const lerMes=t=>{t=String(t||'').trim();let m=/^(\d{1,2})\s*[\/\-.]\s*(\d{4})$/.exec(t);if(m) return key(+m[2],+m[1]);m=/^(\d{4})\s*[\/\-.]\s*(\d{1,2})$/.exec(t);return m?key(+m[1],+m[2]):'';};
 const val=n=>n?String(n).replace('.',','):'';
 const JUDICIAL=/penhora|judic|pens[aã]o|aliment|senten|bloqueio|execu/i;
 async function eventosRecentes(mat){   // eventos de desconto da ficha mais recente (hoje ou até 3 meses atrás)
@@ -844,12 +845,10 @@ async function dlgForm(base,serv){
     '<label data-outro hidden>Código do evento<input name="evc" inputmode="numeric" placeholder="ex.: 913"></label></div>'+
     '<label>Descrição / processo (opcional)<input name="desc" maxlength="200" placeholder="ex.: Processo nº 0000000-00.2026.8.09.0137 · pensão alimentícia" value="'+esc(it.descricao||'')+'"></label>'+
     '<label>Como acompanhar o fim da sentença<select name="modo"><option value="valor"'+(it.modo!=='parcelas'?' selected':'')+'>Pelo valor total devido (R$)</option><option value="parcelas"'+(it.modo==='parcelas'?' selected':'')+'>Pelo número de parcelas</option></select></label>'+
-    '<div class="fr" data-m="valor"><label>Valor total da sentença (R$)<input name="total" inputmode="decimal" placeholder="ex.: 25.000,00" value="'+esc(val(it.total))+'"></label>'+
-    '<label>Já descontado antes (R$)<input name="antes" inputmode="decimal" placeholder="0,00" value="'+esc(val(it.antes))+'"></label></div>'+
-    '<div class="fr" data-m="parcelas" hidden><label>Número de parcelas<input name="parc" inputmode="numeric" placeholder="ex.: 24" value="'+esc(it.parcelas||'')+'"></label>'+
-    '<label>Parcelas já pagas antes<input name="parcAntes" inputmode="numeric" placeholder="0" value="'+esc(it.parcelasAntes||'')+'"></label></div>'+
-    '<label>Contar os descontos da ficha a partir de<input name="desde" type="month" required value="'+esc(it.desde)+'"></label>'+
-    '<p class="sub">Dica: se a sentença já vinha sendo descontada, informe em "Já descontado antes" o que foi pago até o mês anterior a esta data, ou escolha um mês de início mais antigo para o sistema ler as fichas passadas.</p>'+
+    '<div class="fr" data-m="valor"><label>Valor total da sentença (R$)<input name="total" inputmode="decimal" placeholder="ex.: 25.000,00" value="'+esc(val(it.total))+'"></label></div>'+
+    '<div class="fr" data-m="parcelas" hidden><label>Número de parcelas<input name="parc" inputmode="numeric" placeholder="ex.: 24" value="'+esc(it.parcelas||'')+'"></label></div>'+
+    '<label>Contar os descontos da ficha a partir de (mês/ano)<input name="desde" required inputmode="numeric" placeholder="MM/AAAA, ex.: 01/2020" value="'+esc(it.desde?fmtKey(it.desde):'')+'"></label>'+
+    '<p class="sub">Informe o mês em que a sentença começou a ser descontada: o sistema lê a ficha financeira de cada mês desde então e calcula o que já foi pago. Quanto mais antigo o mês, mais demora a primeira leitura.</p>'+
     '<div class="row"><button class="btn" type="button" data-fechar>Cancelar</button><button class="btn primary" type="submit" value="ok">Salvar e ler a ficha</button></div></form>';
   const f=dlg.querySelector('form');
   const sync=()=>{
@@ -867,8 +866,8 @@ async function dlgForm(base,serv){
     const novo=Object.assign({},it,{
       id:it.id||uid(),mat:String(serv.Matricula),funcId:String(serv.Id||it.funcId||''),nome:titulo(serv.Nome),cargo:titulo(serv.Cargo||''),
       evento:{id:eid,nome:f.ev.value?opt.dataset.nome:(it.evento.id===eid?it.evento.nome:'Evento '+eid)},
-      descricao:f.desc.value.trim(),modo:f.modo.value,total:r2(num(f.total.value)),antes:r2(num(f.antes.value)),
-      parcelas:Math.round(num(f.parc.value)),parcelasAntes:Math.round(num(f.parcAntes.value)),desde:f.desde.value,
+      descricao:f.desc.value.trim(),modo:f.modo.value,total:r2(num(f.total.value)),
+      parcelas:Math.round(num(f.parc.value)),desde:lerMes(f.desde.value),
       hist:it.hist||{},criado:it.criado||new Date().toISOString(),por:it.por||PB.centi.nome||''
     });
     if(!parseKey(novo.desde)){toast('Informe o mês de início.');return;}

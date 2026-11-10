@@ -770,6 +770,17 @@ const hojeKey=()=>{const d=new Date();return key(d.getFullYear(),d.getMonth()+1)
 const ROMAN=/^(i|ii|iii|iv|v|vi|vii|viii|ix|x)$/i,MIN=new Set(['de','da','do','das','dos','e','a','o']);
 const titulo=s=>String(s||'').toLowerCase().replace(/\s+/g,' ').trim().split(' ').map((w,i)=>(i>0&&ROMAN.test(w))?w.toUpperCase():(i>0&&MIN.has(w))?w:w.replace(/(^|[-\/(])(\p{L})/gu,(m,a,b)=>a+b.toUpperCase())).join(' ');
 const rotEv=it=>eventosDe(it).map(e=>esc(e.id)+' · '+esc(titulo(e.nome))).join('<br>');
+/* na lista: só o(s) evento(s) que descontaram no mês mais recente com desconto (os dois, se ambos descontaram nesse mês); sem leitura ainda, mostra todos */
+function eventosAtuais(it){
+  const todos=eventosDe(it),hist=it.hist||{};
+  for(const k of Object.keys(hist).sort().reverse()){
+    const e=hist[k].e;if(!e) continue;
+    const ids=todos.filter(x=>Number(e[x.id])>0);
+    if(ids.length) return ids;
+  }
+  return todos;
+}
+const rotEvAtual=it=>eventosAtuais(it).map(e=>esc(e.id)+' · '+esc(titulo(e.nome))).join('<br>');
 const SIT={andamento:'Em andamento',final:'Reta final',atencao:'Atenção',quitada:'Quitada',livre:'Sem total'};
 let dbh=null,itens=[],filtro='',achados=null;
 ligarTema();
@@ -936,7 +947,7 @@ function render(){
       const i=itens.indexOf(it),tot=r.modo==='valor'?brl(it.total):r.modo==='parcelas'?it.parcelas+' parc.':'—';
       const falta=r.quitada?'—':r.modo==='parcelas'?r.faltaParcelas+' parc.'+(r.falta!=null?' ('+brl(r.falta)+')':''):r.falta!=null?brl(r.falta):'—';
       const term=r.quitada?'Quitada'+(r.quitadaEm?' em '+fmtKey(r.quitadaEm):''):r.termino?fmtKey(r.termino)+' <span class="pct">('+r.mesesRest+' '+(r.mesesRest===1?'mês':'meses')+')</span>':'—';
-      return '<tr data-i="'+i+'"><td class="n"><b>'+esc(it.nome)+'</b><span>Mat. '+esc(it.mat)+'</span></td><td class="n"><b>'+rotEv(it)+'</b><span>'+esc(it.descricao||'')+'</span></td>'+
+      return '<tr data-i="'+i+'"><td class="n"><b>'+esc(it.nome)+'</b><span>Mat. '+esc(it.mat)+'</span></td><td class="n"><b>'+rotEvAtual(it)+'</b><span>'+esc(it.descricao||'')+'</span></td>'+
         '<td class="num">'+tot+'</td><td class="num">'+brl(r.pago)+(r.modo==='parcelas'?'<br><span class="pct">'+r.parcelasPagas+' parc.</span>':'')+'</td><td class="num">'+falta+'</td>'+
         '<td>'+(r.pct==null?'<span class="pct">—</span>':'<div class="prog '+r.situacao+'"><i style="width:'+r.pct.toFixed(1)+'%"></i></div><span class="pct">'+Math.floor(r.pct)+'%</span>')+'</td>'+
         '<td class="num">'+(r.parcela?brl(r.parcela):'—')+'</td><td>'+term+'</td><td><span class="tag '+r.situacao+'">'+SIT[r.situacao]+'</span></td></tr>';

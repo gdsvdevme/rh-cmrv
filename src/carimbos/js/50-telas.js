@@ -12,6 +12,7 @@ function cartaoEsp(k,t){
 }
 function telaEsp(){
   const h=location.hash.replace('#',''),t=TELAS_ESP[h]?h:'';
+  if(t!=='devolucao') devOk=false;                                    // sair da tela de devolução desfaz a confirmação: a próxima entrada pede de novo
   $('#menuEsp').hidden=!!t;$('#crumbEsp').hidden=!t;
   $('#abaCar').hidden=t!=='carimbar';$('#abaDev').hidden=t!=='devolucao';
   $('#mainEsp').classList.toggle('sub',!!t);
@@ -21,7 +22,7 @@ function telaEsp(){
     return;
   }
   $('#crumbEsp').innerHTML='<a href="#">← Espelhos de ponto</a><h2>'+esc(TELAS_ESP[t].nome)+'</h2>';
-  if(t==='devolucao') devDesenhar();else if(pdfDoc) mostrar(cur);
+  if(t==='devolucao'){devDesenhar();if(devPronto&&!devOk) devPedirReferencia();}else if(pdfDoc) mostrar(cur);
 }
 window.addEventListener('hashchange',()=>{telaEsp();window.scrollTo(0,0);});
 

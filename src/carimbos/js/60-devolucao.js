@@ -4,6 +4,7 @@ const devKey=()=>{const m=+$('#dMes').value,a=+$('#dAno').value;return(a>=2000&&
 const hoje=()=>{const d=new Date();return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');};
 const brData=iso=>/^\d{4}-\d{2}-\d{2}$/.test(iso||'')?iso.slice(8)+'/'+iso.slice(5,7)+'/'+iso.slice(0,4):'';
 /* espelhos emitidos (carimbados e salvos em Carimbar), por mês do espelho: {'2026-11':{ids:[...],u,p}}; só eles liberam baixa e retirada */
+let devOk=false,devPronto=false;                                         // devOk: referência confirmada nesta entrada na tela; devPronto: dados iniciais carregados
 let emit={},emitOk=false;
 async function emitLer(){
   let j=null;
@@ -52,7 +53,8 @@ function devElegivel(p){const e=devEmitido();if(!e) return devLegado();return(e.
 const devMesNome=ym=>MESES[+ym.slice(5)-1]+'/'+ym.slice(0,4);
 function devAviso(){
   const av=$('#dAviso'),lib=devLiberado(),e=devEmitido();
-  $('#abaDev').classList.toggle('bloqueado',!lib);
+  $('#abaDev').classList.toggle('bloqueado',!lib);$('#abaDev').classList.toggle('semref',!devOk);
+  const cf=$('#dConf');cf.className='refconf '+(devOk?'ok':'nao');cf.textContent=devOk?'✓ Referência confirmada':'Confirmar referência';cf.onclick=devOk?null:devPedirReferencia;
   $('#dEmit').textContent=e?'Espelho emitido em '+new Date(e.u).toLocaleDateString('pt-BR')+' · '+(e.ids||[]).length+' servidores':'';
   if(lib){av.hidden=true;return;}
   const ms=Object.keys(emit).sort().reverse().slice(0,4);
@@ -149,6 +151,7 @@ function qBuscar(){
 }
 /* a baixa só acontece ao ligar o interruptor do servidor (clicar na linha não faz nada); desligar desfaz */
 async function qToggle(i,marcar){
+  if(!devGuardaRef()){qDesenhar();return;}
   const p=qLista[i];if(!p) return;
   const id=pessoaId(p);
   if(!marcar){
@@ -181,6 +184,7 @@ $('#qBusca').addEventListener('keydown',ev=>{
 $('#qUlt').addEventListener('toggle',ev=>{if(ev.target.tagName==='DETAILS') qUltAberto=ev.target.open;},true);
 $('#qUlt').addEventListener('click',ev=>{
   const b=ev.target.closest('[data-undo]');if(!b) return;
+  if(!devGuardaRef()) return;
   devDesfazer(b.dataset.undo);qNovo='';qUltimas();hDesenhar();
 });
 
@@ -205,6 +209,7 @@ function hDesenhar(){
 }
 $('#hSel').addEventListener('change',ev=>{hK=ev.target.value;hDesenhar();});
 $('#hBaixar').addEventListener('click',async()=>{
+  if(!devGuardaRef()) return;
   const k=hK;if(!k) return;
   if(!devLiberado()){toast('O espelho deste mês ainda não foi carimbado e salvo.');return;}
   const g=devSetores().find(x=>x.k===k),P=devPessoasDe(k).filter(p=>devElegivel(p)&&!dev.baixas[pessoaId(p)]);
@@ -216,6 +221,7 @@ $('#hBaixar').addEventListener('click',async()=>{
   toast('Baixa registrada: '+P.length+' servidor'+(P.length===1?'':'es')+' de '+g.nome+'.');
 });
 $('#hDesfazer').addEventListener('click',()=>{
+  if(!devGuardaRef()) return;
   const k=hK;if(!k) return;
   const g=devSetores().find(x=>x.k===k),B=devPessoasDe(k).filter(p=>dev.baixas[pessoaId(p)]);
   if(!g||!B.length) return;
@@ -236,6 +242,7 @@ function rDesenhar(){
 }
 $('#rLista').addEventListener('change',async ev=>{
   const t=ev.target,row=t.closest('.rrow');if(!row) return;
+  if(!devGuardaRef()){rDesenhar();return;}
   const k=row.dataset.k;
   if(t.dataset.rd!==undefined){                                         // ajustar a data
     if(t.value&&dev.retiradas[k]){dev.retiradas[k].d=t.value;dev.retiradas[k].u=new Date().toISOString();devAgendar();}
@@ -250,6 +257,39 @@ $('#rLista').addEventListener('change',async ev=>{
   }else delete dev.retiradas[k];
   devAgendar();rDesenhar();
 });
+/* ---------- confirmação da referência: pedida a cada entrada na tela, antes de qualquer baixa ---------- */
+function devGuardaRef(){
+  if(devOk) return true;
+  toast('Confirme a referência (mês e ano) antes de dar baixa.');devPedirReferencia();return false;
+}
+function rfAtualizar(){
+  const a=+$('#rfAno').value,m=+$('#rfMes').value,box=$('#rfInfo');
+  const ym=(a>=2000&&a<=2100)?a+'-'+String(m).padStart(2,'0'):'',e=ym?emit[ym]:null,ms=Object.keys(emit).sort(),ult=ms[ms.length-1];
+  if(!ym){box.className='aviso';box.textContent='Informe um ano válido.';$('#rfOk').disabled=true;return;}
+  $('#rfOk').disabled=false;
+  const outro=ult&&ult!==ym?` O último espelho emitido foi o de <b>${esc(devMesNome(ult))}</b>.`:'';
+  if(e){box.className='ok';box.innerHTML='Espelho de <b>'+esc(devMesNome(ym))+'</b> emitido em '+esc(new Date(e.u).toLocaleDateString('pt-BR'))+' · '+(e.ids||[]).length+' servidores.'+outro;}
+  else{box.className='aviso';box.innerHTML='O espelho de <b>'+esc(devMesNome(ym))+'</b> ainda não foi carimbado e salvo (ou o mês é antigo, de antes deste controle). Se for um mês novo, não será possível dar baixa.'+outro;}
+}
+function devPedirReferencia(){
+  const d=$('#dlgRef');if(d.open) return;
+  $('#rfMes').innerHTML=MESES.map((m,i)=>'<option value="'+(i+1)+'">'+m+'</option>').join('');
+  $('#rfMes').value=$('#dMes').value;$('#rfAno').value=$('#dAno').value;
+  rfAtualizar();d.showModal();
+}
+$('#rfMes').addEventListener('change',rfAtualizar);$('#rfAno').addEventListener('input',rfAtualizar);
+$('#rfOk').addEventListener('click',async()=>{
+  const a=+$('#rfAno').value,m=$('#rfMes').value;if(!(a>=2000&&a<=2100)) return;
+  const mudou=$('#dMes').value!==m||+$('#dAno').value!==a;
+  $('#dMes').value=m;$('#dAno').value=a;
+  $('#dlgRef').close();
+  if(mudou) await devCarregar();
+  devOk=true;devDesenhar();
+  toast('Referência confirmada: '+MESES[+m-1]+'/'+a+'.');
+});
+$('#rfVoltar').addEventListener('click',()=>{$('#dlgRef').close();location.hash='';});                  // desistiu: volta ao menu
+$('#dlgRef').addEventListener('cancel',ev=>{ev.preventDefault();});                                    // Esc não fecha sem confirmar
+
 /* ---------- relatório do mês (aba lateral): abre o relatório e recolhe os blocos de baixa ---------- */
 let relFiltro='todos',relBusca='';const relAberto=new Set();
 function relDados(){
@@ -295,7 +335,8 @@ $('#relCsv').addEventListener('click',()=>{
   document.body.appendChild(a);a.click();setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove();},4000);
 });
 $('#dAviso').addEventListener('click',ev=>{const b=ev.target.closest('[data-ym]');if(!b) return;$('#dMes').value=String(+b.dataset.ym.slice(5));$('#dAno').value=b.dataset.ym.slice(0,4);devCarregar();});
-$('#dMes').addEventListener('change',devCarregar);$('#dAno').addEventListener('change',devCarregar);
+const devTrocouRef=()=>{devOk=false;devCarregar().then(devPedirReferencia);};   // escolher outro mês também pede confirmação
+$('#dMes').addEventListener('change',devTrocouRef);$('#dAno').addEventListener('change',devTrocouRef);
 window.addEventListener('pagehide',devSalvar);
 (function(){
   const a=new Date();                                                     // padrão: mês atual (troque se quiser outro)

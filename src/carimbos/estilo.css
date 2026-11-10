@@ -151,6 +151,16 @@ main.sub .grid,main.sub .devwrap{margin-top:12px}
 @media (max-width:900px){.relh{grid-template-columns:1fr auto}.relh .prog{grid-column:1/-1;order:3}}
 #dAviso{margin:0;font-size:13.5px}
 #dAviso a{color:inherit}
+.refconf{font-size:12.5px;font-weight:700;padding:3px 10px;border-radius:99px;white-space:nowrap}
+.refconf.ok{background:var(--ok-bg);color:var(--ok)}
+.refconf.nao{background:var(--warn-bg);color:var(--warn);border:0;cursor:pointer}
+.semref .panel,.semref .reltab{opacity:.45;pointer-events:none;user-select:none}
+.refbig{justify-content:flex-start!important;gap:10px}
+.refbig select,.refbig input{font-size:1.25rem;font-weight:700;padding:8px 12px}
+.refbig input{width:110px}
+#rfInfo{font-size:13.5px;border-radius:10px;padding:9px 12px}
+#rfInfo.ok{background:var(--ok-bg);color:var(--ok)}
+#rfInfo.aviso{background:var(--warn-bg);color:var(--warn)}
 #dAviso .mm{display:inline-flex;gap:6px;flex-wrap:wrap;margin-top:6px}
 #dAviso .mm button{border:1px solid currentColor;background:transparent;color:inherit;border-radius:99px;padding:2px 11px;font-weight:700;cursor:pointer}
 .bloqueado .panel{opacity:.5;pointer-events:none;user-select:none}

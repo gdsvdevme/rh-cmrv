@@ -84,6 +84,7 @@
     <select id="dMes" aria-label="Mês"></select>
     <input id="dAno" type="number" min="2000" max="2100" aria-label="Ano" style="width:84px">
     <span class="muted" id="dEmit"></span>
+    <span class="refconf" id="dConf"></span>
     <button type="button" class="reltab" id="relBtn" aria-expanded="false" aria-controls="dRel">Ver relatório</button>
   </div>
   <div class="banner" id="dAviso" hidden></div>
@@ -114,6 +115,13 @@
 </section>
 </div></main>
 <dialog id="dlg"></dialog>
+<dialog id="dlgRef" aria-labelledby="rfT"><form method="dialog" autocomplete="off" onsubmit="return false">
+  <h3 id="rfT">Confirme a referência</h3>
+  <p style="margin:0">Você vai controlar a devolução dos espelhos de ponto de:</p>
+  <div class="row refbig"><select id="rfMes" aria-label="Mês da referência"></select><input id="rfAno" type="number" min="2000" max="2100" aria-label="Ano da referência"></div>
+  <div id="rfInfo"></div>
+  <div class="row"><button type="button" class="btn" id="rfVoltar">Voltar</button><button type="button" class="btn primary" id="rfOk">Confirmar referência</button></div>
+</form></dialog>
 <div id="load" role="status" aria-live="polite" hidden><div class="ld-box"><div class="ld-spin" aria-hidden="true"></div><b
   id="ldT">Carregando…</b><span id="ldS"></span><div class="ld-bar" aria-hidden="true"><i id="ldB"></i></div></div></div>
 <div id="toast" hidden></div>

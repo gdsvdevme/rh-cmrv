@@ -239,6 +239,16 @@ main.sub .grid,main.sub .devwrap{margin-top:12px}
 @media (max-width:900px){.relh{grid-template-columns:1fr auto}.relh .prog{grid-column:1/-1;order:3}}
 #dAviso{margin:0;font-size:13.5px}
 #dAviso a{color:inherit}
+.refconf{font-size:12.5px;font-weight:700;padding:3px 10px;border-radius:99px;white-space:nowrap}
+.refconf.ok{background:var(--ok-bg);color:var(--ok)}
+.refconf.nao{background:var(--warn-bg);color:var(--warn);border:0;cursor:pointer}
+.semref .panel,.semref .reltab{opacity:.45;pointer-events:none;user-select:none}
+.refbig{justify-content:flex-start!important;gap:10px}
+.refbig select,.refbig input{font-size:1.25rem;font-weight:700;padding:8px 12px}
+.refbig input{width:110px}
+#rfInfo{font-size:13.5px;border-radius:10px;padding:9px 12px}
+#rfInfo.ok{background:var(--ok-bg);color:var(--ok)}
+#rfInfo.aviso{background:var(--warn-bg);color:var(--warn)}
 #dAviso .mm{display:inline-flex;gap:6px;flex-wrap:wrap;margin-top:6px}
 #dAviso .mm button{border:1px solid currentColor;background:transparent;color:inherit;border-radius:99px;padding:2px 11px;font-weight:700;cursor:pointer}
 .bloqueado .panel{opacity:.5;pointer-events:none;user-select:none}
@@ -483,6 +493,7 @@ input,select,textarea{border-radius:12px}
     <select id="dMes" aria-label="Mês"></select>
     <input id="dAno" type="number" min="2000" max="2100" aria-label="Ano" style="width:84px">
     <span class="muted" id="dEmit"></span>
+    <span class="refconf" id="dConf"></span>
     <button type="button" class="reltab" id="relBtn" aria-expanded="false" aria-controls="dRel">Ver relatório</button>
   </div>
   <div class="banner" id="dAviso" hidden></div>
@@ -513,6 +524,13 @@ input,select,textarea{border-radius:12px}
 </section>
 </div></main>
 <dialog id="dlg"></dialog>
+<dialog id="dlgRef" aria-labelledby="rfT"><form method="dialog" autocomplete="off" onsubmit="return false">
+  <h3 id="rfT">Confirme a referência</h3>
+  <p style="margin:0">Você vai controlar a devolução dos espelhos de ponto de:</p>
+  <div class="row refbig"><select id="rfMes" aria-label="Mês da referência"></select><input id="rfAno" type="number" min="2000" max="2100" aria-label="Ano da referência"></div>
+  <div id="rfInfo"></div>
+  <div class="row"><button type="button" class="btn" id="rfVoltar">Voltar</button><button type="button" class="btn primary" id="rfOk">Confirmar referência</button></div>
+</form></dialog>
 <div id="load" role="status" aria-live="polite" hidden><div class="ld-box"><div class="ld-spin" aria-hidden="true"></div><b
   id="ldT">Carregando…</b><span id="ldS"></span><div class="ld-bar" aria-hidden="true"><i id="ldB"></i></div></div></div>
 <div id="toast" hidden></div>
@@ -1436,6 +1454,7 @@ function cartaoEsp(k,t){
 }
 function telaEsp(){
   const h=location.hash.replace('#',''),t=TELAS_ESP[h]?h:'';
+  if(t!=='devolucao') devOk=false;                                    // sair da tela de devolução desfaz a confirmação: a próxima entrada pede de novo
   $('#menuEsp').hidden=!!t;$('#crumbEsp').hidden=!t;
   $('#abaCar').hidden=t!=='carimbar';$('#abaDev').hidden=t!=='devolucao';
   $('#mainEsp').classList.toggle('sub',!!t);
@@ -1445,7 +1464,7 @@ function telaEsp(){
     return;
   }
   $('#crumbEsp').innerHTML='<a href="#">← Espelhos de ponto</a><h2>'+esc(TELAS_ESP[t].nome)+'</h2>';
-  if(t==='devolucao') devDesenhar();else if(pdfDoc) mostrar(cur);
+  if(t==='devolucao'){devDesenhar();if(devPronto&&!devOk) devPedirReferencia();}else if(pdfDoc) mostrar(cur);
 }
 window.addEventListener('hashchange',()=>{telaEsp();window.scrollTo(0,0);});
 
@@ -1455,6 +1474,7 @@ const devKey=()=>{const m=+$('#dMes').value,a=+$('#dAno').value;return(a>=2000&&
 const hoje=()=>{const d=new Date();return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');};
 const brData=iso=>/^\d{4}-\d{2}-\d{2}$/.test(iso||'')?iso.slice(8)+'/'+iso.slice(5,7)+'/'+iso.slice(0,4):'';
 /* espelhos emitidos (carimbados e salvos em Carimbar), por mês do espelho: {'2026-11':{ids:[...],u,p}}; só eles liberam baixa e retirada */
+let devOk=false,devPronto=false;                                         // devOk: referência confirmada nesta entrada na tela; devPronto: dados iniciais carregados
 let emit={},emitOk=false;
 async function emitLer(){
   let j=null;
@@ -1503,7 +1523,8 @@ function devElegivel(p){const e=devEmitido();if(!e) return devLegado();return(e.
 const devMesNome=ym=>MESES[+ym.slice(5)-1]+'/'+ym.slice(0,4);
 function devAviso(){
   const av=$('#dAviso'),lib=devLiberado(),e=devEmitido();
-  $('#abaDev').classList.toggle('bloqueado',!lib);
+  $('#abaDev').classList.toggle('bloqueado',!lib);$('#abaDev').classList.toggle('semref',!devOk);
+  const cf=$('#dConf');cf.className='refconf '+(devOk?'ok':'nao');cf.textContent=devOk?'✓ Referência confirmada':'Confirmar referência';cf.onclick=devOk?null:devPedirReferencia;
   $('#dEmit').textContent=e?'Espelho emitido em '+new Date(e.u).toLocaleDateString('pt-BR')+' · '+(e.ids||[]).length+' servidores':'';
   if(lib){av.hidden=true;return;}
   const ms=Object.keys(emit).sort().reverse().slice(0,4);
@@ -1600,6 +1621,7 @@ function qBuscar(){
 }
 /* a baixa só acontece ao ligar o interruptor do servidor (clicar na linha não faz nada); desligar desfaz */
 async function qToggle(i,marcar){
+  if(!devGuardaRef()){qDesenhar();return;}
   const p=qLista[i];if(!p) return;
   const id=pessoaId(p);
   if(!marcar){
@@ -1632,6 +1654,7 @@ $('#qBusca').addEventListener('keydown',ev=>{
 $('#qUlt').addEventListener('toggle',ev=>{if(ev.target.tagName==='DETAILS') qUltAberto=ev.target.open;},true);
 $('#qUlt').addEventListener('click',ev=>{
   const b=ev.target.closest('[data-undo]');if(!b) return;
+  if(!devGuardaRef()) return;
   devDesfazer(b.dataset.undo);qNovo='';qUltimas();hDesenhar();
 });
 
@@ -1656,6 +1679,7 @@ function hDesenhar(){
 }
 $('#hSel').addEventListener('change',ev=>{hK=ev.target.value;hDesenhar();});
 $('#hBaixar').addEventListener('click',async()=>{
+  if(!devGuardaRef()) return;
   const k=hK;if(!k) return;
   if(!devLiberado()){toast('O espelho deste mês ainda não foi carimbado e salvo.');return;}
   const g=devSetores().find(x=>x.k===k),P=devPessoasDe(k).filter(p=>devElegivel(p)&&!dev.baixas[pessoaId(p)]);
@@ -1667,6 +1691,7 @@ $('#hBaixar').addEventListener('click',async()=>{
   toast('Baixa registrada: '+P.length+' servidor'+(P.length===1?'':'es')+' de '+g.nome+'.');
 });
 $('#hDesfazer').addEventListener('click',()=>{
+  if(!devGuardaRef()) return;
   const k=hK;if(!k) return;
   const g=devSetores().find(x=>x.k===k),B=devPessoasDe(k).filter(p=>dev.baixas[pessoaId(p)]);
   if(!g||!B.length) return;
@@ -1687,6 +1712,7 @@ function rDesenhar(){
 }
 $('#rLista').addEventListener('change',async ev=>{
   const t=ev.target,row=t.closest('.rrow');if(!row) return;
+  if(!devGuardaRef()){rDesenhar();return;}
   const k=row.dataset.k;
   if(t.dataset.rd!==undefined){                                         // ajustar a data
     if(t.value&&dev.retiradas[k]){dev.retiradas[k].d=t.value;dev.retiradas[k].u=new Date().toISOString();devAgendar();}
@@ -1701,6 +1727,39 @@ $('#rLista').addEventListener('change',async ev=>{
   }else delete dev.retiradas[k];
   devAgendar();rDesenhar();
 });
+/* ---------- confirmação da referência: pedida a cada entrada na tela, antes de qualquer baixa ---------- */
+function devGuardaRef(){
+  if(devOk) return true;
+  toast('Confirme a referência (mês e ano) antes de dar baixa.');devPedirReferencia();return false;
+}
+function rfAtualizar(){
+  const a=+$('#rfAno').value,m=+$('#rfMes').value,box=$('#rfInfo');
+  const ym=(a>=2000&&a<=2100)?a+'-'+String(m).padStart(2,'0'):'',e=ym?emit[ym]:null,ms=Object.keys(emit).sort(),ult=ms[ms.length-1];
+  if(!ym){box.className='aviso';box.textContent='Informe um ano válido.';$('#rfOk').disabled=true;return;}
+  $('#rfOk').disabled=false;
+  const outro=ult&&ult!==ym?` O último espelho emitido foi o de <b>${esc(devMesNome(ult))}</b>.`:'';
+  if(e){box.className='ok';box.innerHTML='Espelho de <b>'+esc(devMesNome(ym))+'</b> emitido em '+esc(new Date(e.u).toLocaleDateString('pt-BR'))+' · '+(e.ids||[]).length+' servidores.'+outro;}
+  else{box.className='aviso';box.innerHTML='O espelho de <b>'+esc(devMesNome(ym))+'</b> ainda não foi carimbado e salvo (ou o mês é antigo, de antes deste controle). Se for um mês novo, não será possível dar baixa.'+outro;}
+}
+function devPedirReferencia(){
+  const d=$('#dlgRef');if(d.open) return;
+  $('#rfMes').innerHTML=MESES.map((m,i)=>'<option value="'+(i+1)+'">'+m+'</option>').join('');
+  $('#rfMes').value=$('#dMes').value;$('#rfAno').value=$('#dAno').value;
+  rfAtualizar();d.showModal();
+}
+$('#rfMes').addEventListener('change',rfAtualizar);$('#rfAno').addEventListener('input',rfAtualizar);
+$('#rfOk').addEventListener('click',async()=>{
+  const a=+$('#rfAno').value,m=$('#rfMes').value;if(!(a>=2000&&a<=2100)) return;
+  const mudou=$('#dMes').value!==m||+$('#dAno').value!==a;
+  $('#dMes').value=m;$('#dAno').value=a;
+  $('#dlgRef').close();
+  if(mudou) await devCarregar();
+  devOk=true;devDesenhar();
+  toast('Referência confirmada: '+MESES[+m-1]+'/'+a+'.');
+});
+$('#rfVoltar').addEventListener('click',()=>{$('#dlgRef').close();location.hash='';});                  // desistiu: volta ao menu
+$('#dlgRef').addEventListener('cancel',ev=>{ev.preventDefault();});                                    // Esc não fecha sem confirmar
+
 /* ---------- relatório do mês (aba lateral): abre o relatório e recolhe os blocos de baixa ---------- */
 let relFiltro='todos',relBusca='';const relAberto=new Set();
 function relDados(){
@@ -1746,7 +1805,8 @@ $('#relCsv').addEventListener('click',()=>{
   document.body.appendChild(a);a.click();setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove();},4000);
 });
 $('#dAviso').addEventListener('click',ev=>{const b=ev.target.closest('[data-ym]');if(!b) return;$('#dMes').value=String(+b.dataset.ym.slice(5));$('#dAno').value=b.dataset.ym.slice(0,4);devCarregar();});
-$('#dMes').addEventListener('change',devCarregar);$('#dAno').addEventListener('change',devCarregar);
+const devTrocouRef=()=>{devOk=false;devCarregar().then(devPedirReferencia);};   // escolher outro mês também pede confirmação
+$('#dMes').addEventListener('change',devTrocouRef);$('#dAno').addEventListener('change',devTrocouRef);
 window.addEventListener('pagehide',devSalvar);
 (function(){
   const a=new Date();                                                     // padrão: mês atual (troque se quiser outro)
@@ -1770,7 +1830,7 @@ window.addEventListener('pagehide',devSalvar);
     }
   }catch(e){dbh=null;}
   montarHierarquia();stampsUi();
-  await devCarregar();telaEsp();
+  await devCarregar();devPronto=true;telaEsp();
   carga(false);
   if(!pessoal) toast('A hierarquia de pessoal ainda não está salva no servidor. Abra a Hierarquia de Pessoal e clique em Atualizar do Centi.');
 })();

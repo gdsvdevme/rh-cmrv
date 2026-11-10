@@ -15,7 +15,7 @@
     }
   }catch(e){dbh=null;}
   montarHierarquia();stampsUi();
-  await devCarregar();telaEsp();
+  await devCarregar();devPronto=true;telaEsp();
   carga(false);
   if(!pessoal) toast('A hierarquia de pessoal ainda não está salva no servidor. Abra a Hierarquia de Pessoal e clique em Atualizar do Centi.');
 })();

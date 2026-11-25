@@ -96,12 +96,14 @@ const CUBO_MODULO = 120965;
 const CUBO_COLUNAS = ['ID', 'MATRICULA', 'NOMEFUNC', 'CARGO', 'CLASSENIVEL', 'FUNCAO', 'HIERARQUIA', 'LOTACAO', 'TIPOADMISSAO',
   'SITUACAO', 'TIPOAFASTAMENTO', 'DATAADMISSAO', 'EMAIL', 'TELEFONES', 'SALARIO'];
 const vazio = () => ({ Params: [{ Key: 'Tag', Value: '0' }, { Key: 'Array', Value: [] }] });
-const cuboPayload = (mes, ano) => ({
+/* dia: '1' (padrão) = quem estava ativo no dia 1º da referência; 'ultimo' = quem estava ativo no último dia (inclui os admitidos no meio do mês) */
+const dataRefCubo = (mes, ano, dia) => (dia === 'ultimo' ? String(new Date(Date.UTC(ano, mes, 0)).getUTCDate()).padStart(2, '0') : '01') + '/' + String(mes).padStart(2, '0') + '/' + ano;
+const cuboPayload = (mes, ano, dia) => ({
   ModuleKey: CUBO_MODULO, Guid: crypto.randomUUID(),
   Params: [
     { Key: 'Orgaos', Value: vazio() }, { Key: 'Funcionario', Value: vazio() }, { Key: 'FiltroFuncionarios', Value: '0' },
     { Key: 'Cargos', Value: vazio() }, { Key: 'ClassesNeiveis', Value: vazio() }, { Key: 'Funcao', Value: vazio() },
-    { Key: 'IdLotacao', Value: vazio() }, { Key: 'DataRef', Value: '01/' + String(mes).padStart(2, '0') + '/' + ano },
+    { Key: 'IdLotacao', Value: vazio() }, { Key: 'DataRef', Value: dataRefCubo(mes, ano, dia) },
     { Key: 'TiposAdmissao', Value: vazio() }, { Key: 'IdHierarquia', Value: vazio() }, { Key: 'Situacao', Value: '0' },
     { Key: 'Biometria', Value: '0' }, { Key: 'TagFuncionario', Value: '' }, { Key: 'Cube', Value: '' }, { Key: 'CubeExcel', Value: '' },
     { Key: 'QuebrarTexto', Value: '0' }, { Key: 'TipoCuboProcessamento', Value: '0' }, { Key: 'NumberOfDecimalPlaces', Value: '0' },

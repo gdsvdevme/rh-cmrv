@@ -814,7 +814,8 @@ const PB=(function(){
     ficha(matricula,mes,ano){return centiCall('ficha-financeira',{matricula,mes,ano});},
     /* Férias: ativos (FP051) + gozos de férias (FP273) -> {Pessoas:[...],Gozos:[{MATRICULA,DTAQUIINI,DTAQUIFIN,SALDO,GOZOINICIAL,GOZOFINAL,...}]} */
     ferias(mes,ano){return centiCall('ferias',{mes,ano});},
-    cubo(mes,ano){return centiCall('cubo-funcionario',{mes,ano});},
+    /* dia='ultimo': quem estava ativo no último dia da referência (admitidos no meio do mês); padrão: dia 1º */
+    cubo(mes,ano,dia){return centiCall('cubo-funcionario',{mes,ano,dia});},
     /* Conferência de eventos: lançamentos (FP001 > Eventos) dos servidores do lote (até 60 Ids) que valem para o mês -> {Linhas:[{Servidor,Id,Evento,Codigo,Recorrencia,Inicio,Fim,Valor,Lancamento}],Truncados:[Id]} */
     /* Conferência de remuneração: fichas (FP024) das matrículas (até 40) no mês e no anterior -> {Servidores:{mat:{Atual:[ficha],Anterior:[ficha]}},Anterior:{mes,ano}}; ficha={Folha,Prov,Desc,Liq,Eventos:[{Id,Nome,P,D}]} */
     conferenciaRemuneracao(matriculas,mes,ano){return centiCall('conferencia-remuneracao',{matriculas,mes,ano});},

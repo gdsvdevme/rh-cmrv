@@ -343,3 +343,13 @@ test('conferencia-remuneracao: servidor que o Centi não responde vai para Falha
   assert.deepEqual(j.Falhas,['2']);
   assert.deepEqual(Object.keys(j.Servidores),['1']);
 });
+
+test('cubo: dia "ultimo" pede o último dia da referência (inclui admitidos no meio do mês); o padrão é o dia 1º',async()=>{
+  const datas=[];
+  instalar(async(url,init)=>{const b=JSON.parse(init.body);datas.push((b.Params.find(p=>p.Key==='DataRef')||{}).Value);return resp({Cube:{Columns:[],Rows:[]}});});
+  await chamar({path:'cubo-funcionario',body:{mes:11,ano:2026}});
+  await chamar({path:'cubo-funcionario',body:{mes:11,ano:2026,dia:'ultimo'}});
+  await chamar({path:'cubo-funcionario',body:{mes:2,ano:2028,dia:'ultimo'}});    // fevereiro bissexto
+  await chamar({path:'cubo-funcionario',body:{mes:11,ano:2026,dia:'qualquer'}});  // valor estranho cai no padrão
+  assert.deepEqual(datas,['01/11/2026','30/11/2026','29/02/2028','01/11/2026']);
+});

@@ -513,6 +513,8 @@ const PB=(function(){
     /* Férias: ativos (FP051) + gozos de férias (FP273) -> {Pessoas:[...],Gozos:[{MATRICULA,DTAQUIINI,DTAQUIFIN,SALDO,GOZOINICIAL,GOZOFINAL,...}]} */
     ferias(mes,ano){return centiCall('ferias',{mes,ano});},
     cubo(mes,ano){return centiCall('cubo-funcionario',{mes,ano});},
+    /* Conferência de eventos: lançamentos (FP001 > Eventos) dos servidores do lote (até 60 Ids) que valem para o mês -> {Linhas:[{Servidor,Id,Evento,Codigo,Recorrencia,Inicio,Fim,Valor,Lancamento}],Truncados:[Id]} */
+    conferenciaEventos(ids,mes,ano){return centiCall('conferencia-eventos',{ids,mes,ano});},
     /* Licença-prêmio: quadro de ativos (Cubo funcionário reduzido, FP245) -> {Pessoas:[{MATRICULA,NOME,SITUACAO,TIPOADMISSAO,DATAADMISSAO,LOTACAO,CARGO,TIPOAFASTAMENTO,DATAAFASTAMENTO}]} */
     licencaQuadro(mes,ano){return centiCall('licenca-quadro',{mes,ano});},
     /* Espelho de ponto (FP170) do órgão inteiro na referência mes/ano -> Uint8Array com o PDF (o Centi leva de 25 s a 1 min) */

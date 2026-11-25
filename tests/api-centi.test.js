@@ -257,3 +257,34 @@ test('servidor-dados: carrega FP001 e DM017 pelo número de tela do menu e devol
   assert.deepEqual(Object.keys(JSON.parse(r.body)).sort(),['Cpf','DataNascimento','Endereco','Identidade','Nome']);
   assert.equal((await chamar({path:'servidor-dados',body:{id:'abc'}})).status,400);
 });
+
+test('conferencia-eventos: pede indeterminadas e determinadas que não acabaram antes do mês, junta, dá o código do evento e avisa do limite de 50',async()=>{
+  const vistos=[];
+  instalar(async(url,init)=>{
+    const b=JSON.parse(init.body);vistos.push(b);
+    const f=n=>(b.Filters.find(x=>x.FieldName===n)||{});
+    if(b.Entity==='Evento') return resp({Success:true,Data:[{Id:'656',Nome:'PAGA IPARV ASSISTENCIA'},{Id:'1656',Nome:'PAGA IPARV ASSISTENCIA 2'}]});
+    const srv=f('IdPessoaFuncionario').Value;
+    if(srv==='9'&&f('Recorrencia').Value!=null) return resp({Success:true,Data:Array.from({length:50},(_,i)=>({Id:'9'+i,IdEvento:'X',Recorrencia:'Indeterminada',DataInicial:'01/01/2025',DataFinal:'',Valor:'1,00',TipoLancamento:'Manual'}))});
+    if(f('Recorrencia').Value!=null) return resp({Success:true,Data:[{Id:'2',IdEvento:'PAGA IPARV ASSISTENCIA',Recorrencia:'Indeterminada',DataInicial:'01/10/2025',DataFinal:'',Valor:'1,00',TipoLancamento:'Manual'}]});
+    return resp({Success:true,Data:[{Id:'1',IdEvento:'PAGA IPARV ASSISTENCIA',Recorrencia:'Determinada',DataInicial:'01/10/2026',DataFinal:'30/10/2099',Valor:'5,00',TipoLancamento:'Manual'}]});
+  });
+  const r=await chamar({path:'conferencia-eventos',body:{ids:['3649','9'],mes:11,ano:2026}});
+  assert.equal(r.status,200);
+  const j=JSON.parse(r.body);
+  const doS=j.Linhas.filter(l=>l.Servidor==='3649').sort((a,b)=>a.Id-b.Id);
+  assert.deepEqual(doS.map(l=>[l.Id,l.Recorrencia,l.Fim,l.Codigo]),[['1','Determinada','30/10/2099','656'],['2','Indeterminada','','656']]);
+  assert.deepEqual(j.Truncados,['9']);
+  const det=vistos.find(b=>b.Entity==='PessoaFuncionarioEvento'&&b.Filters.some(f=>f.FieldName==='DataFinal'));
+  const fd=det.Filters.find(f=>f.FieldName==='DataFinal');
+  assert.equal(fd.Operation,3);assert.equal(fd.Value,'01/11/2026');          // maior ou igual ao início do mês de referência
+  const ind=vistos.find(b=>b.Entity==='PessoaFuncionarioEvento'&&b.Filters.some(f=>f.FieldName==='Recorrencia'));
+  assert.equal(ind.Filters.find(f=>f.FieldName==='Recorrencia').Value,'0');   // 0 = indeterminada
+  assert.equal(vistos.filter(b=>b.Entity==='Evento').length,2);               // um por nome diferente (PAGA..., X)
+});
+
+test('conferencia-eventos: valida a lista de servidores e a referência',async()=>{
+  instalar(async()=>resp({Success:true,Data:[]}));
+  for(const body of [{ids:[],mes:11,ano:2026},{ids:['a'],mes:11,ano:2026},{ids:Array.from({length:61},(_,i)=>String(i+1)),mes:11,ano:2026},{ids:['1'],mes:13,ano:2026}])
+    assert.equal((await chamar({path:'conferencia-eventos',body})).status,400);
+});

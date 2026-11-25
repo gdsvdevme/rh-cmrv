@@ -282,3 +282,29 @@ function servidorDados(pessoa) {
 const idPessoaDoFuncionario = func => { const id = refCampo(campos(func).IdPessoaFisica).Id; return /^\d{1,12}$/.test(String(id == null ? '' : id)) ? String(id) : ''; };
 module.exports.servidorDados = servidorDados;
 module.exports.idPessoaDoFuncionario = idPessoaDoFuncionario;
+
+/* Determinação de eventos (conferência): lançamentos de evento por servidor (tela FP001 > Eventos, entidade PessoaFuncionarioEvento).
+   O Centi só devolve até 50 linhas por consulta e a paginação não avança; por isso, por servidor, pedimos só o que importa para a referência:
+   as indeterminadas (Recorrencia 0) e as determinadas que ainda não acabaram antes do mês (DataFinal >= 01/MM/AAAA, operação 3 = maior ou igual).
+   O lançamento traz o NOME do evento; o código vem da entidade Evento (Id). */
+const filtroNum = (campo, op, valor, tipo) => ({ FieldName: campo, List: false, Operation: op, TypeFilter: tipo, Value: String(valor), between: '' });
+const eventosFiltros = (idServidor, mes, ano) => {
+  const base = filtroNum('IdPessoaFuncionario', 0, idServidor, 3);
+  return [
+    [base, filtroNum('Recorrencia', 0, 0, 3)],
+    [base, filtroNum('DataFinal', 3, '01/' + String(mes).padStart(2, '0') + '/' + ano, 3)]
+  ];
+};
+const eventoLinha = (idServidor, x) => ({
+  Servidor: String(idServidor), Id: String(x.Id), Evento: String(x.IdEvento == null ? '' : x.IdEvento).trim(),
+  Recorrencia: /^indeterminada$/i.test(String(x.Recorrencia).trim()) ? 'Indeterminada' : 'Determinada',
+  Inicio: String(x.DataInicial || ''), Fim: String(x.DataFinal || ''), Valor: String(x.Valor || ''), Lancamento: String(x.TipoLancamento || '')
+});
+/* busca de evento pelo nome (entidade Evento): devolve o código (Id) do evento de nome exato, ou '' */
+const eventoFiltroNome = nome => filtroNum('Nome', 6, '%' + String(nome).replace(/[%_]/g, '').toUpperCase() + '%', 0);
+const eventoCodigo = (nome, data) => {
+  const n = String(nome).trim().toUpperCase();
+  const ex = (data || []).filter(e => String(e.Nome).trim().toUpperCase() === n);
+  return ex.length ? String(ex[0].Id) : '';
+};
+Object.assign(module.exports, { eventosFiltros, eventoLinha, eventoFiltroNome, eventoCodigo });

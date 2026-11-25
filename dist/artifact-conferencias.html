@@ -1,0 +1,856 @@
+<!-- ARQUIVO GERADO por build.py a partir de src/. Não edite aqui: altere src/ e rode `python3 build.py`. -->
+<title>Conferências</title>
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%230a6b3d'/%3E%3Cg transform='translate(4 4)' fill='none' stroke='%23fff' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M7.5 9l1.5 1.5L11.5 8M7.5 15l1.5 1.5L11.5 14M14 9.5h4M14 15.5h4'/%3E%3Crect x='3' y='4' width='18' height='16' rx='2'/%3E%3C/g%3E%3C/svg%3E">
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Libre+Franklin:wght@500;600;700&family=Public+Sans:wght@400;500;600&display=swap">
+<style>
+/* Cores e sombras comuns a todas as páginas (o build.py injeta onde o modelo tem o marcador SHARED_CSS). Cada página mantém só as suas variáveis próprias. */
+:root{
+  --bg:#eef4f0;
+  --surface:#fff;
+  --fg:#12281d;
+  --muted:#4f665a;
+  --line:#d1ddd6;
+  --accent:#0a6b3d;
+  --accent-fg:#fff;
+  --soft:#e3efe8;
+  --hero-a:#063d27;
+  --hero-b:#0b7a49;
+  --gold:#d4aa4a;
+  --shadow:0 1px 2px rgba(6,61,39,.09),0 6px 20px rgba(6,61,39,.07);
+  --warn:#8a5a00;
+  --warn-bg:#fdf0d5;
+  --danger:#b3261e;
+  --f-display:"Libre Franklin",system-ui,sans-serif;
+  --f-body:"Public Sans",system-ui,sans-serif;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --bg:#08130e;
+  --surface:#0f1e17;
+  --fg:#e3f1ea;
+  --muted:#90b0a0;
+  --line:#234034;
+  --accent:#52c98a;
+  --accent-fg:#04210f;
+  --soft:#15291f;
+  --hero-a:#04150d;
+  --hero-b:#0b4d31;
+  --gold:#d8b45e;
+  --shadow:0 1px 2px rgba(0,0,0,.4),0 6px 20px rgba(0,0,0,.3);
+  --warn:#f0c26a;
+  --warn-bg:#3a2d10;
+  --danger:#ff8a80;
+  color-scheme:dark;}}
+:root[data-theme="dark"]{
+  --bg:#08130e;
+  --surface:#0f1e17;
+  --fg:#e3f1ea;
+  --muted:#90b0a0;
+  --line:#234034;
+  --accent:#52c98a;
+  --accent-fg:#04210f;
+  --soft:#15291f;
+  --hero-a:#04150d;
+  --hero-b:#0b4d31;
+  --gold:#d8b45e;
+  --shadow:0 1px 2px rgba(0,0,0,.4),0 6px 20px rgba(0,0,0,.3);
+  --warn:#f0c26a;
+  --warn-bg:#3a2d10;
+  --danger:#ff8a80;
+  color-scheme:dark;}
+
+:root{
+  --danger-bg:#fbe3e0;
+  --blue:#2f6fb5;
+  --blue-bg:#e2edf9;
+  --ok:#0a6b3d;
+  --ok-bg:#dff3e7;
+  --violet:#6f4aa8;
+  --violet-bg:#eee6f8;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --danger-bg:#3d1a17;
+  --blue:#7fb2ee;
+  --blue-bg:#14273d;
+  --ok:#52c98a;
+  --ok-bg:#12382a;
+  --violet:#b99be8;
+  --violet-bg:#2a1f3d;}}
+:root[data-theme="dark"]{
+  --danger-bg:#3d1a17;
+  --blue:#7fb2ee;
+  --blue-bg:#14273d;
+  --ok:#52c98a;
+  --ok-bg:#12382a;
+  --violet:#b99be8;
+  --violet-bg:#2a1f3d;}
+[hidden]{display:none!important}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--fg);font-family:var(--f-body);font-size:15px;line-height:1.5}
+h1,h2,h3,h4{font-family:var(--f-display);margin:0;text-wrap:balance}
+button,input,select{font:inherit;color:inherit}
+.wrap{padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+.inner{max-width:1180px;margin:0 auto}
+.hero{background:linear-gradient(135deg,var(--hero-a),var(--hero-b));color:#fff;padding-block:22px 54px}
+.top{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:22px}
+.home{color:#fff;text-decoration:none;font-weight:600;font-size:13.5px;display:inline-flex;align-items:center;gap:8px;padding:8px 12px;border-radius:10px;background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.28)}
+.home:hover,.themebtn:hover{background:rgba(255,255,255,.22)}
+.themebtn{margin-left:auto;display:inline-flex;align-items:center;gap:8px;border:1px solid rgba(255,255,255,.35);background:rgba(255,255,255,.12);color:#fff;border-radius:10px;padding:8px 12px;font-weight:600;font-size:13.5px;cursor:pointer}
+.goldrule{width:56px;height:4px;background:var(--gold);border-radius:2px;margin:0 0 14px}
+.hero h1{font-size:clamp(1.6rem,4.4vw,2.4rem);line-height:1.12}
+.hero p{margin:8px 0 0;opacity:.85}
+main{padding-block:0 40px}
+.abas{display:flex;gap:6px;flex-wrap:wrap;margin-top:-26px;position:relative}
+.aba{border:1px solid var(--line);background:var(--surface);border-radius:12px;padding:10px 16px;cursor:pointer;font-weight:600;font-size:14.5px;box-shadow:var(--shadow)}
+.aba[aria-selected=true]{background:var(--accent);color:var(--accent-fg);border-color:var(--accent)}
+.bar{display:flex;flex-wrap:wrap;gap:10px;align-items:center;margin-top:16px}
+.bar label{display:flex;align-items:center;gap:8px;font-size:13.5px;color:var(--muted);font-weight:600}
+select,input[type=search]{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:10px 12px}
+.search{flex:1 1 240px;display:flex;align-items:center;gap:10px;background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:0 14px;box-shadow:var(--shadow);min-width:0}
+.search input{border:0;background:transparent;outline:0;padding:11px 0;flex:1;min-width:0}
+.search:focus-within{border-color:var(--accent)}
+.btn{border:1px solid var(--line);background:var(--surface);border-radius:10px;padding:10px 14px;cursor:pointer;font-weight:600;font-size:14px;display:inline-flex;align-items:center;gap:8px;box-shadow:var(--shadow)}
+.btn:hover{border-color:var(--accent)}.btn.primary{background:var(--accent);color:var(--accent-fg);border-color:var(--accent)}.btn:disabled{opacity:.6;cursor:wait}
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,165px),1fr));gap:10px;margin-top:16px}
+.stat{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:12px 14px;box-shadow:var(--shadow);text-align:left;cursor:pointer;display:block;width:100%}
+.stat:hover{border-color:var(--accent)}.stat.on{outline:2px solid var(--accent);outline-offset:-1px}
+.stat b{font-family:var(--f-display);font-size:1.6rem;display:block;line-height:1.1;font-variant-numeric:tabular-nums}
+.stat span{color:var(--muted);font-size:12.8px;line-height:1.3;display:block}
+.stat.indeterminada b{color:var(--blue)}.stat.determinada b{color:var(--ok)}.stat.so_mes b{color:var(--violet)}.stat.vence_mes b{color:var(--warn)}
+.stat.ate_2099 b,.stat.sem_data b{color:var(--danger)}.stat.futura b{color:var(--muted)}
+.tag{display:inline-block;font-size:11.5px;font-weight:700;padding:2px 9px;border-radius:99px;white-space:nowrap;background:var(--soft);color:var(--muted)}
+.tag.indeterminada{background:var(--blue-bg);color:var(--blue)}.tag.determinada{background:var(--ok-bg);color:var(--ok)}.tag.so_mes{background:var(--violet-bg);color:var(--violet)}
+.tag.vence_mes{background:var(--warn-bg);color:var(--warn)}.tag.ate_2099,.tag.sem_data{background:var(--danger-bg);color:var(--danger)}
+.banner{margin-top:14px;border-radius:12px;padding:12px 16px;font-size:13.5px;background:var(--warn-bg);color:var(--warn)}
+.subabas{display:flex;gap:6px;margin-top:16px}
+.subabas button{border:0;background:transparent;border-bottom:3px solid transparent;padding:8px 12px;cursor:pointer;font-weight:600;color:var(--muted)}
+.subabas button[aria-selected=true]{color:var(--fg);border-bottom-color:var(--accent)}
+.tblwrap{margin-top:10px;background:var(--surface);border:1px solid var(--line);border-radius:14px;box-shadow:var(--shadow);overflow:auto}
+table.lst{width:100%;border-collapse:collapse;font-size:14px;min-width:820px}
+.lst th{background:var(--soft);color:var(--muted);font-size:11.5px;letter-spacing:.05em;text-transform:uppercase;padding:10px 12px;text-align:left;white-space:nowrap}
+.lst td{padding:9px 12px;border-top:1px solid var(--line);vertical-align:middle}
+.lst tbody tr[data-ev]{cursor:pointer}.lst tbody tr[data-ev]:hover td{background:var(--soft)}
+.lst td.n b{display:block;font-weight:600;line-height:1.25}.lst td.n span{color:var(--muted);font-size:12.5px}
+.lst td.num{text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap}
+.lst td.dt{white-space:nowrap;font-variant-numeric:tabular-nums}
+.empty{margin-top:24px;text-align:center;padding:38px 20px;background:var(--surface);border:2px dashed var(--line);border-radius:16px;color:var(--muted)}
+.empty h2{color:var(--fg);margin-bottom:6px}
+.more{display:flex;justify-content:center;padding:12px}
+.note{margin-top:18px;font-size:12.8px;color:var(--muted)}
+.prog{margin-top:16px;background:var(--surface);border:1px solid var(--line);border-radius:14px;box-shadow:var(--shadow);padding:16px}
+.prog .barra{height:10px;border-radius:99px;background:var(--soft);overflow:hidden;margin-top:10px;border:1px solid var(--line)}
+.prog .barra i{display:block;height:100%;background:var(--accent);border-radius:99px;transition:width .2s}
+#load{position:fixed;inset:0;z-index:9000;display:grid;place-items:center;padding:24px;background:radial-gradient(1200px 700px at 50% 30%,var(--hero-b),var(--hero-a)) var(--hero-a);color:#fff;text-align:center}
+#load .ld-box{display:flex;flex-direction:column;align-items:center;gap:10px;max-width:420px}
+#load .ld-spin{width:56px;height:56px;border-radius:50%;border:5px solid rgba(255,255,255,.22);border-top-color:var(--gold);animation:ld-rot .9s linear infinite;margin-bottom:6px}
+#load b{font-family:var(--f-display);font-size:1.35rem;line-height:1.2}
+#load span{opacity:.88;font-size:14.5px;min-height:22px}
+@keyframes ld-rot{to{transform:rotate(360deg)}}
+@media (prefers-reduced-motion:reduce){#load .ld-spin{animation-duration:3s}}
+body.carregando{overflow:hidden}
+#toast{position:fixed;left:50%;transform:translateX(-50%);bottom:max(18px,env(safe-area-inset-bottom,0px));background:var(--fg);color:var(--bg);padding:10px 16px;border-radius:10px;font-size:14px;z-index:60;max-width:90vw}
+@media (pointer:coarse){input,select{font-size:16px}.btn{min-height:42px}}
+/* ===== visual moderno (compartilhado) ===== */
+body{background:radial-gradient(1100px 520px at 85% -120px,color-mix(in srgb,var(--accent) 12%,transparent),transparent 70%),var(--bg);background-attachment:fixed}
+.hero{border-radius:0 0 32px 32px;padding-bottom:clamp(48px,7vw,72px)!important;background:radial-gradient(600px 300px at 12% 0,rgba(255,255,255,.12),transparent 70%),linear-gradient(135deg,var(--hero-a),var(--hero-b));position:relative;overflow:hidden}
+.hero::before{content:"";position:absolute;left:-80px;bottom:-120px;width:300px;height:300px;border-radius:50%;background:radial-gradient(circle,rgba(212,170,74,.28),transparent 70%);pointer-events:none}
+.hero>.inner{position:relative;z-index:1}
+.themebtn{backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);border-radius:99px!important;padding:8px 14px!important;transition:background .15s,transform .15s}
+.themebtn:hover{transform:translateY(-1px)}
+.hero .home{border-radius:99px!important;backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px)}
+.hello{margin:0 0 6px;font-family:var(--f-display);font-weight:600;font-size:clamp(1rem,2.4vw,1.2rem);display:inline-flex;align-items:center;gap:8px;padding:6px 14px 6px 10px;border-radius:99px;background:rgba(255,255,255,.14);border:1px solid rgba(255,255,255,.22);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);color:#fff;opacity:1!important;animation:rise .5s both}
+.hello .wave{display:inline-block;transform-origin:70% 70%;animation:wave 2.2s .6s 1}
+.hero h1{letter-spacing:-.02em;font-weight:700}
+.btn{border-radius:99px!important;transition:transform .15s,border-color .15s,box-shadow .15s}
+.btn:hover{transform:translateY(-1px)}
+.btn.sm{border-radius:99px!important}
+.card,.panel{border-radius:20px!important;transition:box-shadow .2s,border-color .2s}
+.card:hover,.panel:hover{box-shadow:0 14px 34px rgba(6,61,39,.12)}
+input,select,textarea{border-radius:12px}
+.pill,.chip,.tag{border-radius:99px}
+.modal{border-radius:22px!important}
+@keyframes rise{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
+@keyframes wave{0%,60%,100%{transform:rotate(0)}10%,30%{transform:rotate(16deg)}20%,40%{transform:rotate(-10deg)}50%{transform:rotate(8deg)}}
+@media (prefers-reduced-motion:reduce){.hello,.hello .wave{animation:none}.btn:hover,.themebtn:hover{transform:none}}
+@media print{.hello{display:none}}
+/* o conteúdo que sobe sobre o cabeçalho precisa ficar acima dele */
+.hero~main,.hero~.wrap,.stats,.layout,.grid{position:relative;z-index:2}
+/* cabeçalho compacto nas telas internas (o painel inicial mantém o grande) */
+.hero{padding-block:14px 44px!important;border-radius:0 0 26px 26px}
+.hero .top{margin-bottom:10px!important}
+.hero .goldrule{display:none}
+.hello{margin:0 0 4px;font-size:.92rem;padding:3px 12px 3px 8px}
+.hero h1{font-size:clamp(1.35rem,3.4vw,1.8rem)!important;line-height:1.15}
+.hero p:not(.hello){margin-top:4px!important;font-size:.92rem}
+.hero::before{width:220px;height:220px;bottom:-110px}
+
+</style>
+
+<header class="hero wrap"><div class="inner">
+  <div class="top"><a class="home" href="../" target="_top"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 11l9-8 9 8M5 10v10h5v-6h4v6h5V10"/></svg>Sistema Interno do RH</a>
+  <button class="themebtn" id="themeBtn" type="button"></button></div>
+  <div class="goldrule"></div>
+  <h1>Conferências</h1>
+  <p>Câmara Municipal de Rio Verde/GO · conferência dos lançamentos do Centi antes de fechar a folha</p>
+</div></header>
+
+<main class="wrap"><div class="inner">
+  <div class="abas" role="tablist" id="abas"></div>
+  <div id="secao"></div>
+</div></main>
+<div id="load" role="status" aria-live="polite"><div class="ld-box"><div class="ld-spin" aria-hidden="true"></div><b>Conferências</b><span id="ldS">Abrindo o sistema</span></div></div>
+<div id="toast" hidden></div>
+
+<script>
+/* =====================================================================
+   PocketBase: armazenamento no servidor (substitui o localStorage)
+   Expõe PB.connect(), que devolve um objeto "dbh" com a mesma forma
+   usada pelo restante do sistema: dbh.doc('a/b').get/set/delete e
+   dbh.collection('versoes').orderBy('at','desc').limit(n).get()
+   ===================================================================== */
+const PB=(function(){
+  const URL_BASE='https://pb.devgabriel.app.br'.replace(/\/+$/,'');
+  const CENTI_BASE=''.replace(/\/+$/,'');   // vazio = mesmo endereço do site (funções em /api)
+  const AUTH_KEY='rhcrv-pb-auth';
+  let token='',email='',col='rhcmrv_users',loginP=null;
+  let cs=null;   // sessão do Centi: {user,nome,token,refreshToken}
+
+  /* só vale a sessão que tem o acesso do Centi junto e a marca de admin; sessões antigas (login simples ou sem a marca) pedem novo login */
+  function readAuth(){try{const a=JSON.parse(localStorage.getItem(AUTH_KEY)||'null');if(a&&a.token&&a.centi&&a.centi.token&&typeof a.centi.admin==='boolean'){token=a.token;email=a.email||'';col=a.col||'rhcmrv_users';cs=a.centi;}}catch(e){}}
+  function saveAuth(){try{localStorage.setItem(AUTH_KEY,JSON.stringify({token,email,col,centi:cs}));}catch(e){}}
+  function clearAuth(){token='';email='';col='rhcmrv_users';cs=null;try{localStorage.removeItem(AUTH_KEY);}catch(e){}}
+
+  async function raw(method,path,body){
+    const h={};
+    if(body!==undefined) h['Content-Type']='application/json';
+    if(token) h.Authorization=token;
+    const r=await fetch(URL_BASE+path,{method,headers:h,body:body===undefined?undefined:JSON.stringify(body)});
+    if(r.status===204) return null;
+    let j=null; try{j=await r.json();}catch(e){}
+    if(!r.ok){const err=new Error((j&&j.message)||('HTTP '+r.status));err.status=r.status;throw err;}
+    return j;
+  }
+  async function api(method,path,body){
+    try{return await raw(method,path,body);}
+    catch(e){
+      if(e.status===401||e.status===403){
+        clearAuth();
+        if(await login('Sua sessão expirou. Entre novamente para continuar.')) return raw(method,path,body);
+      }
+      throw e;
+    }
+  }
+
+  /* ---------- login ---------- */
+  const IC={
+    user:'<path d="M20 21a8 8 0 10-16 0"/><circle cx="12" cy="8" r="4"/>',
+    lock:'<rect x="4" y="10" width="16" height="11" rx="2.5"/><path d="M8 10V7a4 4 0 018 0v3"/>',
+    eye:'<path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/>',
+    eyeoff:'<path d="M3 3l18 18M10.6 5.1A10.7 10.7 0 0112 5c6.4 0 10 7 10 7a17 17 0 01-3.2 4.2M6.6 6.6A17 17 0 002 12s3.6 7 10 7a10.4 10.4 0 004.4-1M9.9 9.9a3 3 0 004.2 4.2"/>',
+    alert:'<circle cx="12" cy="12" r="9"/><path d="M12 8v5M12 16.5h.01"/>',
+    out:'<path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4M16 17l5-5-5-5M21 12H9"/>',
+    bank:'<path d="M3 10l9-6 9 6M5 10v8M9.5 10v8M14.5 10v8M19 10v8M3 20h18"/>'
+  };
+  const ico=(k,n)=>'<svg width="'+(n||18)+'" height="'+(n||18)+'" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">'+IC[k]+'</svg>';
+  const LOGIN_CSS=
+    '.pbl{position:fixed;inset:0;z-index:99999;display:flex;align-items:center;justify-content:center;padding:20px;overflow:auto;'+
+      'background:radial-gradient(1100px 600px at 50% -10%,#118a50 0%,rgba(17,138,80,0) 60%),linear-gradient(160deg,#0b5f38 0%,#073d25 60%,#052a1a 100%);font-family:var(--f-body,"Public Sans",system-ui,sans-serif)}'+
+    '.pbl::before{content:"";position:absolute;inset:0;background:repeating-linear-gradient(115deg,rgba(255,255,255,.035) 0 2px,transparent 2px 26px);pointer-events:none}'+
+    '.pbl-card{position:relative;width:100%;max-width:410px;background:#fff;color:#12281d;border-radius:22px;padding:38px 32px 26px;box-shadow:0 34px 90px rgba(0,0,0,.4),0 0 0 1px rgba(255,255,255,.08);animation:pblin .35s ease-out both}'+
+    '@keyframes pblin{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:none}}@media (prefers-reduced-motion:reduce){.pbl-card{animation:none}}'+
+    '.pbl-card::before{content:"";position:absolute;left:32px;top:0;width:58px;height:5px;background:#e3a93a;border-radius:0 0 5px 5px}'+
+    '.pbl-logo{width:56px;height:56px;border-radius:16px;background:linear-gradient(145deg,#0f7a47,#0a5a35);color:#fff;display:flex;align-items:center;justify-content:center;box-shadow:0 10px 24px rgba(10,107,61,.35);margin-bottom:18px}'+
+    '.pbl-org{margin:0 0 4px;font-size:11.5px;font-weight:700;letter-spacing:.09em;text-transform:uppercase;color:#4f665a}'+
+    '.pbl-card h2{margin:0 0 6px;font-family:var(--f-display,"Libre Franklin",system-ui,sans-serif);font-size:1.55rem;line-height:1.15;color:#0b2a1b}'+
+    '.pbl-sub{margin:0 0 22px;color:#4f665a;font-size:14px;line-height:1.45}'+
+    '.pbl-f{display:block;margin-bottom:14px}.pbl-f>span{display:block;font-size:12.5px;font-weight:700;color:#2c4a3b;margin-bottom:6px}'+
+    '.pbl-in{position:relative;display:flex;align-items:center}.pbl-in>svg{position:absolute;left:14px;color:#6c8578;pointer-events:none}'+
+    '.pbl-in input{width:100%;box-sizing:border-box;height:48px;padding:0 44px 0 42px;border:1.5px solid #cbd9d0;border-radius:12px;background:#f8fbf9;color:#12281d;font:inherit;font-size:16px;outline:none;transition:border-color .15s,box-shadow .15s,background .15s}'+
+    '.pbl-in input::placeholder{color:#9bb0a4}.pbl-in input:hover{border-color:#a9c0b2}'+
+    '.pbl-in input:focus{border-color:#0a6b3d;background:#fff;box-shadow:0 0 0 4px rgba(10,107,61,.16)}'+
+    '.pbl-eye{position:absolute;right:6px;width:36px;height:36px;border:0;border-radius:9px;background:transparent;color:#6c8578;cursor:pointer;display:flex;align-items:center;justify-content:center}'+
+    '.pbl-eye:hover{background:#e8f1ec;color:#0a6b3d}.pbl-eye:focus-visible{outline:2px solid #0a6b3d}'+
+    '.pbl-err{display:flex;gap:8px;align-items:flex-start;margin:2px 0 14px;padding:10px 12px;border-radius:10px;background:#fdecea;border:1px solid #f3c1bb;color:#9b2c1f;font-size:13.5px;line-height:1.35}'+
+    '.pbl-err:empty{display:none}.pbl-err svg{flex:none;margin-top:1px}.pbl-err.info{background:#eef6f1;border-color:#cfe3d7;color:#2c4a3b}'+
+    '.pbl-go{width:100%;height:50px;border:0;border-radius:13px;background:linear-gradient(180deg,#0f7a47,#0a6b3d);color:#fff;font:inherit;font-size:16px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:10px;box-shadow:0 10px 22px rgba(10,107,61,.32);transition:transform .1s,box-shadow .15s,filter .15s}'+
+    '.pbl-go:hover{filter:brightness(1.06)}.pbl-go:active{transform:translateY(1px);box-shadow:0 6px 14px rgba(10,107,61,.3)}.pbl-go:focus-visible{outline:3px solid #e3a93a;outline-offset:2px}'+
+    '.pbl-go[disabled]{opacity:.8;cursor:progress}.pbl-sp{width:18px;height:18px;border:2.5px solid rgba(255,255,255,.4);border-top-color:#fff;border-radius:50%;animation:pblsp .7s linear infinite}@keyframes pblsp{to{transform:rotate(360deg)}}'+
+    '.pbl-foot{margin:18px 0 0;display:flex;gap:7px;align-items:flex-start;color:#6c8578;font-size:12.3px;line-height:1.4}.pbl-foot svg{flex:none;margin-top:1px}'+
+    '@media (max-width:440px){.pbl{padding:14px;align-items:flex-start}.pbl-card{padding:32px 22px 22px;margin-top:6vh}.pbl-card::before{left:22px}}';
+  function loginCss(){
+    if(document.getElementById('pbl-css')) return;
+    const st=document.createElement('style');st.id='pbl-css';st.textContent=LOGIN_CSS;document.head.appendChild(st);
+  }
+  function login(msg){
+    if(loginP) return loginP;
+    loginP=new Promise(resolve=>{
+      loginCss();
+      const wrap=document.createElement('div');wrap.className='pbl';
+      wrap.innerHTML=
+        '<form class="pbl-card" autocomplete="on" novalidate>'+
+        '<div class="pbl-logo">'+ico('bank',28)+'</div>'+
+        '<p class="pbl-org">Câmara Municipal de Rio Verde/GO</p>'+
+        '<h2>Sistema Interno do RH</h2>'+
+        '<p class="pbl-sub">Entre com o mesmo usuário e senha que você usa no Centi.</p>'+
+        '<label class="pbl-f"><span>Usuário</span><div class="pbl-in">'+ico('user')+'<input name="e" type="text" required autocapitalize="none" autocorrect="off" spellcheck="false" autocomplete="username" placeholder="ex.: nome.sobrenome"></div></label>'+
+        '<label class="pbl-f"><span>Senha</span><div class="pbl-in">'+ico('lock')+'<input name="p" type="password" required autocomplete="current-password" placeholder="Sua senha do Centi"><button type="button" class="pbl-eye" data-eye aria-label="Mostrar a senha" aria-pressed="false">'+ico('eye')+'</button></div></label>'+
+        '<div class="pbl-err" data-err role="alert" aria-live="polite"></div>'+
+        '<button type="submit" class="pbl-go"><span>Entrar</span></button>'+
+        '<p class="pbl-foot">'+ico('lock',14)+'<span>A senha é conferida no Centi e não fica guardada neste sistema.</span></p></form>';
+      document.body.appendChild(wrap);
+      const f=wrap.querySelector('form'),err=wrap.querySelector('[data-err]'),go=wrap.querySelector('.pbl-go'),eye=wrap.querySelector('[data-eye]');
+      const erro=(t,info)=>{err.className='pbl-err'+(info?' info':'');err.innerHTML=t?ico('alert',16)+'<span></span>':'';if(t) err.lastChild.textContent=t;};
+      const ocupado=on=>{go.disabled=on;go.innerHTML=on?'<i class="pbl-sp"></i><span>Entrando…</span>':'<span>Entrar</span>';};
+      if(msg) erro(msg,true);
+      const done=ok=>{wrap.remove();loginP=null;resolve(ok);};
+      f.e.focus();
+      eye.addEventListener('click',()=>{const ver=f.p.type==='password';f.p.type=ver?'text':'password';eye.setAttribute('aria-pressed',ver);eye.setAttribute('aria-label',ver?'Ocultar a senha':'Mostrar a senha');eye.innerHTML=ico(ver?'eyeoff':'eye');f.p.focus();});
+      f.addEventListener('submit',async ev=>{
+        ev.preventDefault();
+        if(!f.e.value.trim()||!f.p.value){erro('Informe o usuário e a senha do Centi.');(f.e.value.trim()?f.p:f.e).focus();return;}
+        erro('');ocupado(true);
+        try{
+          const r=await fetch(CENTI_BASE+'/api/centi-login',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({user:f.e.value.trim(),pass:f.p.value})});
+          let j=null; try{j=await r.json();}catch(e){}
+          if(!r.ok){erro((j&&j.message)||('Não foi possível entrar (HTTP '+r.status+').'));ocupado(false);f.p.select();return;}
+          token=j.pb.token; col='rhcmrv_users'; email=j.centi.user; cs=j.centi; saveAuth(); done(true);
+        }catch(e){erro('Não foi possível entrar: '+e.message);ocupado(false);}
+      });
+    });
+    return loginP;
+  }
+
+  /* ---------- sair ---------- */
+  /* botão "Sair" ao lado do botão de tema (ou no rodapé do menu dos Fluxogramas); só existe com sessão do Centi aberta */
+  function logout(){clearAuth();location.reload();}
+  function mountLogout(){
+    if(!cs||!document.body||document.getElementById('pb-logout')) return;
+    const nome=(cs.nome||cs.user||'').split(' ')[0];
+    const mk=(cls,html)=>{const b=document.createElement('button');b.type='button';b.id='pb-logout';b.className=cls;b.title='Sair ('+cs.user+')';b.setAttribute('aria-label','Sair do sistema ('+cs.user+')');b.innerHTML=html;b.addEventListener('click',logout);return b;};
+    const t=document.getElementById('themeBtn'),h=document.querySelector('.side-foot .homelink');
+    if(t&&t.parentNode){const b=mk(t.className,ico('out',16)+'Sair');b.style.marginLeft='0';t.insertAdjacentElement('afterend',b);t.style.marginLeft='auto';}
+    else if(h&&h.parentNode){const b=mk(h.className,ico('out',14)+'Sair'+(nome?' ('+nome.charAt(0).toUpperCase()+nome.slice(1).toLowerCase()+')':''));b.style.cssText='border:0;cursor:pointer;font:inherit;font-weight:600;font-size:13px;width:calc(100% + 20px);text-align:left;color:inherit';h.insertAdjacentElement('afterend',b);}
+  }
+  /* as páginas montam o cabeçalho em momentos diferentes: tenta de novo quando o DOM muda */
+  function vigiarLogout(){
+    mountLogout();
+    try{const ob=new MutationObserver(()=>{if(!cs){ob.disconnect();return;}if(!document.getElementById('pb-logout')) mountLogout();});ob.observe(document.body,{childList:true,subtree:true});}catch(e){}
+  }
+
+  /* ---------- documentos ---------- */
+  const ids={};   // cache de id de registro por caminho
+  const esc=s=>String(s).replace(/\\/g,'\\\\').replace(/"/g,'\\"');
+  const spec=path=>{
+    const i=path.indexOf('/'),col=path.slice(0,i),id=path.slice(i+1);
+    return col==='versoes'?{c:'rhcmrv_versoes',f:'vid',k:id}:{c:'rhcmrv_docs',f:'key',k:path};
+  };
+  async function find(path){
+    const s=spec(path);
+    const q='?perPage=1&filter='+encodeURIComponent(s.f+'="'+esc(s.k)+'"');
+    const r=await api('GET','/api/collections/'+s.c+'/records'+q);
+    const rec=r.items&&r.items[0];
+    if(rec) ids[path]=rec.id; else delete ids[path];
+    return rec||null;
+  }
+  const payload=(s,data)=>s.c==='rhcmrv_versoes'?Object.assign({vid:s.k},data):{key:s.k,data};
+  const unwrap=(s,rec)=>s.c==='rhcmrv_versoes'?{at:rec.at,label:rec.label,json:rec.json}:rec.data;
+
+  function doc(path){
+    const s=spec(path);
+    return {
+      async get(){const rec=await find(path);return {exists:!!rec,id:s.k,data:()=>rec?unwrap(s,rec):undefined};},
+      async set(data){
+        if(!ids[path]) await find(path);
+        if(ids[path]) await api('PATCH','/api/collections/'+s.c+'/records/'+ids[path],payload(s,data));
+        else{const r=await api('POST','/api/collections/'+s.c+'/records',payload(s,data));ids[path]=r.id;}
+      },
+      async delete(){
+        if(!ids[path]) await find(path);
+        if(ids[path]){await api('DELETE','/api/collections/'+s.c+'/records/'+ids[path]);delete ids[path];}
+      }
+    };
+  }
+  function collection(name){
+    const q={sort:'',n:30};
+    const api_={
+      orderBy(f,dir){q.sort=(dir==='desc'?'-':'')+f;return api_;},
+      limit(n){q.n=n;return api_;},
+      async get(){
+        const r=await api('GET','/api/collections/rhcmrv_'+name+'/records?perPage='+q.n+(q.sort?'&sort='+encodeURIComponent(q.sort):''));
+        return {docs:r.items.map(rec=>({id:rec.vid,data:()=>({at:rec.at,label:rec.label,json:rec.json})}))};
+      }
+    };
+    return api_;
+  }
+
+  /* ---------- tarefas (coleção rhcmrv_tarefas; as regras do servidor mostram só as compartilhadas e as do próprio dono) ---------- */
+  const TAREFAS='/api/collections/rhcmrv_tarefas/records';
+  const userId=()=>{try{const b=token.split('.')[1].replace(/-/g,'+').replace(/_/g,'/');return JSON.parse(decodeURIComponent(escape(atob(b+'='.repeat((4-b.length%4)%4))))).id||'';}catch(e){return '';}};
+  async function todas(filtro){
+    let page=1,out=[];
+    for(;;){
+      const r=await api('GET',TAREFAS+'?perPage=200&page='+page+'&sort=-criada_em'+(filtro?'&filter='+encodeURIComponent(filtro):''));
+      out=out.concat(r.items||[]);
+      if(!r.totalPages||page>=r.totalPages) return out;
+      page++;
+    }
+  }
+  /* tempo real do PocketBase (SSE): cada evento só chega se as regras do servidor deixam esta conta ver a tarefa (privadas de outros não chegam) */
+  function ouvirTarefas(cb){
+    let es=null,parado=false;
+    const abrir=()=>{
+      if(parado||typeof EventSource==='undefined') return;
+      es=new EventSource(URL_BASE+'/api/realtime');
+      es.addEventListener('PB_CONNECT',async ev=>{
+        try{
+          const id=(JSON.parse(ev.data||'{}').clientId)||ev.lastEventId;
+          await fetch(URL_BASE+'/api/realtime',{method:'POST',headers:{'Content-Type':'application/json',Authorization:token},body:JSON.stringify({clientId:id,subscriptions:['rhcmrv_tarefas']})});
+        }catch(e){}
+      });
+      es.addEventListener('rhcmrv_tarefas',ev=>{try{cb(JSON.parse(ev.data));}catch(e){}});
+      es.onerror=()=>{};   // o navegador reconecta sozinho e o PB_CONNECT assina de novo
+    };
+    abrir();
+    return ()=>{parado=true;if(es) es.close();};
+  }
+  const tarefas={
+    listen:ouvirTarefas,
+    list:todas,
+    create:d=>api('POST',TAREFAS,Object.assign({dono:userId()},d)),
+    update:(id,d)=>api('PATCH',TAREFAS+'/'+id,d),
+    remove:id=>api('DELETE',TAREFAS+'/'+id)
+  };
+
+  /* ---------- API do Centi (pelo servidor do sistema, com o acesso da própria pessoa) ---------- */
+  /* Sessão do Centi inválida (token vencido sem renovação, sessão apagada ou outro login): pede o login de novo, com aviso, e repete
+     a consulta uma vez. O erro só chega à tela se o login for refeito e a consulta ainda assim falhar. */
+  function erroSessao(){const e=new Error('Sem sessão do Centi. Entre novamente.');e.status=401;return e;}
+  async function comSessao(fn){
+    try{if(!cs) throw erroSessao();return await fn();}
+    catch(e){
+      if(e.status!==401) throw e;
+      clearAuth();
+      if(!(await login('Sua sessão do Centi expirou. Entre novamente para continuar.'))) throw e;
+      const b=document.getElementById('pb-logout');if(b) b.remove();vigiarLogout();   // o botão Sair passa a mostrar o usuário novo
+      return fn();
+    }
+  }
+  const centiCall=(path,body)=>comSessao(()=>centiCallUma(path,body));
+  const centiPdf=(path,mes,ano,funcionario)=>comSessao(()=>centiPdfUma(path,mes,ano,funcionario));
+  async function centiCallUma(path,body){
+    if(!cs) throw erroSessao();
+    const r=await fetch(CENTI_BASE+'/api/centi',{method:'POST',
+      headers:{'Content-Type':'application/json','x-centi-user':cs.user,'x-centi-token':cs.token,'x-centi-refresh':cs.refreshToken||''},
+      body:JSON.stringify({path,body})});
+    const nt=r.headers.get('x-centi-token'),nr=r.headers.get('x-centi-refresh');
+    if(nt){cs.token=nt;if(nr)cs.refreshToken=nr;saveAuth();}   // o Centi renova o token sozinho
+    let j=null; try{j=await r.json();}catch(e){}
+    if(!r.ok){
+      if(r.status===401){clearAuth();}
+      const err=new Error((j&&j.message)||('Centi: HTTP '+r.status));err.status=r.status;throw err;
+    }
+    return j;
+  }
+  /* consulta que o Centi entrega em PDF: a função devolve o gzip dele e o navegador abre */
+  async function centiPdfUma(path,mes,ano,funcionario){
+    if(!cs) throw erroSessao();
+    const r=await fetch(CENTI_BASE+'/api/centi',{method:'POST',
+      headers:{'Content-Type':'application/json','x-centi-user':cs.user,'x-centi-token':cs.token,'x-centi-refresh':cs.refreshToken||''},
+      body:JSON.stringify({path,body:{mes,ano,funcionario:funcionario||''}})});
+    const nt=r.headers.get('x-centi-token'),nr=r.headers.get('x-centi-refresh');
+    if(nt){cs.token=nt;if(nr)cs.refreshToken=nr;saveAuth();}
+    if(!r.ok){
+      let j=null; try{j=await r.json();}catch(e){}
+      if(r.status===401){clearAuth();}
+      const err=new Error((j&&j.message)||('Centi: HTTP '+r.status));err.status=r.status;throw err;
+    }
+    if(typeof DecompressionStream==='undefined') throw new Error('Este navegador não consegue abrir o arquivo do Centi. Use um navegador mais recente.');
+    return new Uint8Array(await new Response(r.body.pipeThrough(new DecompressionStream('gzip'))).arrayBuffer());
+  }
+  /* PB.centi.search('SFuncionario',[{FieldName:'Nome',Operation:6,Value:'%ana%'}]) -> {Data:[...],Count}
+     (Operation 6 = contém; a tela de consulta do Centi exige ao menos um filtro com valor) */
+  const centi={
+    get user(){return cs?cs.user:'';},
+    get nome(){return cs?(cs.nome||cs.user):'';},
+    get admin(){return !!(cs&&cs.admin);},   // administrador do sistema (edita o painel dos mini sistemas)
+    /* Cubo funcionário (FP051) do Centi na referência mes/ano -> {Data:[{MATRICULA,NOMEFUNC,CARGO,HIERARQUIA,...}],Total}; só ativos */
+    /* Ficha financeira (FP024) da matrícula no mês/ano -> {Fichas:[{Folha,Mes,Ano,TotalProventos,TotalDescontos,LiquidoReceber,Eventos:[...]}]}; não é guardada */
+    ficha(matricula,mes,ano){return centiCall('ficha-financeira',{matricula,mes,ano});},
+    /* Férias: ativos (FP051) + gozos de férias (FP273) -> {Pessoas:[...],Gozos:[{MATRICULA,DTAQUIINI,DTAQUIFIN,SALDO,GOZOINICIAL,GOZOFINAL,...}]} */
+    ferias(mes,ano){return centiCall('ferias',{mes,ano});},
+    cubo(mes,ano){return centiCall('cubo-funcionario',{mes,ano});},
+    /* Conferência de eventos: lançamentos (FP001 > Eventos) dos servidores do lote (até 60 Ids) que valem para o mês -> {Linhas:[{Servidor,Id,Evento,Codigo,Recorrencia,Inicio,Fim,Valor,Lancamento}],Truncados:[Id]} */
+    conferenciaEventos(ids,mes,ano){return centiCall('conferencia-eventos',{ids,mes,ano});},
+    /* Licença-prêmio: quadro de ativos (Cubo funcionário reduzido, FP245) -> {Pessoas:[{MATRICULA,NOME,SITUACAO,TIPOADMISSAO,DATAADMISSAO,LOTACAO,CARGO,TIPOAFASTAMENTO,DATAAFASTAMENTO}]} */
+    licencaQuadro(mes,ano){return centiCall('licenca-quadro',{mes,ano});},
+    /* Espelho de ponto (FP170) do órgão inteiro na referência mes/ano -> Uint8Array com o PDF (o Centi leva de 25 s a 1 min) */
+    espelho(mes,ano,funcionario){return centiPdf('espelho-ponto',mes,ano,funcionario);},
+    /* Relação de afastamentos (FP071), de 1990 até o fim da referência -> Uint8Array com o PDF; com o Id do servidor traz só ele */
+    afastamentosPdf(mes,ano,funcionario){return centiPdf('afastamentos-pdf',mes,ano,funcionario);},
+    /* Busca de servidor por nome (3+ letras) ou matrícula -> {Data:[{Id,Matricula,Nome,DataAdmissao,Situacao,TipoAdm,Cargo,Lotacao}]} (até 50) */
+    /* CPF, nascimento, identidade e endereço de UM servidor (FP001 + DM017), pelo Id da busca -> {Nome,Cpf,DataNascimento,Identidade,Endereco}; nada é guardado */
+    servidorDados(id){return centiCall('servidor-dados',{id});},
+    licencaBusca(termo){return centiCall('licenca-busca',{termo});},
+    /* Converte um .docx (Blob) em PDF/A-2u no serviço pdfa -> Blob application/pdf */
+    async pdfa(blob){
+      if(!cs) throw erroSessao();
+      const b=new Uint8Array(await blob.arrayBuffer());let bin='';
+      for(let i=0;i<b.length;i+=8192) bin+=String.fromCharCode.apply(null,b.subarray(i,i+8192));
+      const r=await fetch(CENTI_BASE+'/api/pdfa',{method:'POST',headers:{'Content-Type':'application/json','x-centi-user':cs.user,'x-centi-token':cs.token,'x-centi-refresh':cs.refreshToken||''},body:JSON.stringify({docx:btoa(bin)})});
+      const nt=r.headers.get('x-centi-token'),nr=r.headers.get('x-centi-refresh');
+      if(nt){cs.token=nt;if(nr)cs.refreshToken=nr;saveAuth();}
+      if(!r.ok){let j=null;try{j=await r.json();}catch(e){}if(r.status===401) clearAuth();const err=new Error((j&&j.message)||('PDF/A: HTTP '+r.status));err.status=r.status;throw err;}
+      return r.blob();
+    },
+    search(entity,filters,start,depth){
+      return centiCall('restauth/searchentity',{Depth:depth||50,Entity:entity,Start:start==null?1:start,
+        Filters:(filters||[]).map(f=>Object.assign({List:false,TypeFilter:0,between:''},f))});
+    }
+  };
+
+  /* ---------- conexão ---------- */
+  const sleep=ms=>new Promise(r=>setTimeout(r,ms));
+  async function alive(){
+    for(let i=0;i<3;i++){
+      const ac=new AbortController(),t=setTimeout(()=>ac.abort(),6000);
+      try{const r=await fetch(URL_BASE+'/api/health',{cache:'no-store',signal:ac.signal});clearTimeout(t);if(r.ok) return true;}catch(e){clearTimeout(t);}
+      if(i<2) await sleep(1500);
+    }
+    return false;
+  }
+  const box='position:fixed;inset:0;z-index:99999;display:flex;align-items:center;justify-content:center;padding:16px;background:rgba(0,0,0,.5)';
+  const card='width:100%;max-width:380px;background:var(--surface,#fff);color:var(--fg,#12281d);border:1px solid var(--line,#d1ddd6);border-radius:12px;padding:22px;box-shadow:0 10px 40px rgba(0,0,0,.3);font:15px/1.45 system-ui,sans-serif';
+  const bt='padding:9px 14px;border-radius:8px;font:inherit;font-weight:600;cursor:pointer;';
+  /* servidor fora do ar: pergunta antes de seguir, para não trabalhar sem querer só neste navegador */
+  function offlineDialog(){
+    return new Promise(resolve=>{
+      const w=document.createElement('div');w.style.cssText=box;
+      w.innerHTML='<div role="alertdialog" aria-modal="true" style="'+card+'"><h3 style="margin:0 0 6px;font-size:18px">Sem conexão com o servidor</h3>'+
+        '<p style="margin:0 0 14px;color:var(--muted,#4f665a);font-size:13.5px">Não foi possível falar com o servidor dos dados. Verifique a internet e tente de novo. Se continuar só neste navegador, o que você fizer <b>não será salvo no servidor</b> e não aparecerá em outros computadores.</p>'+
+        '<div style="display:flex;gap:8px;justify-content:flex-end;flex-wrap:wrap"><button type="button" data-loc style="'+bt+'border:1px solid var(--line,#d1ddd6);background:transparent;color:inherit">Usar só neste navegador</button>'+
+        '<button type="button" data-retry style="'+bt+'border:0;background:var(--accent,#0a6b3d);color:var(--accent-fg,#fff)">Tentar novamente</button></div></div>';
+      document.body.appendChild(w);
+      const done=v=>{w.remove();resolve(v);};
+      w.querySelector('[data-retry]').addEventListener('click',()=>done(true));
+      w.querySelector('[data-loc]').addEventListener('click',()=>done(false));
+      w.querySelector('[data-retry]').focus();
+    });
+  }
+  function markLocal(){
+    if(document.getElementById('pb-local')) return;
+    const b=document.createElement('div');b.id='pb-local';
+    b.style.cssText='position:fixed;left:0;right:0;bottom:0;z-index:99998;background:#8a5a00;color:#fff;padding:8px 14px;font:13.5px/1.35 system-ui,sans-serif;display:flex;gap:10px;align-items:center;justify-content:center;flex-wrap:wrap;text-align:center';
+    b.innerHTML='<span>Modo local: os dados ficam só neste navegador e <b>não são salvos no servidor</b>.</span><button type="button" style="border:1px solid #fff;background:transparent;color:#fff;border-radius:7px;padding:3px 10px;font:inherit;font-weight:600;cursor:pointer">Reconectar</button>';
+    b.querySelector('button').addEventListener('click',()=>location.reload());
+    document.body.appendChild(b);
+  }
+  async function connect(){
+    if(!URL_BASE) return null;
+    readAuth();
+    for(;;){
+      if(!(await alive())){if(await offlineDialog()) continue;markLocal();return null;}
+      try{
+        let ok=false;
+        if(token){
+          try{const r=await raw('POST','/api/collections/'+col+'/auth-refresh');token=r.token;email=(r.record&&(r.record.email||r.record.username))||email;saveAuth();ok=true;}
+          catch(e){if(e.status!==401&&e.status!==403&&e.status!==404) throw e; clearAuth();}
+        }
+        if(!ok&&!(await login())){markLocal();return null;}
+        vigiarLogout();return {doc,collection,centi,tarefas};
+      }catch(e){
+        if(await offlineDialog()) continue;
+        markLocal();return null;
+      }
+    }
+  }
+  /* ---------- recibos em PDF da entrega dos espelhos (coleção rhcmrv_recibos; o arquivo é protegido: abre com token de arquivo) ---------- */
+  const RECIBOS='/api/collections/rhcmrv_recibos/records';
+  const recibos={
+    get ok(){return !!token;},
+    /* envia o PDF; vence em `dias` dias. por = {nome,mat,user}. -> {id,arquivo,criado_em,expira_em} */
+    async enviar(ref,setor,file,por,dias){
+      if(!token) throw new Error('Entre no sistema para anexar o recibo.');
+      const agora=new Date(),exp=new Date(agora.getTime()+dias*864e5),fd=new FormData();
+      fd.append('ref',ref);fd.append('setor',setor);fd.append('por_nome',por.nome);fd.append('por_matricula',por.mat||'');fd.append('por_user',por.user||'');
+      fd.append('criado_em',agora.toISOString());fd.append('expira_em',exp.toISOString());fd.append('arquivo',file);
+      const r=await fetch(URL_BASE+RECIBOS,{method:'POST',headers:{Authorization:token},body:fd});
+      let j=null;try{j=await r.json();}catch(e){}
+      if(!r.ok){
+        const err=new Error(r.status===404?'O servidor ainda não tem a área de recibos. Saia do sistema e entre de novo.':((j&&j.message)||('HTTP '+r.status)));err.status=r.status;
+        if(r.status===401||r.status===403) clearAuth();
+        throw err;
+      }
+      return {id:j.id,arquivo:j.arquivo,criado_em:j.criado_em,expira_em:j.expira_em};
+    },
+    async url(rec){
+      const t=await api('POST','/api/files/token',{});
+      return URL_BASE+'/api/files/rhcmrv_recibos/'+rec.id+'/'+encodeURIComponent(rec.arquivo)+'?token='+encodeURIComponent(t.token);
+    },
+    async apagar(id){try{await api('DELETE',RECIBOS+'/'+id);}catch(e){if(e.status!==404) throw e;}},
+    /* apaga do servidor os recibos com mais de 90 dias; -> quantos */
+    async limparVencidos(){
+      if(!token) return 0;
+      let n=0;
+      try{
+        const r=await api('GET',RECIBOS+'?perPage=100&filter='+encodeURIComponent('expira_em < "'+new Date().toISOString()+'"'));
+        for(const it of (r.items||[])){await api('DELETE',RECIBOS+'/'+it.id);n++;}
+      }catch(e){/* coleção ainda inexistente ou sem acesso: nada a limpar */}
+      return n;
+    }
+  };
+  return {connect,centi,recibos,logout,get email(){return email;},get nome(){return centi.nome;},get admin(){return centi.admin;},get userId(){return userId();},url:URL_BASE};
+})();
+
+/* Motor das Conferências (hoje: Determinação de eventos). Classifica cada lançamento de evento de um servidor
+   (FP001 > Eventos: recorrência, data inicial e data final) em relação ao mês de referência. Não depende de tela nem de rede:
+   é inserido na página pelo build.py e carregado pelos testes (tests/conferencias.test.js). Datas "DD/MM/AAAA" viram dias em UTC. */
+(function(root){
+const D=s=>{const m=/^(\d{2})\/(\d{2})\/(\d{4})$/.exec(String(s||'').trim());return m?Date.UTC(+m[3],+m[2]-1,+m[1]):null;};
+const fmt=ms=>{if(ms==null) return '';const d=new Date(ms);return String(d.getUTCDate()).padStart(2,'0')+'/'+String(d.getUTCMonth()+1).padStart(2,'0')+'/'+d.getUTCFullYear();};
+const ANO_SEM_FIM=2090;   // data final em 2099 etc. é "sem fim" na prática
+
+const CATEGORIAS={
+  indeterminada:'Indeterminada',
+  determinada:'Determinada (até a data final)',
+  so_mes:'Determinada só no mês',
+  vence_mes:'Vence no mês',
+  ate_2099:'Determinada até 2099 (sem fim na prática)',
+  futura:'Começa depois do mês',
+  sem_data:'Determinada sem data final'
+};
+const ORDEM=['sem_data','so_mes','vence_mes','determinada','futura','ate_2099','indeterminada'];
+
+/* l: {Recorrencia:'Determinada'|'Indeterminada', Inicio, Fim}; mes/ano: referência. -> {cat, ini, fim} */
+function classificar(l,mes,ano){
+  const ini=D(l.Inicio),fim=D(l.Fim);
+  const m0=Date.UTC(ano,mes-1,1),m1=Date.UTC(ano,mes,0);
+  const o={ini,fim,cat:'determinada'};
+  if(ini!=null&&ini>m1){o.cat='futura';return o;}
+  if(l.Recorrencia==='Indeterminada'){o.cat='indeterminada';return o;}
+  if(fim==null){o.cat='sem_data';return o;}
+  if(new Date(fim).getUTCFullYear()>=ANO_SEM_FIM){o.cat='ate_2099';return o;}
+  if(fim<m0){o.cat='determinada';o.vencida=true;return o;}   // não deveria vir do Centi; fica marcado
+  if(ini!=null&&ini>=m0&&fim<=m1){o.cat='so_mes';return o;}
+  if(fim<=m1){o.cat='vence_mes';return o;}
+  return o;
+}
+
+/* resumo por evento: {chave (código ou nome), codigo, nome, total, porCat:{cat:n}} ordenado por nome */
+function porEvento(itens){
+  const m=new Map();
+  itens.forEach(x=>{
+    const k=x.l.Codigo||x.l.Evento;
+    if(!m.has(k)) m.set(k,{chave:k,codigo:x.l.Codigo||'',nome:x.l.Evento,total:0,porCat:{}});
+    const e=m.get(k);e.total++;e.porCat[x.c.cat]=(e.porCat[x.c.cat]||0)+1;
+  });
+  return [...m.values()].sort((a,b)=>a.nome.localeCompare(b.nome,'pt-BR'));
+}
+
+const API={D,fmt,CATEGORIAS,ORDEM,classificar,porEvento};
+if(typeof module!=='undefined'&&module.exports) module.exports=API;
+else root.CF=API;
+})(typeof window!=='undefined'?window:globalThis);
+
+const HOME_URL="../";
+/* Núcleo compartilhado por todas as páginas (o build.py injeta onde o modelo tem o marcador SHARED:core). Mudou aqui, mudou em todas. */
+const TEMA_KEY='rhcrv-tema';
+const $=s=>document.querySelector(s);
+const esc=s=>String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const ICO2={sun:'<circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/>',
+  moon:'<path d="M21 12.8A9 9 0 1111.2 3a7 7 0 009.8 9.8z"/>'};
+function isDark(){const m=/rgba?\((\d+),\s*(\d+),\s*(\d+)/.exec(getComputedStyle(document.body).backgroundColor);return m?(0.2126*m[1]+0.7152*m[2]+0.0722*m[3])/255<0.4:false;}
+function themeBtn(){
+  const b=$('#themeBtn');if(!b) return;const d=isDark();
+  b.innerHTML=`<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${ICO2[d?'sun':'moon']}</svg>${d?'Modo claro':'Modo escuro'}`;
+  b.setAttribute('aria-label',d?'Mudar para o modo claro':'Mudar para o modo escuro');
+}
+/* liga o botão de tema; `depois` roda após a troca (ex.: redesenhar um gráfico) */
+function ligarTema(depois){
+  $('#themeBtn').addEventListener('click',()=>{
+    const n=isDark()?'light':'dark';document.documentElement.setAttribute('data-theme',n);
+    try{localStorage.setItem(TEMA_KEY,n);}catch(e){}
+    themeBtn();if(depois) depois();
+  });
+}
+/* reage a mudanças do tema (preferência do sistema ou atributo data-theme); por padrão só refaz o botão */
+function observarTema(fn){
+  fn=fn||themeBtn;
+  try{matchMedia('(prefers-color-scheme: dark)').addEventListener('change',fn);new MutationObserver(fn).observe(document.documentElement,{attributes:true,attributeFilter:['data-theme']});}catch(e){}
+}
+try{const s=localStorage.getItem(TEMA_KEY);document.documentElement.setAttribute('data-theme',s==='dark'?'dark':'light');}catch(e){document.documentElement.setAttribute('data-theme','light');}
+/* Aviso rápido (#toast), compartilhado (marcador SHARED:toast). A página pode trocar a duração depois do marcador: TOAST_MS=3500; */
+let TOAST_MS=4500;
+function toast(m){const t=$('#toast');t.textContent=m;t.hidden=false;clearTimeout(toast.t);toast.t=setTimeout(()=>t.hidden=true,TOAST_MS);}
+/* Tela de carregamento (#load) simples, compartilhada (marcador SHARED:carga). */
+function carga(on,msg){const l=$('#load');if(!l) return;l.hidden=!on;document.body.classList.toggle('carregando',!!on);if(msg) $('#ldS').textContent=msg;}
+/* Texto sem acento, minúsculo e aparado (para comparar nomes), compartilhado (marcador SHARED:norm). */
+const norm=s=>String(s||'').normalize('NFD').replace(/[̀-ͯ]/g,'').toLowerCase().trim();
+
+const {D,fmt,CATEGORIAS,ORDEM,classificar,porEvento}=window.CF;
+const MESES=['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'];
+const ROTULO_CURTO={indeterminada:'Indeterminadas',determinada:'Determinadas (até a data final)',so_mes:'Determinadas só no mês',vence_mes:'Vencem no mês',ate_2099:'Determinadas até 2099',futura:'Começam depois do mês',sem_data:'Determinadas sem data final'};
+const ROTULO_TAG={indeterminada:'Indeterminada',determinada:'Determinada',so_mes:'Só no mês',vence_mes:'Vence no mês',ate_2099:'Até 2099',futura:'Começa depois',sem_data:'Sem data final'};
+const SECOES=[{id:'eventos',nome:'Determinação de eventos'}];
+const MIN=new Set(['de','da','do','das','dos','e','a','o','em']),SIGLAS=/^(rh|iparv|inss|irrf|fgts|tce|tcm|cef|ii|iii|iv|vi|vii|viii|ix|x)$/i;
+const titulo=s=>String(s||'').toLowerCase().replace(/\s+/g,' ').trim().split(' ').map((w,i)=>SIGLAS.test(w)?w.toUpperCase():(i>0&&MIN.has(w))?w:w.replace(/(^|[-\/(.])(\p{L})/gu,(m,a,b)=>a+b.toUpperCase())).join(' ');
+ligarTema();
+
+let secao='eventos',ref=(()=>{const d=new Date();return {mes:d.getMonth()+1,ano:d.getFullYear()};})();
+let dados=null;                    // {ref:{mes,ano}, itens:[{l,s,c}], truncados:[nomes], servidores:n}
+let filtro={cat:'',q:'',ev:''},vista='lancamentos',limite=200,lendo=false;
+
+/* ---------- abas ---------- */
+function renderAbas(){
+  $('#abas').innerHTML=SECOES.map(s=>'<button class="aba" role="tab" type="button" data-sec="'+s.id+'" aria-selected="'+(s.id===secao)+'">'+esc(s.nome)+'</button>').join('');
+}
+
+/* ---------- leitura no Centi ---------- */
+const msgErro=e=>e.status===401?'A sessão do Centi expirou. Entre de novo e repita.':(e.message||String(e));
+async function garantirSessao(){
+  if(PB.centi.user) return true;
+  await PB.connect();
+  return !!PB.centi.user;
+}
+function progresso(txt,pct){
+  $('#prog').hidden=false;$('#progTxt').textContent=txt;$('#progBar').style.width=Math.max(2,Math.min(100,pct||0))+'%';
+}
+async function carregar(){
+  if(lendo) return;
+  const mes=+$('#selMes').value,ano=+$('#selAno').value;
+  lendo=true;$('#btnCarregar').disabled=true;ref={mes,ano};
+  try{
+    if(!(await garantirSessao())){toast('Entre com o acesso do Centi para carregar.');return;}
+    progresso('Listando os servidores no Centi (leva cerca de 15 segundos)…',3);
+    const cubo=await PB.centi.cubo(mes,ano);
+    const servs=new Map();
+    (cubo.Data||[]).forEach(r=>servs.set(String(r.ID),{id:String(r.ID),mat:String(r.MATRICULA||''),nome:r.NOMEFUNC||'',cargo:r.CARGO||'',lot:r.HIERARQUIA||r.LOTACAO||''}));
+    const ids=[...servs.keys()],lotes=[];
+    for(let i=0;i<ids.length;i+=40) lotes.push(ids.slice(i,i+40));
+    const linhas=[],trunc=new Set();let feitos=0,erro=null;
+    progresso('Lendo os eventos dos servidores: 0 de '+ids.length+'…',10);
+    const fila=lotes.slice();
+    await Promise.all(Array.from({length:Math.min(3,fila.length)},async()=>{
+      while(fila.length&&!erro){
+        const lote=fila.shift();
+        try{
+          const r=await PB.centi.conferenciaEventos(lote,mes,ano);
+          (r.Linhas||[]).forEach(l=>linhas.push(l));(r.Truncados||[]).forEach(t=>trunc.add(String(t)));
+        }catch(e){erro=e;}
+        feitos+=lote.length;progresso('Lendo os eventos dos servidores: '+Math.min(feitos,ids.length)+' de '+ids.length+'…',10+feitos/ids.length*90);
+      }
+    }));
+    if(erro) throw erro;
+    const itens=linhas.map(l=>({l,s:servs.get(l.Servidor)||{id:l.Servidor,mat:'',nome:'Servidor '+l.Servidor,cargo:'',lot:''},c:classificar(l,mes,ano)}));
+    dados={ref:{mes,ano},itens,servidores:ids.length,truncados:[...trunc].map(i=>(servs.get(i)||{nome:'Servidor '+i}).nome)};
+    filtro={cat:'',q:'',ev:''};limite=200;
+  }catch(e){toast('Não foi possível carregar do Centi: '+msgErro(e));}
+  finally{lendo=false;$('#btnCarregar').disabled=false;$('#prog').hidden=true;}
+  renderEventos();
+}
+
+/* ---------- Determinação de eventos ---------- */
+const rotEvento=l=>(l.Codigo?l.Codigo+' · ':'')+titulo(l.Evento);
+function filtrados(){
+  const q=norm(filtro.q);
+  return dados.itens.filter(x=>(!filtro.cat||x.c.cat===filtro.cat)&&(!filtro.ev||(x.l.Codigo||x.l.Evento)===filtro.ev)&&
+    (!q||norm(x.s.nome+' '+x.s.mat+' '+x.l.Evento+' '+x.l.Codigo).includes(q)))
+    .sort((a,b)=>(ORDEM.indexOf(a.c.cat)-ORDEM.indexOf(b.c.cat))||((a.c.fim||9e15)-(b.c.fim||9e15))||a.s.nome.localeCompare(b.s.nome,'pt-BR'));
+}
+function renderEventos(){
+  const anoAtual=new Date().getFullYear();
+  let h='<div class="bar"><label>Mês <select id="selMes">'+MESES.map((m,i)=>'<option value="'+(i+1)+'"'+(i+1===ref.mes?' selected':'')+'>'+m+'</option>').join('')+'</select></label>'+
+    '<label>Ano <select id="selAno">'+[anoAtual-1,anoAtual,anoAtual+1].map(a=>'<option'+(a===ref.ano?' selected':'')+'>'+a+'</option>').join('')+'</select></label>'+
+    '<button class="btn primary" id="btnCarregar" type="button">'+(dados?'Carregar de novo':'Carregar do Centi')+'</button>'+
+    (dados?'<button class="btn" id="btnCsv" type="button">Exportar CSV</button>':'')+'</div>'+
+    '<div class="prog" id="prog" hidden><b id="progTxt"></b><div class="barra"><i id="progBar" style="width:2%"></i></div></div>';
+  if(!dados){
+    h+='<div class="empty"><h2>Determinação de eventos</h2><p>Escolha o mês de referência e carregue. O sistema lê, no Centi, os lançamentos de evento de cada servidor ativo (FP001 &gt; Eventos) e mostra quais são <b>indeterminados</b>, quais são <b>determinados e até quando</b> e quais valem <b>só naquele mês</b> (ex.: 01/10/2026 a 30/10/2026).</p></div>';
+    $('#secao').innerHTML=h;ligarBarra();return;
+  }
+  const cont={};dados.itens.forEach(x=>{cont[x.c.cat]=(cont[x.c.cat]||0)+1;});
+  h+='<div class="stats">'+ORDEM.filter(c=>cont[c]||c==='indeterminada'||c==='determinada'||c==='so_mes').map(c=>'<button type="button" class="stat '+c+(filtro.cat===c?' on':'')+'" data-cat="'+c+'"><b>'+(cont[c]||0)+'</b><span>'+ROTULO_CURTO[c]+'</span></button>').join('')+'</div>';
+  if(dados.truncados.length) h+='<div class="banner">Atenção: '+dados.truncados.length+' servidor(es) têm 50 ou mais lançamentos que atendem ao filtro e o Centi entrega no máximo 50 por consulta; a conferência pode estar incompleta para: '+esc(dados.truncados.slice(0,6).map(titulo).join(', '))+(dados.truncados.length>6?' e outros':'')+'.</div>';
+  const evs=porEvento(dados.itens);
+  h+='<div class="bar"><label class="search"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></svg><input id="q" type="search" placeholder="Filtrar por servidor, matrícula ou evento" value="'+esc(filtro.q)+'" autocomplete="off"></label>'+
+    '<select id="selEv" aria-label="Evento"><option value="">Todos os eventos</option>'+evs.map(e=>'<option value="'+esc(e.chave)+'"'+(filtro.ev===e.chave?' selected':'')+'>'+esc((e.codigo?e.codigo+' · ':'')+titulo(e.nome))+' ('+e.total+')</option>').join('')+'</select></div>';
+  h+='<div class="subabas" role="tablist"><button type="button" role="tab" data-vista="lancamentos" aria-selected="'+(vista==='lancamentos')+'">Lançamentos</button><button type="button" role="tab" data-vista="evento" aria-selected="'+(vista==='evento')+'">Por evento</button></div>';
+  if(vista==='evento'){
+    h+='<div class="tblwrap"><table class="lst"><thead><tr><th>Evento</th><th class="num">Lançamentos</th>'+ORDEM.map(c=>'<th class="num">'+ROTULO_TAG[c]+'</th>').join('')+'</tr></thead><tbody>'+
+      evs.map(e=>'<tr data-ev="'+esc(e.chave)+'"><td class="n"><b>'+esc((e.codigo?e.codigo+' · ':'')+titulo(e.nome))+'</b></td><td class="num">'+e.total+'</td>'+ORDEM.map(c=>'<td class="num">'+(e.porCat[c]||'')+'</td>').join('')+'</tr>').join('')+'</tbody></table></div>';
+  }else{
+    const l=filtrados(),vis=l.slice(0,limite);
+    h+='<div class="tblwrap"><table class="lst"><thead><tr><th>Servidor</th><th>Evento</th><th>Recorrência</th><th>Início</th><th>Fim</th><th class="num">Valor</th><th>Situação</th></tr></thead><tbody>'+
+      (vis.length?vis.map(x=>{
+        const fim=x.l.Recorrencia==='Indeterminada'?'—':(x.l.Fim||'—');
+        return '<tr><td class="n"><b>'+esc(titulo(x.s.nome))+'</b><span>Mat. '+esc(x.s.mat)+(x.s.lot?' · '+esc(titulo(x.s.lot)):'')+'</span></td><td class="n"><b>'+esc(rotEvento(x.l))+'</b></td><td>'+esc(x.l.Recorrencia)+'</td><td class="dt">'+esc(x.l.Inicio||'—')+'</td><td class="dt">'+esc(fim)+'</td><td class="num">'+esc(x.l.Valor)+'</td><td><span class="tag '+x.c.cat+'">'+ROTULO_TAG[x.c.cat]+'</span></td></tr>';
+      }).join(''):'<tr><td colspan="7" class="none" style="padding:16px;color:var(--muted)">Nenhum lançamento neste filtro.</td></tr>')+'</tbody></table>'+
+      (l.length>vis.length?'<div class="more"><button class="btn" id="btnMais" type="button">Mostrar mais ('+(l.length-vis.length)+' restantes)</button></div>':'')+'</div>'+
+      '<p class="note">'+l.length+' lançamento(s) de '+dados.servidores+' servidores ativos em '+MESES[dados.ref.mes-1]+'/'+dados.ref.ano+'. Valem os lançamentos indeterminados e os determinados cuja data final não acabou antes do mês.</p>';
+  }
+  $('#secao').innerHTML=h;ligarBarra();
+}
+function ligarBarra(){
+  const b=$('#btnCarregar');if(b) b.addEventListener('click',carregar);
+  const c=$('#btnCsv');if(c) c.addEventListener('click',csv);
+}
+function csv(){
+  const cel=v=>'"'+String(v==null?'':v).replace(/"/g,'""')+'"';
+  const cab=['Servidor','Matrícula','Lotação','Código do evento','Evento','Recorrência','Início','Fim','Valor','Situação'];
+  const lin=filtrados().map(x=>[x.s.nome,x.s.mat,x.s.lot,x.l.Codigo,x.l.Evento,x.l.Recorrencia,x.l.Inicio,x.l.Recorrencia==='Indeterminada'?'':x.l.Fim,x.l.Valor,CATEGORIAS[x.c.cat]].map(cel).join(';'));
+  const blob=new Blob(['﻿'+[cab.map(cel).join(';')].concat(lin).join('\r\n')],{type:'text/csv;charset=utf-8'});
+  const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='determinacao-de-eventos-'+String(dados.ref.mes).padStart(2,'0')+'-'+dados.ref.ano+'.csv';document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(a.href),2000);
+}
+
+/* ---------- eventos da página ---------- */
+document.addEventListener('click',e=>{
+  const sec=e.target.closest('[data-sec]');if(sec){secao=sec.dataset.sec;renderAbas();renderEventos();return;}
+  const st=e.target.closest('.stat[data-cat]');if(st){filtro.cat=filtro.cat===st.dataset.cat?'':st.dataset.cat;vista='lancamentos';limite=200;renderEventos();return;}
+  const vi=e.target.closest('[data-vista]');if(vi){vista=vi.dataset.vista;renderEventos();return;}
+  const ev=e.target.closest('tr[data-ev]');if(ev){filtro.ev=ev.dataset.ev;vista='lancamentos';limite=200;renderEventos();return;}
+  if(e.target.closest('#btnMais')){limite+=300;renderEventos();}
+});
+document.addEventListener('input',e=>{if(e.target.id==='q'){filtro.q=e.target.value;limite=200;const p=e.target.selectionStart;renderEventos();const q=$('#q');q.focus();q.setSelectionRange(p,p);}});
+document.addEventListener('change',e=>{
+  if(e.target.id==='selEv'){filtro.ev=e.target.value;limite=200;renderEventos();}
+  if(e.target.id==='selMes'||e.target.id==='selAno'){ref={mes:+$('#selMes').value,ano:+$('#selAno').value};}
+});
+observarTema();
+
+(function init(){
+  themeBtn();renderAbas();renderEventos();carga(true,'Conectando ao servidor…');
+  (async()=>{
+    try{
+      if(window.claude&&window.claude.use) await window.claude.use('db');
+      else await PB.connect();
+    }catch(e){}
+    finally{carga(false);}
+  })();
+})();
+</script>
+<script>
+/* "Olá, Primeiro nome" — lê o nome do Centi guardado na sessão deste navegador */
+(function(){
+  function nome(){
+    try{const a=JSON.parse(localStorage.getItem('rhcrv-pb-auth')||'null');const n=a&&a.centi&&(a.centi.nome||a.centi.user);
+      if(!n) return '';const p=String(n).trim().split(/\s+/)[0];
+      if(!p||/\d/.test(p)||/^[a-z]+\.[a-z]/i.test(p)) return '';
+      return p.charAt(0).toLocaleUpperCase('pt-BR')+p.slice(1).toLocaleLowerCase('pt-BR');}catch(e){return '';}
+  }
+  function aplicar(){
+    const n=nome();let el=document.getElementById('helloMod');
+    if(!n){if(el) el.remove();return;}
+    if(!el){
+      const hero=document.querySelector('.hero h1'),top=document.querySelector('.side .brand');
+      el=document.createElement(hero?'p':'div');el.id='helloMod';el.className='hello';
+      el.innerHTML='<span class="wave" aria-hidden="true">👋</span><span></span>';
+      if(hero) hero.parentNode.insertBefore(el,hero);
+      else if(top) top.insertAdjacentElement('afterend',el);
+      else return;
+    }
+    el.lastChild.textContent='Olá, '+n;
+  }
+  let i=0;aplicar();const t=setInterval(()=>{aplicar();if(++i>40)clearInterval(t);},500);
+  window.addEventListener('storage',aplicar);
+})();
+
+</script>

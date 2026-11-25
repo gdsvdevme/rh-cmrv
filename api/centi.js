@@ -1,9 +1,9 @@
 /* POST /api/centi  { path, body }   cabeçalhos: x-centi-user, x-centi-token, x-centi-refresh
    Repassa ao Centi uma consulta feita com o token da própria pessoa (o Centi aplica as permissões dela).
    Só as rotas listadas em ROTAS e as consultas somente leitura "cubo-funcionario" (FP051), "ficha-financeira" (FP024) "ferias" (FP051 + FP273),
-   "licenca-busca" (busca de servidor por nome ou matrícula), "licenca-quadro" (FP245), "espelho-ponto" (FP170) e "afastamentos-pdf" (FP071, do órgão ou de um servidor; os dois últimos devolvem o PDF compactado em gzip) são aceitos. O Centi renova o token sozinho; se renovar,
+   "conferencia-eventos" (lançamentos de evento por servidor: recorrência e datas, em lotes de até 60 servidores), "licenca-busca" (busca de servidor por nome ou matrícula), "licenca-quadro" (FP245), "espelho-ponto" (FP170) e "afastamentos-pdf" (FP071, do órgão ou de um servidor; os dois últimos devolvem o PDF compactado em gzip) são aceitos. O Centi renova o token sozinho; se renovar,
    o novo vem nos cabeçalhos x-centi-token e x-centi-refresh da resposta. */
-const { BASE, centiPost, chaveDaTela, cuboPayload, espelhoPayload, quadroPayload, quadroLinhas, afastamentosPayload, buscaFiltro, buscaLinhas, servidorDados, idPessoaDoFuncionario, centiGet, cuboLinhas, feriasPayload, feriasLinhas, fichaResumo, isAllowed, readBody, send } = require('./_centi');
+const { BASE, centiPost, chaveDaTela, cuboPayload, espelhoPayload, quadroPayload, quadroLinhas, afastamentosPayload, buscaFiltro, buscaLinhas, eventosFiltros, eventoLinha, eventoFiltroNome, eventoCodigo, servidorDados, idPessoaDoFuncionario, centiGet, cuboLinhas, feriasPayload, feriasLinhas, fichaResumo, isAllowed, readBody, send } = require('./_centi');
 
 const { semFolha, referencias, sessaoInvalida } = require('./_ref');
 
@@ -22,6 +22,7 @@ async function tela(codigo, payload, h) {
   return payload;
 }
 
+const CODIGOS = new Map();   // nome do evento -> código, aproveitado entre chamadas enquanto a função está ativa
 const ROTAS = /^restauth\/(searchentity)$/;
 
 module.exports = async (req, res) => {
@@ -33,20 +34,23 @@ module.exports = async (req, res) => {
   if (!isAllowed(user)) return send(res, 403, { message: 'Usuário sem permissão neste sistema.' });
   const { path, body } = readBody(req);
   const cubo = path === 'cubo-funcionario', ficha = path === 'ficha-financeira', ferias = path === 'ferias', espelho = path === 'espelho-ponto';
+  const evlote = path === 'conferencia-eventos';
   const quadro = path === 'licenca-quadro', afast = path === 'afastamentos-pdf', busca = path === 'licenca-busca', dados = path === 'servidor-dados';
-  if (typeof path !== 'string' || (!cubo && !ficha && !ferias && !espelho && !quadro && !afast && !busca && !dados && !ROTAS.test(path))) return send(res, 400, { message: 'Consulta não permitida.' });
+  if (typeof path !== 'string' || (!cubo && !evlote && !ficha && !ferias && !espelho && !quadro && !afast && !busca && !dados && !ROTAS.test(path))) return send(res, 400, { message: 'Consulta não permitida.' });
   const mes = Number(body && body.mes), ano = Number(body && body.ano), matricula = String((body && body.matricula) || '').trim();
-  if ((cubo || ficha || ferias || espelho || quadro || afast) && !(mes >= 1 && mes <= 12 && ano >= 2000 && ano <= 2100)) return send(res, 400, { message: 'Referência inválida.' });
+  if ((cubo || evlote || ficha || ferias || espelho || quadro || afast) && !(mes >= 1 && mes <= 12 && ano >= 2000 && ano <= 2100)) return send(res, 400, { message: 'Referência inválida.' });
   if (ficha && !/^\d{1,12}$/.test(matricula)) return send(res, 400, { message: 'Matrícula inválida.' });
   const funcionario = String((body && body.funcionario) || '').trim();
   if ((afast || espelho) && funcionario && !/^\d{1,12}$/.test(funcionario)) return send(res, 400, { message: 'Servidor inválido.' });
+  const ids = evlote ? (Array.isArray(body && body.ids) ? body.ids.map(String) : []) : [];
+  if (evlote && (!ids.length || ids.length > 60 || !ids.every(i => /^\d{1,12}$/.test(i)))) return send(res, 400, { message: 'Lista de servidores inválida.' });
   const idServidor = String((body && body.id) || '').trim();
   if (dados && !/^\d{1,12}$/.test(idServidor)) return send(res, 400, { message: 'Servidor inválido.' });
   const filtroBusca = busca ? buscaFiltro(body && body.termo) : null;
   if (busca && !filtroBusca) return send(res, 400, { message: 'Digite ao menos 3 letras do nome ou a matrícula.' });
   try {
     const h = { user, token, refreshtoken: refresh, Authorization: 'Bearer ' + token };
-    if (cubo || ficha || ferias || espelho || quadro || afast) Object.assign(h, { company: process.env.CENTI_COMPANY || '1', year: String(ano), month: String(mes), 'x-ts-ajax-request': 'true' });
+    if (cubo || evlote || ficha || ferias || espelho || quadro || afast) Object.assign(h, { company: process.env.CENTI_COMPANY || '1', year: String(ano), month: String(mes), 'x-ts-ajax-request': 'true' });
     if (espelho || afast) {
       /* o Centi monta o PDF (o espelho do órgão inteiro leva de 25 s a 1 min). Devolvemos o gzip dele sem reabrir: a Vercel limita a resposta a 4,5 MB */
       let e, usada = { mes, ano };
@@ -86,6 +90,36 @@ module.exports = async (req, res) => {
       res.setHeader('Content-Type', 'application/gzip');
       res.setHeader('Cache-Control', 'no-store');
       return res.end(buf);
+    }
+    if (evlote) {
+      /* lançamentos de evento (determinação) dos servidores do lote; 8 consultas ao mesmo tempo */
+      const linhas = new Map(), truncados = new Set();
+      let tk = '', rf = '';
+      const um = async id => {
+        for (const filtros of eventosFiltros(id, mes, ano)) {
+          const r = await post('restauth/searchentity', { Depth: 50, Entity: 'PessoaFuncionarioEvento', Start: 1, Filters: filtros }, h);
+          tk = r.headers.get('token') || tk; rf = r.headers.get('refreshtoken') || rf;
+          if (!r.data || r.data.Success === false) { const e = new Error((r.data && r.data.Message && r.data.Message[0]) || 'O Centi não respondeu.'); e.centi = true; throw e; }
+          const d = r.data.Data || [];
+          if (d.length >= 50) truncados.add(id);
+          d.forEach(x => linhas.set(id + ':' + x.Id, eventoLinha(id, x)));
+        }
+      };
+      const fila = ids.slice();
+      await Promise.all(Array.from({ length: Math.min(8, fila.length) }, async () => { while (fila.length) await um(fila.shift()); }));
+      /* código do evento (656...) pelo nome; guardado entre chamadas */
+      const nomes = [...new Set([...linhas.values()].map(l => l.Evento).filter(Boolean))].filter(n => !CODIGOS.has(n));
+      const fn = nomes.slice();
+      await Promise.all(Array.from({ length: Math.min(6, fn.length) }, async () => { while (fn.length) {
+        const n = fn.shift();
+        const r = await post('restauth/searchentity', { Depth: 50, Entity: 'Evento', Start: 1, Filters: [eventoFiltroNome(n)] }, h);
+        tk = r.headers.get('token') || tk; rf = r.headers.get('refreshtoken') || rf;
+        const c = eventoCodigo(n, r.data && r.data.Data);
+        if (c) CODIGOS.set(n, c);
+      } }));
+      if (tk) res.setHeader('x-centi-token', tk);
+      if (rf) res.setHeader('x-centi-refresh', rf);
+      return send(res, 200, { Linhas: [...linhas.values()].map(l => Object.assign(l, { Codigo: CODIGOS.get(l.Evento) || '' })), Truncados: [...truncados] });
     }
     if (busca) {
       const b = await post('restauth/searchentity', { Depth: 50, Entity: 'SFuncionario', Start: 1, Filters: [filtroBusca] }, h)   // Depth é o tamanho da página (50 no máximo); a paginação do Centi não avança;
@@ -172,6 +206,7 @@ module.exports = async (req, res) => {
     return send(res, r.status === 401 ? 401 : 200, r.data == null ? {} : r.data);
   } catch (e) {
     if (e && e.expirou) return send(res, 401, { message: 'Sua sessão do Centi expirou. Entre novamente.' });
+    if (e && e.centi) return send(res, 502, { message: e.message });
     return send(res, 502, { message: 'Não foi possível falar com o Centi.' });
   }
 };

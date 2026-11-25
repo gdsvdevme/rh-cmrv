@@ -115,3 +115,12 @@ test('descreverMudanca: entrou, saiu, aumentou e diminuiu, com a natureza (prove
   assert.equal(c.todos.find(m=>m.id==='50').mudou,false);       // o salário base não mudou
   assert.equal(c.todos[0].id==='50'||c.todos[0].id==='917',true);   // proventos primeiro
 });
+
+test('nome do evento: a folha só aparece entre parênteses quando acrescenta informação',()=>{
+  const un=(nome,folha)=>CF.compararFichas([fi(100,0,[ev(917,nome,100,0)],folha)],[]).todos[0].nome;
+  assert.equal(un('INDENIZAÇÃO LICENÇA PRÊMIO.','INDENIZAÇÃO LICENÇA PRÊMIO'),'INDENIZAÇÃO LICENÇA PRÊMIO.');   // repete o nome: sem parênteses
+  assert.equal(un('13º SALÁRIO ADIANTAMENTO','13º SALÁRIO'),'13º SALÁRIO ADIANTAMENTO');
+  assert.equal(un('SALÁRIO BASE','MENSAL'),'SALÁRIO BASE');
+  assert.equal(un('SALÁRIO BASE','FOLHA COMPLEMENTAR'),'SALÁRIO BASE (FOLHA COMPLEMENTAR)');
+  assert.equal(un('SALÁRIO BASE',''),'SALÁRIO BASE');
+});

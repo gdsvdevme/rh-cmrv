@@ -227,7 +227,7 @@ module.exports = async (req, res) => {
       }
       return send(res, 200, { Fichas: fichas });
     }
-    const r = await post(cubo ? 'restauth/operation' : path, cubo ? await tela('FP051', cuboPayload(mes, ano), h) : (body || {}), h);
+    const r = await post(cubo ? 'restauth/operation' : path, cubo ? await tela('FP051', cuboPayload(mes, ano, body && body.dia === 'ultimo' ? 'ultimo' : '1'), h) : (body || {}), h);
     const nt = r.headers.get('token'), nr = r.headers.get('refreshtoken');
     if (nt) res.setHeader('x-centi-token', nt);
     if (nr) res.setHeader('x-centi-refresh', nr);

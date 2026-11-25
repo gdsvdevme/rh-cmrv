@@ -70,13 +70,22 @@ function compararFichas(atual,anterior,tol){
   else if(Math.abs(d.prov)>t) status='bruto';
   else if(Math.abs(d.liq)>t||Math.abs(d.desc)>t) status='desconto';
   else status='igual';
-  return {status,a,b,d,mudancas};
+  const todos=[...mapa.values()].map(m=>Object.assign(m,{mudou:Math.abs(m.pa-m.pb)>0.004||Math.abs(m.da-m.db)>0.004,efeito:r2((m.pa-m.da)-(m.pb-m.db)),tipo:!m.tb?'novo':!m.ta?'saiu':'mudou'}))
+    .sort((x,y)=>((y.pa||y.pb)>0)-((x.pa||x.pb)>0)||Math.max(y.pa,y.da,y.pb,y.db)-Math.max(x.pa,x.da,x.pb,x.db));
+  return {status,a,b,d,mudancas,todos};
+}
+/* texto claro de uma mudança de evento: {verbo:'Entrou'|'Saiu'|'Aumentou'|'Diminuiu', natureza:'provento'|'desconto', de, para} (valores do próprio evento) */
+function descreverMudanca(m){
+  const natureza=(m.pa>0||m.pb>0)?'provento':'desconto';
+  const para=natureza==='provento'?m.pa:m.da,de=natureza==='provento'?m.pb:m.db;
+  const verbo=m.tipo==='novo'?'Entrou':m.tipo==='saiu'?'Saiu':(para>de?'Aumentou':'Diminuiu');
+  return {verbo,natureza,de,para};
 }
 const STATUS_REM={bruto:'Bruto mudou',desconto:'Só descontos mudaram',novo:'Novo na folha',saiu:'Saiu da folha',igual:'Igual',sem:'Sem ficha'};
 /* a conferência feita vale enquanto os valores forem os mesmos de quando foi marcada */
 const conferenciaValida=(rec,c)=>!!rec&&Math.abs((rec.prov||0)-c.a.prov)<0.005&&Math.abs((rec.liq||0)-c.a.liq)<0.005;
 
-const API={D,fmt,CATEGORIAS,ORDEM,classificar,porEvento,compararFichas,STATUS_REM,conferenciaValida,r2};
+const API={D,fmt,CATEGORIAS,ORDEM,classificar,porEvento,compararFichas,descreverMudanca,STATUS_REM,conferenciaValida,r2};
 if(typeof module!=='undefined'&&module.exports) module.exports=API;
 else root.CF=API;
 })(typeof window!=='undefined'?window:globalThis);

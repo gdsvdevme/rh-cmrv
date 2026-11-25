@@ -75,7 +75,7 @@ table.lst{width:100%;border-collapse:collapse;font-size:14px;min-width:820px}
 .lst th{background:var(--soft);color:var(--muted);font-size:11.5px;letter-spacing:.05em;text-transform:uppercase;padding:10px 12px;text-align:left;white-space:nowrap}
 .lst td{padding:9px 12px;border-top:1px solid var(--line);vertical-align:middle}
 .lst tbody tr[data-ev]{cursor:pointer}.lst tbody tr[data-ev]:hover td{background:var(--soft)}
-.lst td.n b{display:block;font-weight:600;line-height:1.25}.lst td.n span{color:var(--muted);font-size:12.5px}
+.lst td.n{min-width:170px}.lst td.n b{display:block;font-weight:600;line-height:1.25}.lst td.n span{color:var(--muted);font-size:12.5px}
 .lst td.num{text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap}
 .lst td.dt{white-space:nowrap;font-variant-numeric:tabular-nums}
 .empty{margin-top:24px;text-align:center;padding:38px 20px;background:var(--surface);border:2px dashed var(--line);border-radius:16px;color:var(--muted)}
@@ -94,6 +94,33 @@ table.lst{width:100%;border-collapse:collapse;font-size:14px;min-width:820px}
 @media (prefers-reduced-motion:reduce){#load .ld-spin{animation-duration:3s}}
 body.carregando{overflow:hidden}
 #toast{position:fixed;left:50%;transform:translateX(-50%);bottom:max(18px,env(safe-area-inset-bottom,0px));background:var(--fg);color:var(--bg);padding:10px 16px;border-radius:10px;font-size:14px;z-index:60;max-width:90vw}
+.stat.bruto b{color:var(--danger)}.stat.desconto b{color:var(--warn)}.stat.novo b{color:var(--blue)}.stat.saiu b{color:var(--violet)}.stat.igual b{color:var(--ok)}.stat.pend b{color:var(--danger)}
+.tag.bruto{background:var(--danger-bg);color:var(--danger)}.tag.desconto{background:var(--warn-bg);color:var(--warn)}.tag.novo{background:var(--blue-bg);color:var(--blue)}.tag.saiu{background:var(--violet-bg);color:var(--violet)}.tag.igual,.tag.conf{background:var(--ok-bg);color:var(--ok)}
+.pos{color:var(--ok)}.neg{color:var(--danger)}
+.chips{display:flex;gap:4px;flex-wrap:wrap}.chip{font-size:11.5px;background:var(--soft);border-radius:8px;padding:2px 7px;white-space:nowrap}
+.lst tbody tr[data-rm]{cursor:pointer}.lst tbody tr[data-rm]:hover td{background:var(--soft)}
+.lst tr.pendente td:first-child{box-shadow:inset 4px 0 0 var(--danger)}.lst tr.conferido td{opacity:.75}
+.tot{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,230px),1fr));gap:10px;margin-top:10px}
+.tot div{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:10px 14px;box-shadow:var(--shadow);font-size:13px;color:var(--muted)}
+.tot b{display:block;font-family:var(--f-display);font-size:1.15rem;color:var(--fg);font-variant-numeric:tabular-nums}
+.ck{display:inline-flex;align-items:center;gap:6px;font-size:13.5px;color:var(--muted);font-weight:600}
+dialog{border:1px solid var(--line);border-radius:16px;padding:0;background:var(--surface);color:var(--fg);width:min(820px,96vw);box-shadow:0 20px 60px rgba(0,0,0,.4)}
+dialog::backdrop{background:rgba(0,0,0,.5)}
+dialog .dbox{padding:20px;display:flex;flex-direction:column;gap:12px;max-height:88vh;overflow:auto}
+dialog .dbox>*{flex-shrink:0}
+dialog h3{font-size:1.15rem}dialog p{margin:0;font-size:14px}
+dialog label.f{display:flex;flex-direction:column;gap:4px;font-size:13px;color:var(--muted);font-weight:600}
+dialog input[type=text]{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:10px 12px;color:var(--fg);font-weight:400}
+dialog .row{display:flex;gap:8px;justify-content:flex-end;flex-wrap:wrap}
+.sum3{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.sum3 div{border-radius:12px;padding:9px 12px;background:var(--soft);border:1px solid var(--line)}
+.sum3 small{display:block;font-size:11.5px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:var(--muted)}
+.sum3 b{font-family:var(--f-display);font-size:1.15rem;font-variant-numeric:tabular-nums}.sum3 span{display:block;font-size:12.5px;color:var(--muted)}
+.pw{overflow:auto;border:1px solid var(--line);border-radius:12px;max-height:320px}
+table.per{width:100%;border-collapse:collapse;font-size:13.5px}
+.per th{background:var(--soft);color:var(--muted);font-size:11.5px;letter-spacing:.05em;text-transform:uppercase;padding:8px 10px;text-align:left;white-space:nowrap;position:sticky;top:0}
+.per td{padding:7px 10px;border-top:1px solid var(--line)}.per td.num{text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap}
+@media (max-width:560px){.sum3{grid-template-columns:1fr}}
 @media (pointer:coarse){input,select{font-size:16px}.btn{min-height:42px}}
 /*MODERN_CSS*/
 </style>
@@ -111,6 +138,7 @@ body.carregando{overflow:hidden}
   <div id="secao"></div>
 </div></main>
 <div id="load" role="status" aria-live="polite"><div class="ld-box"><div class="ld-spin" aria-hidden="true"></div><b>Conferências</b><span id="ldS">Abrindo o sistema</span></div></div>
+<dialog id="dlg"></dialog>
 <div id="toast" hidden></div>
 
 <script>
@@ -122,16 +150,18 @@ const {D,fmt,CATEGORIAS,ORDEM,classificar,porEvento}=window.CF;
 const MESES=['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'];
 const ROTULO_CURTO={indeterminada:'Indeterminadas',determinada:'Determinadas (até a data final)',so_mes:'Determinadas só no mês',vence_mes:'Vencem no mês',ate_2099:'Determinadas até 2099',futura:'Começam depois do mês',sem_data:'Determinadas sem data final'};
 const ROTULO_TAG={indeterminada:'Indeterminada',determinada:'Determinada',so_mes:'Só no mês',vence_mes:'Vence no mês',ate_2099:'Até 2099',futura:'Começa depois',sem_data:'Sem data final'};
-const SECOES=[{id:'eventos',nome:'Determinação de eventos'}];
+const SECOES=[{id:'eventos',nome:'Determinação de eventos'},{id:'remuneracao',nome:'Conferência de remuneração'}];
 const MIN=new Set(['de','da','do','das','dos','e','a','o','em']),SIGLAS=/^(rh|iparv|inss|irrf|fgts|tce|tcm|cef|ii|iii|iv|vi|vii|viii|ix|x)$/i;
 const titulo=s=>String(s||'').toLowerCase().replace(/\s+/g,' ').trim().split(' ').map((w,i)=>SIGLAS.test(w)?w.toUpperCase():(i>0&&MIN.has(w))?w:w.replace(/(^|[-\/(.])(\p{L})/gu,(m,a,b)=>a+b.toUpperCase())).join(' ');
 ligarTema();
 
 let secao='eventos',ref=(()=>{const d=new Date();return {mes:d.getMonth()+1,ano:d.getFullYear()};})();
+let dbh=null;
 let dados=null;                    // {ref:{mes,ano}, itens:[{l,s,c}], truncados:[nomes], servidores:n}
 let filtro={cat:'',q:'',ev:''},vista='lancamentos',limite=200,lendo=false;
 
 /* ---------- abas ---------- */
+function renderSecao(){if(secao==='remuneracao') renderRemun();else renderEventos();}
 function renderAbas(){
   $('#abas').innerHTML=SECOES.map(s=>'<button class="aba" role="tab" type="button" data-sec="'+s.id+'" aria-selected="'+(s.id===secao)+'">'+esc(s.nome)+'</button>').join('');
 }
@@ -233,27 +263,183 @@ function csv(){
   const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='determinacao-de-eventos-'+String(dados.ref.mes).padStart(2,'0')+'-'+dados.ref.ano+'.csv';document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(a.href),2000);
 }
 
+
+/* ---------- Conferência de remuneração: ficha financeira (FP024) do mês x mês anterior ---------- */
+const {compararFichas,STATUS_REM,conferenciaValida,r2}=window.CF;
+const brl=n=>'R$ '+Number(n||0).toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2});
+const sgn=n=>Math.abs(n)<0.005?'—':(n>0?'+':'−')+brl(Math.abs(n));
+const numBR=t=>{t=String(t==null?'':t).replace(/[^\d,.\-]/g,'');if(!t) return 0;if(t.includes(',')) t=t.replace(/\./g,'').replace(',','.');const n=Number(t);return isFinite(n)?n:0;};
+let rem=null;                                   // {ref,ant,itens:[{s,f:{Atual,Anterior},c}],conf:{matrícula:{por,em,nota,prov,liq}}}
+let rf={st:'',q:'',ocultar:false,tol:0},rLimite=200,rLendo=false;
+const mesAntRef=(m,a)=>m===1?{mes:12,ano:a-1}:{mes:m-1,ano:a};
+const docRem=r=>'conferencias/remuneracao-'+r.ano+'-'+String(r.mes).padStart(2,'0');
+async function lerConf(r){
+  if(!dbh) return {};
+  try{const d=await dbh.doc(docRem(r)).get();if(d.exists){const j=JSON.parse(d.data().json);return (j&&j.itens)||{};}}catch(e){}
+  return {};
+}
+/* a marcação relê o que está no servidor e troca só aquela matrícula: duas pessoas conferindo servidores diferentes não se sobrescrevem */
+let filaConf=Promise.resolve();
+function gravarConf(r,mat,rec){
+  const f=filaConf.then(async()=>{
+    if(!dbh) throw new Error('Sem conexão com o servidor: a conferência não pôde ser salva.');
+    let itens=await lerConf(r);
+    if(rec) itens[mat]=rec;else delete itens[mat];
+    await dbh.doc(docRem(r)).set({json:JSON.stringify({v:1,itens})});
+    return itens;
+  });
+  filaConf=f.catch(()=>{});
+  return f;
+}
+function recalcRem(){rem.itens.forEach(x=>{x.c=compararFichas(x.f.Atual,x.f.Anterior,rf.tol);});}
+async function carregarRem(){
+  if(rLendo) return;
+  const mes=+$('#rMes').value,ano=+$('#rAno').value;rf.tol=Math.max(0,numBR($('#rTol').value));
+  rLendo=true;$('#rCarregar').disabled=true;
+  const prog=(t,p)=>{$('#rProg').hidden=false;$('#rProgTxt').textContent=t;$('#rProgBar').style.width=Math.max(2,Math.min(100,p||0))+'%';};
+  try{
+    if(!(await garantirSessao())){toast('Entre com o acesso do Centi para carregar.');return;}
+    prog('Listando os servidores no Centi (leva cerca de 10 segundos)…',3);
+    const cubo=await PB.centi.cubo(mes,ano);
+    const servs=new Map();
+    (cubo.Data||[]).forEach(r=>{const m=String(r.MATRICULA||'');if(m) servs.set(m,{mat:m,nome:r.NOMEFUNC||'',cargo:r.CARGO||'',lot:r.HIERARQUIA||r.LOTACAO||''});});
+    const mats=[...servs.keys()],fila=[],fichas={};
+    for(let i=0;i<mats.length;i+=30) fila.push(mats.slice(i,i+30));
+    let feitos=0,erro=null;
+    prog('Lendo as fichas financeiras: 0 de '+mats.length+'…',10);
+    await Promise.all(Array.from({length:Math.min(4,fila.length)},async()=>{
+      while(fila.length&&!erro){
+        const lote=fila.shift();
+        try{Object.assign(fichas,(await PB.centi.conferenciaRemuneracao(lote,mes,ano)).Servidores||{});}catch(e){erro=e;}
+        feitos+=lote.length;prog('Lendo as fichas financeiras ('+MESES[mes-1]+' e '+MESES[mesAntRef(mes,ano).mes-1]+'): '+Math.min(feitos,mats.length)+' de '+mats.length+'…',10+feitos/mats.length*88);
+      }
+    }));
+    if(erro) throw erro;
+    const ref_={mes,ano};
+    const conf=await lerConf(ref_);
+    rem={ref:ref_,ant:mesAntRef(mes,ano),conf,itens:mats.map(m=>({s:servs.get(m),f:fichas[m]||{Atual:[],Anterior:[]}}))};
+    recalcRem();rf.st='';rf.q='';rLimite=200;
+  }catch(e){toast('Não foi possível carregar do Centi: '+msgErro(e));}
+  finally{rLendo=false;const b=$('#rCarregar');if(b) b.disabled=false;const p=$('#rProg');if(p) p.hidden=true;}
+  renderRemun();
+}
+const confDe=x=>{const rec=rem.conf[x.s.mat];return {rec,ok:conferenciaValida(rec,x.c),velha:!!rec&&!conferenciaValida(rec,x.c)};};
+const ehDiverg=c=>c.status==='bruto'||c.status==='desconto'||c.status==='novo'||c.status==='saiu';
+function filtradosRem(){
+  const q=norm(rf.q);
+  return rem.itens.filter(x=>{
+    if(x.c.status==='sem') return false;
+    const k=confDe(x);
+    if(rf.st==='pend'){if(!ehDiverg(x.c)||k.ok) return false;}
+    else if(rf.st&&x.c.status!==rf.st) return false;
+    if(rf.ocultar&&k.ok) return false;
+    return !q||norm(x.s.nome+' '+x.s.mat).includes(q);
+  }).sort((a,b)=>{
+    const pa=ehDiverg(a.c)&&!confDe(a).ok?0:ehDiverg(a.c)?1:2,pb=ehDiverg(b.c)&&!confDe(b).ok?0:ehDiverg(b.c)?1:2;
+    return (pa-pb)||((Math.abs(b.c.d.prov)+Math.abs(b.c.d.liq))-(Math.abs(a.c.d.prov)+Math.abs(a.c.d.liq)))||a.s.nome.localeCompare(b.s.nome,'pt-BR');
+  });
+}
+const clsDif=n=>Math.abs(n)<0.005?'':(n>0?'pos':'neg');
+const chipsMud=c=>c.mudancas.slice(0,3).map(m=>'<span class="chip">'+esc(m.id+' '+titulo(m.nome).slice(0,22))+' '+sgn(m.efeito)+'</span>').join('')+(c.mudancas.length>3?'<span class="chip">+'+(c.mudancas.length-3)+'</span>':'');
+function renderRemun(){
+  const anoAtual=new Date().getFullYear(),a=rem?rem.ant:mesAntRef(ref.mes,ref.ano);
+  let h='<div class="bar"><label>Mês <select id="rMes">'+MESES.map((m,i)=>'<option value="'+(i+1)+'"'+(i+1===ref.mes?' selected':'')+'>'+m+'</option>').join('')+'</select></label>'+
+    '<label>Ano <select id="rAno">'+[anoAtual-1,anoAtual,anoAtual+1].map(y=>'<option'+(y===ref.ano?' selected':'')+'>'+y+'</option>').join('')+'</select></label>'+
+    '<label title="Diferenças até este valor não contam como divergência">Tolerância R$ <input id="rTol" type="text" inputmode="decimal" value="'+esc(String(rf.tol||0).replace('.',','))+'" style="width:84px;background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:10px 10px"></label>'+
+    '<button class="btn primary" id="rCarregar" type="button">'+(rem?'Carregar de novo':'Carregar do Centi')+'</button>'+(rem?'<button class="btn" id="rCsv" type="button">Exportar CSV</button>':'')+'</div>'+
+    '<div class="prog" id="rProg" hidden><b id="rProgTxt"></b><div class="barra"><i id="rProgBar" style="width:2%"></i></div></div>';
+  if(!rem){
+    $('#secao').innerHTML=h+'<div class="empty"><h2>Conferência de remuneração</h2><p>Escolha o mês e carregue. O sistema lê a <b>ficha financeira</b> (FP024) de cada servidor ativo no mês escolhido e no <b>mês anterior ('+MESES[a.mes-1]+'/'+a.ano+')</b>, compara proventos, descontos e líquido e <b>destaca quem divergiu</b>, com os eventos que explicam a diferença. Depois de conferir, marque o servidor como <b>conferido</b>.</p></div>';
+    ligarRem();return;
+  }
+  const cont={bruto:0,desconto:0,novo:0,saiu:0,igual:0,pend:0};
+  let tPa=0,tPb=0,tLa=0,tLb=0;
+  rem.itens.forEach(x=>{if(x.c.status==='sem') return;cont[x.c.status]++;if(ehDiverg(x.c)&&!confDe(x).ok) cont.pend++;tPa+=x.c.a.prov;tPb+=x.c.b.prov;tLa+=x.c.a.liq;tLb+=x.c.b.liq;});
+  const conferidos=rem.itens.filter(x=>x.c.status!=='sem'&&ehDiverg(x.c)&&confDe(x).ok).length,totalDiv=cont.bruto+cont.desconto+cont.novo+cont.saiu;
+  const cards=[['pend','Divergentes a conferir'],['bruto','Bruto mudou'],['desconto','Só descontos mudaram'],['novo','Novos na folha'],['saiu','Saíram da folha'],['igual','Iguais']];
+  h+='<div class="stats">'+cards.map(c=>'<button type="button" class="stat '+c[0]+(rf.st===c[0]?' on':'')+'" data-rst="'+c[0]+'"><b>'+cont[c[0]]+'</b><span>'+c[1]+'</span></button>').join('')+'</div>'+
+    '<div class="tot"><div>Folha bruta '+MESES[rem.ref.mes-1]+'/'+rem.ref.ano+'<b>'+brl(tPa)+'</b>'+sgn(r2(tPa-tPb))+' sobre '+MESES[a.mes-1]+'</div><div>Líquido '+MESES[rem.ref.mes-1]+'/'+rem.ref.ano+'<b>'+brl(tLa)+'</b>'+sgn(r2(tLa-tLb))+' sobre '+MESES[a.mes-1]+'</div><div>Conferência<b>'+conferidos+' de '+totalDiv+'</b>divergências conferidas</div></div>';
+  h+='<div class="bar"><label class="search"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></svg><input id="rQ" type="search" placeholder="Filtrar por servidor ou matrícula" value="'+esc(rf.q)+'" autocomplete="off"></label>'+
+    '<label class="ck"><input type="checkbox" id="rOcultar"'+(rf.ocultar?' checked':'')+'> Ocultar conferidos</label></div>';
+  const l=filtradosRem(),vis=l.slice(0,rLimite);
+  h+='<div class="tblwrap"><table class="lst" style="min-width:980px"><thead><tr><th>Servidor</th><th class="num">Bruto anterior</th><th class="num">Bruto atual</th><th class="num">Dif.</th><th class="num">Líquido anterior</th><th class="num">Líquido atual</th><th class="num">Dif.</th><th>O que mudou</th><th>Situação</th></tr></thead><tbody>'+
+    (vis.length?vis.map(x=>{
+      const i=rem.itens.indexOf(x),k=confDe(x),c=x.c,div=ehDiverg(c);
+      const sit=k.ok?'<span class="tag conf" title="'+esc((k.rec.por||'')+' em '+new Date(k.rec.em).toLocaleDateString('pt-BR')+(k.rec.nota?' · '+k.rec.nota:''))+'">Conferido</span>':k.velha?'<span class="tag bruto">Mudou após conferir</span>':'<span class="tag '+c.status+'">'+({desconto:'Só descontos'}[c.status]||STATUS_REM[c.status])+'</span>';
+      return '<tr data-rm="'+i+'" class="'+(div&&!k.ok?'pendente':'')+(k.ok?' conferido':'')+'"><td class="n"><b>'+esc(titulo(x.s.nome))+'</b><span>Mat. '+esc(x.s.mat)+(x.s.lot?' · '+esc(titulo(x.s.lot)):'')+'</span></td>'+
+        '<td class="num">'+brl(c.b.prov)+'</td><td class="num">'+brl(c.a.prov)+'</td><td class="num '+clsDif(c.d.prov)+'">'+sgn(c.d.prov)+'</td>'+
+        '<td class="num">'+brl(c.b.liq)+'</td><td class="num">'+brl(c.a.liq)+'</td><td class="num '+clsDif(c.d.liq)+'">'+sgn(c.d.liq)+'</td>'+
+        '<td><div class="chips">'+chipsMud(c)+'</div></td><td>'+sit+'</td></tr>';
+    }).join(''):'<tr><td colspan="9" style="padding:16px;color:var(--muted)">Nenhum servidor neste filtro.</td></tr>')+'</tbody></table>'+
+    (l.length>vis.length?'<div class="more"><button class="btn" id="rMais" type="button">Mostrar mais ('+(l.length-vis.length)+' restantes)</button></div>':'')+'</div>'+
+    '<p class="note">'+l.length+' servidor(es) listados · comparação de '+MESES[rem.ref.mes-1]+'/'+rem.ref.ano+' com '+MESES[a.mes-1]+'/'+a.ano+', somando todas as folhas de cada mês (mensal, 13º, complementar). Clique no servidor para ver o que mudou e marcar como conferido. A conferência deixa de valer se a ficha mudar depois.</p>';
+  $('#secao').innerHTML=h;ligarRem();
+}
+function ligarRem(){
+  const b=$('#rCarregar');if(b) b.addEventListener('click',carregarRem);
+  const c=$('#rCsv');if(c) c.addEventListener('click',csvRem);
+}
+function dlgRem(i){
+  const x=rem.itens[i];if(!x) return;
+  const c=x.c,k=confDe(x),a=rem.ant,r=rem.ref;
+  const cx=(t,b,at,d)=>'<div><small>'+t+'</small><b>'+brl(at)+'</b><span>'+MESES[a.mes-1].slice(0,3)+': '+brl(b)+' · <b class="'+clsDif(d)+'" style="font-size:inherit;font-family:inherit">'+sgn(d)+'</b></span></div>';
+  const lin=m=>'<tr><td>'+esc(m.id+' · '+titulo(m.nome))+'</td><td><span class="tag '+(m.tipo==='novo'?'novo':m.tipo==='saiu'?'saiu':'desconto')+'">'+(m.tipo==='novo'?'Novo':m.tipo==='saiu'?'Saiu':'Mudou')+'</span></td>'+
+    '<td class="num">'+(m.pb?'P '+brl(m.pb):'')+(m.db?(m.pb?'<br>':'')+'D '+brl(m.db):'')+(m.tb?'':'—')+'</td><td class="num">'+(m.pa?'P '+brl(m.pa):'')+(m.da?(m.pa?'<br>':'')+'D '+brl(m.da):'')+(m.ta?'':'—')+'</td><td class="num '+clsDif(m.efeito)+'">'+sgn(m.efeito)+'</td></tr>';
+  $('#dlg').innerHTML='<div class="dbox"><h3>'+esc(titulo(x.s.nome))+'</h3><p>Matrícula '+esc(x.s.mat)+(x.s.cargo?' · '+esc(titulo(x.s.cargo)):'')+(x.s.lot?' · '+esc(titulo(x.s.lot)):'')+' · <span class="tag '+c.status+'">'+STATUS_REM[c.status]+'</span></p>'+
+    '<div class="sum3">'+cx('Proventos (bruto)',c.b.prov,c.a.prov,c.d.prov)+cx('Descontos',c.b.desc,c.a.desc,c.d.desc)+cx('Líquido',c.b.liq,c.a.liq,c.d.liq)+'</div>'+
+    (c.mudancas.length?'<div class="pw"><table class="per"><thead><tr><th>Evento</th><th></th><th class="num">'+MESES[a.mes-1]+'</th><th class="num">'+MESES[r.mes-1]+'</th><th class="num">Efeito no líquido</th></tr></thead><tbody>'+c.mudancas.map(lin).join('')+'</tbody></table></div><p class="sub" style="color:var(--muted);font-size:12.5px">P = provento, D = desconto.</p>':'<p>Nenhum evento mudou entre os dois meses.</p>')+
+    (k.velha?'<div class="banner">Esta ficha já foi conferida por '+esc(k.rec.por||'—')+' em '+new Date(k.rec.em).toLocaleDateString('pt-BR')+', mas os valores mudaram depois (era '+brl(k.rec.prov)+' bruto e '+brl(k.rec.liq)+' líquido). Confira de novo.</div>':'')+
+    '<label class="f">Observação da conferência (opcional)<input type="text" id="rNota" maxlength="300" placeholder="ex.: reajuste de março; penhora nova (processo X)" value="'+esc(k.rec?k.rec.nota||'':'')+'"></label>'+
+    (k.ok?'<p class="sub" style="color:var(--muted);font-size:12.5px">Conferido por '+esc(k.rec.por||'—')+' em '+new Date(k.rec.em).toLocaleString('pt-BR')+'.</p>':'')+
+    '<div class="row"><button class="btn" type="button" data-rfechar>Fechar</button>'+(k.rec?'<button class="btn" type="button" data-rdesm="'+i+'">Remover conferência</button>':'')+'<button class="btn primary" type="button" data-rconf="'+i+'">'+(k.ok?'Atualizar observação':'Marcar como conferido')+'</button></div></div>';
+  $('#dlg').showModal();
+}
+async function marcarConf(i,desmarcar){
+  const x=rem.itens[i];if(!x) return;
+  const rec=desmarcar?null:{por:PB.centi.nome||PB.centi.user||'',em:new Date().toISOString(),nota:($('#rNota').value||'').trim(),prov:x.c.a.prov,liq:x.c.a.liq};
+  try{rem.conf=await gravarConf(rem.ref,x.s.mat,rec);toast(desmarcar?'Conferência removida.':'Marcado como conferido.');}
+  catch(e){toast(e.message||'Não foi possível salvar.');return;}
+  $('#dlg').close();renderRemun();
+}
+function csvRem(){
+  const cel=v=>'"'+String(v==null?'':v).replace(/"/g,'""')+'"',n=v=>String(v).replace('.',',');
+  const cab=['Servidor','Matrícula','Lotação','Bruto anterior','Bruto atual','Diferença bruto','Líquido anterior','Líquido atual','Diferença líquido','Situação','Conferido','Conferido por','Observação','Principais mudanças'];
+  const lin=filtradosRem().map(x=>{const k=confDe(x),c=x.c;return [x.s.nome,x.s.mat,x.s.lot,n(c.b.prov),n(c.a.prov),n(c.d.prov),n(c.b.liq),n(c.a.liq),n(c.d.liq),STATUS_REM[c.status],k.ok?'Sim':k.velha?'Mudou após conferir':'Não',k.rec?k.rec.por:'',k.rec?k.rec.nota:'',c.mudancas.slice(0,5).map(m=>m.id+' '+m.nome+' '+n(m.efeito)).join(' | ')].map(cel).join(';');});
+  const blob=new Blob(['﻿'+[cab.map(cel).join(';')].concat(lin).join('\r\n')],{type:'text/csv;charset=utf-8'});
+  const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='conferencia-remuneracao-'+String(rem.ref.mes).padStart(2,'0')+'-'+rem.ref.ano+'.csv';document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(a.href),2000);
+}
+
 /* ---------- eventos da página ---------- */
 document.addEventListener('click',e=>{
-  const sec=e.target.closest('[data-sec]');if(sec){secao=sec.dataset.sec;renderAbas();renderEventos();return;}
+  const rs=e.target.closest('[data-rst]');if(rs){rf.st=rf.st===rs.dataset.rst?'':rs.dataset.rst;rLimite=200;renderRemun();return;}
+  const rm=e.target.closest('tr[data-rm]');if(rm){dlgRem(+rm.dataset.rm);return;}
+  if(e.target.closest('[data-rfechar]')){$('#dlg').close();return;}
+  const rc=e.target.closest('[data-rconf]');if(rc){marcarConf(+rc.dataset.rconf,false);return;}
+  const rd=e.target.closest('[data-rdesm]');if(rd){marcarConf(+rd.dataset.rdesm,true);return;}
+  if(e.target.closest('#rMais')){rLimite+=300;renderRemun();return;}
+  const sec=e.target.closest('[data-sec]');if(sec){secao=sec.dataset.sec;renderAbas();renderSecao();return;}
   const st=e.target.closest('.stat[data-cat]');if(st){filtro.cat=filtro.cat===st.dataset.cat?'':st.dataset.cat;vista='lancamentos';limite=200;renderEventos();return;}
   const vi=e.target.closest('[data-vista]');if(vi){vista=vi.dataset.vista;renderEventos();return;}
   const ev=e.target.closest('tr[data-ev]');if(ev){filtro.ev=ev.dataset.ev;vista='lancamentos';limite=200;renderEventos();return;}
   if(e.target.closest('#btnMais')){limite+=300;renderEventos();}
 });
-document.addEventListener('input',e=>{if(e.target.id==='q'){filtro.q=e.target.value;limite=200;const p=e.target.selectionStart;renderEventos();const q=$('#q');q.focus();q.setSelectionRange(p,p);}});
+document.addEventListener('input',e=>{
+  if(e.target.id==='rQ'){rf.q=e.target.value;rLimite=200;const p=e.target.selectionStart;renderRemun();const q=$('#rQ');q.focus();q.setSelectionRange(p,p);return;}if(e.target.id==='q'){filtro.q=e.target.value;limite=200;const p=e.target.selectionStart;renderEventos();const q=$('#q');q.focus();q.setSelectionRange(p,p);}});
 document.addEventListener('change',e=>{
+  if(e.target.id==='rOcultar'){rf.ocultar=e.target.checked;rLimite=200;renderRemun();return;}
+  if(e.target.id==='rTol'&&rem){rf.tol=Math.max(0,numBR(e.target.value));recalcRem();renderRemun();return;}
+  if(e.target.id==='rMes'||e.target.id==='rAno'){ref={mes:+$('#rMes').value,ano:+$('#rAno').value};return;}
   if(e.target.id==='selEv'){filtro.ev=e.target.value;limite=200;renderEventos();}
   if(e.target.id==='selMes'||e.target.id==='selAno'){ref={mes:+$('#selMes').value,ano:+$('#selAno').value};}
 });
 observarTema();
 
 (function init(){
-  themeBtn();renderAbas();renderEventos();carga(true,'Conectando ao servidor…');
+  themeBtn();renderAbas();renderSecao();carga(true,'Conectando ao servidor…');
   (async()=>{
     try{
-      if(window.claude&&window.claude.use) await window.claude.use('db');
-      else await PB.connect();
+      if(window.claude&&window.claude.use) dbh=await window.claude.use('db');
+      if(!dbh) dbh=await PB.connect();
     }catch(e){}
     finally{carga(false);}
   })();

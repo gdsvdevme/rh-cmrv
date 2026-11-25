@@ -45,3 +45,58 @@ test('resumo por evento agrupa pelo código e conta por categoria',()=>{
   assert.deepEqual(r.map(x=>[x.codigo,x.total]),[['644',1],['656',2]]);
   assert.deepEqual(r[1].porCat,{indeterminada:1,so_mes:1});
 });
+
+/* ---------- remuneração ---------- */
+const fi=(prov,desc,evs,folha)=>({Folha:folha||'MENSAL',Prov:prov,Desc:desc,Liq:Math.round((prov-desc)*100)/100,Eventos:evs});
+const ev=(id,nome,p,d)=>({Id:id,Nome:nome,P:p,D:d});
+
+test('remuneração igual nos dois meses',()=>{
+  const f=()=>[fi(5000,1000,[ev(50,'SALÁRIO',5000,0),ev(52,'INSS',0,1000)])];
+  const c=CF.compararFichas(f(),f());
+  assert.equal(c.status,'igual');assert.deepEqual(c.mudancas,[]);
+});
+
+test('bruto mudou: aponta o evento que explica a diferença',()=>{
+  const ant=[fi(5000,1000,[ev(50,'SALÁRIO',5000,0),ev(52,'INSS',0,1000)])];
+  const atu=[fi(6000,1000,[ev(50,'SALÁRIO',5000,0),ev(149,'QUINQUÊNIO',1000,0),ev(52,'INSS',0,1000)])];
+  const c=CF.compararFichas(atu,ant);
+  assert.equal(c.status,'bruto');assert.equal(c.d.prov,1000);assert.equal(c.d.liq,1000);
+  assert.deepEqual(c.mudancas.map(m=>[m.id,m.tipo,m.efeito]),[['149','novo',1000]]);
+});
+
+test('só descontos mudaram (bruto igual): consignação nova',()=>{
+  const ant=[fi(5000,1000,[ev(50,'SALÁRIO',5000,0),ev(52,'INSS',0,1000)])];
+  const atu=[fi(5000,1366.02,[ev(50,'SALÁRIO',5000,0),ev(52,'INSS',0,1000),ev(913,'PENHORA',0,366.02)])];
+  const c=CF.compararFichas(atu,ant);
+  assert.equal(c.status,'desconto');assert.equal(c.d.liq,-366.02);
+  assert.deepEqual(c.mudancas.map(m=>[m.id,m.tipo,m.efeito]),[['913','novo',-366.02]]);
+});
+
+test('evento que saiu da ficha e valor que mudou',()=>{
+  const ant=[fi(5000,1100,[ev(50,'SALÁRIO',5000,0),ev(91,'CONVENIO',0,100),ev(52,'INSS',0,1000)])];
+  const atu=[fi(5000,1050,[ev(50,'SALÁRIO',5000,0),ev(52,'INSS',0,1050)])];
+  const c=CF.compararFichas(atu,ant);
+  assert.deepEqual(c.mudancas.map(m=>[m.id,m.tipo]),[['91','saiu'],['52','mudou']]);
+});
+
+test('novo na folha, saiu da folha, sem ficha',()=>{
+  const f=[fi(5000,1000,[])];
+  assert.equal(CF.compararFichas(f,[]).status,'novo');
+  assert.equal(CF.compararFichas([],f).status,'saiu');
+  assert.equal(CF.compararFichas([],[]).status,'sem');
+});
+
+test('tolerância: diferenças pequenas não contam; 13º entra como outra folha',()=>{
+  const ant=[fi(5000,1000,[])],atu=[fi(5000.5,1000,[])];
+  assert.equal(CF.compararFichas(atu,ant,0).status,'bruto');
+  assert.equal(CF.compararFichas(atu,ant,1).status,'igual');
+  const c=CF.compararFichas([fi(5000,1000,[ev(50,'SAL',5000,0)]),fi(5000,0,[ev(8,'13º SALÁRIO',5000,0)],'13º SALÁRIO')],[fi(5000,1000,[ev(50,'SAL',5000,0)])]);
+  assert.equal(c.status,'bruto');assert.match(c.mudancas[0].nome,/13º/);
+});
+
+test('a conferência marcada deixa de valer se os valores mudarem depois',()=>{
+  const c=CF.compararFichas([fi(5000,1000,[])],[fi(4000,1000,[])]);
+  assert.equal(CF.conferenciaValida({prov:5000,liq:4000},c),true);
+  assert.equal(CF.conferenciaValida({prov:5000,liq:3900},c),false);
+  assert.equal(CF.conferenciaValida(null,c),false);
+});

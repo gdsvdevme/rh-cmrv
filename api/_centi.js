@@ -307,4 +307,8 @@ const eventoCodigo = (nome, data) => {
   const ex = (data || []).filter(e => String(e.Nome).trim().toUpperCase() === n);
   return ex.length ? String(ex[0].Id) : '';
 };
-Object.assign(module.exports, { eventosFiltros, eventoLinha, eventoFiltroNome, eventoCodigo });
+/* Conferência de remuneração: ficha financeira enxuta (totais e, por evento, provento e desconto; sem CPF, base de cálculo nem apontamentos) */
+const fichaEnxuta = f => ({ Folha: f.Folha, Mes: f.Mes, Ano: f.Ano, Prov: f.TotalProventos, Desc: f.TotalDescontos, Liq: f.LiquidoReceber,
+  Eventos: (f.Eventos || []).map(e => ({ Id: e.Id, Nome: e.Nome, P: e.Provento, D: e.Desconto })) });
+const mesAnterior = (mes, ano) => mes === 1 ? { mes: 12, ano: ano - 1 } : { mes: mes - 1, ano };
+Object.assign(module.exports, { fichaEnxuta, mesAnterior, eventosFiltros, eventoLinha, eventoFiltroNome, eventoCodigo });

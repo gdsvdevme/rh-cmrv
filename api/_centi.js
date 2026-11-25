@@ -307,8 +307,21 @@ const eventoCodigo = (nome, data) => {
   const ex = (data || []).filter(e => String(e.Nome).trim().toUpperCase() === n);
   return ex.length ? String(ex[0].Id) : '';
 };
+/* Consulta ao Centi com novas tentativas: resposta vazia, fora do ar ou "Success: false" (instabilidade passageira) tenta de novo até 3 vezes.
+   Sessão inválida não é tratada aqui (post lança o erro "expirou" e ninguém repete). */
+const dorme = ms => new Promise(r => setTimeout(r, ms));
+async function postComTentativas(post, path, body, h, tentativas = 3, espera = 300) {
+  let r;
+  for (let i = 0; i < tentativas; i++) {
+    r = await post(path, body, h);
+    if (r.data && r.data.Success !== false) return r;
+    if (i < tentativas - 1) await dorme(espera * (i + 1));
+  }
+  return r;
+}
+const motivoFalha = r => 'HTTP ' + (r && r.status) + (r && r.data && r.data.Message && r.data.Message[0] ? ': ' + r.data.Message[0] : '');
 /* Conferência de remuneração: ficha financeira enxuta (totais e, por evento, provento e desconto; sem CPF, base de cálculo nem apontamentos) */
 const fichaEnxuta = f => ({ Folha: f.Folha, Mes: f.Mes, Ano: f.Ano, Prov: f.TotalProventos, Desc: f.TotalDescontos, Liq: f.LiquidoReceber,
   Eventos: (f.Eventos || []).map(e => ({ Id: e.Id, Nome: e.Nome, P: e.Provento, D: e.Desconto })) });
 const mesAnterior = (mes, ano) => mes === 1 ? { mes: 12, ano: ano - 1 } : { mes: mes - 1, ano };
-Object.assign(module.exports, { fichaEnxuta, mesAnterior, eventosFiltros, eventoLinha, eventoFiltroNome, eventoCodigo });
+Object.assign(module.exports, { postComTentativas, motivoFalha, fichaEnxuta, mesAnterior, eventosFiltros, eventoLinha, eventoFiltroNome, eventoCodigo });

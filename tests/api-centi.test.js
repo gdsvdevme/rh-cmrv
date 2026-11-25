@@ -314,3 +314,32 @@ test('conferencia-remuneracao: valida matrículas e referência',async()=>{
   for(const body of [{matriculas:[],mes:11,ano:2026},{matriculas:['x'],mes:11,ano:2026},{matriculas:Array.from({length:41},(_,i)=>String(i+1)),mes:11,ano:2026},{matriculas:['1'],mes:0,ano:2026}])
     assert.equal((await chamar({path:'conferencia-remuneracao',body})).status,400);
 });
+
+test('conferencia-eventos: tenta de novo quando o Centi não responde e, se continuar falhando, devolve só aquele servidor em Falhas',async()=>{
+  let chamadasDe7=0;
+  instalar(async(url,init)=>{
+    const b=JSON.parse(init.body);
+    if(b.Entity==='Evento') return resp({Success:true,Data:[]});
+    const srv=b.Filters.find(f=>f.FieldName==='IdPessoaFuncionario').Value;
+    if(srv==='7') return resp(null,503);                                   // sempre fora do ar
+    if(srv==='8'&&++chamadasDe7<2) return resp(null,503);                 // falha só na primeira vez
+    return resp({Success:true,Data:b.Filters.some(f=>f.FieldName==='Recorrencia')?[{Id:'1'+srv,IdEvento:'X',Recorrencia:'Indeterminada',DataInicial:'01/01/2026',DataFinal:'',Valor:'1,00',TipoLancamento:'Manual'}]:[]});
+  });
+  const r=await chamar({path:'conferencia-eventos',body:{ids:['6','7','8'],mes:11,ano:2026}});
+  assert.equal(r.status,200);
+  const j=JSON.parse(r.body);
+  assert.deepEqual(j.Falhas,['7']);
+  assert.match(j.Detalhe,/HTTP 503/);
+  assert.deepEqual(j.Linhas.map(l=>l.Servidor).sort(),['6','8']);          // o servidor 8 foi recuperado na nova tentativa
+});
+
+test('conferencia-remuneracao: servidor que o Centi não responde vai para Falhas sem derrubar o lote',async()=>{
+  instalar(async(url,init)=>{
+    const b=JSON.parse(init.body);
+    if(/searchentity$/.test(url)){const m=b.Filters[0].Value;return m==='2'?resp(null,500):resp({Success:true,Data:[{Id:'F'+m,Matricula:m}]});}
+    return resp({Id:b.Id,Folha:'MENSAL',Mes:11,Ano:2026,TotalProventos:1,TotalDescontos:0,LiquidoReceber:1,Eventos:[]});
+  });
+  const j=JSON.parse((await chamar({path:'conferencia-remuneracao',body:{matriculas:['1','2'],mes:11,ano:2026}})).body);
+  assert.deepEqual(j.Falhas,['2']);
+  assert.deepEqual(Object.keys(j.Servidores),['1']);
+});

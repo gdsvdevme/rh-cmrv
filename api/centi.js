@@ -3,7 +3,7 @@
    Só as rotas listadas em ROTAS e as consultas somente leitura "cubo-funcionario" (FP051), "ficha-financeira" (FP024) "ferias" (FP051 + FP273),
    "conferencia-remuneracao" (fichas financeiras da matrícula no mês e no anterior, em lotes de até 40), "conferencia-eventos" (lançamentos de evento por servidor: recorrência e datas, em lotes de até 60 servidores), "licenca-busca" (busca de servidor por nome ou matrícula), "licenca-quadro" (FP245), "espelho-ponto" (FP170) e "afastamentos-pdf" (FP071, do órgão ou de um servidor; os dois últimos devolvem o PDF compactado em gzip) são aceitos. O Centi renova o token sozinho; se renovar,
    o novo vem nos cabeçalhos x-centi-token e x-centi-refresh da resposta. */
-const { BASE, centiPost, chaveDaTela, cuboPayload, espelhoPayload, quadroPayload, quadroLinhas, afastamentosPayload, buscaFiltro, buscaLinhas, fichaEnxuta, mesAnterior, eventosFiltros, eventoLinha, eventoFiltroNome, eventoCodigo, servidorDados, idPessoaDoFuncionario, centiGet, cuboLinhas, feriasPayload, feriasLinhas, fichaResumo, isAllowed, readBody, send } = require('./_centi');
+const { BASE, centiPost, chaveDaTela, cuboPayload, espelhoPayload, quadroPayload, quadroLinhas, afastamentosPayload, buscaFiltro, buscaLinhas, postComTentativas, motivoFalha, fichaEnxuta, mesAnterior, eventosFiltros, eventoLinha, eventoFiltroNome, eventoCodigo, servidorDados, idPessoaDoFuncionario, centiGet, cuboLinhas, feriasPayload, feriasLinhas, fichaResumo, isAllowed, readBody, send } = require('./_centi');
 
 const { semFolha, referencias, sessaoInvalida } = require('./_ref');
 
@@ -97,40 +97,46 @@ module.exports = async (req, res) => {
       /* fichas financeiras (FP024) de cada matrícula no mês pedido e no anterior; 8 matrículas ao mesmo tempo */
       const ant = mesAnterior(mes, ano), saida = {};
       let tk = '', rf = '';
+      const falhas = new Set(); let detalhe = '';
       const um = async mat => {
-        const o = saida[mat] = {};
+        const o = {};
         for (const [chave, ref] of [['Atual', { mes, ano }], ['Anterior', ant]]) {
           const hr = Object.assign({}, h, { year: String(ref.ano), month: String(ref.mes) });
-          const b = await post('restauth/searchentity', { Depth: 50, Entity: 'SFichaFinanceiraPessoa', Start: 1,
+          const b = await postComTentativas(post, 'restauth/searchentity', { Depth: 50, Entity: 'SFichaFinanceiraPessoa', Start: 1,
             Filters: [{ FieldName: 'Matricula', List: false, Operation: 0, TypeFilter: 3, Value: mat, between: '' }] }, hr);
           tk = b.headers.get('token') || tk; rf = b.headers.get('refreshtoken') || rf;
-          if (!b.data || b.data.Success === false) { const e = new Error((b.data && b.data.Message && b.data.Message[0]) || 'O Centi não respondeu.'); e.centi = true; throw e; }
+          if (!b.data || b.data.Success === false) { falhas.add(mat); detalhe = motivoFalha(b); return; }
           o[chave] = [];
           for (const f of (b.data.Data || []).filter(x => String(x.Matricula) === mat).slice(0, 10)) {
-            const d = await post('restauth/postdata', { Id: String(f.Id), Method: 'folha.carregarfichafinanceira' }, hr);
-            if (d.data && d.data.Id) o[chave].push(fichaEnxuta(fichaResumo(d.data)));
+            const d = await postComTentativas(post, 'restauth/postdata', { Id: String(f.Id), Method: 'folha.carregarfichafinanceira' }, hr);
+            if (!d.data || !d.data.Id) { falhas.add(mat); detalhe = motivoFalha(d); return; }
+            o[chave].push(fichaEnxuta(fichaResumo(d.data)));
           }
         }
+        saida[mat] = o;
       };
       const fila = mats.slice();
       await Promise.all(Array.from({ length: Math.min(8, fila.length) }, async () => { while (fila.length) await um(fila.shift()); }));
       if (tk) res.setHeader('x-centi-token', tk);
       if (rf) res.setHeader('x-centi-refresh', rf);
-      return send(res, 200, { Servidores: saida, Anterior: ant });
+      return send(res, 200, { Servidores: saida, Anterior: ant, Falhas: [...falhas], Detalhe: detalhe });
     }
     if (evlote) {
       /* lançamentos de evento (determinação) dos servidores do lote; 8 consultas ao mesmo tempo */
       const linhas = new Map(), truncados = new Set();
       let tk = '', rf = '';
+      const falhas = new Set(); let detalhe = '';
       const um = async id => {
+        const meus = [];
         for (const filtros of eventosFiltros(id, mes, ano)) {
-          const r = await post('restauth/searchentity', { Depth: 50, Entity: 'PessoaFuncionarioEvento', Start: 1, Filters: filtros }, h);
+          const r = await postComTentativas(post, 'restauth/searchentity', { Depth: 50, Entity: 'PessoaFuncionarioEvento', Start: 1, Filters: filtros }, h);
           tk = r.headers.get('token') || tk; rf = r.headers.get('refreshtoken') || rf;
-          if (!r.data || r.data.Success === false) { const e = new Error((r.data && r.data.Message && r.data.Message[0]) || 'O Centi não respondeu.'); e.centi = true; throw e; }
+          if (!r.data || r.data.Success === false) { falhas.add(id); detalhe = motivoFalha(r); return; }
           const d = r.data.Data || [];
           if (d.length >= 50) truncados.add(id);
-          d.forEach(x => linhas.set(id + ':' + x.Id, eventoLinha(id, x)));
+          d.forEach(x => meus.push([id + ':' + x.Id, eventoLinha(id, x)]));
         }
+        meus.forEach(([k, l]) => linhas.set(k, l));
       };
       const fila = ids.slice();
       await Promise.all(Array.from({ length: Math.min(8, fila.length) }, async () => { while (fila.length) await um(fila.shift()); }));
@@ -139,14 +145,14 @@ module.exports = async (req, res) => {
       const fn = nomes.slice();
       await Promise.all(Array.from({ length: Math.min(6, fn.length) }, async () => { while (fn.length) {
         const n = fn.shift();
-        const r = await post('restauth/searchentity', { Depth: 50, Entity: 'Evento', Start: 1, Filters: [eventoFiltroNome(n)] }, h);
+        const r = await postComTentativas(post, 'restauth/searchentity', { Depth: 50, Entity: 'Evento', Start: 1, Filters: [eventoFiltroNome(n)] }, h);
         tk = r.headers.get('token') || tk; rf = r.headers.get('refreshtoken') || rf;
-        const c = eventoCodigo(n, r.data && r.data.Data);
+        const c = eventoCodigo(n, r.data && r.data.Data);   // sem resposta: fica sem código (a tela mostra só o nome)
         if (c) CODIGOS.set(n, c);
       } }));
       if (tk) res.setHeader('x-centi-token', tk);
       if (rf) res.setHeader('x-centi-refresh', rf);
-      return send(res, 200, { Linhas: [...linhas.values()].map(l => Object.assign(l, { Codigo: CODIGOS.get(l.Evento) || '' })), Truncados: [...truncados] });
+      return send(res, 200, { Linhas: [...linhas.values()].map(l => Object.assign(l, { Codigo: CODIGOS.get(l.Evento) || '' })), Truncados: [...truncados], Falhas: [...falhas], Detalhe: detalhe });
     }
     if (busca) {
       const b = await post('restauth/searchentity', { Depth: 50, Entity: 'SFuncionario', Start: 1, Filters: [filtroBusca] }, h)   // Depth é o tamanho da página (50 no máximo); a paginação do Centi não avança;

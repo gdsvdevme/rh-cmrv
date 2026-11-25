@@ -701,6 +701,15 @@ const soma=(fs,k)=>r2((fs||[]).reduce((t,f)=>t+(Number(f[k])||0),0));
    tol: diferenças até esse valor (R$) não contam como divergência. 
    -> {status:'sem'|'novo'|'saiu'|'igual'|'bruto'|'desconto', a:{prov,desc,liq}, b:{...}, d:{prov,desc,liq}, mudancas:[{id,nome,tipo,pa,da,pb,db,efeito}]}
    'bruto' = os proventos mudaram; 'desconto' = só os descontos mudaram (o bruto é igual); 'novo'/'saiu' = há ficha em só um dos meses. */
+/* nome do evento; se vier de outra folha que não a mensal (13º, complementar...), mostra a folha entre parênteses, a não ser que ela só repita o nome do evento */
+const sem=t=>String(t||'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase().replace(/[^a-z0-9]+/g,' ').trim();
+function nomeComFolha(nome,folha){
+  const f=String(folha||'').trim();
+  if(!f||/^mensal$/i.test(f)) return nome;
+  const a=sem(nome),b=sem(f);
+  if(b&&(a.includes(b)||b.includes(a))) return nome;
+  return nome+' ('+f+')';
+}
 function compararFichas(atual,anterior,tol){
   tol=Number(tol)||0;const t=tol+0.004;
   const a={prov:soma(atual,'Prov'),desc:soma(atual,'Desc'),liq:soma(atual,'Liq')},b={prov:soma(anterior,'Prov'),desc:soma(anterior,'Desc'),liq:soma(anterior,'Liq')};
@@ -708,7 +717,7 @@ function compararFichas(atual,anterior,tol){
   const mapa=new Map();
   const poe=(fs,lado)=>(fs||[]).forEach(f=>(f.Eventos||[]).forEach(e=>{
     const k=String(e.Id)+(/^mensal$/i.test(f.Folha||'')?'':'@'+(f.Folha||''));
-    if(!mapa.has(k)) mapa.set(k,{id:String(e.Id),nome:e.Nome+(/^mensal$/i.test(f.Folha||'')?'':' ('+(f.Folha||'outra folha')+')'),pa:0,da:0,pb:0,db:0,ta:false,tb:false});
+    if(!mapa.has(k)) mapa.set(k,{id:String(e.Id),nome:nomeComFolha(e.Nome,f.Folha),pa:0,da:0,pb:0,db:0,ta:false,tb:false});
     const m=mapa.get(k);m['p'+lado]=r2(m['p'+lado]+(Number(e.P)||0));m['d'+lado]=r2(m['d'+lado]+(Number(e.D)||0));m['t'+lado]=true;
   }));
   poe(atual,'a');poe(anterior,'b');

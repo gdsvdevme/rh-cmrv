@@ -1,0 +1,264 @@
+<title>Conferências</title>
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%230a6b3d'/%3E%3Cg transform='translate(4 4)' fill='none' stroke='%23fff' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M7.5 9l1.5 1.5L11.5 8M7.5 15l1.5 1.5L11.5 14M14 9.5h4M14 15.5h4'/%3E%3Crect x='3' y='4' width='18' height='16' rx='2'/%3E%3C/g%3E%3C/svg%3E">
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Libre+Franklin:wght@500;600;700&family=Public+Sans:wght@400;500;600&display=swap">
+<style>
+/*SHARED_CSS*/
+:root{
+  --danger-bg:#fbe3e0;
+  --blue:#2f6fb5;
+  --blue-bg:#e2edf9;
+  --ok:#0a6b3d;
+  --ok-bg:#dff3e7;
+  --violet:#6f4aa8;
+  --violet-bg:#eee6f8;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --danger-bg:#3d1a17;
+  --blue:#7fb2ee;
+  --blue-bg:#14273d;
+  --ok:#52c98a;
+  --ok-bg:#12382a;
+  --violet:#b99be8;
+  --violet-bg:#2a1f3d;}}
+:root[data-theme="dark"]{
+  --danger-bg:#3d1a17;
+  --blue:#7fb2ee;
+  --blue-bg:#14273d;
+  --ok:#52c98a;
+  --ok-bg:#12382a;
+  --violet:#b99be8;
+  --violet-bg:#2a1f3d;}
+[hidden]{display:none!important}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--fg);font-family:var(--f-body);font-size:15px;line-height:1.5}
+h1,h2,h3,h4{font-family:var(--f-display);margin:0;text-wrap:balance}
+button,input,select{font:inherit;color:inherit}
+.wrap{padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+.inner{max-width:1180px;margin:0 auto}
+.hero{background:linear-gradient(135deg,var(--hero-a),var(--hero-b));color:#fff;padding-block:22px 54px}
+.top{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:22px}
+.home{color:#fff;text-decoration:none;font-weight:600;font-size:13.5px;display:inline-flex;align-items:center;gap:8px;padding:8px 12px;border-radius:10px;background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.28)}
+.home:hover,.themebtn:hover{background:rgba(255,255,255,.22)}
+.themebtn{margin-left:auto;display:inline-flex;align-items:center;gap:8px;border:1px solid rgba(255,255,255,.35);background:rgba(255,255,255,.12);color:#fff;border-radius:10px;padding:8px 12px;font-weight:600;font-size:13.5px;cursor:pointer}
+.goldrule{width:56px;height:4px;background:var(--gold);border-radius:2px;margin:0 0 14px}
+.hero h1{font-size:clamp(1.6rem,4.4vw,2.4rem);line-height:1.12}
+.hero p{margin:8px 0 0;opacity:.85}
+main{padding-block:0 40px}
+.abas{display:flex;gap:6px;flex-wrap:wrap;margin-top:-26px;position:relative}
+.aba{border:1px solid var(--line);background:var(--surface);border-radius:12px;padding:10px 16px;cursor:pointer;font-weight:600;font-size:14.5px;box-shadow:var(--shadow)}
+.aba[aria-selected=true]{background:var(--accent);color:var(--accent-fg);border-color:var(--accent)}
+.bar{display:flex;flex-wrap:wrap;gap:10px;align-items:center;margin-top:16px}
+.bar label{display:flex;align-items:center;gap:8px;font-size:13.5px;color:var(--muted);font-weight:600}
+select,input[type=search]{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:10px 12px}
+.search{flex:1 1 240px;display:flex;align-items:center;gap:10px;background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:0 14px;box-shadow:var(--shadow);min-width:0}
+.search input{border:0;background:transparent;outline:0;padding:11px 0;flex:1;min-width:0}
+.search:focus-within{border-color:var(--accent)}
+.btn{border:1px solid var(--line);background:var(--surface);border-radius:10px;padding:10px 14px;cursor:pointer;font-weight:600;font-size:14px;display:inline-flex;align-items:center;gap:8px;box-shadow:var(--shadow)}
+.btn:hover{border-color:var(--accent)}.btn.primary{background:var(--accent);color:var(--accent-fg);border-color:var(--accent)}.btn:disabled{opacity:.6;cursor:wait}
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,165px),1fr));gap:10px;margin-top:16px}
+.stat{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:12px 14px;box-shadow:var(--shadow);text-align:left;cursor:pointer;display:block;width:100%}
+.stat:hover{border-color:var(--accent)}.stat.on{outline:2px solid var(--accent);outline-offset:-1px}
+.stat b{font-family:var(--f-display);font-size:1.6rem;display:block;line-height:1.1;font-variant-numeric:tabular-nums}
+.stat span{color:var(--muted);font-size:12.8px;line-height:1.3;display:block}
+.stat.indeterminada b{color:var(--blue)}.stat.determinada b{color:var(--ok)}.stat.so_mes b{color:var(--violet)}.stat.vence_mes b{color:var(--warn)}
+.stat.ate_2099 b,.stat.sem_data b{color:var(--danger)}.stat.futura b{color:var(--muted)}
+.tag{display:inline-block;font-size:11.5px;font-weight:700;padding:2px 9px;border-radius:99px;white-space:nowrap;background:var(--soft);color:var(--muted)}
+.tag.indeterminada{background:var(--blue-bg);color:var(--blue)}.tag.determinada{background:var(--ok-bg);color:var(--ok)}.tag.so_mes{background:var(--violet-bg);color:var(--violet)}
+.tag.vence_mes{background:var(--warn-bg);color:var(--warn)}.tag.ate_2099,.tag.sem_data{background:var(--danger-bg);color:var(--danger)}
+.banner{margin-top:14px;border-radius:12px;padding:12px 16px;font-size:13.5px;background:var(--warn-bg);color:var(--warn)}
+.subabas{display:flex;gap:6px;margin-top:16px}
+.subabas button{border:0;background:transparent;border-bottom:3px solid transparent;padding:8px 12px;cursor:pointer;font-weight:600;color:var(--muted)}
+.subabas button[aria-selected=true]{color:var(--fg);border-bottom-color:var(--accent)}
+.tblwrap{margin-top:10px;background:var(--surface);border:1px solid var(--line);border-radius:14px;box-shadow:var(--shadow);overflow:auto}
+table.lst{width:100%;border-collapse:collapse;font-size:14px;min-width:820px}
+.lst th{background:var(--soft);color:var(--muted);font-size:11.5px;letter-spacing:.05em;text-transform:uppercase;padding:10px 12px;text-align:left;white-space:nowrap}
+.lst td{padding:9px 12px;border-top:1px solid var(--line);vertical-align:middle}
+.lst tbody tr[data-ev]{cursor:pointer}.lst tbody tr[data-ev]:hover td{background:var(--soft)}
+.lst td.n b{display:block;font-weight:600;line-height:1.25}.lst td.n span{color:var(--muted);font-size:12.5px}
+.lst td.num{text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap}
+.lst td.dt{white-space:nowrap;font-variant-numeric:tabular-nums}
+.empty{margin-top:24px;text-align:center;padding:38px 20px;background:var(--surface);border:2px dashed var(--line);border-radius:16px;color:var(--muted)}
+.empty h2{color:var(--fg);margin-bottom:6px}
+.more{display:flex;justify-content:center;padding:12px}
+.note{margin-top:18px;font-size:12.8px;color:var(--muted)}
+.prog{margin-top:16px;background:var(--surface);border:1px solid var(--line);border-radius:14px;box-shadow:var(--shadow);padding:16px}
+.prog .barra{height:10px;border-radius:99px;background:var(--soft);overflow:hidden;margin-top:10px;border:1px solid var(--line)}
+.prog .barra i{display:block;height:100%;background:var(--accent);border-radius:99px;transition:width .2s}
+#load{position:fixed;inset:0;z-index:9000;display:grid;place-items:center;padding:24px;background:radial-gradient(1200px 700px at 50% 30%,var(--hero-b),var(--hero-a)) var(--hero-a);color:#fff;text-align:center}
+#load .ld-box{display:flex;flex-direction:column;align-items:center;gap:10px;max-width:420px}
+#load .ld-spin{width:56px;height:56px;border-radius:50%;border:5px solid rgba(255,255,255,.22);border-top-color:var(--gold);animation:ld-rot .9s linear infinite;margin-bottom:6px}
+#load b{font-family:var(--f-display);font-size:1.35rem;line-height:1.2}
+#load span{opacity:.88;font-size:14.5px;min-height:22px}
+@keyframes ld-rot{to{transform:rotate(360deg)}}
+@media (prefers-reduced-motion:reduce){#load .ld-spin{animation-duration:3s}}
+body.carregando{overflow:hidden}
+#toast{position:fixed;left:50%;transform:translateX(-50%);bottom:max(18px,env(safe-area-inset-bottom,0px));background:var(--fg);color:var(--bg);padding:10px 16px;border-radius:10px;font-size:14px;z-index:60;max-width:90vw}
+@media (pointer:coarse){input,select{font-size:16px}.btn{min-height:42px}}
+/*MODERN_CSS*/
+</style>
+
+<header class="hero wrap"><div class="inner">
+  <div class="top"><a class="home" href="/*HOME_URL*/" target="_top"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 11l9-8 9 8M5 10v10h5v-6h4v6h5V10"/></svg>Sistema Interno do RH</a>
+  <button class="themebtn" id="themeBtn" type="button"></button></div>
+  <div class="goldrule"></div>
+  <h1>Conferências</h1>
+  <p>Câmara Municipal de Rio Verde/GO · conferência dos lançamentos do Centi antes de fechar a folha</p>
+</div></header>
+
+<main class="wrap"><div class="inner">
+  <div class="abas" role="tablist" id="abas"></div>
+  <div id="secao"></div>
+</div></main>
+<div id="load" role="status" aria-live="polite"><div class="ld-box"><div class="ld-spin" aria-hidden="true"></div><b>Conferências</b><span id="ldS">Abrindo o sistema</span></div></div>
+<div id="toast" hidden></div>
+
+<script>
+/*PB_JS*/
+/*ENGINE_JS*/
+const HOME_URL="/*HOME_URL*/";
+/*SHARED:core,toast,carga,norm*/
+const {D,fmt,CATEGORIAS,ORDEM,classificar,porEvento}=window.CF;
+const MESES=['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'];
+const ROTULO_CURTO={indeterminada:'Indeterminadas',determinada:'Determinadas (até a data final)',so_mes:'Determinadas só no mês',vence_mes:'Vencem no mês',ate_2099:'Determinadas até 2099',futura:'Começam depois do mês',sem_data:'Determinadas sem data final'};
+const ROTULO_TAG={indeterminada:'Indeterminada',determinada:'Determinada',so_mes:'Só no mês',vence_mes:'Vence no mês',ate_2099:'Até 2099',futura:'Começa depois',sem_data:'Sem data final'};
+const SECOES=[{id:'eventos',nome:'Determinação de eventos'}];
+const MIN=new Set(['de','da','do','das','dos','e','a','o','em']),SIGLAS=/^(rh|iparv|inss|irrf|fgts|tce|tcm|cef|ii|iii|iv|vi|vii|viii|ix|x)$/i;
+const titulo=s=>String(s||'').toLowerCase().replace(/\s+/g,' ').trim().split(' ').map((w,i)=>SIGLAS.test(w)?w.toUpperCase():(i>0&&MIN.has(w))?w:w.replace(/(^|[-\/(.])(\p{L})/gu,(m,a,b)=>a+b.toUpperCase())).join(' ');
+ligarTema();
+
+let secao='eventos',ref=(()=>{const d=new Date();return {mes:d.getMonth()+1,ano:d.getFullYear()};})();
+let dados=null;                    // {ref:{mes,ano}, itens:[{l,s,c}], truncados:[nomes], servidores:n}
+let filtro={cat:'',q:'',ev:''},vista='lancamentos',limite=200,lendo=false;
+
+/* ---------- abas ---------- */
+function renderAbas(){
+  $('#abas').innerHTML=SECOES.map(s=>'<button class="aba" role="tab" type="button" data-sec="'+s.id+'" aria-selected="'+(s.id===secao)+'">'+esc(s.nome)+'</button>').join('');
+}
+
+/* ---------- leitura no Centi ---------- */
+const msgErro=e=>e.status===401?'A sessão do Centi expirou. Entre de novo e repita.':(e.message||String(e));
+async function garantirSessao(){
+  if(PB.centi.user) return true;
+  await PB.connect();
+  return !!PB.centi.user;
+}
+function progresso(txt,pct){
+  $('#prog').hidden=false;$('#progTxt').textContent=txt;$('#progBar').style.width=Math.max(2,Math.min(100,pct||0))+'%';
+}
+async function carregar(){
+  if(lendo) return;
+  const mes=+$('#selMes').value,ano=+$('#selAno').value;
+  lendo=true;$('#btnCarregar').disabled=true;ref={mes,ano};
+  try{
+    if(!(await garantirSessao())){toast('Entre com o acesso do Centi para carregar.');return;}
+    progresso('Listando os servidores no Centi (leva cerca de 15 segundos)…',3);
+    const cubo=await PB.centi.cubo(mes,ano);
+    const servs=new Map();
+    (cubo.Data||[]).forEach(r=>servs.set(String(r.ID),{id:String(r.ID),mat:String(r.MATRICULA||''),nome:r.NOMEFUNC||'',cargo:r.CARGO||'',lot:r.HIERARQUIA||r.LOTACAO||''}));
+    const ids=[...servs.keys()],lotes=[];
+    for(let i=0;i<ids.length;i+=40) lotes.push(ids.slice(i,i+40));
+    const linhas=[],trunc=new Set();let feitos=0,erro=null;
+    progresso('Lendo os eventos dos servidores: 0 de '+ids.length+'…',10);
+    const fila=lotes.slice();
+    await Promise.all(Array.from({length:Math.min(3,fila.length)},async()=>{
+      while(fila.length&&!erro){
+        const lote=fila.shift();
+        try{
+          const r=await PB.centi.conferenciaEventos(lote,mes,ano);
+          (r.Linhas||[]).forEach(l=>linhas.push(l));(r.Truncados||[]).forEach(t=>trunc.add(String(t)));
+        }catch(e){erro=e;}
+        feitos+=lote.length;progresso('Lendo os eventos dos servidores: '+Math.min(feitos,ids.length)+' de '+ids.length+'…',10+feitos/ids.length*90);
+      }
+    }));
+    if(erro) throw erro;
+    const itens=linhas.map(l=>({l,s:servs.get(l.Servidor)||{id:l.Servidor,mat:'',nome:'Servidor '+l.Servidor,cargo:'',lot:''},c:classificar(l,mes,ano)}));
+    dados={ref:{mes,ano},itens,servidores:ids.length,truncados:[...trunc].map(i=>(servs.get(i)||{nome:'Servidor '+i}).nome)};
+    filtro={cat:'',q:'',ev:''};limite=200;
+  }catch(e){toast('Não foi possível carregar do Centi: '+msgErro(e));}
+  finally{lendo=false;$('#btnCarregar').disabled=false;$('#prog').hidden=true;}
+  renderEventos();
+}
+
+/* ---------- Determinação de eventos ---------- */
+const rotEvento=l=>(l.Codigo?l.Codigo+' · ':'')+titulo(l.Evento);
+function filtrados(){
+  const q=norm(filtro.q);
+  return dados.itens.filter(x=>(!filtro.cat||x.c.cat===filtro.cat)&&(!filtro.ev||(x.l.Codigo||x.l.Evento)===filtro.ev)&&
+    (!q||norm(x.s.nome+' '+x.s.mat+' '+x.l.Evento+' '+x.l.Codigo).includes(q)))
+    .sort((a,b)=>(ORDEM.indexOf(a.c.cat)-ORDEM.indexOf(b.c.cat))||((a.c.fim||9e15)-(b.c.fim||9e15))||a.s.nome.localeCompare(b.s.nome,'pt-BR'));
+}
+function renderEventos(){
+  const anoAtual=new Date().getFullYear();
+  let h='<div class="bar"><label>Mês <select id="selMes">'+MESES.map((m,i)=>'<option value="'+(i+1)+'"'+(i+1===ref.mes?' selected':'')+'>'+m+'</option>').join('')+'</select></label>'+
+    '<label>Ano <select id="selAno">'+[anoAtual-1,anoAtual,anoAtual+1].map(a=>'<option'+(a===ref.ano?' selected':'')+'>'+a+'</option>').join('')+'</select></label>'+
+    '<button class="btn primary" id="btnCarregar" type="button">'+(dados?'Carregar de novo':'Carregar do Centi')+'</button>'+
+    (dados?'<button class="btn" id="btnCsv" type="button">Exportar CSV</button>':'')+'</div>'+
+    '<div class="prog" id="prog" hidden><b id="progTxt"></b><div class="barra"><i id="progBar" style="width:2%"></i></div></div>';
+  if(!dados){
+    h+='<div class="empty"><h2>Determinação de eventos</h2><p>Escolha o mês de referência e carregue. O sistema lê, no Centi, os lançamentos de evento de cada servidor ativo (FP001 &gt; Eventos) e mostra quais são <b>indeterminados</b>, quais são <b>determinados e até quando</b> e quais valem <b>só naquele mês</b> (ex.: 01/10/2026 a 30/10/2026).</p></div>';
+    $('#secao').innerHTML=h;ligarBarra();return;
+  }
+  const cont={};dados.itens.forEach(x=>{cont[x.c.cat]=(cont[x.c.cat]||0)+1;});
+  h+='<div class="stats">'+ORDEM.filter(c=>cont[c]||c==='indeterminada'||c==='determinada'||c==='so_mes').map(c=>'<button type="button" class="stat '+c+(filtro.cat===c?' on':'')+'" data-cat="'+c+'"><b>'+(cont[c]||0)+'</b><span>'+ROTULO_CURTO[c]+'</span></button>').join('')+'</div>';
+  if(dados.truncados.length) h+='<div class="banner">Atenção: '+dados.truncados.length+' servidor(es) têm 50 ou mais lançamentos que atendem ao filtro e o Centi entrega no máximo 50 por consulta; a conferência pode estar incompleta para: '+esc(dados.truncados.slice(0,6).map(titulo).join(', '))+(dados.truncados.length>6?' e outros':'')+'.</div>';
+  const evs=porEvento(dados.itens);
+  h+='<div class="bar"><label class="search"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></svg><input id="q" type="search" placeholder="Filtrar por servidor, matrícula ou evento" value="'+esc(filtro.q)+'" autocomplete="off"></label>'+
+    '<select id="selEv" aria-label="Evento"><option value="">Todos os eventos</option>'+evs.map(e=>'<option value="'+esc(e.chave)+'"'+(filtro.ev===e.chave?' selected':'')+'>'+esc((e.codigo?e.codigo+' · ':'')+titulo(e.nome))+' ('+e.total+')</option>').join('')+'</select></div>';
+  h+='<div class="subabas" role="tablist"><button type="button" role="tab" data-vista="lancamentos" aria-selected="'+(vista==='lancamentos')+'">Lançamentos</button><button type="button" role="tab" data-vista="evento" aria-selected="'+(vista==='evento')+'">Por evento</button></div>';
+  if(vista==='evento'){
+    h+='<div class="tblwrap"><table class="lst"><thead><tr><th>Evento</th><th class="num">Lançamentos</th>'+ORDEM.map(c=>'<th class="num">'+ROTULO_TAG[c]+'</th>').join('')+'</tr></thead><tbody>'+
+      evs.map(e=>'<tr data-ev="'+esc(e.chave)+'"><td class="n"><b>'+esc((e.codigo?e.codigo+' · ':'')+titulo(e.nome))+'</b></td><td class="num">'+e.total+'</td>'+ORDEM.map(c=>'<td class="num">'+(e.porCat[c]||'')+'</td>').join('')+'</tr>').join('')+'</tbody></table></div>';
+  }else{
+    const l=filtrados(),vis=l.slice(0,limite);
+    h+='<div class="tblwrap"><table class="lst"><thead><tr><th>Servidor</th><th>Evento</th><th>Recorrência</th><th>Início</th><th>Fim</th><th class="num">Valor</th><th>Situação</th></tr></thead><tbody>'+
+      (vis.length?vis.map(x=>{
+        const fim=x.l.Recorrencia==='Indeterminada'?'—':(x.l.Fim||'—');
+        return '<tr><td class="n"><b>'+esc(titulo(x.s.nome))+'</b><span>Mat. '+esc(x.s.mat)+(x.s.lot?' · '+esc(titulo(x.s.lot)):'')+'</span></td><td class="n"><b>'+esc(rotEvento(x.l))+'</b></td><td>'+esc(x.l.Recorrencia)+'</td><td class="dt">'+esc(x.l.Inicio||'—')+'</td><td class="dt">'+esc(fim)+'</td><td class="num">'+esc(x.l.Valor)+'</td><td><span class="tag '+x.c.cat+'">'+ROTULO_TAG[x.c.cat]+'</span></td></tr>';
+      }).join(''):'<tr><td colspan="7" class="none" style="padding:16px;color:var(--muted)">Nenhum lançamento neste filtro.</td></tr>')+'</tbody></table>'+
+      (l.length>vis.length?'<div class="more"><button class="btn" id="btnMais" type="button">Mostrar mais ('+(l.length-vis.length)+' restantes)</button></div>':'')+'</div>'+
+      '<p class="note">'+l.length+' lançamento(s) de '+dados.servidores+' servidores ativos em '+MESES[dados.ref.mes-1]+'/'+dados.ref.ano+'. Valem os lançamentos indeterminados e os determinados cuja data final não acabou antes do mês.</p>';
+  }
+  $('#secao').innerHTML=h;ligarBarra();
+}
+function ligarBarra(){
+  const b=$('#btnCarregar');if(b) b.addEventListener('click',carregar);
+  const c=$('#btnCsv');if(c) c.addEventListener('click',csv);
+}
+function csv(){
+  const cel=v=>'"'+String(v==null?'':v).replace(/"/g,'""')+'"';
+  const cab=['Servidor','Matrícula','Lotação','Código do evento','Evento','Recorrência','Início','Fim','Valor','Situação'];
+  const lin=filtrados().map(x=>[x.s.nome,x.s.mat,x.s.lot,x.l.Codigo,x.l.Evento,x.l.Recorrencia,x.l.Inicio,x.l.Recorrencia==='Indeterminada'?'':x.l.Fim,x.l.Valor,CATEGORIAS[x.c.cat]].map(cel).join(';'));
+  const blob=new Blob(['﻿'+[cab.map(cel).join(';')].concat(lin).join('\r\n')],{type:'text/csv;charset=utf-8'});
+  const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='determinacao-de-eventos-'+String(dados.ref.mes).padStart(2,'0')+'-'+dados.ref.ano+'.csv';document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(a.href),2000);
+}
+
+/* ---------- eventos da página ---------- */
+document.addEventListener('click',e=>{
+  const sec=e.target.closest('[data-sec]');if(sec){secao=sec.dataset.sec;renderAbas();renderEventos();return;}
+  const st=e.target.closest('.stat[data-cat]');if(st){filtro.cat=filtro.cat===st.dataset.cat?'':st.dataset.cat;vista='lancamentos';limite=200;renderEventos();return;}
+  const vi=e.target.closest('[data-vista]');if(vi){vista=vi.dataset.vista;renderEventos();return;}
+  const ev=e.target.closest('tr[data-ev]');if(ev){filtro.ev=ev.dataset.ev;vista='lancamentos';limite=200;renderEventos();return;}
+  if(e.target.closest('#btnMais')){limite+=300;renderEventos();}
+});
+document.addEventListener('input',e=>{if(e.target.id==='q'){filtro.q=e.target.value;limite=200;const p=e.target.selectionStart;renderEventos();const q=$('#q');q.focus();q.setSelectionRange(p,p);}});
+document.addEventListener('change',e=>{
+  if(e.target.id==='selEv'){filtro.ev=e.target.value;limite=200;renderEventos();}
+  if(e.target.id==='selMes'||e.target.id==='selAno'){ref={mes:+$('#selMes').value,ano:+$('#selAno').value};}
+});
+observarTema();
+
+(function init(){
+  themeBtn();renderAbas();renderEventos();carga(true,'Conectando ao servidor…');
+  (async()=>{
+    try{
+      if(window.claude&&window.claude.use) await window.claude.use('db');
+      else await PB.connect();
+    }catch(e){}
+    finally{carga(false);}
+  })();
+})();
+</script>
+<script>
+/*HELLO_JS*/
+</script>

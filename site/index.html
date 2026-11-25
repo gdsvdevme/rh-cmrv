@@ -493,6 +493,8 @@ const PB=(function(){
     /* Férias: ativos (FP051) + gozos de férias (FP273) -> {Pessoas:[...],Gozos:[{MATRICULA,DTAQUIINI,DTAQUIFIN,SALDO,GOZOINICIAL,GOZOFINAL,...}]} */
     ferias(mes,ano){return centiCall('ferias',{mes,ano});},
     cubo(mes,ano){return centiCall('cubo-funcionario',{mes,ano});},
+    /* Conferência de eventos: lançamentos (FP001 > Eventos) dos servidores do lote (até 60 Ids) que valem para o mês -> {Linhas:[{Servidor,Id,Evento,Codigo,Recorrencia,Inicio,Fim,Valor,Lancamento}],Truncados:[Id]} */
+    conferenciaEventos(ids,mes,ano){return centiCall('conferencia-eventos',{ids,mes,ano});},
     /* Licença-prêmio: quadro de ativos (Cubo funcionário reduzido, FP245) -> {Pessoas:[{MATRICULA,NOME,SITUACAO,TIPOADMISSAO,DATAADMISSAO,LOTACAO,CARGO,TIPOAFASTAMENTO,DATAAFASTAMENTO}]} */
     licencaQuadro(mes,ano){return centiCall('licenca-quadro',{mes,ano});},
     /* Espelho de ponto (FP170) do órgão inteiro na referência mes/ano -> Uint8Array com o PDF (o Centi leva de 25 s a 1 min) */
@@ -722,6 +724,7 @@ const CARIMBOS_URL="espelho/";
 const DOCUMENTOS_URL="documentos/";
 const LICENCA_URL="licenca-premio/";
 const SENTENCAS_URL="sentencas/";
+const CONFERENCIAS_URL="conferencias/";
 const LS='rhcrv-painel-v1';
 const CACHE='rhcrv-painel-servidor';      // última cópia do painel vinda do servidor (evita mostrar nomes antigos enquanto o servidor responde)
 const ICONS={
@@ -784,13 +787,14 @@ const uid=()=>'t'+Math.random().toString(36).slice(2,9);
 
 const ANTIGA_DESC_ESPELHOS='Carimbe os espelhos de ponto em PDF, organizados pela hierarquia, e acompanhe quais setores devolveram o espelho (entregue, com pendências ou não entregue).';
 function defaults(){
-  return {v:13,tiles:[
+  return {v:14,tiles:[
     {id:'t-fluxos',nome:'Fluxogramas e Manual do RH',desc:'Organograma, fluxogramas editáveis, competências, matriz de responsabilidades, manual de procedimentos e indicadores.',icone:'flow',hue:152,status:'ok',url:FLOW_URL},
     {id:'t-pessoal',nome:'Hierarquia de Pessoal',desc:'Quadro de pessoal organizado por hierarquia: setor administrativo e gabinetes dos vereadores.',icone:'org',hue:262,status:'ok',url:PESSOAL_URL},
     {id:'t-ponto',nome:'Ponto – Servidores Externos',desc:'Registro de ponto pelo celular com localização, assinatura digital e foto, e acompanhamento em tempo real pelo RH (simulação).',icone:'pin',hue:200,status:'ok',url:PONTO_URL},
     {id:'t-ferias',nome:'Férias',desc:'Quem está de férias, quem tem direito a gozar e quem está com férias vencidas, pelo período aquisitivo (dados do Centi).',icone:'calendar',hue:28,status:'ok',url:FERIAS_URL},
     {id:'t-licenca',nome:'Licença-prêmio',desc:'Períodos aquisitivos de cada servidor efetivo, prazos de gozo e de perda do direito, calculados pelo Estatuto (arts. 194 a 197) com os afastamentos do Centi.',icone:'award',hue:44,status:'ok',url:LICENCA_URL},
     {id:'t-sentencas',nome:'Sentenças judiciais',desc:'Acompanhe penhoras e outras sentenças descontadas em folha: quanto já foi descontado, quanto falta e a previsão de término, lidos direto da ficha financeira do Centi.',icone:'scale',hue:20,status:'ok',url:SENTENCAS_URL},
+    {id:'t-conferencias',nome:'Conferências',desc:'Conferência dos lançamentos do Centi antes de fechar a folha. Começa por Determinação de eventos: indeterminados, determinados até quando e só no mês.',icone:'shield',hue:168,status:'ok',url:CONFERENCIAS_URL},
     {id:'t-tarefas',nome:'Tarefas do RH',desc:'Checklist em quadro (a fazer, em andamento, concluído) com tarefas da equipe ou privadas. As concluídas saem do quadro na virada do mês.',icone:'tasks',hue:212,status:'ok',url:TAREFAS_URL},
     {id:'t-carimbos',nome:'Espelhos de ponto',desc:'Carimbe os espelhos de ponto em PDF, organizados pela hierarquia, e acompanhe quais setores devolveram o espelho (devolvido ao RH, com pendências ou não devolvido).',icone:'file',hue:340,status:'ok',url:CARIMBOS_URL},
     {id:'t-documentos',nome:'Gerador de Documentos',desc:'Gera documentos oficiais no papel timbrado da Câmara, em Word e PDF. Começa pela declaração de abertura de conta; portarias e decretos virão depois.',icone:'file',hue:200,status:'ok',url:DOCUMENTOS_URL},
@@ -1011,6 +1015,10 @@ function migrar(){
   if(st.v<13){ // Sentenças judiciais entra depois de Licença-prêmio
     if(!st.tiles.some(x=>x.id==='t-sentencas')){const d=defaults().tiles.find(t=>t.id==='t-sentencas');const i=st.tiles.findIndex(x=>x.id==='t-licenca');st.tiles.splice(i>=0?i+1:st.tiles.length,0,d);}
     st.v=13;persist();
+  }
+  if(st.v<14){ // Conferências entra depois de Sentenças judiciais
+    if(!st.tiles.some(x=>x.id==='t-conferencias')){const d=defaults().tiles.find(t=>t.id==='t-conferencias');const i=st.tiles.findIndex(x=>x.id==='t-sentencas');st.tiles.splice(i>=0?i+1:st.tiles.length,0,d);}
+    st.v=14;persist();
   }
 }
 (function init(){

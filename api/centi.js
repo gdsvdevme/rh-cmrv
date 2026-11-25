@@ -3,7 +3,7 @@
    Só as rotas listadas em ROTAS e as consultas somente leitura "cubo-funcionario" (FP051), "ficha-financeira" (FP024) "ferias" (FP051 + FP273),
    "conferencia-remuneracao" (fichas financeiras da matrícula no mês e no anterior, em lotes de até 40), "conferencia-eventos" (lançamentos de evento por servidor: recorrência e datas, em lotes de até 60 servidores), "licenca-busca" (busca de servidor por nome ou matrícula), "licenca-quadro" (FP245), "espelho-ponto" (FP170) e "afastamentos-pdf" (FP071, do órgão ou de um servidor; os dois últimos devolvem o PDF compactado em gzip) são aceitos. O Centi renova o token sozinho; se renovar,
    o novo vem nos cabeçalhos x-centi-token e x-centi-refresh da resposta. */
-const { BASE, centiPost, chaveDaTela, cuboPayload, espelhoPayload, quadroPayload, quadroLinhas, afastamentosPayload, buscaFiltro, buscaLinhas, postComTentativas, motivoFalha, fichaEnxuta, mesAnterior, eventosFiltros, eventoLinha, eventoFiltroNome, eventoCodigo, servidorDados, idPessoaDoFuncionario, centiGet, cuboLinhas, feriasPayload, feriasLinhas, fichaResumo, isAllowed, readBody, send } = require('./_centi');
+const { BASE, centiPost, chaveDaTela, cuboPayload, espelhoPayload, quadroPayload, quadroLinhas, afastamentosPayload, buscaFiltro, buscaLinhas, eventosFiltroTodos, lancamentoVale, postComTentativas, motivoFalha, fichaEnxuta, mesAnterior, eventosFiltros, eventoLinha, eventoFiltroNome, eventoCodigo, servidorDados, idPessoaDoFuncionario, centiGet, cuboLinhas, feriasPayload, feriasLinhas, fichaResumo, isAllowed, readBody, send } = require('./_centi');
 
 const { semFolha, referencias, sessaoInvalida } = require('./_ref');
 
@@ -94,7 +94,7 @@ module.exports = async (req, res) => {
       return res.end(buf);
     }
     if (remlote) {
-      /* fichas financeiras (FP024) de cada matrícula no mês pedido e no anterior; 8 matrículas ao mesmo tempo */
+      /* fichas financeiras (FP024) de cada matrícula no mês pedido e no anterior; 3 matrículas ao mesmo tempo */
       const ant = mesAnterior(mes, ano), saida = {};
       let tk = '', rf = '';
       const falhas = new Set(); let detalhe = '';
@@ -116,30 +116,38 @@ module.exports = async (req, res) => {
         saida[mat] = o;
       };
       const fila = mats.slice();
-      await Promise.all(Array.from({ length: Math.min(8, fila.length) }, async () => { while (fila.length) await um(fila.shift()); }));
+      await Promise.all(Array.from({ length: Math.min(3, fila.length) }, async () => { while (fila.length) await um(fila.shift()); }));
       if (tk) res.setHeader('x-centi-token', tk);
       if (rf) res.setHeader('x-centi-refresh', rf);
       return send(res, 200, { Servidores: saida, Anterior: ant, Falhas: [...falhas], Detalhe: detalhe });
     }
     if (evlote) {
-      /* lançamentos de evento (determinação) dos servidores do lote; 8 consultas ao mesmo tempo */
+      /* lançamentos de evento (determinação) dos servidores do lote; 3 consultas ao mesmo tempo (o Centi responde 429 se vier muita coisa de uma vez) */
       const linhas = new Map(), truncados = new Set();
       let tk = '', rf = '';
       const falhas = new Set(); let detalhe = '';
       const um = async id => {
         const meus = [];
-        for (const filtros of eventosFiltros(id, mes, ano)) {
+        const pede = async filtros => {
           const r = await postComTentativas(post, 'restauth/searchentity', { Depth: 50, Entity: 'PessoaFuncionarioEvento', Start: 1, Filters: filtros }, h);
           tk = r.headers.get('token') || tk; rf = r.headers.get('refreshtoken') || rf;
-          if (!r.data || r.data.Success === false) { falhas.add(id); detalhe = motivoFalha(r); return; }
-          const d = r.data.Data || [];
+          if (!r.data || r.data.Success === false) { falhas.add(id); detalhe = motivoFalha(r); return null; }
+          return r.data.Data || [];
+        };
+        /* 1 consulta com tudo do servidor; só quem tem 50 ou mais lançamentos (histórico longo) precisa das 2 consultas refinadas */
+        const todos = await pede(eventosFiltroTodos(id));
+        if (!todos) return;
+        if (todos.length < 50) todos.map(x => eventoLinha(id, x)).filter(l => lancamentoVale(l, mes, ano)).forEach(l => meus.push([id + ':' + l.Id, l]));
+        else for (const filtros of eventosFiltros(id, mes, ano)) {
+          const d = await pede(filtros);
+          if (!d) return;
           if (d.length >= 50) truncados.add(id);
           d.forEach(x => meus.push([id + ':' + x.Id, eventoLinha(id, x)]));
         }
         meus.forEach(([k, l]) => linhas.set(k, l));
       };
       const fila = ids.slice();
-      await Promise.all(Array.from({ length: Math.min(8, fila.length) }, async () => { while (fila.length) await um(fila.shift()); }));
+      await Promise.all(Array.from({ length: Math.min(3, fila.length) }, async () => { while (fila.length) await um(fila.shift()); }));
       /* código do evento (656...) pelo nome; guardado entre chamadas */
       const nomes = [...new Set([...linhas.values()].map(l => l.Evento).filter(Boolean))].filter(n => !CODIGOS.has(n));
       const fn = nomes.slice();

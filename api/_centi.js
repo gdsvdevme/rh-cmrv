@@ -297,6 +297,11 @@ const eventosFiltros = (idServidor, mes, ano) => {
     [base, filtroNum('DataFinal', 3, '01/' + String(mes).padStart(2, '0') + '/' + ano, 3)]
   ];
 };
+/* uma consulta só por servidor: todos os lançamentos dele (até 50). Só se bater 50 é que se refina com eventosFiltros (indeterminadas + data final) */
+const eventosFiltroTodos = idServidor => [filtroNum('IdPessoaFuncionario', 0, idServidor, 3)];
+const brData = t => { const m = /^(\d{2})\/(\d{2})\/(\d{4})$/.exec(String(t || '')); return m ? Date.UTC(+m[3], +m[2] - 1, +m[1]) : null; };
+/* vale para a referência: indeterminada, ou determinada cuja data final não acabou antes do mês */
+const lancamentoVale = (l, mes, ano) => l.Recorrencia === 'Indeterminada' || brData(l.Fim) == null || brData(l.Fim) >= Date.UTC(ano, mes - 1, 1);
 const eventoLinha = (idServidor, x) => ({
   Servidor: String(idServidor), Id: String(x.Id), Evento: String(x.IdEvento == null ? '' : x.IdEvento).trim(),
   Recorrencia: /^indeterminada$/i.test(String(x.Recorrencia).trim()) ? 'Indeterminada' : 'Determinada',
@@ -312,12 +317,16 @@ const eventoCodigo = (nome, data) => {
 /* Consulta ao Centi com novas tentativas: resposta vazia, fora do ar ou "Success: false" (instabilidade passageira) tenta de novo até 3 vezes.
    Sessão inválida não é tratada aqui (post lança o erro "expirou" e ninguém repete). */
 const dorme = ms => new Promise(r => setTimeout(r, ms));
-async function postComTentativas(post, path, body, h, tentativas = 3, espera = 300) {
+/* HTTP 429 (limite de consultas do Centi): espera o tempo que o Centi pede (Retry-After) ou cresce 1,2 s, 2,4 s, 4,8 s... (no máximo 8 s). Outras falhas: 0,3 s, 0,6 s... */
+async function postComTentativas(post, path, body, h, tentativas = 5, espera = Number(process.env.CENTI_RETRY_MS) || 300) {
   let r;
   for (let i = 0; i < tentativas; i++) {
     r = await post(path, body, h);
     if (r.data && r.data.Success !== false) return r;
-    if (i < tentativas - 1) await dorme(espera * (i + 1));
+    if (i < tentativas - 1) {
+      const ra = Number(r && r.headers && r.headers.get && r.headers.get('retry-after'));
+      await dorme(r && r.status === 429 ? Math.min(8000, ra > 0 ? ra * 1000 : espera * 4 * 2 ** i) : espera * (i + 1));
+    }
   }
   return r;
 }
@@ -326,4 +335,4 @@ const motivoFalha = r => 'HTTP ' + (r && r.status) + (r && r.data && r.data.Mess
 const fichaEnxuta = f => ({ Folha: f.Folha, Mes: f.Mes, Ano: f.Ano, Prov: f.TotalProventos, Desc: f.TotalDescontos, Liq: f.LiquidoReceber,
   Eventos: (f.Eventos || []).map(e => ({ Id: e.Id, Nome: e.Nome, P: e.Provento, D: e.Desconto })) });
 const mesAnterior = (mes, ano) => mes === 1 ? { mes: 12, ano: ano - 1 } : { mes: mes - 1, ano };
-Object.assign(module.exports, { postComTentativas, motivoFalha, fichaEnxuta, mesAnterior, eventosFiltros, eventoLinha, eventoFiltroNome, eventoCodigo });
+Object.assign(module.exports, { eventosFiltroTodos, lancamentoVale, filtroNum, postComTentativas, motivoFalha, fichaEnxuta, mesAnterior, eventosFiltros, eventoLinha, eventoFiltroNome, eventoCodigo });

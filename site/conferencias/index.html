@@ -808,7 +808,8 @@ async function lerEmLotes(ids,tam,conc,chamar,juntar,andamento){
   if(falhas.size){
     const de_novo=[...falhas];falhas.clear();
     andamento(ids.length,ids.length,'Tentando de novo '+de_novo.length+' servidor(es) que o Centi não respondeu…');
-    for(let i=0;i<de_novo.length;i+=8) await tenta(de_novo.slice(i,i+8));
+    await new Promise(r=>setTimeout(r,2500));   // dá tempo ao limite de consultas do Centi se recuperar
+    for(let i=0;i<de_novo.length;i+=6) await tenta(de_novo.slice(i,i+6));
   }
   return {falhas:[...falhas],motivo};
 }
@@ -837,15 +838,52 @@ async function carregar(){
     for(let i=0;i<ids.length;i+=40) lotes.push(ids.slice(i,i+40));
     const linhas=[],trunc=new Set();
     progresso('Lendo os eventos dos servidores: 0 de '+ids.length+'…',10);
-    const res=await lerEmLotes(ids,40,3,lote=>PB.centi.conferenciaEventos(lote,mes,ano),r=>{(r.Linhas||[]).forEach(l=>linhas.push(l));(r.Truncados||[]).forEach(t=>trunc.add(String(t)));},
+    const res=await lerEmLotes(ids,20,2,lote=>PB.centi.conferenciaEventos(lote,mes,ano),r=>{(r.Linhas||[]).forEach(l=>linhas.push(l));(r.Truncados||[]).forEach(t=>trunc.add(String(t)));},
       (f,t,msg)=>progresso(msg||'Lendo os eventos dos servidores: '+f+' de '+t+'…',10+f/t*90));
     if(res.falhas.length>=ids.length) throw new Error('O Centi não respondeu'+(res.motivo?' ('+res.motivo+')':'')+'. Tente de novo em instantes.');
     const itens=linhas.map(l=>({l,s:servs.get(l.Servidor)||{id:l.Servidor,mat:'',nome:'Servidor '+l.Servidor,cargo:'',lot:''},c:classificar(l,mes,ano)}));
-    dados={ref:{mes,ano},itens,servidores:ids.length,falhas:res.falhas.map(i=>(servs.get(i)||{nome:'Servidor '+i}).nome),motivo:res.motivo,truncados:[...trunc].map(i=>(servs.get(i)||{nome:'Servidor '+i}).nome)};
+    dados={ref:{mes,ano},itens,servs,falhasIds:res.falhas,servidores:ids.length,falhas:res.falhas.map(i=>(servs.get(i)||{nome:'Servidor '+i}).nome),motivo:res.motivo,truncados:[...trunc].map(i=>(servs.get(i)||{nome:'Servidor '+i}).nome)};
     filtro={cat:'',q:'',ev:''};limite=200;
   }catch(e){toast('Não foi possível carregar do Centi: '+msgErro(e));}
   finally{lendo=false;$('#btnCarregar').disabled=false;$('#prog').hidden=true;}
   renderEventos();
+}
+
+/* lê de novo só os servidores que falharam, sem refazer a carga toda (o limite de consultas do Centi costuma passar com um pouco de espera) */
+async function relerFalhasEv(){
+  if(lendo||!dados||!dados.falhasIds.length) return;
+  lendo=true;const {mes,ano}=dados.ref;let ativas=0;
+  const btn=$('#btnRefalhas');if(btn) btn.disabled=true;
+  try{
+    progresso('Lendo de novo os '+dados.falhasIds.length+' servidor(es) que falharam…',5);
+    const linhas=[],trunc=new Set();
+    const res=await lerEmLotes(dados.falhasIds,6,1,lote=>PB.centi.conferenciaEventos(lote,mes,ano),r=>{(r.Linhas||[]).forEach(l=>linhas.push(l));(r.Truncados||[]).forEach(t=>trunc.add(String(t)));},
+      (f,t,msg)=>progresso(msg||'Lendo de novo os servidores que falharam: '+f+' de '+t+'…',5+f/t*90));
+    linhas.forEach(l=>dados.itens.push({l,s:dados.servs.get(l.Servidor)||{id:l.Servidor,mat:'',nome:'Servidor '+l.Servidor,cargo:'',lot:''},c:classificar(l,mes,ano)}));
+    trunc.forEach(t=>{const n=(dados.servs.get(t)||{nome:'Servidor '+t}).nome;if(!dados.truncados.includes(n)) dados.truncados.push(n);});
+    dados.falhasIds=res.falhas;dados.falhas=res.falhas.map(i=>(dados.servs.get(i)||{nome:'Servidor '+i}).nome);dados.motivo=res.motivo;
+    toast(res.falhas.length?'Ainda faltam '+res.falhas.length+' servidor(es).':'Todos os servidores foram lidos.');
+  }catch(e){toast('Não foi possível ler de novo: '+msgErro(e));}
+  finally{lendo=false;const p=$('#prog');if(p) p.hidden=true;}
+  renderEventos();
+}
+async function relerFalhasRem(){
+  if(rLendo||!rem||!rem.falhasMats.length) return;
+  rLendo=true;const {mes,ano}=rem.ref;
+  const btn=$('#rRefalhas');if(btn) btn.disabled=true;
+  const prog=(t,p)=>{const b=$('#rProg');if(!b) return;b.hidden=false;$('#rProgTxt').textContent=t;$('#rProgBar').style.width=Math.max(2,Math.min(100,p||0))+'%';};
+  try{
+    prog('Lendo de novo os '+rem.falhasMats.length+' servidor(es) que falharam…',5);
+    const fichas={};
+    const res=await lerEmLotes(rem.falhasMats,5,1,lote=>PB.centi.conferenciaRemuneracao(lote,mes,ano),r=>Object.assign(fichas,r.Servidores||{}),
+      (f,t,msg)=>prog(msg||'Lendo de novo os servidores que falharam: '+f+' de '+t+'…',5+f/t*90));
+    Object.keys(fichas).forEach(m=>rem.itens.push({s:rem.servs.get(m),f:fichas[m]}));
+    recalcRem();
+    rem.falhasMats=res.falhas;rem.falhas=res.falhas.map(m=>titulo(rem.servs.get(m).nome));rem.motivo=res.motivo;
+    toast(res.falhas.length?'Ainda faltam '+res.falhas.length+' servidor(es).':'Todos os servidores foram lidos.');
+  }catch(e){toast('Não foi possível ler de novo: '+msgErro(e));}
+  finally{rLendo=false;const b=$('#rProg');if(b) b.hidden=true;}
+  renderRemun();
 }
 
 /* ---------- Determinação de eventos ---------- */
@@ -893,7 +931,7 @@ function renderEventos(){
   }
   const cont={};dados.itens.forEach(x=>{cont[x.c.cat]=(cont[x.c.cat]||0)+1;});
   h+='<div class="stats">'+ORDEM.filter(c=>cont[c]||c==='indeterminada'||c==='determinada'||c==='so_mes').map(c=>'<button type="button" class="stat '+c+(filtro.cat===c?' on':'')+'" data-cat="'+c+'"><b>'+(cont[c]||0)+'</b><span>'+ROTULO_CURTO[c]+'</span></button>').join('')+'</div>';
-  if(dados.falhas&&dados.falhas.length) h+='<div class="banner">O Centi não respondeu para '+dados.falhas.length+' servidor(es), mesmo depois de tentar de novo; a lista abaixo está incompleta para: '+esc(dados.falhas.slice(0,6).map(titulo).join(', '))+(dados.falhas.length>6?' e outros':'')+(dados.motivo?' ('+esc(dados.motivo)+')':'')+'. Clique em <b>Carregar de novo</b>.</div>';
+  if(dados.falhas&&dados.falhas.length) h+='<div class="banner">O Centi não respondeu para '+dados.falhas.length+' servidor(es), mesmo depois de tentar de novo; a lista abaixo está incompleta para: '+esc(dados.falhas.slice(0,6).map(titulo).join(', '))+(dados.falhas.length>6?' e outros':'')+(dados.motivo?' ('+esc(dados.motivo)+')':'')+'. <button class="btn sm" id="btnRefalhas" type="button">Reler só os que falharam</button></div>';
   if(dados.truncados.length) h+='<div class="banner">Atenção: '+dados.truncados.length+' servidor(es) têm 50 ou mais lançamentos que atendem ao filtro e o Centi entrega no máximo 50 por consulta; a conferência pode estar incompleta para: '+esc(dados.truncados.slice(0,6).map(titulo).join(', '))+(dados.truncados.length>6?' e outros':'')+'.</div>';
   const evs=porEvento(dados.itens);
   h+='<div class="bar"><label class="search"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></svg><input id="q" type="search" placeholder="Filtrar por servidor, matrícula ou evento" value="'+esc(filtro.q)+'" autocomplete="off"></label>'+
@@ -968,12 +1006,12 @@ async function carregarRem(){
     ativos.forEach(r=>{const m=String(r.MATRICULA||'');if(m) servs.set(m,{mat:m,nome:r.NOMEFUNC||'',cargo:r.CARGO||'',lot:r.HIERARQUIA||r.LOTACAO||''});});
     const mats=[...servs.keys()],fichas={};
     prog('Lendo as fichas financeiras: 0 de '+mats.length+'…',10);
-    const res=await lerEmLotes(mats,30,3,lote=>PB.centi.conferenciaRemuneracao(lote,mes,ano),r=>Object.assign(fichas,r.Servidores||{}),
+    const res=await lerEmLotes(mats,15,2,lote=>PB.centi.conferenciaRemuneracao(lote,mes,ano),r=>Object.assign(fichas,r.Servidores||{}),
       (f,t,msg)=>prog(msg||'Lendo as fichas financeiras ('+MESES[mes-1]+' e '+MESES[mesAntRef(mes,ano).mes-1]+'): '+f+' de '+t+'…',10+f/t*88));
     if(res.falhas.length>=mats.length) throw new Error('O Centi não respondeu'+(res.motivo?' ('+res.motivo+')':'')+'. Tente de novo em instantes.');
     const ref_={mes,ano};
     const conf=await lerConf(ref_);
-    rem={ref:ref_,ant:mesAntRef(mes,ano),conf,falhas:res.falhas.map(m=>titulo(servs.get(m).nome)),motivo:res.motivo,itens:mats.filter(m=>!res.falhas.includes(m)).map(m=>({s:servs.get(m),f:fichas[m]||{Atual:[],Anterior:[]}}))};
+    rem={ref:ref_,ant:mesAntRef(mes,ano),conf,servs,falhasMats:res.falhas,falhas:res.falhas.map(m=>titulo(servs.get(m).nome)),motivo:res.motivo,itens:mats.filter(m=>!res.falhas.includes(m)).map(m=>({s:servs.get(m),f:fichas[m]||{Atual:[],Anterior:[]}}))};
     recalcRem();rf.st='';rf.q='';rLimite=200;
   }catch(e){toast('Não foi possível carregar do Centi: '+msgErro(e));}
   finally{rLendo=false;const b=$('#rCarregar');if(b) b.disabled=false;const p=$('#rProg');if(p) p.hidden=true;}
@@ -1015,7 +1053,7 @@ function renderRemun(){
   const cards=[['pend','Divergentes a conferir'],['bruto','Bruto mudou'],['desconto','Só descontos mudaram'],['novo','Novos na folha'],['saiu','Saíram da folha'],['igual','Iguais']];
   h+='<div class="stats">'+cards.map(c=>'<button type="button" class="stat '+c[0]+(rf.st===c[0]?' on':'')+'" data-rst="'+c[0]+'"><b>'+cont[c[0]]+'</b><span>'+c[1]+'</span></button>').join('')+'</div>'+
     '<div class="tot"><div>Folha bruta '+MESES[rem.ref.mes-1]+'/'+rem.ref.ano+'<b>'+brl(tPa)+'</b>'+sgn(r2(tPa-tPb))+' sobre '+MESES[a.mes-1]+'</div><div>Líquido '+MESES[rem.ref.mes-1]+'/'+rem.ref.ano+'<b>'+brl(tLa)+'</b>'+sgn(r2(tLa-tLb))+' sobre '+MESES[a.mes-1]+'</div><div>Conferência<b>'+conferidos+' de '+totalDiv+'</b>divergências conferidas</div></div>';
-  if(rem.falhas&&rem.falhas.length) h+='<div class="banner">O Centi não respondeu para '+rem.falhas.length+' servidor(es), mesmo depois de tentar de novo; eles ficaram de fora da comparação: '+esc(rem.falhas.slice(0,6).join(', '))+(rem.falhas.length>6?' e outros':'')+(rem.motivo?' ('+esc(rem.motivo)+')':'')+'. Clique em <b>Carregar de novo</b>.</div>';
+  if(rem.falhas&&rem.falhas.length) h+='<div class="banner">O Centi não respondeu para '+rem.falhas.length+' servidor(es), mesmo depois de tentar de novo; eles ficaram de fora da comparação: '+esc(rem.falhas.slice(0,6).join(', '))+(rem.falhas.length>6?' e outros':'')+(rem.motivo?' ('+esc(rem.motivo)+')':'')+'. <button class="btn sm" id="rRefalhas" type="button">Reler só os que falharam</button></div>';
   h+='<div class="bar"><label class="search"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></svg><input id="rQ" type="search" placeholder="Filtrar por servidor ou matrícula" value="'+esc(rf.q)+'" autocomplete="off"></label>'+
     '<label class="ck"><input type="checkbox" id="rOcultar"'+(rf.ocultar?' checked':'')+'> Ocultar conferidos</label></div>';
   const l=filtradosRem(),vis=l.slice(0,rLimite);
@@ -1081,6 +1119,8 @@ document.addEventListener('keydown',e=>{
 });
 document.addEventListener('click',e=>{
   if(e.target.closest('#evLimpa')){escolherEv('');return;}
+  if(e.target.closest('#btnRefalhas')){relerFalhasEv();return;}
+  if(e.target.closest('#rRefalhas')){relerFalhasRem();return;}
   const rs=e.target.closest('[data-rst]');if(rs){rf.st=rf.st===rs.dataset.rst?'':rs.dataset.rst;rLimite=200;renderRemun();return;}
   const rm=e.target.closest('tr[data-rm]');if(rm){dlgRem(+rm.dataset.rm);return;}
   if(e.target.closest('[data-rfechar]')){$('#dlg').close();return;}

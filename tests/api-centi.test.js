@@ -8,6 +8,7 @@ const Module=require('node:module');
 const carregar=Module._load;
 Module._load=function(req,...r){return req==='lz-string'?{compressToBase64:s=>s}:carregar.call(this,req,...r);};
 process.env.CENTI_ALLOWED_USERS='rh.teste';
+process.env.CENTI_RETRY_MS='1';   // esperas entre tentativas mínimas nos testes
 const handler=require('../api/centi.js');
 const C=require('../api/_centi.js');
 const {semFolha,referencias,sessaoInvalida}=require('../api/_ref.js');
@@ -258,29 +259,31 @@ test('servidor-dados: carrega FP001 e DM017 pelo número de tela do menu e devol
   assert.equal((await chamar({path:'servidor-dados',body:{id:'abc'}})).status,400);
 });
 
-test('conferencia-eventos: pede indeterminadas e determinadas que não acabaram antes do mês, junta, dá o código do evento e avisa do limite de 50',async()=>{
+test('conferencia-eventos: 1 consulta por servidor, descarta a que acabou antes do mês, dá o código do evento e, com 50 lançamentos, refina em 2 consultas',async()=>{
   const vistos=[];
+  const R=(id,rec,ini,fim,ev)=>({Id:id,IdEvento:ev||'PAGA IPARV ASSISTENCIA',Recorrencia:rec,DataInicial:ini,DataFinal:fim,Valor:'1,00',TipoLancamento:'Manual'});
   instalar(async(url,init)=>{
     const b=JSON.parse(init.body);vistos.push(b);
     const f=n=>(b.Filters.find(x=>x.FieldName===n)||{});
     if(b.Entity==='Evento') return resp({Success:true,Data:[{Id:'656',Nome:'PAGA IPARV ASSISTENCIA'},{Id:'1656',Nome:'PAGA IPARV ASSISTENCIA 2'}]});
     const srv=f('IdPessoaFuncionario').Value;
-    if(srv==='9'&&f('Recorrencia').Value!=null) return resp({Success:true,Data:Array.from({length:50},(_,i)=>({Id:'9'+i,IdEvento:'X',Recorrencia:'Indeterminada',DataInicial:'01/01/2025',DataFinal:'',Valor:'1,00',TipoLancamento:'Manual'}))});
-    if(f('Recorrencia').Value!=null) return resp({Success:true,Data:[{Id:'2',IdEvento:'PAGA IPARV ASSISTENCIA',Recorrencia:'Indeterminada',DataInicial:'01/10/2025',DataFinal:'',Valor:'1,00',TipoLancamento:'Manual'}]});
-    return resp({Success:true,Data:[{Id:'1',IdEvento:'PAGA IPARV ASSISTENCIA',Recorrencia:'Determinada',DataInicial:'01/10/2026',DataFinal:'30/10/2099',Valor:'5,00',TipoLancamento:'Manual'}]});
+    if(srv==='9'){
+      if(b.Filters.length===1) return resp({Success:true,Data:Array.from({length:50},(_,i)=>R('9'+i,'Determinada','01/01/2020','31/12/2020','X'))});   // histórico longo: bateu 50
+      if(f('Recorrencia').Value!=null) return resp({Success:true,Data:Array.from({length:50},(_,i)=>R('i'+i,'Indeterminada','01/01/2025','','X'))});
+      return resp({Success:true,Data:[R('d1','Determinada','01/10/2026','30/10/2099','X')]});
+    }
+    return resp({Success:true,Data:[R('1','Determinada','01/10/2026','30/10/2099'),R('2','Indeterminada','01/10/2025',''),R('3','Determinada','01/01/2026','30/09/2026')]});
   });
   const r=await chamar({path:'conferencia-eventos',body:{ids:['3649','9'],mes:11,ano:2026}});
   assert.equal(r.status,200);
   const j=JSON.parse(r.body);
   const doS=j.Linhas.filter(l=>l.Servidor==='3649').sort((a,b)=>a.Id-b.Id);
-  assert.deepEqual(doS.map(l=>[l.Id,l.Recorrencia,l.Fim,l.Codigo]),[['1','Determinada','30/10/2099','656'],['2','Indeterminada','','656']]);
-  assert.deepEqual(j.Truncados,['9']);
-  const det=vistos.find(b=>b.Entity==='PessoaFuncionarioEvento'&&b.Filters.some(f=>f.FieldName==='DataFinal'));
-  const fd=det.Filters.find(f=>f.FieldName==='DataFinal');
-  assert.equal(fd.Operation,3);assert.equal(fd.Value,'01/11/2026');          // maior ou igual ao início do mês de referência
-  const ind=vistos.find(b=>b.Entity==='PessoaFuncionarioEvento'&&b.Filters.some(f=>f.FieldName==='Recorrencia'));
-  assert.equal(ind.Filters.find(f=>f.FieldName==='Recorrencia').Value,'0');   // 0 = indeterminada
-  assert.equal(vistos.filter(b=>b.Entity==='Evento').length,2);               // um por nome diferente (PAGA..., X)
+  assert.deepEqual(doS.map(l=>[l.Id,l.Recorrencia,l.Fim,l.Codigo]),[['1','Determinada','30/10/2099','656'],['2','Indeterminada','','656']]);   // o 3 acabou em 30/09: fora
+  assert.equal(vistos.filter(b=>b.Entity==='PessoaFuncionarioEvento'&&b.Filters.some(f=>f.Value==='3649')).length,1);                            // 1 consulta só
+  assert.deepEqual(j.Truncados,['9']);                                                                                                           // as indeterminadas bateram 50
+  const fd=vistos.find(b=>b.Filters.some(f=>f.FieldName==='DataFinal')).Filters.find(f=>f.FieldName==='DataFinal');
+  assert.equal(fd.Operation,3);assert.equal(fd.Value,'01/11/2026');                                                                              // maior ou igual ao início do mês
+  assert.equal(vistos.find(b=>b.Filters.some(f=>f.FieldName==='Recorrencia')).Filters.find(f=>f.FieldName==='Recorrencia').Value,'0');          // 0 = indeterminada
 });
 
 test('conferencia-eventos: valida a lista de servidores e a referência',async()=>{
@@ -315,22 +318,36 @@ test('conferencia-remuneracao: valida matrículas e referência',async()=>{
     assert.equal((await chamar({path:'conferencia-remuneracao',body})).status,400);
 });
 
-test('conferencia-eventos: tenta de novo quando o Centi não responde e, se continuar falhando, devolve só aquele servidor em Falhas',async()=>{
-  let chamadasDe7=0;
+test('conferencia-eventos: tenta de novo (inclusive após HTTP 429) e, se continuar falhando, devolve só aquele servidor em Falhas',async()=>{
+  let de8=0,de5=0;
   instalar(async(url,init)=>{
     const b=JSON.parse(init.body);
     if(b.Entity==='Evento') return resp({Success:true,Data:[]});
     const srv=b.Filters.find(f=>f.FieldName==='IdPessoaFuncionario').Value;
-    if(srv==='7') return resp(null,503);                                   // sempre fora do ar
-    if(srv==='8'&&++chamadasDe7<2) return resp(null,503);                 // falha só na primeira vez
-    return resp({Success:true,Data:b.Filters.some(f=>f.FieldName==='Recorrencia')?[{Id:'1'+srv,IdEvento:'X',Recorrencia:'Indeterminada',DataInicial:'01/01/2026',DataFinal:'',Valor:'1,00',TipoLancamento:'Manual'}]:[]});
+    if(srv==='7') return resp(null,503);                          // sempre fora do ar
+    if(srv==='8'&&++de8<2) return resp(null,503);                 // falha só na primeira vez
+    if(srv==='5'&&++de5<3) return resp(null,429);                 // limite de consultas: passa depois de duas esperas
+    return resp({Success:true,Data:[{Id:'1'+srv,IdEvento:'X',Recorrencia:'Indeterminada',DataInicial:'01/01/2026',DataFinal:'',Valor:'1,00',TipoLancamento:'Manual'}]});
   });
-  const r=await chamar({path:'conferencia-eventos',body:{ids:['6','7','8'],mes:11,ano:2026}});
+  const r=await chamar({path:'conferencia-eventos',body:{ids:['5','6','7','8'],mes:11,ano:2026}});
   assert.equal(r.status,200);
   const j=JSON.parse(r.body);
   assert.deepEqual(j.Falhas,['7']);
   assert.match(j.Detalhe,/HTTP 503/);
-  assert.deepEqual(j.Linhas.map(l=>l.Servidor).sort(),['6','8']);          // o servidor 8 foi recuperado na nova tentativa
+  assert.deepEqual(j.Linhas.map(l=>l.Servidor).sort(),['5','6','8']);     // 5 e 8 foram recuperados nas novas tentativas
+});
+
+test('postComTentativas: no HTTP 429 espera o Retry-After pedido pelo Centi',async()=>{
+  const {postComTentativas}=require('../api/_centi.js');
+  const antes=global.setTimeout,esperas=[];
+  global.setTimeout=(fn,ms)=>{esperas.push(ms);return antes(fn,0);};
+  try{
+    let n=0;
+    const post=async()=>({status:n++<1?429:200,headers:{get:k=>k==='retry-after'?'2':null},data:n<=1?null:{Success:true}});
+    const r=await postComTentativas(post,'x',{},{});
+    assert.equal(r.status,200);
+    assert.deepEqual(esperas,[2000]);
+  }finally{global.setTimeout=antes;}
 });
 
 test('conferencia-remuneracao: servidor que o Centi não responde vai para Falhas sem derrubar o lote',async()=>{

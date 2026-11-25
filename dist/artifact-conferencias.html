@@ -161,7 +161,13 @@ body.carregando{overflow:hidden}
 .tag.bruto{background:var(--danger-bg);color:var(--danger)}.tag.desconto{background:var(--warn-bg);color:var(--warn)}.tag.novo{background:var(--blue-bg);color:var(--blue)}.tag.saiu{background:var(--violet-bg);color:var(--violet)}.tag.igual,.tag.conf{background:var(--ok-bg);color:var(--ok)}
 .pos{color:var(--ok)}.neg{color:var(--danger)}
 .lst.compacta{font-size:13.5px}.lst.compacta th,.lst.compacta td{padding:8px 7px}.lst.compacta td.n{min-width:140px}
-.chips{display:flex;gap:4px;flex-wrap:wrap;min-width:200px;max-width:280px}.chip{font-size:11.5px;line-height:1.3;background:var(--soft);border-radius:8px;padding:2px 7px;white-space:normal;overflow-wrap:anywhere}
+.chips{display:flex;flex-direction:column;align-items:flex-start;gap:4px;min-width:220px;max-width:300px}.chip{font-size:12px;line-height:1.35;background:var(--soft);border-radius:8px;padding:3px 8px;white-space:normal;overflow-wrap:anywhere}
+.chip b{font-weight:700}.chip .cv{font-variant-numeric:tabular-nums;font-weight:700;white-space:nowrap}
+.chip.c-novo{background:var(--ok-bg);color:var(--ok)}.chip.c-saiu{background:var(--danger-bg);color:var(--danger)}.chip.c-alt{background:var(--warn-bg);color:var(--warn)}
+.expbox{background:var(--soft);border:1px solid var(--line);border-radius:12px;padding:12px 14px}.expbox h4{font-size:.95rem;margin-bottom:6px}.expbox p{margin:0 0 8px;line-height:1.5}.expbox p:last-child{margin-bottom:0}
+ol.expl{margin:0 0 8px;padding-left:20px;display:flex;flex-direction:column;gap:6px;font-size:14px;line-height:1.45}
+dialog h4{font-size:.95rem}.per tr.mudou td{background:var(--warn-bg)}.pos0{color:var(--ok);font-weight:600}.neg0{color:var(--danger);font-weight:600}
+details.todos{border:1px solid var(--line);border-radius:12px;padding:8px 12px}details.todos summary{cursor:pointer;font-weight:600;font-size:14px}details.todos[open] summary{margin-bottom:8px}
 .lst tbody tr[data-rm]{cursor:pointer}.lst tbody tr[data-rm]:hover td{background:var(--soft)}
 .lst tr.pendente td:first-child{box-shadow:inset 4px 0 0 var(--danger)}.lst tr.conferido td{opacity:.75}
 .tot{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,230px),1fr));gap:10px;margin-top:10px}
@@ -713,13 +719,22 @@ function compararFichas(atual,anterior,tol){
   else if(Math.abs(d.prov)>t) status='bruto';
   else if(Math.abs(d.liq)>t||Math.abs(d.desc)>t) status='desconto';
   else status='igual';
-  return {status,a,b,d,mudancas};
+  const todos=[...mapa.values()].map(m=>Object.assign(m,{mudou:Math.abs(m.pa-m.pb)>0.004||Math.abs(m.da-m.db)>0.004,efeito:r2((m.pa-m.da)-(m.pb-m.db)),tipo:!m.tb?'novo':!m.ta?'saiu':'mudou'}))
+    .sort((x,y)=>((y.pa||y.pb)>0)-((x.pa||x.pb)>0)||Math.max(y.pa,y.da,y.pb,y.db)-Math.max(x.pa,x.da,x.pb,x.db));
+  return {status,a,b,d,mudancas,todos};
+}
+/* texto claro de uma mudança de evento: {verbo:'Entrou'|'Saiu'|'Aumentou'|'Diminuiu', natureza:'provento'|'desconto', de, para} (valores do próprio evento) */
+function descreverMudanca(m){
+  const natureza=(m.pa>0||m.pb>0)?'provento':'desconto';
+  const para=natureza==='provento'?m.pa:m.da,de=natureza==='provento'?m.pb:m.db;
+  const verbo=m.tipo==='novo'?'Entrou':m.tipo==='saiu'?'Saiu':(para>de?'Aumentou':'Diminuiu');
+  return {verbo,natureza,de,para};
 }
 const STATUS_REM={bruto:'Bruto mudou',desconto:'Só descontos mudaram',novo:'Novo na folha',saiu:'Saiu da folha',igual:'Igual',sem:'Sem ficha'};
 /* a conferência feita vale enquanto os valores forem os mesmos de quando foi marcada */
 const conferenciaValida=(rec,c)=>!!rec&&Math.abs((rec.prov||0)-c.a.prov)<0.005&&Math.abs((rec.liq||0)-c.a.liq)<0.005;
 
-const API={D,fmt,CATEGORIAS,ORDEM,classificar,porEvento,compararFichas,STATUS_REM,conferenciaValida,r2};
+const API={D,fmt,CATEGORIAS,ORDEM,classificar,porEvento,compararFichas,descreverMudanca,STATUS_REM,conferenciaValida,r2};
 if(typeof module!=='undefined'&&module.exports) module.exports=API;
 else root.CF=API;
 })(typeof window!=='undefined'?window:globalThis);
@@ -964,7 +979,7 @@ function csv(){
 
 
 /* ---------- Conferência de remuneração: ficha financeira (FP024) do mês x mês anterior ---------- */
-const {compararFichas,STATUS_REM,conferenciaValida,r2}=window.CF;
+const {compararFichas,descreverMudanca,STATUS_REM,conferenciaValida,r2}=window.CF;
 const brl=n=>'R$ '+Number(n||0).toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2});
 const sgn=n=>Math.abs(n)<0.005?'—':(n>0?'+':'−')+brl(Math.abs(n));
 const numBR=t=>{t=String(t==null?'':t).replace(/[^\d,.\-]/g,'');if(!t) return 0;if(t.includes(',')) t=t.replace(/\./g,'').replace(',','.');const n=Number(t);return isFinite(n)?n:0;};
@@ -1032,7 +1047,9 @@ function filtradosRem(){
   });
 }
 const clsDif=n=>Math.abs(n)<0.005?'':(n>0?'pos':'neg');
-const chipsMud=c=>c.mudancas.slice(0,3).map(m=>'<span class="chip">'+esc(m.id+' '+titulo(m.nome).slice(0,22))+' '+sgn(m.efeito)+'</span>').join('')+(c.mudancas.length>3?'<span class="chip">+'+(c.mudancas.length-3)+'</span>':'');
+/* resumo na tabela, em linguagem clara: "Entrou · Indenização Licença Prêmio · +R$ 37.749,69" (efeito no líquido); sem cortar o nome */
+const chipMud=m=>{const d=descreverMudanca(m);return '<span class="chip '+(m.efeito>0.004?'c-novo':m.efeito<-0.004?'c-saiu':'c-alt')+'" title="'+esc(m.id+' · '+titulo(m.nome)+' ('+d.natureza+')')+'"><b>'+d.verbo+'</b> '+esc(titulo(m.nome))+' <span class="cv">'+sgn(m.efeito)+'</span></span>';};
+const chipsMud=c=>c.mudancas.length?c.mudancas.slice(0,3).map(chipMud).join('')+(c.mudancas.length>3?'<span class="chip">+'+(c.mudancas.length-3)+' mudança(s)</span>':''):(c.status==='novo'?'<span class="chip c-novo">Primeira ficha do servidor</span>':c.status==='saiu'?'<span class="chip c-saiu">Sem ficha no mês</span>':'');
 function renderRemun(){
   const anoAtual=new Date().getFullYear(),a=rem?rem.ant:mesAntRef(ref.mes,ref.ano);
   let h='<div class="bar"><label>Mês <select id="rMes">'+MESES.map((m,i)=>'<option value="'+(i+1)+'"'+(i+1===ref.mes?' selected':'')+'>'+m+'</option>').join('')+'</select></label>'+
@@ -1072,15 +1089,40 @@ function ligarRem(){
   const b=$('#rCarregar');if(b) b.addEventListener('click',carregarRem);
   const c=$('#rCsv');if(c) c.addEventListener('click',csvRem);
 }
+/* explicação em texto do que aconteceu com a remuneração do servidor, comparando os dois meses */
+function explicacao(c,mA,mB){
+  const A=MESES[mA],B=MESES[mB];
+  const nome=m=>'<b>'+esc(titulo(m.nome))+'</b>';
+  const frase=m=>{const d=descreverMudanca(m);
+    if(d.verbo==='Entrou') return nome(m)+' <b>entrou</b> na ficha em '+A+' ('+d.natureza+' de '+brl(d.para)+'); em '+B+' não havia.';
+    if(d.verbo==='Saiu') return nome(m)+' <b>saiu</b> da ficha: em '+B+' era '+d.natureza+' de '+brl(d.de)+' e em '+A+' não há.';
+    return nome(m)+' <b>'+d.verbo.toLowerCase()+'</b>: o '+d.natureza+' foi de '+brl(d.de)+' em '+B+' para '+brl(d.para)+' em '+A+'.';};
+  let t='';
+  if(c.status==='sem') return '<p>Este servidor não tem ficha financeira em nenhum dos dois meses.</p>';
+  if(c.status==='novo') t='<p>Não há ficha de <b>'+B+'</b> para este servidor: ele <b>entrou na folha em '+A+'</b>, com bruto de '+brl(c.a.prov)+', descontos de '+brl(c.a.desc)+' e líquido de '+brl(c.a.liq)+'. Confira se a admissão e os valores iniciais estão corretos.</p>';
+  else if(c.status==='saiu') t='<p>Havia ficha em <b>'+B+'</b> (bruto '+brl(c.b.prov)+', líquido '+brl(c.b.liq)+'), mas <b>não há ficha em '+A+'</b>. Confira se houve desligamento, afastamento sem remuneração ou se a folha ainda não foi calculada.</p>';
+  else if(c.status==='igual') t='<p>Os valores são iguais nos dois meses: bruto '+brl(c.a.prov)+' e líquido '+brl(c.a.liq)+'.</p>';
+  else{
+    t='<p>Em <b>'+B+'</b> o servidor teve bruto de '+brl(c.b.prov)+', descontos de '+brl(c.b.desc)+' e líquido de '+brl(c.b.liq)+'. Em <b>'+A+'</b>, ';
+    t+=c.status==='bruto'?'o bruto foi para <b>'+brl(c.a.prov)+'</b> ('+sgn(c.d.prov)+'), os descontos para '+brl(c.a.desc)+' ('+sgn(c.d.desc)+') e o líquido para <b>'+brl(c.a.liq)+'</b> ('+sgn(c.d.liq)+').</p>'
+      :'o bruto <b>não mudou</b> ('+brl(c.a.prov)+'), mas os descontos foram para <b>'+brl(c.a.desc)+'</b> ('+sgn(c.d.desc)+') e o líquido para <b>'+brl(c.a.liq)+'</b> ('+sgn(c.d.liq)+').</p>';
+    if(c.mudancas.length) t+='<p>O que explica a diferença'+(c.mudancas.length>1?' (do maior efeito para o menor)':'')+':</p><ol class="expl">'+c.mudancas.slice(0,6).map(m=>'<li>'+frase(m)+' Efeito no líquido: <b class="'+clsDif(m.efeito)+'">'+sgn(m.efeito)+'</b>.</li>').join('')+'</ol>'+(c.mudancas.length>6?'<p class="sub">…e mais '+(c.mudancas.length-6)+' mudança(s), na tabela abaixo.</p>':'');
+    else t+='<p>Nenhum evento mudou individualmente: a diferença vem de arredondamentos ou de outra folha do mês.</p>';
+  }
+  return t;
+}
 function dlgRem(i){
   const x=rem.itens[i];if(!x) return;
-  const c=x.c,k=confDe(x),a=rem.ant,r=rem.ref;
-  const cx=(t,b,at,d)=>'<div><small>'+t+'</small><b>'+brl(at)+'</b><span>'+MESES[a.mes-1].slice(0,3)+': '+brl(b)+' · <b class="'+clsDif(d)+'" style="font-size:inherit;font-family:inherit">'+sgn(d)+'</b></span></div>';
-  const lin=m=>'<tr><td>'+esc(m.id+' · '+titulo(m.nome))+'</td><td><span class="tag '+(m.tipo==='novo'?'novo':m.tipo==='saiu'?'saiu':'desconto')+'">'+(m.tipo==='novo'?'Novo':m.tipo==='saiu'?'Saiu':'Mudou')+'</span></td>'+
-    '<td class="num">'+(m.pb?'P '+brl(m.pb):'')+(m.db?(m.pb?'<br>':'')+'D '+brl(m.db):'')+(m.tb?'':'—')+'</td><td class="num">'+(m.pa?'P '+brl(m.pa):'')+(m.da?(m.pa?'<br>':'')+'D '+brl(m.da):'')+(m.ta?'':'—')+'</td><td class="num '+clsDif(m.efeito)+'">'+sgn(m.efeito)+'</td></tr>';
+  const c=x.c,k=confDe(x),a=rem.ant,r=rem.ref,mA=r.mes-1,mB=a.mes-1;
+  const cx=(t,b,at,d)=>'<div><small>'+t+'</small><b>'+brl(at)+'</b><span>'+MESES[mB]+': '+brl(b)+' · <b class="'+clsDif(d)+'" style="font-size:inherit;font-family:inherit">'+sgn(d)+'</b></span></div>';
+  const val=(tem,p,d)=>!tem?'<span class="sub">Não tinha</span>':(p?'<span class="pos0">Provento</span> '+brl(p):'')+(d?(p?'<br>':'')+'<span class="neg0">Desconto</span> '+brl(d):'');
+  const lin=m=>{const d=descreverMudanca(m);return '<tr><td>'+esc(m.id+' · '+titulo(m.nome))+'</td><td><span class="tag '+(d.verbo==='Entrou'?'novo':d.verbo==='Saiu'?'saiu':'desconto')+'">'+d.verbo+'</span></td><td class="num">'+val(m.tb,m.pb,m.db)+'</td><td class="num">'+val(m.ta,m.pa,m.da)+'</td><td class="num '+clsDif(m.efeito)+'">'+sgn(m.efeito)+'</td></tr>';};
+  const lin2=m=>'<tr'+(m.mudou?' class="mudou"':'')+'><td>'+esc(m.id+' · '+titulo(m.nome))+(m.mudou?' <span class="tag desconto">mudou</span>':'')+'</td><td class="num">'+(m.tb?(m.pb?brl(m.pb):'')+(m.db?(m.pb?' / ':'')+'−'+brl(m.db):''):'—')+'</td><td class="num">'+(m.ta?(m.pa?brl(m.pa):'')+(m.da?(m.pa?' / ':'')+'−'+brl(m.da):''):'—')+'</td></tr>';
   $('#dlg').innerHTML='<div class="dbox"><h3>'+esc(titulo(x.s.nome))+'</h3><p>Matrícula '+esc(x.s.mat)+(x.s.cargo?' · '+esc(titulo(x.s.cargo)):'')+(x.s.lot?' · '+esc(titulo(x.s.lot)):'')+' · <span class="tag '+c.status+'">'+STATUS_REM[c.status]+'</span></p>'+
     '<div class="sum3">'+cx('Proventos (bruto)',c.b.prov,c.a.prov,c.d.prov)+cx('Descontos',c.b.desc,c.a.desc,c.d.desc)+cx('Líquido',c.b.liq,c.a.liq,c.d.liq)+'</div>'+
-    (c.mudancas.length?'<div class="pw"><table class="per"><thead><tr><th>Evento</th><th></th><th class="num">'+MESES[a.mes-1]+'</th><th class="num">'+MESES[r.mes-1]+'</th><th class="num">Efeito no líquido</th></tr></thead><tbody>'+c.mudancas.map(lin).join('')+'</tbody></table></div><p class="sub" style="color:var(--muted);font-size:12.5px">P = provento, D = desconto.</p>':'<p>Nenhum evento mudou entre os dois meses.</p>')+
+    '<div class="expbox"><h4>O que aconteceu</h4>'+explicacao(c,mA,mB)+'</div>'+
+    (c.mudancas.length?'<h4>Eventos que mudaram</h4><div class="pw"><table class="per"><thead><tr><th>Evento</th><th>O que houve</th><th class="num">Em '+MESES[mB]+' (anterior)</th><th class="num">Em '+MESES[mA]+' (atual)</th><th class="num">Efeito no líquido</th></tr></thead><tbody>'+c.mudancas.map(lin).join('')+'</tbody></table></div>':'')+
+    (c.todos.length?'<details class="todos"><summary>Ver tudo o que havia na ficha nos dois meses ('+c.todos.length+' eventos)</summary><div class="pw"><table class="per"><thead><tr><th>Evento</th><th class="num">'+MESES[mB]+' (provento / −desconto)</th><th class="num">'+MESES[mA]+' (provento / −desconto)</th></tr></thead><tbody>'+c.todos.map(lin2).join('')+'</tbody></table></div></details>':'')+
     (k.velha?'<div class="banner">Esta ficha já foi conferida por '+esc(k.rec.por||'—')+' em '+new Date(k.rec.em).toLocaleDateString('pt-BR')+', mas os valores mudaram depois (era '+brl(k.rec.prov)+' bruto e '+brl(k.rec.liq)+' líquido). Confira de novo.</div>':'')+
     '<label class="f">Observação da conferência (opcional)<input type="text" id="rNota" maxlength="300" placeholder="ex.: reajuste de março; penhora nova (processo X)" value="'+esc(k.rec?k.rec.nota||'':'')+'"></label>'+
     (k.ok?'<p class="sub" style="color:var(--muted);font-size:12.5px">Conferido por '+esc(k.rec.por||'—')+' em '+new Date(k.rec.em).toLocaleString('pt-BR')+'.</p>':'')+

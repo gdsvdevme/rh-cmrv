@@ -100,3 +100,18 @@ test('a conferência marcada deixa de valer se os valores mudarem depois',()=>{
   assert.equal(CF.conferenciaValida({prov:5000,liq:3900},c),false);
   assert.equal(CF.conferenciaValida(null,c),false);
 });
+
+test('descreverMudanca: entrou, saiu, aumentou e diminuiu, com a natureza (provento ou desconto)',()=>{
+  const c=CF.compararFichas(
+    [fi(7000,1500,[ev(50,'SAL',5000,0),ev(917,'INDENIZAÇÃO',2000,0),ev(913,'PENHORA',0,500),ev(52,'INSS',0,1000)])],
+    [fi(6000,1100,[ev(50,'SAL',5000,0),ev(662,'13º ADIANT.',1000,0),ev(52,'INSS',0,800),ev(91,'CONVENIO',0,300)])]);
+  const d=id=>CF.descreverMudanca(c.mudancas.find(m=>m.id===id));
+  assert.deepEqual(d('917'),{verbo:'Entrou',natureza:'provento',de:0,para:2000});
+  assert.deepEqual(d('662'),{verbo:'Saiu',natureza:'provento',de:1000,para:0});
+  assert.deepEqual(d('913'),{verbo:'Entrou',natureza:'desconto',de:0,para:500});
+  assert.deepEqual(d('52'),{verbo:'Aumentou',natureza:'desconto',de:800,para:1000});
+  assert.equal(d('91').verbo,'Saiu');
+  assert.equal(c.todos.length,6);                               // todos os eventos dos dois meses
+  assert.equal(c.todos.find(m=>m.id==='50').mudou,false);       // o salário base não mudou
+  assert.equal(c.todos[0].id==='50'||c.todos[0].id==='917',true);   // proventos primeiro
+});

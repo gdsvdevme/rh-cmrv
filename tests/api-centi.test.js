@@ -288,3 +288,29 @@ test('conferencia-eventos: valida a lista de servidores e a referência',async()
   for(const body of [{ids:[],mes:11,ano:2026},{ids:['a'],mes:11,ano:2026},{ids:Array.from({length:61},(_,i)=>String(i+1)),mes:11,ano:2026},{ids:['1'],mes:13,ano:2026}])
     assert.equal((await chamar({path:'conferencia-eventos',body})).status,400);
 });
+
+test('conferencia-remuneracao: lê a ficha do mês e a do mês anterior (virada de ano) de cada matrícula, sem dados pessoais',async()=>{
+  const vistos=[];
+  instalar(async(url,init)=>{
+    const b=JSON.parse(init.body),mes=init.headers.month,ano=init.headers.year;vistos.push({url,mes,ano,b});
+    if(/searchentity$/.test(url)) return resp({Success:true,Data:b.Filters[0].Value==='222'&&mes==='12'?[]:[{Id:'F'+b.Filters[0].Value+'-'+mes,Matricula:b.Filters[0].Value,Cpf:'000.000.000-00'}]});
+    return resp({Id:b.Id,Folha:'MENSAL',Mes:+mes,Ano:+ano,TotalProventos:5000,TotalDescontos:1000,LiquidoReceber:4000,Cpf:'000.000.000-00',
+      Eventos:[{Id:50,Nome:'SALÁRIO',BaseCalc:5000,Referencia:30,Provento:5000,Desconto:0}]});
+  });
+  const r=await chamar({path:'conferencia-remuneracao',body:{matriculas:['111','222'],mes:1,ano:2027}});
+  assert.equal(r.status,200);
+  const j=JSON.parse(r.body);
+  assert.deepEqual(j.Anterior,{mes:12,ano:2026});
+  assert.equal(j.Servidores['111'].Atual[0].Liq,4000);
+  assert.equal(j.Servidores['111'].Anterior[0].Mes,12);
+  assert.deepEqual(j.Servidores['222'].Anterior,[]);
+  assert.deepEqual(j.Servidores['111'].Atual[0].Eventos[0],{Id:50,Nome:'SALÁRIO',P:5000,D:0});
+  assert.ok(!r.body.includes('000.000.000-00'));
+  assert.ok(vistos.some(v=>v.mes==='12'&&v.ano==='2026'));   // o mês anterior vai nos cabeçalhos da consulta
+});
+
+test('conferencia-remuneracao: valida matrículas e referência',async()=>{
+  instalar(async()=>resp({Success:true,Data:[]}));
+  for(const body of [{matriculas:[],mes:11,ano:2026},{matriculas:['x'],mes:11,ano:2026},{matriculas:Array.from({length:41},(_,i)=>String(i+1)),mes:11,ano:2026},{matriculas:['1'],mes:0,ano:2026}])
+    assert.equal((await chamar({path:'conferencia-remuneracao',body})).status,400);
+});
